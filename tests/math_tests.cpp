@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <numbers>
 import engine.math;
 
 using Catch::Matchers::WithinRel;
@@ -105,4 +106,50 @@ TEST_CASE( "Min/Max and nearEqual", "[math][minmax]" )
 	REQUIRE( mx.w == 5 );
 	const math::Vec4<> c = a + math::Vec4<>{ 0.000001f, 0.0f, 0.0f, 0.0f };
 	REQUIRE( math::nearEqual( a, c ) );
+}
+
+TEST_CASE( "Clamp and saturate", "[math][clamp]" )
+{
+	const math::Vec3<> v{ -1.0f, 0.5f, 2.0f };
+	const auto cl = math::clamp( v, 0.0f, 1.0f );
+	REQUIRE( cl.x == 0.0f );
+	REQUIRE( cl.y == 0.5f );
+	REQUIRE( cl.z == 1.0f );
+	auto sat = math::saturate( v );
+	REQUIRE( sat.x == 0.0f );
+	REQUIRE( sat.y == 0.5f );
+	REQUIRE( sat.z == 1.0f );
+}
+
+TEST_CASE( "Angle between vectors", "[math][angle]" )
+{
+	const math::Vec3<> x{ 1, 0, 0 }, y{ 0, 1, 0 };
+	const float a = math::angle( x, y );
+	REQUIRE_THAT( a, WithinRel( static_cast<float>( std::numbers::pi / 2.0 ), 1e-5f ) );
+}
+
+TEST_CASE( "Slerp basics", "[math][slerp]" )
+{
+	const math::Vec3<> x{ 1, 0, 0 }, y{ 0, 1, 0 };
+	const auto mid = math::slerp( x, y, 0.5f );
+	// Midpoint direction should be roughly normalized (0.707,0.707,0)
+	REQUIRE_THAT( math::dot( math::normalize( mid ), math::Vec3<>{ std::numbers::sqrt2_v<float> / 2.0f, std::numbers::sqrt2_v<float> / 2.0f, 0.0f } ), WithinRel( 1.0f, 1e-4f ) );
+}
+
+TEST_CASE("Slerp varying magnitudes", "[math][slerp]")
+{
+	// a length 2, b length 4, 90 deg apart.
+	const math::Vec3<> a{ 2, 0, 0 };        // |a| = 2
+	const math::Vec3<> b{ 0, 4, 0 };        // |b| = 4
+	const float t = 0.25f;                  // quarter of the way
+	const auto r = math::slerp( a, b, t );
+	// Expected blended magnitude = 2*(1-t)+4*t = 2.5
+	const auto mag = math::length( r );
+	REQUIRE_THAT( static_cast<float>( mag ), WithinRel( 2.5f, 1e-4f ) );
+	// Direction should be rotated 22.5 degrees from a toward b (pi/8)
+	const auto dir = math::normalize( r );
+	const float expectedAngle = static_cast<float>( std::numbers::pi / 8.0 );
+	// Compute angle between dir and x-axis (1,0,0)
+	const float ang = math::angle( dir, math::Vec3<>{ 1, 0, 0 } );
+	REQUIRE_THAT( ang, WithinRel( expectedAngle, 1e-3f ) );
 }

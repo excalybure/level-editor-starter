@@ -349,4 +349,83 @@ constexpr bool nearEqual( const V &a, const V &b, typename V::value_type eps = s
 		return std::abs( a.x - b.x ) <= eps && std::abs( a.y - b.y ) <= eps;
 }
 
+// Clamp each component of v to [minValue, maxValue]
+template <typename V>
+constexpr V clamp( const V &v, typename V::value_type minValue, typename V::value_type maxValue )
+{
+	const auto lo = minValue;
+	const auto hi = maxValue;
+	if constexpr ( requires { v.w; } )
+		return { std::clamp( v.x, lo, hi ), std::clamp( v.y, lo, hi ), std::clamp( v.z, lo, hi ), std::clamp( v.w, lo, hi ) };
+	else if constexpr ( requires { v.z; } )
+		return { std::clamp( v.x, lo, hi ), std::clamp( v.y, lo, hi ), std::clamp( v.z, lo, hi ) };
+	else
+		return { std::clamp( v.x, lo, hi ), std::clamp( v.y, lo, hi ) };
+}
+
+// Clamp to [0,1]
+template <typename V>
+constexpr V saturate( const V &v )
+{
+	return clamp( v, static_cast<typename V::value_type>( 0 ), static_cast<typename V::value_type>( 1 ) );
+}
+
+// Angle between vectors (in radians). Returns 0 if any vector length is zero.
+template <typename V>
+inline auto angle( const V &a, const V &b )
+{
+	using VT = typename V::value_type;
+	const auto la2 = lengthSquared( a );
+	const auto lb2 = lengthSquared( b );
+	if ( la2 == 0 || lb2 == 0 )
+		return VT{ 0 };
+	const long double denom = std::sqrt( static_cast<long double>( la2 ) ) * std::sqrt( static_cast<long double>( lb2 ) );
+	long double c = static_cast<long double>( dot( a, b ) ) / denom;
+	c = std::min<long double>( 1.0L, std::max<long double>( -1.0L, c ) ); // clamp
+	return static_cast<VT>( std::acos( c ) );
+}
+
+// Spherical linear interpolation between vectors a and b (not necessarily normalized). If angle is tiny, falls back to lerp.
+template <typename V, typename T>
+inline V slerp( const V &a, const V &b, T t )
+{
+	using VT = typename V::value_type;
+	// Normalize inputs for direction; retain magnitudes via linear interpolation of lengths if desired (here we slerp direction only then scale by lerped length)
+	const auto lenA = length( a );
+	const auto lenB = length( b );
+	if ( lenA == 0 || lenB == 0 )
+	{
+		return lerp( a, b, t ); // degeneracy
+	}
+	const V na = normalize( a );
+	const V nb = normalize( b );
+	long double cosTheta = static_cast<long double>( dot( na, nb ) );
+	cosTheta = std::min<long double>( 1.0L, std::max<long double>( -1.0L, cosTheta ) );
+	const long double theta = std::acos( cosTheta );
+
+	const long double tld = static_cast<long double>( t );
+	const VT magBlend = static_cast<VT>( ( 1.0L - tld ) * lenA + tld * lenB );
+	if ( theta < 1e-6L )
+	{
+		// Very small angle: linear blend and renormalize, then scale length
+		const V blended = normalize( lerp( na, nb, t ) );
+		return blended * magBlend;
+	}
+	const long double sinTheta = std::sin( theta );
+	const long double w1 = std::sin( ( 1 - static_cast<long double>( t ) ) * theta ) / sinTheta;
+	const long double w2 = std::sin( static_cast<long double>( t ) * theta ) / sinTheta;
+	V dir{};
+	dir.x = static_cast<VT>( na.x * w1 + nb.x * w2 );
+	dir.y = static_cast<VT>( na.y * w1 + nb.y * w2 );
+	if constexpr ( requires { na.z; } )
+	{
+		dir.z = static_cast<VT>( na.z * w1 + nb.z * w2 );
+	}
+	if constexpr ( requires { na.w; } )
+	{
+		dir.w = static_cast<VT>( na.w * w1 + nb.w * w2 );
+	}
+	return dir * magBlend;
+}
+
 } // namespace math
