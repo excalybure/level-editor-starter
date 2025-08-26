@@ -1,0 +1,23 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ddbc24f7e71612adff15532190f07a1790d7c0549669cd109d6280d157f28868
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 6020b2e44892a7a145a4d45e672cee1b2c3a8e575ddb682799bffcff9859906d
+Status: install ok installed
+
+Package: catch2
+Version: 3.9.1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 32db60481dc4a41ecc0c77e29a3c5d0eb984df9baab41294f9e620ec62d1a1e2
+Description: A modern, C++-native, test framework for unit-tests, TDD and BDD.
+Status: install ok installed
+
