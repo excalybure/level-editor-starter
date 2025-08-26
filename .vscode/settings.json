@@ -7,5 +7,19 @@
     "clang-format.language.cpp.enable": true,
     "clang-format.language.cpp.style": "file",
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
-    "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe"
+    "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
+    "chat.tools.terminal.autoApprove": {
+        "rm": false,
+        "rmdir": false,
+        "del": false,
+        "kill": false,
+        "curl": false,
+        "wget": false,
+        "eval": false,
+        "chmod": false,
+        "chown": false,
+        "git": true,
+        "cmake": true,
+        "/^Remove-Item\\b/i": false
+    }
 }
