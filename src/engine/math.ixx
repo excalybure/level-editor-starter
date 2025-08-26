@@ -249,21 +249,20 @@ constexpr auto lengthSquared( const V &v )
 template <typename V>
 inline auto length( const V &v )
 {
-	using std::sqrt;
-	return sqrt( static_cast<long double>( lengthSquared( v ) ) );
+	return std::sqrt( static_cast<long double>( lengthSquared( v ) ) );
 }
 
 // Normalize (returns zero vector if length is (near) zero)
 template <typename V>
 constexpr V normalize( const V &v )
 {
-	auto ls = lengthSquared( v );
+	const auto ls = lengthSquared( v );
 	using VT = typename V::value_type;
 	if ( ls <= std::numeric_limits<decltype( ls )>::epsilon() )
 	{
 		return V{}; // cannot normalize zero vector
 	}
-	long double invLen = 1.0L / std::sqrt( static_cast<long double>( ls ) );
+	const long double invLen = 1.0L / std::sqrt( static_cast<long double>( ls ) );
 	if constexpr ( requires { v.w; } )
 	{
 		return { static_cast<VT>( v.x * invLen ), static_cast<VT>( v.y * invLen ), static_cast<VT>( v.z * invLen ), static_cast<VT>( v.w * invLen ) };
@@ -276,6 +275,78 @@ constexpr V normalize( const V &v )
 	{
 		return { static_cast<VT>( v.x * invLen ), static_cast<VT>( v.y * invLen ) };
 	}
+}
+
+// Distance utilities
+template <typename V>
+constexpr auto distanceSquared( const V &a, const V &b )
+{
+	return lengthSquared( a - b );
+}
+
+template <typename V>
+inline auto distance( const V &a, const V &b )
+{
+	return length( a - b );
+}
+
+// Linear interpolation: lerp(a,b,t) = a + t*(b-a)
+template <typename V, typename T>
+constexpr V lerp( const V &a, const V &b, T t )
+{
+	return a + ( b - a ) * static_cast<typename V::value_type>( t );
+}
+
+// Reflection of incident vector I about normal N (assumes N is normalized)
+template <typename V>
+constexpr V reflect( const V &I, const V &N )
+{
+	return I - ( static_cast<typename V::value_type>( 2 ) * dot( I, N ) ) * N;
+}
+
+// Projection of vector A onto vector B. If B is zero, returns zero vector.
+template <typename V>
+constexpr V project( const V &A, const V &B )
+{
+	const auto denom = dot( B, B );
+	if ( denom == 0 )
+		return V{};
+	return ( dot( A, B ) / denom ) * B;
+}
+
+// Component-wise min/max
+template <typename V>
+constexpr V min( const V &a, const V &b )
+{
+	if constexpr ( requires { a.w; } )
+		return { std::min( a.x, b.x ), std::min( a.y, b.y ), std::min( a.z, b.z ), std::min( a.w, b.w ) };
+	else if constexpr ( requires { a.z; } )
+		return { std::min( a.x, b.x ), std::min( a.y, b.y ), std::min( a.z, b.z ) };
+	else
+		return { std::min( a.x, b.x ), std::min( a.y, b.y ) };
+}
+
+template <typename V>
+constexpr V max( const V &a, const V &b )
+{
+	if constexpr ( requires { a.w; } )
+		return { std::max( a.x, b.x ), std::max( a.y, b.y ), std::max( a.z, b.z ), std::max( a.w, b.w ) };
+	else if constexpr ( requires { a.z; } )
+		return { std::max( a.x, b.x ), std::max( a.y, b.y ), std::max( a.z, b.z ) };
+	else
+		return { std::max( a.x, b.x ), std::max( a.y, b.y ) };
+}
+
+// Approximate equality
+template <typename V>
+constexpr bool nearEqual( const V &a, const V &b, typename V::value_type eps = static_cast<typename V::value_type>( 1e-5 ) )
+{
+	if constexpr ( requires { a.w; } )
+		return std::abs( a.x - b.x ) <= eps && std::abs( a.y - b.y ) <= eps && std::abs( a.z - b.z ) <= eps && std::abs( a.w - b.w ) <= eps;
+	else if constexpr ( requires { a.z; } )
+		return std::abs( a.x - b.x ) <= eps && std::abs( a.y - b.y ) <= eps && std::abs( a.z - b.z ) <= eps;
+	else
+		return std::abs( a.x - b.x ) <= eps && std::abs( a.y - b.y ) <= eps;
 }
 
 } // namespace math

@@ -20,6 +20,7 @@
         "chown": false,
         "git": true,
         "cmake": true,
+        "math_tests.exe": true,
         "/^Remove-Item\\b/i": false
     }
 }
