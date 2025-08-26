@@ -1,0 +1,27 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "ninja-msvc",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/ninja-msvc",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_SCAN_FOR_MODULES": "ON"
+      }
+    },
+    {
+      "name": "vs2022-x64",
+      "generator": "Visual Studio 17 2022",
+      "architecture": { "value": "x64" },
+      "binaryDir": "${sourceDir}/build/vs2022-x64",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_SCAN_FOR_MODULES": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "build", "configurePreset": "ninja-msvc" }
+  ]
+}

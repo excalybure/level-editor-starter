@@ -1,0 +1,36 @@
+# Build artifacts
+/build/
+[Cc]MakeCache.txt
+CMakeFiles/
+**/Debug/
+**/Release/
+*.obj
+*.pdb
+*.ilk
+*.tlog/
+*.log
+*.user
+*.opendb
+*.VC.db
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# OS junk
+Thumbs.db
+.DS_Store
+
+# Generated modules/interface units
+**/*.ifc
+
+# Binary outputs
+*.exe
+*.lib
+*.dll
+*.exp
+
+# Test temp
+Testing/Temporary/

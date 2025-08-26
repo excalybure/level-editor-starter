@@ -1,0 +1,9 @@
+{
+  "name": "level-editor-starter",
+  "version-string": "0.0.1",
+  "builtin-baseline": "*",
+  "dependencies": [
+    "catch2"
+  ],
+  "description": "Starter scaffold for a C++23 modular world editor with tests"
+}
