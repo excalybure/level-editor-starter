@@ -136,12 +136,12 @@ TEST_CASE( "Slerp basics", "[math][slerp]" )
 	REQUIRE_THAT( math::dot( math::normalize( mid ), math::Vec3<>{ std::numbers::sqrt2_v<float> / 2.0f, std::numbers::sqrt2_v<float> / 2.0f, 0.0f } ), WithinRel( 1.0f, 1e-4f ) );
 }
 
-TEST_CASE("Slerp varying magnitudes", "[math][slerp]")
+TEST_CASE( "Slerp varying magnitudes", "[math][slerp]" )
 {
 	// a length 2, b length 4, 90 deg apart.
-	const math::Vec3<> a{ 2, 0, 0 };        // |a| = 2
-	const math::Vec3<> b{ 0, 4, 0 };        // |b| = 4
-	const float t = 0.25f;                  // quarter of the way
+	const math::Vec3<> a{ 2, 0, 0 }; // |a| = 2
+	const math::Vec3<> b{ 0, 4, 0 }; // |b| = 4
+	const float t = 0.25f;			 // quarter of the way
 	const auto r = math::slerp( a, b, t );
 	// Expected blended magnitude = 2*(1-t)+4*t = 2.5
 	const auto mag = math::length( r );
