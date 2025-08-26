@@ -1,4 +1,95 @@
-# Level Editor Starter
+# 🎯 Project Summary: C++23 world Editor (Windows)
+
+## Goals
+- Build a **3D world editor** as a continuous self-learning project.
+- Use **modern C++23 features** (modules, concepts, ranges).
+- Run on **Windows**; build in **VS Code** with MSVC + CMake.
+- Use **unit tests** (Catch2) to validate subsystems.
+- Learn by integrating graphics + engine concepts:
+  - Multiple camera views (Perspective, Top, Front(Y), Side(X)).
+  - Scene editing with gizmos (Z up, Y forward, X right).
+  - Object placement & picking.
+  - Terrain system with **virtual texturing** (D3D12 Tiled Resources).
+  - Material system like Unreal (node graph → HLSL codegen).
+
+---
+
+## Tech Stack
+- **Language/Build:** C++23, MSVC, CMake ≥ 3.29, Ninja or MSBuild.
+- **Dependencies:** vcpkg (Catch2, ImGui, GLFW, GLM, DirectX headers + DXC, cgltf).
+- **Graphics:** Direct3D 12 (with tiled resources for VT).
+- **UI:** Dear ImGui (docking + viewports), ImGuizmo (manipulators).
+- **Assets:** glTF 2.0 for mesh import.
+- **Testing:** Catch2 unit tests + GitHub Actions CI (later).
+
+---
+
+## Project Layout (modules)
+```
+/src
+  /engine       # math, renderer, GPU resources
+  /runtime      # ECS, app loop, scene, serialization
+  /platform     # Win32 window + D3D12 device
+  /editor       # UI, multi-viewport, gizmos, commands
+  main.cpp
+/tests          # Catch2 unit tests
+/shaders        # HLSL + material codegen output
+```
+
+---
+
+## Key Modules
+- **engine.math.ixx** – Vec3, Mat4, dot, cross (RH Z-up).
+- **runtime.ecs.ixx** – minimal ECS with `Component` concept + storage.
+- **runtime.app.ixx** – main loop (`tick()`).
+- **platform.win32.win32_window.ixx** – window creation + pump (global module fragment for `windows.h`).
+- **editor.ui.ixx** – ImGui docking + panels (stubbed).
+
+---
+
+## Implementation Roadmap
+**Milestone 0 – Scaffolding**
+- Build system with C++23 modules working in VS Code.
+- Unit test scaffold (Catch2).
+
+**Milestone 1 – Multi-Viewport Cameras**
+- Four docked views (Perspective, Top, Front, Side).
+- Camera controllers with Z-up RH system.
+- Grid + snapping.
+
+**Milestone 2 – Scene & Editing**
+- ECS for transforms, components.
+- glTF import, picking, gizmo manipulations.
+- Undo/redo command stack.
+
+**Milestone 3 – Material System**
+- Node graph UI (ImGui).
+- IR DAG → HLSL codegen (baseColor, normal, roughness, metallic).
+- DXC compile + caching.
+- Unit tests for graph validation.
+
+**Milestone 4 – Terrain**
+- Quadtree LOD heightmap.
+- Integrate with material system.
+- Add **virtual texturing**: tiled resources, page table, residency, feedback pass.
+
+**Milestone 5 – Polish**
+- Serialization (scene save/load).
+- Camera bookmarks, duplication, delete.
+- Performance & usability fixes.
+
+---
+
+## Testing Strategy
+- **Math:** dot, cross, transforms.
+- **ECS:** create/destroy/get.
+- **Scene:** pick ray vs AABB.
+- **Material graph:** DAG validation, HLSL snippets.
+- **Terrain/VT:** page mapping, residency tests.
+
+---
+
+# World Editor
 
 C++23 modular scaffold for a future 3D world editor (Windows / MSVC / CMake). Provides:
 
