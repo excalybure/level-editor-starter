@@ -13,6 +13,7 @@ TEST_CASE( "Random class basic functionality", "[math][random]" )
 {
 	SECTION( "seeded random generates consistent values" )
 	{
+		// Random generators must be mutable as they modify internal state
 		math::Random rng1( 12345 );
 		math::Random rng2( 12345 );
 
@@ -29,7 +30,7 @@ TEST_CASE( "Random class basic functionality", "[math][random]" )
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			float value = rng.random();
+			const float value = rng.random();
 			REQUIRE( value >= 0.0f );
 			REQUIRE( value < 1.0f );
 		}
@@ -38,12 +39,12 @@ TEST_CASE( "Random class basic functionality", "[math][random]" )
 	SECTION( "range(float) returns values in specified range" )
 	{
 		math::Random rng( 123 );
-		float min = -10.0f;
-		float max = 25.5f;
+		const float min = -10.0f;
+		const float max = 25.5f;
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			float value = rng.range( min, max );
+			const float value = rng.range( min, max );
 			REQUIRE( value >= min );
 			REQUIRE( value < max );
 		}
@@ -52,14 +53,14 @@ TEST_CASE( "Random class basic functionality", "[math][random]" )
 	SECTION( "range(int) returns values in specified inclusive range" )
 	{
 		math::Random rng( 456 );
-		int min = -5;
-		int max = 10;
+		const int min = -5;
+		const int max = 10;
 		std::set<int> generatedValues;
 
 		// Generate many values and check they're all in range
 		for ( int i = 0; i < 1000; i++ )
 		{
-			int value = rng.range( min, max );
+			const int value = rng.range( min, max );
 			REQUIRE( value >= min );
 			REQUIRE( value <= max );
 			generatedValues.insert( value );
@@ -107,8 +108,8 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 
 		for ( int i = 0; i < 50; i++ )
 		{
-			auto point = rng.unitCircle();
-			float distance = sqrt( point.x * point.x + point.y * point.y );
+			const auto point = rng.unitCircle();
+			const float distance = sqrt( point.x * point.x + point.y * point.y );
 			REQUIRE_THAT( distance, WithinRel( 1.0f, 1e-5f ) );
 		}
 	}
@@ -119,8 +120,8 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 
 		for ( int i = 0; i < 50; i++ )
 		{
-			auto point = rng.unitSphere();
-			float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
+			const auto point = rng.unitSphere();
+			const float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
 			REQUIRE_THAT( distance, WithinRel( 1.0f, 1e-5f ) );
 		}
 	}
@@ -131,8 +132,8 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			auto point = rng.insideSphere();
-			float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
+			const auto point = rng.insideSphere();
+			const float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
 			REQUIRE( distance <= 1.0f );
 		}
 
@@ -140,8 +141,8 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 		float minDistance = 1.0f;
 		for ( int i = 0; i < 100; i++ )
 		{
-			auto point = rng.insideSphere();
-			float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
+			const auto point = rng.insideSphere();
+			const float distance = sqrt( point.x * point.x + point.y * point.y + point.z * point.z );
 			if ( distance < minDistance )
 				minDistance = distance;
 		}
@@ -154,7 +155,7 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			auto point = rng.insideCube();
+			const auto point = rng.insideCube();
 			REQUIRE( point.x >= -1.0f );
 			REQUIRE( point.x <= 1.0f );
 			REQUIRE( point.y >= -1.0f );
@@ -170,13 +171,13 @@ TEST_CASE( "Random utility functions", "[math][random]" )
 	SECTION( "choice() selects random element from container" )
 	{
 		math::Random rng( 222324 );
-		std::vector<int> values = { 10, 20, 30, 40, 50 };
+		const std::vector<int> values = { 10, 20, 30, 40, 50 };
 		std::set<int> chosen;
 
 		// Select many times to ensure we get different elements
 		for ( int i = 0; i < 200; i++ )
 		{
-			int selected = rng.choice( values );
+			const int selected = rng.choice( values );
 			// Should be one of our values
 			REQUIRE( std::find( values.begin(), values.end(), selected ) != values.end() );
 			chosen.insert( selected );
@@ -189,7 +190,7 @@ TEST_CASE( "Random utility functions", "[math][random]" )
 	SECTION( "shuffle() randomizes container order" )
 	{
 		math::Random rng( 252627 );
-		std::vector<int> original = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		const std::vector<int> original = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		std::vector<int> shuffled = original;
 
 		rng.shuffle( shuffled );
@@ -225,28 +226,28 @@ TEST_CASE( "Global random functions", "[math][random]" )
 	SECTION( "global convenience functions work" )
 	{
 		// Test that global functions are accessible and return reasonable values
-		float r1 = math::random();
+		const float r1 = math::random();
 		REQUIRE( r1 >= 0.0f );
 		REQUIRE( r1 < 1.0f );
 
-		float r2 = math::random( 5.0f, 10.0f );
+		const float r2 = math::random( 5.0f, 10.0f );
 		REQUIRE( r2 >= 5.0f );
 		REQUIRE( r2 < 10.0f );
 
-		int ri = math::randomInt( -3, 7 );
+		const int ri = math::randomInt( -3, 7 );
 		REQUIRE( ri >= -3 );
 		REQUIRE( ri <= 7 );
 
-		auto circle = math::randomUnitCircle();
-		float circleDistance = sqrt( circle.x * circle.x + circle.y * circle.y );
+		const auto circle = math::randomUnitCircle();
+		const float circleDistance = sqrt( circle.x * circle.x + circle.y * circle.y );
 		REQUIRE_THAT( circleDistance, WithinRel( 1.0f, 1e-5f ) );
 
-		auto sphere = math::randomUnitSphere();
-		float sphereDistance = sqrt( sphere.x * sphere.x + sphere.y * sphere.y + sphere.z * sphere.z );
+		const auto sphere = math::randomUnitSphere();
+		const float sphereDistance = sqrt( sphere.x * sphere.x + sphere.y * sphere.y + sphere.z * sphere.z );
 		REQUIRE_THAT( sphereDistance, WithinRel( 1.0f, 1e-5f ) );
 
-		auto inside = math::randomInsideSphere();
-		float insideDistance = sqrt( inside.x * inside.x + inside.y * inside.y + inside.z * inside.z );
+		const auto inside = math::randomInsideSphere();
+		const float insideDistance = sqrt( inside.x * inside.x + inside.y * inside.y + inside.z * inside.z );
 		REQUIRE( insideDistance <= 1.0f );
 	}
 }
@@ -256,7 +257,7 @@ TEST_CASE( "Noise functions", "[math][random]" )
 	SECTION( "perlinNoise() returns values in reasonable range" )
 	{
 		// Test various coordinates
-		float testCoords[][2] = {
+		const float testCoords[][2] = {
 			{ 0.0f, 0.0f },
 			{ 1.5f, 2.3f },
 			{ -3.7f, 4.1f },
@@ -264,9 +265,9 @@ TEST_CASE( "Noise functions", "[math][random]" )
 			{ 0.1f, 0.1f }
 		};
 
-		for ( auto &[x, y] : testCoords )
+		for ( const auto &[x, y] : testCoords )
 		{
-			float noise = math::perlinNoise( x, y );
+			const float noise = math::perlinNoise( x, y );
 			// Perlin noise should typically be in range [-1, 1]
 			REQUIRE( noise >= -1.5f ); // Allow slight overshoot due to interpolation
 			REQUIRE( noise <= 1.5f );
@@ -276,9 +277,9 @@ TEST_CASE( "Noise functions", "[math][random]" )
 	SECTION( "perlinNoise() is deterministic" )
 	{
 		// Same coordinates should always give same result
-		float x = 3.14f, y = 2.71f;
-		float noise1 = math::perlinNoise( x, y );
-		float noise2 = math::perlinNoise( x, y );
+		const float x = 3.14f, y = 2.71f;
+		const float noise1 = math::perlinNoise( x, y );
+		const float noise2 = math::perlinNoise( x, y );
 
 		REQUIRE_THAT( noise1, WithinAbs( noise2, 1e-6f ) );
 	}
@@ -286,12 +287,12 @@ TEST_CASE( "Noise functions", "[math][random]" )
 	SECTION( "perlinNoise() varies smoothly" )
 	{
 		// Adjacent points should have similar values (smoothness test)
-		float baseX = 5.0f, baseY = 3.0f;
-		float delta = 0.01f;
+		const float baseX = 5.0f, baseY = 3.0f;
+		const float delta = 0.01f;
 
-		float center = math::perlinNoise( baseX, baseY );
-		float right = math::perlinNoise( baseX + delta, baseY );
-		float up = math::perlinNoise( baseX, baseY + delta );
+		const float center = math::perlinNoise( baseX, baseY );
+		const float right = math::perlinNoise( baseX + delta, baseY );
+		const float up = math::perlinNoise( baseX, baseY + delta );
 
 		// Adjacent values should be close (smoothness)
 		REQUIRE( abs( center - right ) < 0.1f );
@@ -300,12 +301,12 @@ TEST_CASE( "Noise functions", "[math][random]" )
 
 	SECTION( "fractalNoise() combines multiple octaves" )
 	{
-		float x = 2.5f, y = 1.8f;
+		const float x = 2.5f, y = 1.8f;
 
 		// Test different octave counts
-		float noise1 = math::fractalNoise( x, y, 1 );
-		float noise4 = math::fractalNoise( x, y, 4 );
-		float noise8 = math::fractalNoise( x, y, 8 );
+		const float noise1 = math::fractalNoise( x, y, 1 );
+		const float noise4 = math::fractalNoise( x, y, 4 );
+		const float noise8 = math::fractalNoise( x, y, 8 );
 
 		// All should be in reasonable range
 		REQUIRE( noise1 >= -2.0f );
@@ -322,16 +323,16 @@ TEST_CASE( "Noise functions", "[math][random]" )
 
 	SECTION( "turbulence() returns positive values" )
 	{
-		float testCoords[][2] = {
+		const float testCoords[][2] = {
 			{ 0.0f, 0.0f },
 			{ 1.0f, 1.0f },
 			{ -2.5f, 3.7f },
 			{ 7.2f, -4.1f }
 		};
 
-		for ( auto &[x, y] : testCoords )
+		for ( const auto &[x, y] : testCoords )
 		{
-			float turb = math::turbulence( x, y, 4 );
+			const float turb = math::turbulence( x, y, 4 );
 			// Turbulence should be positive (absolute values)
 			REQUIRE( turb >= 0.0f );
 			REQUIRE( turb <= 2.0f ); // Should be normalized
@@ -341,9 +342,9 @@ TEST_CASE( "Noise functions", "[math][random]" )
 	SECTION( "noise functions are accessible through SimpleNoise class" )
 	{
 		// Test direct class access
-		float noise1 = math::SimpleNoise::perlinNoise( 1.0f, 2.0f );
-		float noise2 = math::SimpleNoise::fractalNoise( 1.0f, 2.0f, 3 );
-		float noise3 = math::SimpleNoise::turbulence( 1.0f, 2.0f, 3 );
+		const float noise1 = math::SimpleNoise::perlinNoise( 1.0f, 2.0f );
+		const float noise2 = math::SimpleNoise::fractalNoise( 1.0f, 2.0f, 3 );
+		const float noise3 = math::SimpleNoise::turbulence( 1.0f, 2.0f, 3 );
 
 		// Basic range checks
 		REQUIRE( noise1 >= -2.0f );

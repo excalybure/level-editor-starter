@@ -21,12 +21,13 @@ public:
 	}
 
 	// Seed the generator
-	void seed( unsigned int newSeed )
+	void seed( const unsigned int newSeed )
 	{
 		m_generator.seed( newSeed );
 	}
 
 	// Get the current seed (approximation - returns a state-based value)
+	// Note: This method modifies internal state and cannot be const
 	unsigned int getSeed()
 	{
 		// Note: std::mt19937 doesn't provide direct seed access
@@ -41,20 +42,20 @@ public:
 	}
 
 	// Random float in range [min, max)
-	float range( float min, float max )
+	float range( const float min, const float max )
 	{
 		return min + random() * ( max - min );
 	}
 
 	// Random integer in range [min, max] (inclusive)
-	int range( int min, int max )
+	int range( const int min, const int max )
 	{
 		std::uniform_int_distribution<int> dist( min, max );
 		return dist( m_generator );
 	}
 
 	// Random boolean with given probability of true
-	bool chance( float probability = 0.5f )
+	bool chance( const float probability = 0.5f )
 	{
 		return random() < probability;
 	}
@@ -95,16 +96,16 @@ public:
 	template <typename Container>
 	auto &choice( Container &container )
 	{
-		auto size = container.size();
-		auto index = range( 0, static_cast<int>( size ) - 1 );
+		const auto size = container.size();
+		const auto index = range( 0, static_cast<int>( size ) - 1 );
 		return container[index];
 	}
 
 	template <typename Container>
 	const auto &choice( const Container &container )
 	{
-		auto size = container.size();
-		auto index = range( 0, static_cast<int>( size ) - 1 );
+		const auto size = container.size();
+		const auto index = range( 0, static_cast<int>( size ) - 1 );
 		return container[index];
 	}
 
@@ -112,10 +113,10 @@ public:
 	template <typename Container>
 	void shuffle( Container &container )
 	{
-		auto size = container.size();
+		const auto size = container.size();
 		for ( size_t i = size - 1; i > 0; --i )
 		{
-			size_t j = range( 0, static_cast<int>( i ) );
+			const size_t j = range( 0, static_cast<int>( i ) );
 			std::swap( container[i], container[j] );
 		}
 	}
@@ -129,15 +130,15 @@ inline float random()
 {
 	return globalRandom.random();
 }
-inline float random( float min, float max )
+inline float random( const float min, const float max )
 {
 	return globalRandom.range( min, max );
 }
-inline int randomInt( int min, int max )
+inline int randomInt( const int min, const int max )
 {
 	return globalRandom.range( min, max );
 }
-inline bool randomBool( float probability = 0.5f )
+inline bool randomBool( const float probability = 0.5f )
 {
 	return globalRandom.chance( probability );
 }
@@ -180,81 +181,85 @@ private:
     };
 	// clang-format on
 
-	static float fade( float t )
+	static float fade( const float t )
 	{
 		// Fade function: 6t^5 - 15t^4 + 10t^3
 		return t * t * t * ( t * ( t * 6.0f - 15.0f ) + 10.0f );
 	}
 
-	static float grad( int hash, float x, float y )
+	static float grad( const int hash, const float x, const float y )
 	{
 		// Convert hash to gradient vector
-		int h = hash & 3;
-		float u = h < 2 ? x : y;
-		float v = h < 2 ? y : x;
+		const int h = hash & 3;
+		const float u = h < 2 ? x : y;
+		const float v = h < 2 ? y : x;
 		return ( ( h & 1 ) == 0 ? u : -u ) + ( ( h & 2 ) == 0 ? v : -v );
 	}
 
 public:
 	// 2D Perlin-style noise function
-	static float perlinNoise( float x, float y )
+	static float perlinNoise( const float x, const float y )
 	{
 		// Find unit square containing point
-		int xi = static_cast<int>( floor( x ) ) & NOISE_MASK;
-		int yi = static_cast<int>( floor( y ) ) & NOISE_MASK;
+		const int xi = static_cast<int>( math::floor( x ) ) & NOISE_MASK;
+		const int yi = static_cast<int>( math::floor( y ) ) & NOISE_MASK;
 
 		// Find relative position in square
-		float xf = x - floor( x );
-		float yf = y - floor( y );
+		const float xf = x - math::floor( x );
+		const float yf = y - math::floor( y );
 
 		// Compute fade curves
-		float u = fade( xf );
-		float v = fade( yf );
+		const float u = fade( xf );
+		const float v = fade( yf );
 
 		// Hash coordinates of square corners
-		int aa = permutation[permutation[xi] + yi];
-		int ab = permutation[permutation[xi] + yi + 1];
-		int ba = permutation[permutation[xi + 1] + yi];
-		int bb = permutation[permutation[xi + 1] + yi + 1];
+		const int aa = permutation[permutation[xi] + yi];
+		const int ab = permutation[permutation[xi] + yi + 1];
+		const int ba = permutation[permutation[xi + 1] + yi];
+		const int bb = permutation[permutation[xi + 1] + yi + 1];
 
 		// Blend the results from the corners
-		float x1 = lerp( grad( aa, xf, yf ), grad( ba, xf - 1.0f, yf ), u );
-		float x2 = lerp( grad( ab, xf, yf - 1.0f ), grad( bb, xf - 1.0f, yf - 1.0f ), u );
+		const float x1 = math::lerp( grad( aa, xf, yf ), grad( ba, xf - 1.0f, yf ), u );
+		const float x2 = math::lerp( grad( ab, xf, yf - 1.0f ), grad( bb, xf - 1.0f, yf - 1.0f ), u );
 
-		return lerp( x1, x2, v );
+		return math::lerp( x1, x2, v );
 	}
 
 	// Fractal noise (multiple octaves of Perlin noise)
-	static float fractalNoise( float x, float y, int octaves = 4, float frequency = 1.0f, float amplitude = 1.0f, float persistence = 0.5f )
+	static float fractalNoise( const float x, const float y, const int octaves = 4, const float frequency = 1.0f, const float amplitude = 1.0f, const float persistence = 0.5f )
 	{
 		float total = 0.0f;
 		float maxValue = 0.0f;
+		float currentAmplitude = amplitude;
+		float currentFrequency = frequency;
 
 		for ( int i = 0; i < octaves; i++ )
 		{
-			total += perlinNoise( x * frequency, y * frequency ) * amplitude;
-			maxValue += amplitude;
+			total += perlinNoise( x * currentFrequency, y * currentFrequency ) * currentAmplitude;
+			maxValue += currentAmplitude;
 
-			amplitude *= persistence;
-			frequency *= 2.0f;
+			currentAmplitude *= persistence;
+			currentFrequency *= 2.0f;
 		}
 
 		return total / maxValue; // Normalize to [-1, 1]
 	}
 
 	// Turbulence (absolute value of fractal noise)
-	static float turbulence( float x, float y, int octaves = 4, float frequency = 1.0f, float amplitude = 1.0f, float persistence = 0.5f )
+	static float turbulence( const float x, const float y, const int octaves = 4, const float frequency = 1.0f, const float amplitude = 1.0f, const float persistence = 0.5f )
 	{
 		float total = 0.0f;
 		float maxValue = 0.0f;
+		float currentAmplitude = amplitude;
+		float currentFrequency = frequency;
 
 		for ( int i = 0; i < octaves; i++ )
 		{
-			total += math::abs( perlinNoise( x * frequency, y * frequency ) ) * amplitude;
-			maxValue += amplitude;
+			total += math::abs( perlinNoise( x * currentFrequency, y * currentFrequency ) ) * currentAmplitude;
+			maxValue += currentAmplitude;
 
-			amplitude *= persistence;
-			frequency *= 2.0f;
+			currentAmplitude *= persistence;
+			currentFrequency *= 2.0f;
 		}
 
 		return total / maxValue; // Normalize to [0, 1]
@@ -262,15 +267,15 @@ public:
 };
 
 // Convenience noise functions
-inline float perlinNoise( float x, float y )
+inline float perlinNoise( const float x, const float y )
 {
 	return SimpleNoise::perlinNoise( x, y );
 }
-inline float fractalNoise( float x, float y, int octaves = 4 )
+inline float fractalNoise( const float x, const float y, const int octaves = 4 )
 {
 	return SimpleNoise::fractalNoise( x, y, octaves );
 }
-inline float turbulence( float x, float y, int octaves = 4 )
+inline float turbulence( const float x, const float y, const int octaves = 4 )
 {
 	return SimpleNoise::turbulence( x, y, octaves );
 }
