@@ -16,6 +16,14 @@ target_sources(engine.vec PUBLIC
 )
 target_compile_features(engine.vec PUBLIC cxx_std_23)
 
+add_library(engine.matrix)
+target_sources(engine.matrix PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/matrix.ixx
+)
+target_compile_features(engine.matrix PUBLIC cxx_std_23)
+target_link_libraries(engine.matrix PUBLIC engine.vec)
+
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -47,13 +55,13 @@ target_compile_features(editor.ui PUBLIC cxx_std_23)
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec runtime.ecs runtime.app platform.win32 editor.ui
+  engine.vec engine.matrix runtime.ecs runtime.app platform.win32 editor.ui
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.vec runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.vec engine.matrix runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -70,6 +78,14 @@ if(BUILD_TESTING)
   if (MSVC)
     target_compile_options(math_tests PRIVATE /W4 /permissive- /std:c++latest)
   endif()
+  
+  add_executable(matrix_tests tests/matrix_tests.cpp)
+  target_link_libraries(matrix_tests PRIVATE engine.matrix Catch2::Catch2WithMain)
+  target_compile_features(matrix_tests PUBLIC cxx_std_23)
+  if (MSVC)
+    target_compile_options(matrix_tests PRIVATE /W4 /permissive- /std:c++latest)
+  endif()
   add_test(NAME math COMMAND math_tests)
+  add_test(NAME matrix COMMAND matrix_tests)
 endif()
 

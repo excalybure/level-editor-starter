@@ -9,7 +9,7 @@
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
     "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
     "chat.tools.terminal.autoApprove": {
-        "rm": false,
+        "rm": true,
         "rmdir": false,
         "del": false,
         "kill": false,
@@ -20,7 +20,7 @@
         "chown": false,
         "git": true,
         "cmake": true,
-        "cd": true,
+        "ctest": true,
         "D:/cod_users/setienne/level-editor-starter/build/vs2022-x64/Debug/math_tests.exe": true,
         "/^Remove-Item\\b/i": true
     }
