@@ -72,7 +72,7 @@ TEST_CASE( "Random class basic functionality", "[math][random]" )
 	SECTION( "chance() returns true/false based on probability" )
 	{
 		math::Random rng( 789 );
-		
+
 		// Test with 0% probability
 		bool anyTrue = false;
 		for ( int i = 0; i < 100; i++ )
@@ -264,7 +264,7 @@ TEST_CASE( "Noise functions", "[math][random]" )
 			{ 0.1f, 0.1f }
 		};
 
-		for ( auto& [x, y] : testCoords )
+		for ( auto &[x, y] : testCoords )
 		{
 			float noise = math::perlinNoise( x, y );
 			// Perlin noise should typically be in range [-1, 1]
@@ -279,7 +279,7 @@ TEST_CASE( "Noise functions", "[math][random]" )
 		float x = 3.14f, y = 2.71f;
 		float noise1 = math::perlinNoise( x, y );
 		float noise2 = math::perlinNoise( x, y );
-		
+
 		REQUIRE_THAT( noise1, WithinAbs( noise2, 1e-6f ) );
 	}
 
@@ -288,11 +288,11 @@ TEST_CASE( "Noise functions", "[math][random]" )
 		// Adjacent points should have similar values (smoothness test)
 		float baseX = 5.0f, baseY = 3.0f;
 		float delta = 0.01f;
-		
+
 		float center = math::perlinNoise( baseX, baseY );
 		float right = math::perlinNoise( baseX + delta, baseY );
 		float up = math::perlinNoise( baseX, baseY + delta );
-		
+
 		// Adjacent values should be close (smoothness)
 		REQUIRE( abs( center - right ) < 0.1f );
 		REQUIRE( abs( center - up ) < 0.1f );
@@ -301,12 +301,12 @@ TEST_CASE( "Noise functions", "[math][random]" )
 	SECTION( "fractalNoise() combines multiple octaves" )
 	{
 		float x = 2.5f, y = 1.8f;
-		
+
 		// Test different octave counts
 		float noise1 = math::fractalNoise( x, y, 1 );
 		float noise4 = math::fractalNoise( x, y, 4 );
 		float noise8 = math::fractalNoise( x, y, 8 );
-		
+
 		// All should be in reasonable range
 		REQUIRE( noise1 >= -2.0f );
 		REQUIRE( noise1 <= 2.0f );
@@ -314,7 +314,7 @@ TEST_CASE( "Noise functions", "[math][random]" )
 		REQUIRE( noise4 <= 2.0f );
 		REQUIRE( noise8 >= -2.0f );
 		REQUIRE( noise8 <= 2.0f );
-		
+
 		// More octaves should generally give different results
 		// (though not guaranteed, so just test they're accessible)
 		REQUIRE( true ); // Basic accessibility test
@@ -329,7 +329,7 @@ TEST_CASE( "Noise functions", "[math][random]" )
 			{ 7.2f, -4.1f }
 		};
 
-		for ( auto& [x, y] : testCoords )
+		for ( auto &[x, y] : testCoords )
 		{
 			float turb = math::turbulence( x, y, 4 );
 			// Turbulence should be positive (absolute values)
