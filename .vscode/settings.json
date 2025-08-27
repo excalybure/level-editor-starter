@@ -27,6 +27,8 @@
     },
     "files.associations": {
         "xutility": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "complex": "cpp",
+        "valarray": "cpp"
     }
 }

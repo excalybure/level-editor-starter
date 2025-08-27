@@ -24,6 +24,14 @@ target_sources(engine.matrix PUBLIC
 target_compile_features(engine.matrix PUBLIC cxx_std_23)
 target_link_libraries(engine.matrix PUBLIC engine.vec)
 
+add_library(engine.quat)
+target_sources(engine.quat PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/quat.ixx
+)
+target_compile_features(engine.quat PUBLIC cxx_std_23)
+target_link_libraries(engine.quat PUBLIC engine.vec)
+
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -61,7 +69,7 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.vec engine.matrix runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.vec engine.matrix engine.quat runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -101,7 +109,15 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     target_compile_options(matrix_tests PRIVATE /W4 /permissive- /std:c++latest)
   endif()
 
+  add_executable(quat_tests tests/quat_tests.cpp)
+  target_link_libraries(quat_tests PRIVATE engine.quat Catch2::Catch2WithMain)
+  target_compile_features(quat_tests PUBLIC cxx_std_23)
+  if (MSVC)
+    target_compile_options(quat_tests PRIVATE /W4 /permissive- /std:c++latest)
+  endif()
+
   add_test(NAME vec COMMAND vec_tests)
   add_test(NAME matrix COMMAND matrix_tests)
+  add_test(NAME quat COMMAND quat_tests)
 endif()
 

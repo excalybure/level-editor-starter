@@ -673,79 +673,79 @@ struct Mat4
 		return *this;
 	}
 
-constexpr Mat4 &operator*=( const Mat4 &rhs )
-{
-	*this = ( *this ) * rhs;
-	return *this;
-}
-
-// Matrix transpose
-constexpr Mat4 transpose() const
-{
-	return {
-		Vec4<T>{ row0.x, row1.x, row2.x, row3.x },
-		Vec4<T>{ row0.y, row1.y, row2.y, row3.y },
-		Vec4<T>{ row0.z, row1.z, row2.z, row3.z },
-		Vec4<T>{ row0.w, row1.w, row2.w, row3.w }
-	};
-}
-
-// Matrix determinant
-constexpr T determinant() const
-{
-	// Using cofactor expansion along the first row
-	const T s0 = row2.z * row3.w - row2.w * row3.z;
-	const T s1 = row2.y * row3.w - row2.w * row3.y;
-	const T s2 = row2.y * row3.z - row2.z * row3.y;
-	const T s3 = row2.x * row3.w - row2.w * row3.x;
-	const T s4 = row2.x * row3.z - row2.z * row3.x;
-	const T s5 = row2.x * row3.y - row2.y * row3.x;
-
-	return row0.x * ( row1.y * s0 - row1.z * s1 + row1.w * s2 ) -
-		row0.y * ( row1.x * s0 - row1.z * s3 + row1.w * s4 ) +
-		row0.z * ( row1.x * s1 - row1.y * s3 + row1.w * s5 ) -
-		row0.w * ( row1.x * s2 - row1.y * s4 + row1.z * s5 );
-}
-
-// Matrix inverse (returns zero matrix if not invertible)
-Mat4 inverse() const
-{
-	const T det = determinant();
-	if ( std::abs( det ) <= std::numeric_limits<T>::epsilon() )
+	constexpr Mat4 &operator*=( const Mat4 &rhs )
 	{
-		return Mat4{}; // Return zero matrix for non-invertible matrices
+		*this = ( *this ) * rhs;
+		return *this;
 	}
 
-	const T invDet = static_cast<T>( 1 ) / det;
+	// Matrix transpose
+	constexpr Mat4 transpose() const
+	{
+		return {
+			Vec4<T>{ row0.x, row1.x, row2.x, row3.x },
+			Vec4<T>{ row0.y, row1.y, row2.y, row3.y },
+			Vec4<T>{ row0.z, row1.z, row2.z, row3.z },
+			Vec4<T>{ row0.w, row1.w, row2.w, row3.w }
+		};
+	}
 
-	// Calculate cofactors and adjugate matrix
-	const T c00 = ( row1.y * ( row2.z * row3.w - row2.w * row3.z ) - row1.z * ( row2.y * row3.w - row2.w * row3.y ) + row1.w * ( row2.y * row3.z - row2.z * row3.y ) ) * invDet;
-	const T c01 = -( row1.x * ( row2.z * row3.w - row2.w * row3.z ) - row1.z * ( row2.x * row3.w - row2.w * row3.x ) + row1.w * ( row2.x * row3.z - row2.z * row3.x ) ) * invDet;
-	const T c02 = ( row1.x * ( row2.y * row3.w - row2.w * row3.y ) - row1.y * ( row2.x * row3.w - row2.w * row3.x ) + row1.w * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
-	const T c03 = -( row1.x * ( row2.y * row3.z - row2.z * row3.y ) - row1.y * ( row2.x * row3.z - row2.z * row3.x ) + row1.z * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+	// Matrix determinant
+	constexpr T determinant() const
+	{
+		// Using cofactor expansion along the first row
+		const T s0 = row2.z * row3.w - row2.w * row3.z;
+		const T s1 = row2.y * row3.w - row2.w * row3.y;
+		const T s2 = row2.y * row3.z - row2.z * row3.y;
+		const T s3 = row2.x * row3.w - row2.w * row3.x;
+		const T s4 = row2.x * row3.z - row2.z * row3.x;
+		const T s5 = row2.x * row3.y - row2.y * row3.x;
 
-	const T c10 = -( row0.y * ( row2.z * row3.w - row2.w * row3.z ) - row0.z * ( row2.y * row3.w - row2.w * row3.y ) + row0.w * ( row2.y * row3.z - row2.z * row3.y ) ) * invDet;
-	const T c11 = ( row0.x * ( row2.z * row3.w - row2.w * row3.z ) - row0.z * ( row2.x * row3.w - row2.w * row3.x ) + row0.w * ( row2.x * row3.z - row2.z * row3.x ) ) * invDet;
-	const T c12 = -( row0.x * ( row2.y * row3.w - row2.w * row3.y ) - row0.y * ( row2.x * row3.w - row2.w * row3.x ) + row0.w * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
-	const T c13 = ( row0.x * ( row2.y * row3.z - row2.z * row3.y ) - row0.y * ( row2.x * row3.z - row2.z * row3.x ) + row0.z * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+		return row0.x * ( row1.y * s0 - row1.z * s1 + row1.w * s2 ) -
+			row0.y * ( row1.x * s0 - row1.z * s3 + row1.w * s4 ) +
+			row0.z * ( row1.x * s1 - row1.y * s3 + row1.w * s5 ) -
+			row0.w * ( row1.x * s2 - row1.y * s4 + row1.z * s5 );
+	}
 
-	const T c20 = ( row0.y * ( row1.z * row3.w - row1.w * row3.z ) - row0.z * ( row1.y * row3.w - row1.w * row3.y ) + row0.w * ( row1.y * row3.z - row1.z * row3.y ) ) * invDet;
-	const T c21 = -( row0.x * ( row1.z * row3.w - row1.w * row3.z ) - row0.z * ( row1.x * row3.w - row1.w * row3.x ) + row0.w * ( row1.x * row3.z - row1.z * row3.x ) ) * invDet;
-	const T c22 = ( row0.x * ( row1.y * row3.w - row1.w * row3.y ) - row0.y * ( row1.x * row3.w - row1.w * row3.x ) + row0.w * ( row1.x * row3.y - row1.y * row3.x ) ) * invDet;
-	const T c23 = -( row0.x * ( row1.y * row3.z - row1.z * row3.y ) - row0.y * ( row1.x * row3.z - row1.z * row3.x ) + row0.z * ( row1.x * row3.y - row1.y * row3.x ) ) * invDet;
+	// Matrix inverse (returns zero matrix if not invertible)
+	Mat4 inverse() const
+	{
+		const T det = determinant();
+		if ( std::abs( det ) <= std::numeric_limits<T>::epsilon() )
+		{
+			return Mat4{}; // Return zero matrix for non-invertible matrices
+		}
 
-	const T c30 = -( row0.y * ( row1.z * row2.w - row1.w * row2.z ) - row0.z * ( row1.y * row2.w - row1.w * row2.y ) + row0.w * ( row1.y * row2.z - row1.z * row2.y ) ) * invDet;
-	const T c31 = ( row0.x * ( row1.z * row2.w - row1.w * row2.z ) - row0.z * ( row1.x * row2.w - row1.w * row2.x ) + row0.w * ( row1.x * row2.z - row1.z * row2.x ) ) * invDet;
-	const T c32 = -( row0.x * ( row1.y * row2.w - row1.w * row2.y ) - row0.y * ( row1.x * row2.w - row1.w * row2.x ) + row0.w * ( row1.x * row2.y - row1.y * row2.x ) ) * invDet;
-	const T c33 = ( row0.x * ( row1.y * row2.z - row1.z * row2.y ) - row0.y * ( row1.x * row2.z - row1.z * row2.x ) + row0.z * ( row1.x * row2.y - row1.y * row2.x ) ) * invDet;
+		const T invDet = static_cast<T>( 1 ) / det;
 
-	return {
-		Vec4<T>{ c00, c01, c02, c03 },
-		Vec4<T>{ c10, c11, c12, c13 },
-		Vec4<T>{ c20, c21, c22, c23 },
-		Vec4<T>{ c30, c31, c32, c33 }
-	};
-}
+		// Calculate cofactors and adjugate matrix
+		const T c00 = ( row1.y * ( row2.z * row3.w - row2.w * row3.z ) - row1.z * ( row2.y * row3.w - row2.w * row3.y ) + row1.w * ( row2.y * row3.z - row2.z * row3.y ) ) * invDet;
+		const T c01 = -( row1.x * ( row2.z * row3.w - row2.w * row3.z ) - row1.z * ( row2.x * row3.w - row2.w * row3.x ) + row1.w * ( row2.x * row3.z - row2.z * row3.x ) ) * invDet;
+		const T c02 = ( row1.x * ( row2.y * row3.w - row2.w * row3.y ) - row1.y * ( row2.x * row3.w - row2.w * row3.x ) + row1.w * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+		const T c03 = -( row1.x * ( row2.y * row3.z - row2.z * row3.y ) - row1.y * ( row2.x * row3.z - row2.z * row3.x ) + row1.z * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+
+		const T c10 = -( row0.y * ( row2.z * row3.w - row2.w * row3.z ) - row0.z * ( row2.y * row3.w - row2.w * row3.y ) + row0.w * ( row2.y * row3.z - row2.z * row3.y ) ) * invDet;
+		const T c11 = ( row0.x * ( row2.z * row3.w - row2.w * row3.z ) - row0.z * ( row2.x * row3.w - row2.w * row3.x ) + row0.w * ( row2.x * row3.z - row2.z * row3.x ) ) * invDet;
+		const T c12 = -( row0.x * ( row2.y * row3.w - row2.w * row3.y ) - row0.y * ( row2.x * row3.w - row2.w * row3.x ) + row0.w * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+		const T c13 = ( row0.x * ( row2.y * row3.z - row2.z * row3.y ) - row0.y * ( row2.x * row3.z - row2.z * row3.x ) + row0.z * ( row2.x * row3.y - row2.y * row3.x ) ) * invDet;
+
+		const T c20 = ( row0.y * ( row1.z * row3.w - row1.w * row3.z ) - row0.z * ( row1.y * row3.w - row1.w * row3.y ) + row0.w * ( row1.y * row3.z - row1.z * row3.y ) ) * invDet;
+		const T c21 = -( row0.x * ( row1.z * row3.w - row1.w * row3.z ) - row0.z * ( row1.x * row3.w - row1.w * row3.x ) + row0.w * ( row1.x * row3.z - row1.z * row3.x ) ) * invDet;
+		const T c22 = ( row0.x * ( row1.y * row3.w - row1.w * row3.y ) - row0.y * ( row1.x * row3.w - row1.w * row3.x ) + row0.w * ( row1.x * row3.y - row1.y * row3.x ) ) * invDet;
+		const T c23 = -( row0.x * ( row1.y * row3.z - row1.z * row3.y ) - row0.y * ( row1.x * row3.z - row1.z * row3.x ) + row0.z * ( row1.x * row3.y - row1.y * row3.x ) ) * invDet;
+
+		const T c30 = -( row0.y * ( row1.z * row2.w - row1.w * row2.z ) - row0.z * ( row1.y * row2.w - row1.w * row2.y ) + row0.w * ( row1.y * row2.z - row1.z * row2.y ) ) * invDet;
+		const T c31 = ( row0.x * ( row1.z * row2.w - row1.w * row2.z ) - row0.z * ( row1.x * row2.w - row1.w * row2.x ) + row0.w * ( row1.x * row2.z - row1.z * row2.x ) ) * invDet;
+		const T c32 = -( row0.x * ( row1.y * row2.w - row1.w * row2.y ) - row0.y * ( row1.x * row2.w - row1.w * row2.x ) + row0.w * ( row1.x * row2.y - row1.y * row2.x ) ) * invDet;
+		const T c33 = ( row0.x * ( row1.y * row2.z - row1.z * row2.y ) - row0.y * ( row1.x * row2.z - row1.z * row2.x ) + row0.z * ( row1.x * row2.y - row1.y * row2.x ) ) * invDet;
+
+		return {
+			Vec4<T>{ c00, c01, c02, c03 },
+			Vec4<T>{ c10, c11, c12, c13 },
+			Vec4<T>{ c20, c21, c22, c23 },
+			Vec4<T>{ c30, c31, c32, c33 }
+		};
+	}
 };
 
 // Scalar-matrix multiplication (commutative property)
