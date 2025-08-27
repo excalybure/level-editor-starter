@@ -9,31 +9,16 @@ export namespace math
 // Seeded random number generator class
 class Random
 {
-private:
-	std::mt19937 m_generator;
-	std::uniform_real_distribution<float> m_uniformFloat{ 0.0f, 1.0f };
-
-	// Helper function to generate uniform random point inside unit disc
-	// Returns the point coordinates and squared length for reuse
+public:
+	// Helper struct for disc coordinates - public for external use
 	struct DiscPoint
 	{
 		float x, y, lengthSquared;
 	};
 
-	DiscPoint insideDisc()
-	{
-		// Use Marsaglia's method for uniform distribution on sphere
-		// This avoids clustering at poles that occurs with naive spherical coordinate sampling
-		float x, y, lengthSquared;
-		do
-		{
-			x = range( -1.0f, 1.0f );
-			y = range( -1.0f, 1.0f );
-			lengthSquared = x * x + y * y;
-		} while ( lengthSquared >= 1.0f || lengthSquared == 0.0f );
-
-		return { x, y, lengthSquared };
-	}
+private:
+	std::mt19937 m_generator;
+	std::uniform_real_distribution<float> m_uniformFloat{ 0.0f, 1.0f };
 
 	// Helper function to project disc coordinates onto sphere with given radius
 	Vec3<float> projectOntoSphereSurface( const DiscPoint &disc, const float radius )
@@ -98,6 +83,23 @@ public:
 	{
 		float angle = range( 0.0f, 2.0f * math::pi<float> );
 		return { math::cos( angle ), math::sin( angle ) };
+	}
+
+	// Generate uniform random point inside unit disc
+	// Returns the point coordinates and squared length for reuse
+	DiscPoint insideDisc()
+	{
+		// Use Marsaglia's method for uniform distribution on sphere
+		// This avoids clustering at poles that occurs with naive spherical coordinate sampling
+		float x, y, lengthSquared;
+		do
+		{
+			x = range( -1.0f, 1.0f );
+			y = range( -1.0f, 1.0f );
+			lengthSquared = x * x + y * y;
+		} while ( lengthSquared >= 1.0f || lengthSquared == 0.0f );
+
+		return { x, y, lengthSquared };
 	}
 
 	// Random point on unit sphere surface
