@@ -23,7 +23,7 @@
         "ctest//b": true,
         "ls": true,
         "tree": true,
-        "math_tests.exe\\b/i": true,
+        ".\\.*\\math_tests.exe\\b/i": true,
         "/^Remove-Item\\b/i": true,
         "/^Get-ChildItem\\b/i": true,
         "/^Move-ChildItem\\b/i": true
@@ -32,6 +32,7 @@
         "xutility": "cpp",
         "random": "cpp",
         "complex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "utility": "cpp"
     }
 }

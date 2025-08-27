@@ -9,12 +9,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 # Libraries (modules)
+add_library(engine.math)
+target_sources(engine.math PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/math.ixx
+)
+target_compile_features(engine.math PUBLIC cxx_std_23)
+
 add_library(engine.vec)
 target_sources(engine.vec PUBLIC
   FILE_SET CXX_MODULES FILES
     src/engine/math/vec.ixx
 )
 target_compile_features(engine.vec PUBLIC cxx_std_23)
+target_link_libraries(engine.vec PUBLIC engine.math)
 
 add_library(engine.matrix)
 target_sources(engine.matrix PUBLIC
@@ -22,7 +30,7 @@ target_sources(engine.matrix PUBLIC
     src/engine/math/matrix.ixx
 )
 target_compile_features(engine.matrix PUBLIC cxx_std_23)
-target_link_libraries(engine.matrix PUBLIC engine.vec)
+target_link_libraries(engine.matrix PUBLIC engine.vec engine.math)
 
 add_library(engine.quat)
 target_sources(engine.quat PUBLIC
@@ -30,7 +38,7 @@ target_sources(engine.quat PUBLIC
     src/engine/math/quat.ixx
 )
 target_compile_features(engine.quat PUBLIC cxx_std_23)
-target_link_libraries(engine.quat PUBLIC engine.vec)
+target_link_libraries(engine.quat PUBLIC engine.vec engine.math)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -69,7 +77,7 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.vec engine.matrix engine.quat runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -101,6 +109,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/quat_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
+    engine.math
     engine.vec 
     engine.matrix 
     engine.quat 

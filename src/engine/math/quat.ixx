@@ -1,5 +1,6 @@
 export module engine.quat;
 import std;
+import engine.math;
 import engine.vec;
 
 export namespace math
@@ -349,20 +350,6 @@ constexpr Quat<T> quatLookRotation( const Vec3<T> &forward, const Vec3<T> &up = 
 			static_cast<T>( 0.25 ) * s
 		};
 	}
-}
-
-// Utility function to convert degrees to radians
-template <typename T>
-constexpr T radians( T degrees )
-{
-	return degrees * static_cast<T>( 0.01745329251994329576923690768489 ); // π/180
-}
-
-// Utility function to convert radians to degrees
-template <typename T>
-constexpr T degrees( T radians )
-{
-	return radians * static_cast<T>( 57.295779513082320876798154814105 ); // 180/π
 }
 
 // Type aliases for common quaternion types
