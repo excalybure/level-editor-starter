@@ -107,6 +107,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/vec_tests.cpp
     tests/matrix_tests.cpp
     tests/quat_tests.cpp
+    tests/math_utils_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
