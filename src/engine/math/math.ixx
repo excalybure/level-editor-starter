@@ -210,4 +210,133 @@ constexpr unsigned int nextPowerOfTwo( unsigned int value )
 	return ++value;
 }
 
+// ============================================================================
+// ADVANCED MATH UTILITIES
+// ============================================================================
+
+// Fast inverse square root (Quake-style algorithm)
+constexpr float fastInverseSqrt( const float value ) noexcept
+{
+	if ( value <= 0.0f )
+		return 0.0f;
+
+	// Use bit manipulation for fast approximation
+	const float threeHalfs = 1.5f;
+	float x2 = value * 0.5f;
+	float y = value;
+
+	// Evil floating point bit level hacking
+	std::uint32_t i = std::bit_cast<std::uint32_t>( y );
+	i = 0x5f3759df - ( i >> 1 ); // What the...?
+	y = std::bit_cast<float>( i );
+
+	// One iteration of Newton's method
+	y = y * ( threeHalfs - ( x2 * y * y ) );
+
+	return y;
+}
+
+// Fast square root approximation
+constexpr float fastSqrt( const float value ) noexcept
+{
+	if ( value <= 0.0f )
+		return 0.0f;
+
+	return value * fastInverseSqrt( value );
+}
+
+// Factorial function
+constexpr unsigned long long factorial( const unsigned int n ) noexcept
+{
+	if ( n > 20 )
+		return 0; // Overflow protection for unsigned long long
+
+	unsigned long long result = 1;
+	for ( unsigned int i = 2; i <= n; ++i )
+	{
+		result *= i;
+	}
+	return result;
+}
+
+// Greatest Common Divisor (Euclidean algorithm)
+constexpr unsigned int gcd( unsigned int a, unsigned int b ) noexcept
+{
+	while ( b != 0 )
+	{
+		const unsigned int temp = b;
+		b = a % b;
+		a = temp;
+	}
+	return a;
+}
+
+// Least Common Multiple
+constexpr unsigned int lcm( const unsigned int a, const unsigned int b ) noexcept
+{
+	if ( a == 0 || b == 0 )
+		return 0;
+
+	const unsigned int gcdValue = gcd( a, b );
+	// Use division to prevent overflow
+	return ( a / gcdValue ) * b;
+}
+
+// Prime number test (trial division)
+constexpr bool isPrime( const unsigned int n ) noexcept
+{
+	if ( n < 2 )
+		return false;
+	if ( n == 2 )
+		return true;
+	if ( n % 2 == 0 )
+		return false;
+
+	// Check odd divisors up to sqrt(n)
+	for ( unsigned int i = 3; i * i <= n; i += 2 )
+	{
+		if ( n % i == 0 )
+			return false;
+	}
+	return true;
+}
+
+// Count set bits (population count)
+constexpr unsigned int countBits( unsigned int value ) noexcept
+{
+	unsigned int count = 0;
+	while ( value )
+	{
+		count += value & 1;
+		value >>= 1;
+	}
+	return count;
+}
+
+// Reverse bits in a 32-bit integer
+constexpr unsigned int reverseBits( unsigned int value ) noexcept
+{
+	unsigned int result = 0;
+	for ( int i = 0; i < 32; ++i )
+	{
+		result = ( result << 1 ) | ( value & 1 );
+		value >>= 1;
+	}
+	return result;
+}
+
+// Rotate bits left
+constexpr unsigned int rotateLeft( const unsigned int value, const int shift ) noexcept
+{
+	const int normalizedShift = shift & 31; // Ensure shift is in range [0, 31]
+	return ( value << normalizedShift ) | ( value >> ( 32 - normalizedShift ) );
+}
+
+// Rotate bits right
+constexpr unsigned int rotateRight( const unsigned int value, const int shift ) noexcept
+{
+	const int normalizedShift = shift & 31; // Ensure shift is in range [0, 31]
+	return ( value >> normalizedShift ) | ( value << ( 32 - normalizedShift ) );
+}
+
 } // namespace math
