@@ -1,16 +1,5 @@
-module; // global module fragment for traditional includes prior to module declaration
-#if defined( __SSE__ ) || defined( _M_X64 ) || ( defined( _M_IX86_FP ) && _M_IX86_FP >= 2 )
-#include <xmmintrin.h>
-#include <emmintrin.h>
-#endif
-// Standard library headers required (avoid relying solely on experimental 'import std;')
-#include <cmath>
-#include <algorithm>
-#include <limits>
-#include <utility>
-#include <cstdint>
-
 export module engine.math;
+import std;
 
 export namespace math
 {
@@ -359,107 +348,6 @@ constexpr bool nearEqual( const V &a, const V &b, typename V::value_type eps = s
 	else
 		return std::abs( a.x - b.x ) <= eps && std::abs( a.y - b.y ) <= eps;
 }
-
-// SIMD specializations (SSE2+) - placed after generic templates
-// SIMD specializations for float vectors (SSE2 only, using store-based reduction for portability)
-#if defined( __SSE__ ) || defined( _M_X64 ) || ( defined( _M_IX86_FP ) && _M_IX86_FP >= 2 )
-namespace detail
-{
-inline float hsum2_xy( __m128 v )
-{
-	alignas( 16 ) float vals[4];
-	_mm_storeu_ps( vals, v );
-	return vals[0] + vals[1];
-}
-inline float hsum3_xyz( __m128 v )
-{
-	alignas( 16 ) float vals[4];
-	_mm_storeu_ps( vals, v );
-	return vals[0] + vals[1] + vals[2];
-}
-inline float hsum4_xyzw( __m128 v )
-{
-	alignas( 16 ) float vals[4];
-	_mm_storeu_ps( vals, v );
-	return vals[0] + vals[1] + vals[2] + vals[3];
-}
-} // namespace detail
-
-export inline float dot( const Vec2<float> &a, const Vec2<float> &b ) noexcept
-{
-	const __m128 va = _mm_set_ps( 0.0f, 0.0f, a.y, a.x );
-	const __m128 vb = _mm_set_ps( 0.0f, 0.0f, b.y, b.x );
-	return detail::hsum2_xy( _mm_mul_ps( va, vb ) );
-}
-
-export inline float dot( const Vec3<float> &a, const Vec3<float> &b ) noexcept
-{
-	const __m128 va = _mm_set_ps( 0.0f, a.z, a.y, a.x );
-	const __m128 vb = _mm_set_ps( 0.0f, b.z, b.y, b.x );
-	return detail::hsum3_xyz( _mm_mul_ps( va, vb ) );
-}
-
-export inline float dot( const Vec4<float> &a, const Vec4<float> &b ) noexcept
-{
-	const __m128 va = _mm_set_ps( a.w, a.z, a.y, a.x );
-	const __m128 vb = _mm_set_ps( b.w, b.z, b.y, b.x );
-	return detail::hsum4_xyzw( _mm_mul_ps( va, vb ) );
-}
-
-// lengthSquared specializations
-export inline float lengthSquared( const Vec2<float> &v ) noexcept
-{
-	return dot( v, v );
-}
-export inline float lengthSquared( const Vec3<float> &v ) noexcept
-{
-	return dot( v, v );
-}
-export inline float lengthSquared( const Vec4<float> &v ) noexcept
-{
-	return dot( v, v );
-}
-
-// length
-export inline float length( const Vec2<float> &v ) noexcept
-{
-	return std::sqrt( lengthSquared( v ) );
-}
-export inline float length( const Vec3<float> &v ) noexcept
-{
-	return std::sqrt( lengthSquared( v ) );
-}
-export inline float length( const Vec4<float> &v ) noexcept
-{
-	return std::sqrt( lengthSquared( v ) );
-}
-
-// normalize
-export inline Vec2<float> normalize( const Vec2<float> &v ) noexcept
-{
-	float ls = lengthSquared( v );
-	if ( ls <= std::numeric_limits<float>::epsilon() )
-		return {};
-	float inv = 1.0f / std::sqrt( ls );
-	return { v.x * inv, v.y * inv };
-}
-export inline Vec3<float> normalize( const Vec3<float> &v ) noexcept
-{
-	float ls = lengthSquared( v );
-	if ( ls <= std::numeric_limits<float>::epsilon() )
-		return {};
-	float inv = 1.0f / std::sqrt( ls );
-	return { v.x * inv, v.y * inv, v.z * inv };
-}
-export inline Vec4<float> normalize( const Vec4<float> &v ) noexcept
-{
-	float ls = lengthSquared( v );
-	if ( ls <= std::numeric_limits<float>::epsilon() )
-		return {};
-	float inv = 1.0f / std::sqrt( ls );
-	return { v.x * inv, v.y * inv, v.z * inv, v.w * inv };
-}
-#endif // SIMD specializations
 
 // Clamp each component of v to [minValue, maxValue]
 template <typename V>
