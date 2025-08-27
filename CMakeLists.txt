@@ -40,6 +40,14 @@ target_sources(engine.quat PUBLIC
 target_compile_features(engine.quat PUBLIC cxx_std_23)
 target_link_libraries(engine.quat PUBLIC engine.vec engine.math)
 
+add_library(engine.color)
+target_sources(engine.color PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/color.ixx
+)
+target_compile_features(engine.color PUBLIC cxx_std_23)
+target_link_libraries(engine.color PUBLIC engine.math)
+
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -77,7 +85,7 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -114,6 +122,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.vec 
     engine.matrix 
     engine.quat 
+    engine.color
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)
