@@ -20,7 +20,7 @@
         "chown": false,
         "git": true,
         "cmake": true,
-        "/^ctest//b": true,
+        "/^ctest\\b/": true,
         "ls": true,
         "tree": true,
         "/^.*\\math_tests.exe\\b/i": true,

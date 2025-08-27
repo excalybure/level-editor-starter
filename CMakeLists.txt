@@ -48,6 +48,14 @@ target_sources(engine.color PUBLIC
 target_compile_features(engine.color PUBLIC cxx_std_23)
 target_link_libraries(engine.color PUBLIC engine.math)
 
+add_library(engine.random)
+target_sources(engine.random PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/random.ixx
+)
+target_compile_features(engine.random PUBLIC cxx_std_23)
+target_link_libraries(engine.random PUBLIC engine.math engine.vec)
+
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -116,6 +124,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/matrix_tests.cpp
     tests/quat_tests.cpp
     tests/math_utils_tests.cpp
+    tests/random_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -123,6 +132,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.matrix 
     engine.quat 
     engine.color
+    engine.random
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)

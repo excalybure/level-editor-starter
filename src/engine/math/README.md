@@ -1,6 +1,30 @@
 # Engine Math Library
 
-This directory contains the math modules for the engine, providing comprehensive mathematical utilities for game development and level editing.
+This directory contains the math modules f### `quat.ixx` - Quaternion Operations
+**Status: ✅ Complete**
+- Quaternion class with full arithmetic support
+- Euler angle conversions
+- Spherical linear interpolation (slerp)
+- Rotation utilities and factory functions
+
+## 🚀 Future Enhancement Roadmap
+
+### 🎲 **Random Number Utilities** (Priority: High) ✅ **COMPLETED**
+Essential for procedural generation, testing, and dynamic content.
+
+**✅ Implemented Functions:**
+- `Random` class with seeded generation using Mersenne Twister
+- `seed(unsigned int)`, `random()`, `range(min, max)` for floats and integers
+- `chance(probability)` - Random boolean with specified probability
+- `unitCircle()`, `unitSphere()`, `insideSphere()`, `insideCube()` - Geometric sampling
+- `choice(container)` - Random element selection from containers
+- `shuffle(container)` - Fisher-Yates shuffle algorithm
+- `perlinNoise(x, y)` - 2D Perlin noise implementation
+- `fractalNoise(x, y, octaves)` - Multi-octave fractal noise
+- `turbulence(x, y, octaves)` - Absolute value fractal noise for turbulence effects
+- Global convenience functions: `random()`, `randomInt()`, `randomBool()`, etc.
+
+**🧪 Test Coverage:** 3460 assertions across 5 test cases covering deterministic seeding, range validation, geometric distributions, container operations, and noise function properties.ding comprehensive mathematical utilities for game development and level editing.
 
 ## 📁 Current Modules
 
@@ -41,12 +65,14 @@ This directory contains the math modules for the engine, providing comprehensive
 - View and projection matrices
 - Matrix decomposition and utilities
 
-### `quat.ixx` - Quaternion Operations
+### `random.ixx` - Random Number Utilities
 **Status: ✅ Complete**
-- Quaternion class with full arithmetic support
-- Euler angle conversions
-- Spherical linear interpolation (slerp)
-- Rotation utilities and factory functions
+- Seeded random number generator class (Random)
+- Random value generation (float ranges, integer ranges, boolean chance)
+- Geometric random functions (unit circle, unit sphere, inside sphere, inside cube)
+- Container utilities (random choice, Fisher-Yates shuffle)
+- Noise functions (Perlin noise, fractal noise, turbulence)
+- Global convenience functions for quick random access
 
 ## 🚀 Future Enhancement Roadmap
 
@@ -198,8 +224,8 @@ All math functions include comprehensive unit tests in `tests/math_utils_tests.c
 
 **Recommended implementation order:**
 1. ~~**Color Math Functions**~~ ✅ **COMPLETED** - Essential for any visual editor
-2. **Easing Functions** - Critical for smooth UI/UX
-3. **Random Utilities** - Needed for procedural content and testing
+2. ~~**Random Number Utilities**~~ ✅ **COMPLETED** - Essential for procedural generation, testing, and dynamic content
+3. **Easing Functions** - Critical for smooth UI/UX
 4. **2D Geometry** - Important for spatial operations and collision detection
 5. **Advanced Math Utilities** - Nice-to-have optimizations
 6. **Statistics Functions** - Useful for debugging and profiling tools
