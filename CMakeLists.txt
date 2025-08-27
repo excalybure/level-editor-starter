@@ -70,21 +70,37 @@ endif()
 # Testing (Catch2 via vcpkg manifest)
 # -----------------------------------------------------------------------------
 include(CTest)
-if(BUILD_TESTING)
-  find_package(Catch2 3 REQUIRED)
+
+# Allow user to force-disable tests: -DENABLE_TESTS=OFF
+option(ENABLE_TESTS "Build unit tests" ON)
+if(NOT BUILD_TESTING)
+  set(ENABLE_TESTS OFF)
+endif()
+
+if(ENABLE_TESTS)
+  # Try to locate Catch2 via vcpkg (toolchain) first; fall back gracefully.
+  find_package(Catch2 3 QUIET CONFIG)
+  if(NOT Catch2_FOUND)
+    message(WARNING "Catch2 v3 not found via toolchain. Tests will be skipped. To enable tests ensure vcpkg toolchain is used or install Catch2 and re-configure.")
+    set(ENABLE_TESTS OFF)
+  endif()
+endif()
+
+if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(vec_tests tests/vec_tests.cpp)
   target_link_libraries(vec_tests PRIVATE engine.vec Catch2::Catch2WithMain)
   target_compile_features(vec_tests PUBLIC cxx_std_23)
   if (MSVC)
     target_compile_options(vec_tests PRIVATE /W4 /permissive- /std:c++latest)
   endif()
-  
+
   add_executable(matrix_tests tests/matrix_tests.cpp)
   target_link_libraries(matrix_tests PRIVATE engine.matrix Catch2::Catch2WithMain)
   target_compile_features(matrix_tests PUBLIC cxx_std_23)
   if (MSVC)
     target_compile_options(matrix_tests PRIVATE /W4 /permissive- /std:c++latest)
   endif()
+
   add_test(NAME vec COMMAND vec_tests)
   add_test(NAME matrix COMMAND matrix_tests)
 endif()
