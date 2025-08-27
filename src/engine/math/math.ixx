@@ -194,6 +194,13 @@ constexpr bool isPowerOfTwo( unsigned int value )
 // Next power of two
 constexpr unsigned int nextPowerOfTwo( unsigned int value )
 {
+	if ( value == 0 )
+		return 1;
+
+	// If the value is already a power of two, we want the next one
+	if ( isPowerOfTwo( value ) )
+		value++;
+
 	--value;
 	value |= value >> 1;
 	value |= value >> 2;

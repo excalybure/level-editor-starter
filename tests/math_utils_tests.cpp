@@ -250,7 +250,7 @@ TEST_CASE( "Modulo and wrap functions", "[math][mod]" )
 	SECTION( "modulo function" )
 	{
 		REQUIRE_THAT( math::mod( 7.0f, 3.0f ), WithinRel( 1.0f, 1e-5f ) );
-		REQUIRE_THAT( math::mod( -7.0f, 3.0f ), WithinRel( 2.0f, 1e-5f ) );
+		REQUIRE_THAT( math::mod( -7.0f, 3.0f ), WithinRel( -1.0f, 1e-5f ) ); // std::fmod(-7, 3) = -1
 		REQUIRE_THAT( math::mod( 6.0, 3.0 ), WithinAbs( 0.0, 1e-10 ) );
 	}
 
