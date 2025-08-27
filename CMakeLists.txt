@@ -95,29 +95,22 @@ if(ENABLE_TESTS)
 endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
-  add_executable(vec_tests tests/vec_tests.cpp)
-  target_link_libraries(vec_tests PRIVATE engine.vec Catch2::Catch2WithMain)
-  target_compile_features(vec_tests PUBLIC cxx_std_23)
+  add_executable(math_tests 
+    tests/vec_tests.cpp
+    tests/matrix_tests.cpp
+    tests/quat_tests.cpp
+  )
+  target_link_libraries(math_tests PRIVATE 
+    engine.vec 
+    engine.matrix 
+    engine.quat 
+    Catch2::Catch2WithMain
+  )
+  target_compile_features(math_tests PUBLIC cxx_std_23)
   if (MSVC)
-    target_compile_options(vec_tests PRIVATE /W4 /permissive- /std:c++latest)
+    target_compile_options(math_tests PRIVATE /W4 /permissive- /std:c++latest)
   endif()
 
-  add_executable(matrix_tests tests/matrix_tests.cpp)
-  target_link_libraries(matrix_tests PRIVATE engine.matrix Catch2::Catch2WithMain)
-  target_compile_features(matrix_tests PUBLIC cxx_std_23)
-  if (MSVC)
-    target_compile_options(matrix_tests PRIVATE /W4 /permissive- /std:c++latest)
-  endif()
-
-  add_executable(quat_tests tests/quat_tests.cpp)
-  target_link_libraries(quat_tests PRIVATE engine.quat Catch2::Catch2WithMain)
-  target_compile_features(quat_tests PUBLIC cxx_std_23)
-  if (MSVC)
-    target_compile_options(quat_tests PRIVATE /W4 /permissive- /std:c++latest)
-  endif()
-
-  add_test(NAME vec COMMAND vec_tests)
-  add_test(NAME matrix COMMAND matrix_tests)
-  add_test(NAME quat COMMAND quat_tests)
+  add_test(NAME math COMMAND math_tests)
 endif()
 
