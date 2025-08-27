@@ -20,10 +20,10 @@ TEST_CASE( "Mat2 basic operations", "[math][matrix][mat2]" )
 
 	SECTION( "Identity matrix properties" )
 	{
-		REQUIRE( identity.m00 == 1.0f );
-		REQUIRE( identity.m11 == 1.0f );
-		REQUIRE( identity.m01 == 0.0f );
-		REQUIRE( identity.m10 == 0.0f );
+		REQUIRE( identity.m00() == 1.0f );
+		REQUIRE( identity.m11() == 1.0f );
+		REQUIRE( identity.m01() == 0.0f );
+		REQUIRE( identity.m10() == 0.0f );
 
 		Vec2<float> v{ 3.0f, 4.0f };
 		Vec2<float> result = identity * v;
@@ -38,31 +38,31 @@ TEST_CASE( "Mat2 basic operations", "[math][matrix][mat2]" )
 
 		// Addition
 		Mat2<float> sum = a + b;
-		REQUIRE( sum.m00 == 6.0f );
-		REQUIRE( sum.m01 == 8.0f );
-		REQUIRE( sum.m10 == 10.0f );
-		REQUIRE( sum.m11 == 12.0f );
+		REQUIRE( sum.m00() == 6.0f );
+		REQUIRE( sum.m01() == 8.0f );
+		REQUIRE( sum.m10() == 10.0f );
+		REQUIRE( sum.m11() == 12.0f );
 
 		// Subtraction
 		Mat2<float> diff = b - a;
-		REQUIRE( diff.m00 == 4.0f );
-		REQUIRE( diff.m01 == 4.0f );
-		REQUIRE( diff.m10 == 4.0f );
-		REQUIRE( diff.m11 == 4.0f );
+		REQUIRE( diff.m00() == 4.0f );
+		REQUIRE( diff.m01() == 4.0f );
+		REQUIRE( diff.m10() == 4.0f );
+		REQUIRE( diff.m11() == 4.0f );
 
 		// Scalar multiplication
 		Mat2<float> scaled = a * 2.0f;
-		REQUIRE( scaled.m00 == 2.0f );
-		REQUIRE( scaled.m01 == 4.0f );
-		REQUIRE( scaled.m10 == 6.0f );
-		REQUIRE( scaled.m11 == 8.0f );
+		REQUIRE( scaled.m00() == 2.0f );
+		REQUIRE( scaled.m01() == 4.0f );
+		REQUIRE( scaled.m10() == 6.0f );
+		REQUIRE( scaled.m11() == 8.0f );
 
 		// Matrix multiplication
 		Mat2<float> product = a * b;
-		REQUIRE( product.m00 == 19.0f ); // 1*5 + 2*7
-		REQUIRE( product.m01 == 22.0f ); // 1*6 + 2*8
-		REQUIRE( product.m10 == 43.0f ); // 3*5 + 4*7
-		REQUIRE( product.m11 == 50.0f ); // 3*6 + 4*8
+		REQUIRE( product.m00() == 19.0f ); // 1*5 + 2*7
+		REQUIRE( product.m01() == 22.0f ); // 1*6 + 2*8
+		REQUIRE( product.m10() == 43.0f ); // 3*5 + 4*7
+		REQUIRE( product.m11() == 50.0f ); // 3*6 + 4*8
 	}
 
 	SECTION( "Determinant and inverse" )
@@ -73,17 +73,17 @@ TEST_CASE( "Mat2 basic operations", "[math][matrix][mat2]" )
 		REQUIRE( det == 10.0f ); // 4*6 - 7*2
 
 		Mat2<float> inv = m.inverse();
-		REQUIRE( inv.m00 == Approx( 0.6f ) );
-		REQUIRE( inv.m01 == Approx( -0.7f ) );
-		REQUIRE( inv.m10 == Approx( -0.2f ) );
-		REQUIRE( inv.m11 == Approx( 0.4f ) );
+		REQUIRE( inv.m00() == Approx( 0.6f ) );
+		REQUIRE( inv.m01() == Approx( -0.7f ) );
+		REQUIRE( inv.m10() == Approx( -0.2f ) );
+		REQUIRE( inv.m11() == Approx( 0.4f ) );
 
 		// Test inverse: m * m^-1 = identity
 		Mat2<float> result = m * inv;
-		REQUIRE( result.m00 == Approx( 1.0f ) );
-		REQUIRE( result.m01 == Approx( 0.0f ) );
-		REQUIRE( result.m10 == Approx( 0.0f ) );
-		REQUIRE( result.m11 == Approx( 1.0f ) );
+		REQUIRE( result.m00() == Approx( 1.0f ) );
+		REQUIRE( result.m01() == Approx( 0.0f ) );
+		REQUIRE( result.m10() == Approx( 0.0f ) );
+		REQUIRE( result.m11() == Approx( 1.0f ) );
 	}
 
 	SECTION( "Rotation matrix" )
@@ -105,9 +105,9 @@ TEST_CASE( "Mat3 basic operations", "[math][matrix][mat3]" )
 
 	SECTION( "Identity matrix properties" )
 	{
-		REQUIRE( identity.m00 == 1.0f );
-		REQUIRE( identity.m11 == 1.0f );
-		REQUIRE( identity.m22 == 1.0f );
+		REQUIRE( identity.m00() == 1.0f );
+		REQUIRE( identity.m11() == 1.0f );
+		REQUIRE( identity.m22() == 1.0f );
 
 		Vec3<float> v{ 3.0f, 4.0f, 5.0f };
 		Vec3<float> result = identity * v;
@@ -166,15 +166,15 @@ TEST_CASE( "Mat3 basic operations", "[math][matrix][mat3]" )
 
 		// Test inverse: m * m^-1 = identity
 		Mat3<float> result = m * inv;
-		REQUIRE( result.m00 == Approx( 1.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m11 == Approx( 1.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m22 == Approx( 1.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m01 == Approx( 0.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m02 == Approx( 0.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m10 == Approx( 0.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m12 == Approx( 0.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m20 == Approx( 0.0f ).margin( 1e-5f ) );
-		REQUIRE( result.m21 == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m00() == Approx( 1.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m11() == Approx( 1.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m22() == Approx( 1.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m01() == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m02() == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m10() == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m12() == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m20() == Approx( 0.0f ).margin( 1e-5f ) );
+		REQUIRE( result.m21() == Approx( 0.0f ).margin( 1e-5f ) );
 	}
 }
 
