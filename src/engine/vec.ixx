@@ -1,4 +1,4 @@
-export module engine.math;
+export module engine.vec;
 import std;
 
 export namespace math

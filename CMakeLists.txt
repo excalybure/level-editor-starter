@@ -9,12 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 # Libraries (modules)
-add_library(engine.math)
-target_sources(engine.math PUBLIC
+add_library(engine.vec)
+target_sources(engine.vec PUBLIC
   FILE_SET CXX_MODULES FILES
-    src/engine/math.ixx
+    src/engine/vec.ixx
 )
-target_compile_features(engine.math PUBLIC cxx_std_23)
+target_compile_features(engine.vec PUBLIC cxx_std_23)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -47,13 +47,13 @@ target_compile_features(editor.ui PUBLIC cxx_std_23)
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.math runtime.ecs runtime.app platform.win32 editor.ui
+  engine.vec runtime.ecs runtime.app platform.win32 editor.ui
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.math runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.vec runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -65,7 +65,7 @@ include(CTest)
 if(BUILD_TESTING)
   find_package(Catch2 3 REQUIRED)
   add_executable(math_tests tests/math_tests.cpp)
-  target_link_libraries(math_tests PRIVATE engine.math Catch2::Catch2WithMain)
+  target_link_libraries(math_tests PRIVATE engine.vec Catch2::Catch2WithMain)
   target_compile_features(math_tests PUBLIC cxx_std_23)
   if (MSVC)
     target_compile_options(math_tests PRIVATE /W4 /permissive- /std:c++latest)
