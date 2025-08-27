@@ -22,6 +22,6 @@
         "cmake": true,
         "cd": true,
         "D:/cod_users/setienne/level-editor-starter/build/vs2022-x64/Debug/math_tests.exe": true,
-        "/^Remove-Item\\b/i": false
+        "/^Remove-Item\\b/i": true
     }
 }
