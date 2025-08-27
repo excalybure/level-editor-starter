@@ -12,14 +12,14 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 add_library(engine.vec)
 target_sources(engine.vec PUBLIC
   FILE_SET CXX_MODULES FILES
-    src/engine/vec.ixx
+    src/engine/math/vec.ixx
 )
 target_compile_features(engine.vec PUBLIC cxx_std_23)
 
 add_library(engine.matrix)
 target_sources(engine.matrix PUBLIC
   FILE_SET CXX_MODULES FILES
-    src/engine/matrix.ixx
+    src/engine/math/matrix.ixx
 )
 target_compile_features(engine.matrix PUBLIC cxx_std_23)
 target_link_libraries(engine.matrix PUBLIC engine.vec)
@@ -27,7 +27,7 @@ target_link_libraries(engine.matrix PUBLIC engine.vec)
 add_library(engine.quat)
 target_sources(engine.quat PUBLIC
   FILE_SET CXX_MODULES FILES
-    src/engine/quat.ixx
+    src/engine/math/quat.ixx
 )
 target_compile_features(engine.quat PUBLIC cxx_std_23)
 target_link_libraries(engine.quat PUBLIC engine.vec)
