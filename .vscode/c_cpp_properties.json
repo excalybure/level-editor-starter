@@ -22,10 +22,10 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.26100.0",
-            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/clang++.exe",
             "cStandard": "c17",
             "cppStandard": "c++23",
-            "intelliSenseMode": "windows-msvc-x64",
+            "intelliSenseMode": "windows-clang-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],

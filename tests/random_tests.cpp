@@ -156,15 +156,15 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 		for ( int i = 0; i < 100; i++ )
 		{
 			const auto disc = rng.insideDisc();
-			
+
 			// Check that points are within unit disc
 			REQUIRE( disc.lengthSquared < 1.0f );
 			REQUIRE( disc.lengthSquared >= 0.0f );
-			
+
 			// Verify lengthSquared matches x^2 + y^2
 			const float actualLengthSquared = disc.x * disc.x + disc.y * disc.y;
 			REQUIRE_THAT( disc.lengthSquared, WithinAbs( actualLengthSquared, 1e-6f ) );
-			
+
 			// Check coordinate bounds (should be in [-1, 1])
 			REQUIRE( disc.x >= -1.0f );
 			REQUIRE( disc.x <= 1.0f );
@@ -176,7 +176,7 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 	SECTION( "insideDisc() provides uniform distribution" )
 	{
 		math::Random rng( 222324 );
-		
+
 		// Sample many points and check distribution properties
 		int quadrant1 = 0, quadrant2 = 0, quadrant3 = 0, quadrant4 = 0;
 		const int numSamples = 1000;
@@ -184,12 +184,16 @@ TEST_CASE( "Random geometric functions", "[math][random]" )
 		for ( int i = 0; i < numSamples; i++ )
 		{
 			const auto disc = rng.insideDisc();
-			
+
 			// Count points in each quadrant
-			if ( disc.x >= 0.0f && disc.y >= 0.0f ) quadrant1++;
-			else if ( disc.x < 0.0f && disc.y >= 0.0f ) quadrant2++;
-			else if ( disc.x < 0.0f && disc.y < 0.0f ) quadrant3++;
-			else quadrant4++;
+			if ( disc.x >= 0.0f && disc.y >= 0.0f )
+				quadrant1++;
+			else if ( disc.x < 0.0f && disc.y >= 0.0f )
+				quadrant2++;
+			else if ( disc.x < 0.0f && disc.y < 0.0f )
+				quadrant3++;
+			else
+				quadrant4++;
 		}
 
 		// Each quadrant should have roughly 25% of points (with some tolerance)

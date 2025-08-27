@@ -8,6 +8,7 @@
     "clang-format.language.cpp.style": "file",
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
     "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
+    "C_Cpp.default.cppStandard": "c++23",
     "chat.tools.terminal.autoApprove": {
         "rm": true,
         "rmdir": false,
