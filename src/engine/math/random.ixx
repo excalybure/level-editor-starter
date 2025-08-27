@@ -13,6 +13,39 @@ private:
 	std::mt19937 m_generator;
 	std::uniform_real_distribution<float> m_uniformFloat{ 0.0f, 1.0f };
 
+	// Helper function to generate uniform random point inside unit disc
+	// Returns the point coordinates and squared length for reuse
+	struct DiscPoint
+	{
+		float x, y, lengthSquared;
+	};
+
+	DiscPoint insideDisc()
+	{
+		// Use Marsaglia's method for uniform distribution on sphere
+		// This avoids clustering at poles that occurs with naive spherical coordinate sampling
+		float x, y, lengthSquared;
+		do
+		{
+			x = range( -1.0f, 1.0f );
+			y = range( -1.0f, 1.0f );
+			lengthSquared = x * x + y * y;
+		} while ( lengthSquared >= 1.0f || lengthSquared == 0.0f );
+
+		return { x, y, lengthSquared };
+	}
+
+	// Helper function to project disc coordinates onto sphere with given radius
+	Vec3<float> projectOntoSphereSurface( const DiscPoint &disc, const float radius )
+	{
+		const float scale = radius * 2.0f * math::sqrt( 1.0f - disc.lengthSquared );
+		return {
+			disc.x * scale,
+			disc.y * scale,
+			radius * ( 1.0f - 2.0f * disc.lengthSquared )
+		};
+	}
+
 public:
 	// Constructor with optional seed
 	Random( unsigned int seed = std::random_device{}() )
@@ -70,20 +103,19 @@ public:
 	// Random point on unit sphere surface
 	Vec3<float> unitSphere()
 	{
-		// Use rejection sampling for uniform distribution
-		float z = range( -1.0f, 1.0f );
-		float angle = range( 0.0f, 2.0f * math::pi<float> );
-		float radius = math::sqrt( 1.0f - z * z );
-		return { radius * math::cos( angle ), radius * math::sin( angle ), z };
+		const auto disc = insideDisc();
+		return projectOntoSphereSurface( disc, 1.0f );
 	}
 
 	// Random point inside unit sphere
 	Vec3<float> insideSphere()
 	{
-		// Generate random point on sphere and scale by random radius
-		Vec3<float> point = unitSphere();
-		float radius = math::pow( random(), 1.0f / 3.0f ); // Cube root for uniform volume distribution
-		return point * radius;
+		const auto disc = insideDisc();
+
+		// Generate uniform radius for volume distribution (cube root for uniform 3D density)
+		const float r = math::pow( random(), 1.0f / 3.0f );
+
+		return projectOntoSphereSurface( disc, r );
 	}
 
 	// Random point inside unit cube
