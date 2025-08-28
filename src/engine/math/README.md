@@ -4,6 +4,7 @@
 - Unit test all new implementation
 - Ensure const-correctness
 - After implementing new functionality, update this file accordingly
+- To build the project, use cmake
 
 This directory contains the math modules f### `quat.ixx` - Quaternion Operations
 **Status: ✅ Complete**
@@ -334,9 +335,25 @@ All math functions include comprehensive unit tests in `tests/math_utils_tests.c
 3. ~~**Easing Functions**~~ ✅ **COMPLETED** - Critical for smooth UI/UX
 4. ~~**Advanced Math Utilities**~~ ✅ **COMPLETED** - Useful for mathematical operations and optimizations
 5. ~~**2D Geometry**~~ ✅ **COMPLETED** - Important for spatial operations and collision detection
-6. **3D Geometry** - **HIGH PRIORITY** - Essential for 3D level editor operations, ray casting, and collision detection
-7. **Curve and Spline Functions** - Useful for smooth paths and procedural shapes
+6. ~~**3D Geometry & Bounding Volumes**~~ ✅ **COMPLETED** - Essential for 3D level editor operations, ray casting, and collision detection
+7. **Curve and Spline Functions** - **HIGH PRIORITY** - Useful for smooth paths and procedural shapes
 8. **Statistics Functions** - Useful for debugging and profiling tools
+
+### 📦 **3D Geometry & Bounding Volumes** (Priority: HIGH) ✅ **COMPLETED**
+
+**✅ Implemented Modules:**
+- `engine.bounding_box_2d` - 2D axis-aligned bounding boxes with intersection and containment tests
+- `engine.bounding_box_3d` - 3D axis-aligned bounding boxes with corner access and volume calculations  
+- `engine.bounding_sphere` - 3D bounding spheres with expansion algorithms and surface/volume calculations
+- `engine.oriented_bounding_box` - 3D oriented bounding boxes with Separating Axes Theorem collision detection
+- `engine.plane` - 3D planes with distance calculations and point projections
+- `engine.frustum` - 3D view frustums for culling operations with box/sphere intersection tests
+- `engine.bounding_volumes` - Convenience module importing all bounding structures
+- `engine.math_3d` - Complete 3D geometry functions: point-in-shape tests, ray intersections, distance calculations, geometric utilities
+
+**🧪 Test Coverage:** 5,246 assertions across 70 test cases covering all 2D/3D geometric operations, bounding volume intersections, ray casting, distance calculations, and edge cases.
+
+**🏗️ Architecture:** Fully modular design allowing selective imports of specific bounding structures while maintaining a unified convenience interface.
 
 ---
 *Last updated: August 27, 2025*

@@ -72,6 +72,60 @@ target_sources(engine.bounding_box_2d PUBLIC
 target_compile_features(engine.bounding_box_2d PUBLIC cxx_std_23)
 target_link_libraries(engine.bounding_box_2d PUBLIC engine.vec)
 
+add_library(engine.bounding_box_3d)
+target_sources(engine.bounding_box_3d PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/bounding_box_3d.ixx
+)
+target_compile_features(engine.bounding_box_3d PUBLIC cxx_std_23)
+target_link_libraries(engine.bounding_box_3d PUBLIC engine.vec)
+
+add_library(engine.bounding_sphere)
+target_sources(engine.bounding_sphere PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/bounding_sphere.ixx
+)
+target_compile_features(engine.bounding_sphere PUBLIC cxx_std_23)
+target_link_libraries(engine.bounding_sphere PUBLIC engine.vec engine.math)
+
+add_library(engine.oriented_bounding_box)
+target_sources(engine.oriented_bounding_box PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/oriented_bounding_box.ixx
+)
+target_compile_features(engine.oriented_bounding_box PUBLIC cxx_std_23)
+target_link_libraries(engine.oriented_bounding_box PUBLIC engine.vec)
+
+add_library(engine.plane)
+target_sources(engine.plane PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/plane.ixx
+)
+target_compile_features(engine.plane PUBLIC cxx_std_23)
+target_link_libraries(engine.plane PUBLIC engine.vec)
+
+add_library(engine.frustum)
+target_sources(engine.frustum PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/frustum.ixx
+)
+target_compile_features(engine.frustum PUBLIC cxx_std_23)
+target_link_libraries(engine.frustum PUBLIC engine.vec engine.plane engine.bounding_box_3d engine.bounding_sphere)
+
+add_library(engine.bounding_volumes)
+target_sources(engine.bounding_volumes PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/bounding_volumes.ixx
+)
+target_compile_features(engine.bounding_volumes PUBLIC cxx_std_23)
+target_link_libraries(engine.bounding_volumes PUBLIC 
+  engine.bounding_box_2d 
+  engine.bounding_box_3d 
+  engine.bounding_sphere 
+  engine.oriented_bounding_box 
+  engine.plane 
+  engine.frustum)
+
 add_library(engine.math_2d)
 target_sources(engine.math_2d PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -79,6 +133,14 @@ target_sources(engine.math_2d PUBLIC
 )
 target_compile_features(engine.math_2d PUBLIC cxx_std_23)
 target_link_libraries(engine.math_2d PUBLIC engine.math engine.vec engine.bounding_box_2d)
+
+add_library(engine.math_3d)
+target_sources(engine.math_3d PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/math_3d.ixx
+)
+target_compile_features(engine.math_3d PUBLIC cxx_std_23)
+target_link_libraries(engine.math_3d PUBLIC engine.math engine.vec engine.bounding_volumes)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -117,7 +179,11 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation engine.bounding_box_2d engine.math_2d runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS 
+    engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
+    engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
+    engine.math_2d engine.math_3d 
+    runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -151,6 +217,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/random_tests.cpp
     tests/animation_tests.cpp
     tests/math_2d_tests.cpp
+    tests/math_3d_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -160,8 +227,10 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.color
     engine.random
     engine.animation
+    engine.bounding_volumes
     engine.bounding_box_2d
     engine.math_2d
+    engine.math_3d
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)

@@ -18,12 +18,13 @@ struct BoundingBox2D
 
 	constexpr BoundingBox2D() noexcept = default;
 
-	constexpr BoundingBox2D( const Vec2<T> &minPoint, const Vec2<T> &maxPoint ) noexcept
-		: min( minPoint ), max( maxPoint )
-	{
-	}
+	constexpr BoundingBox2D( const Vec2<T> &min, const Vec2<T> &max ) noexcept
+		: min( min ), max( max ) {}
 
-	// Check if a point is inside the bounding box
+	constexpr BoundingBox2D( T minX, T minY, T maxX, T maxY ) noexcept
+		: min( minX, minY ), max( maxX, maxY ) {}
+
+	// Point containment test
 	constexpr bool contains( const Vec2<T> &point ) const noexcept
 	{
 		return point.x >= min.x && point.x <= max.x &&
@@ -37,7 +38,15 @@ struct BoundingBox2D
 			min.y <= other.max.y && max.y >= other.min.y;
 	}
 
-	// Expand the bounding box to include a point
+	// Circle intersection test
+	constexpr bool intersects( const Vec2<T> &circleCenter, T radius ) const noexcept
+	{
+		T dx = std::max( T( 0 ), std::max( min.x - circleCenter.x, circleCenter.x - max.x ) );
+		T dy = std::max( T( 0 ), std::max( min.y - circleCenter.y, circleCenter.y - max.y ) );
+		return ( dx * dx + dy * dy ) <= ( radius * radius );
+	}
+
+	// Expand to include point
 	constexpr void expand( const Vec2<T> &point ) noexcept
 	{
 		min.x = std::min( min.x, point.x );
@@ -46,27 +55,36 @@ struct BoundingBox2D
 		max.y = std::max( max.y, point.y );
 	}
 
-	// Get the center of the bounding box
+	// Expand to include another bounding box
+	constexpr void expand( const BoundingBox2D &other ) noexcept
+	{
+		min.x = std::min( min.x, other.min.x );
+		min.y = std::min( min.y, other.min.y );
+		max.x = std::max( max.x, other.max.x );
+		max.y = std::max( max.y, other.max.y );
+	}
+
+	// Get center point
 	constexpr Vec2<T> center() const noexcept
 	{
 		return Vec2<T>( ( min.x + max.x ) * static_cast<T>( 0.5 ),
 			( min.y + max.y ) * static_cast<T>( 0.5 ) );
 	}
 
-	// Get the size (width, height) of the bounding box
+	// Get size (width, height)
 	constexpr Vec2<T> size() const noexcept
 	{
 		return Vec2<T>( max.x - min.x, max.y - min.y );
 	}
 
-	// Get the area of the bounding box
+	// Get area
 	constexpr T area() const noexcept
 	{
 		const Vec2<T> s = size();
 		return s.x * s.y;
 	}
 
-	// Check if the bounding box is valid (min <= max)
+	// Check if bounding box is valid (min <= max)
 	constexpr bool isValid() const noexcept
 	{
 		return min.x <= max.x && min.y <= max.y;
