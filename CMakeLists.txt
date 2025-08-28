@@ -64,13 +64,21 @@ target_sources(engine.animation PUBLIC
 target_compile_features(engine.animation PUBLIC cxx_std_23)
 target_link_libraries(engine.animation PUBLIC engine.math)
 
+add_library(engine.bounding_box)
+target_sources(engine.bounding_box PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/bounding_box.ixx
+)
+target_compile_features(engine.bounding_box PUBLIC cxx_std_23)
+target_link_libraries(engine.bounding_box PUBLIC engine.vec)
+
 add_library(engine.math_2d)
 target_sources(engine.math_2d PUBLIC
   FILE_SET CXX_MODULES FILES
     src/engine/math/math_2d.ixx
 )
 target_compile_features(engine.math_2d PUBLIC cxx_std_23)
-target_link_libraries(engine.math_2d PUBLIC engine.math engine.vec)
+target_link_libraries(engine.math_2d PUBLIC engine.math engine.vec engine.bounding_box)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -109,7 +117,7 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation engine.math_2d runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation engine.bounding_box engine.math_2d runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -152,6 +160,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.color
     engine.random
     engine.animation
+    engine.bounding_box
     engine.math_2d
     Catch2::Catch2WithMain
   )
