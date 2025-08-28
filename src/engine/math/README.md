@@ -167,25 +167,108 @@ Useful for various mathematical operations and optimizations.
 
 **🧪 Test Coverage:** 287 assertions across 4 test cases covering fast approximations (1% accuracy), number theory properties, bit manipulation operations, and const-correctness.
 
-### 🎯 **2D Geometry Functions** (Priority: Medium)
+### 🎯 **2D Geometry Functions** (Priority: Medium) ✅ **COMPLETED**
 Valuable for 2D collision detection, UI hit testing, and spatial queries.
+
+**✅ Implemented Functions:**
+- `pointInCircle(point, center, radius)` - Fast circle containment test
+- `pointInRect(point, min, max)` - Axis-aligned rectangle test  
+- `pointInTriangle(point, a, b, c)` - Barycentric coordinate method
+- `pointInPolygon(point, polygon)` - Ray casting algorithm for arbitrary polygons
+- `lineLineIntersection(a1, a2, b1, b2, intersection)` - Parametric line intersection with result point
+- `rayCircleIntersection(origin, direction, center, radius)` - Ray-sphere collision detection
+- `segmentCircleIntersection(start, end, center, radius)` - Finite segment-circle intersection
+- `distancePointToLine(point, lineStart, lineEnd)` - Perpendicular distance to infinite line
+- `distancePointToSegment(point, segmentStart, segmentEnd)` - Distance to finite line segment
+- `triangleArea(a, b, c)` - Cross product area calculation
+- `polygonArea(polygon)` - Shoelace formula for arbitrary polygons
+- `isPolygonConvex(polygon)` - Convexity test using cross products
+- `BoundingBox2D` struct with contains, intersects, expand, center, size, area, and validity methods
+
+**🧪 Test Coverage:** 115 assertions across 6 test cases covering all geometric functions, boundary conditions, mathematical properties, and const-correctness.
+
+### 🎲 **3D Geometry Functions** (Priority: High)
+Essential for 3D collision detection, ray casting, spatial queries, and level editor operations.
 ```cpp
-// Point-in-shape tests
-bool pointInCircle(Vec2<T> point, Vec2<T> center, T radius);
-bool pointInRect(Vec2<T> point, Vec2<T> min, Vec2<T> max);
-bool pointInTriangle(Vec2<T> point, Vec2<T> a, Vec2<T> b, Vec2<T> c);
-bool pointInPolygon(Vec2<T> point, const std::vector<Vec2<T>>& polygon);
+// Point-in-shape tests for 3D
+bool pointInSphere(Vec3<T> point, Vec3<T> center, T radius);
+bool pointInAABB(Vec3<T> point, Vec3<T> min, Vec3<T> max);
+bool pointInOBB(Vec3<T> point, const OrientedBoundingBox& obb);
+bool pointInTetrahedron(Vec3<T> point, Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T> d);
 
-// Line intersection
-bool lineLineIntersection(Vec2<T> a1, Vec2<T> a2, Vec2<T> b1, Vec2<T> b2, Vec2<T>& intersection);
-bool rayCircleIntersection(Vec2<T> origin, Vec2<T> direction, Vec2<T> center, T radius);
+// Ray-shape intersections (critical for 3D editors)
+bool raySphereIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> center, T radius, T& hitDistance);
+bool rayAABBIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> min, Vec3<T> max, T& hitDistance);
+bool rayTriangleIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T>& hitPoint);
+bool rayPlaneIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> planePoint, Vec3<T> planeNormal, T& hitDistance);
 
-// Bounding box utilities
-struct BoundingBox2D {
-    Vec2<T> min, max;
-    bool contains(Vec2<T> point);
-    bool intersects(const BoundingBox2D& other);
-    void expand(Vec2<T> point);
+// Line and segment intersections
+bool lineLineIntersection3D(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2, Vec3<T>& closest1, Vec3<T>& closest2);
+bool segmentSegmentIntersection(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2, Vec3<T>& intersection);
+
+// Distance calculations
+T distancePointToPlane(Vec3<T> point, Vec3<T> planePoint, Vec3<T> planeNormal);
+T distancePointToLine3D(Vec3<T> point, Vec3<T> linePoint, Vec3<T> lineDirection);
+T distancePointToSegment3D(Vec3<T> point, Vec3<T> segmentStart, Vec3<T> segmentEnd);
+T distanceLinesToLines(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2);
+
+// Bounding volume utilities
+struct BoundingBox3D {
+    Vec3<T> min, max;
+    bool contains(Vec3<T> point);
+    bool intersects(const BoundingBox3D& other);
+    bool intersects(Vec3<T> sphereCenter, T radius);
+    void expand(Vec3<T> point);
+    void expand(const BoundingBox3D& other);
+    Vec3<T> center() const;
+    Vec3<T> size() const;
+    T volume() const;
+    Vec3<T> corner(int index) const;  // Get one of 8 corners
+};
+
+struct BoundingSphere {
+    Vec3<T> center;
+    T radius;
+    bool contains(Vec3<T> point);
+    bool intersects(const BoundingSphere& other);
+    bool intersects(const BoundingBox3D& box);
+    void expand(Vec3<T> point);
+    void expand(const BoundingSphere& other);
+};
+
+// Oriented bounding box for rotated objects
+struct OrientedBoundingBox {
+    Vec3<T> center;
+    Vec3<T> axes[3];      // Local coordinate system
+    Vec3<T> extents;      // Half-sizes along each axis
+    bool contains(Vec3<T> point);
+    bool intersects(const OrientedBoundingBox& other);
+    Vec3<T> corner(int index) const;
+};
+
+// Geometric calculations
+T tetrahedronVolume(Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T> d);
+T triangleArea3D(Vec3<T> a, Vec3<T> b, Vec3<T> c);
+Vec3<T> triangleNormal(Vec3<T> a, Vec3<T> b, Vec3<T> c);
+Vec3<T> barycentric3D(Vec3<T> point, Vec3<T> a, Vec3<T> b, Vec3<T> c);
+
+// Plane utilities
+struct Plane {
+    Vec3<T> normal;
+    T distance;
+    Plane(Vec3<T> point, Vec3<T> normal);
+    Plane(Vec3<T> a, Vec3<T> b, Vec3<T> c);  // From triangle
+    T distanceToPoint(Vec3<T> point) const;
+    Vec3<T> closestPoint(Vec3<T> point) const;
+    bool isPointOnPlane(Vec3<T> point, T tolerance = 1e-6) const;
+};
+
+// Frustum culling for 3D rendering
+struct Frustum {
+    Plane planes[6];  // Left, Right, Top, Bottom, Near, Far
+    bool contains(Vec3<T> point);
+    bool intersects(const BoundingBox3D& box);
+    bool intersects(const BoundingSphere& sphere);
 };
 ```
 
@@ -245,8 +328,10 @@ All math functions include comprehensive unit tests in `tests/math_utils_tests.c
 2. ~~**Random Number Utilities**~~ ✅ **COMPLETED** - Essential for procedural generation, testing, and dynamic content
 3. ~~**Easing Functions**~~ ✅ **COMPLETED** - Critical for smooth UI/UX
 4. ~~**Advanced Math Utilities**~~ ✅ **COMPLETED** - Useful for mathematical operations and optimizations
-5. **2D Geometry** - Important for spatial operations and collision detection
-6. **Statistics Functions** - Useful for debugging and profiling tools
+5. ~~**2D Geometry**~~ ✅ **COMPLETED** - Important for spatial operations and collision detection
+6. **3D Geometry** - **HIGH PRIORITY** - Essential for 3D level editor operations, ray casting, and collision detection
+7. **Curve and Spline Functions** - Useful for smooth paths and procedural shapes
+8. **Statistics Functions** - Useful for debugging and profiling tools
 
 ---
 *Last updated: August 27, 2025*

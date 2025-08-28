@@ -19,27 +19,27 @@ struct BoundingBox2D
 
 	constexpr BoundingBox2D() noexcept = default;
 
-	constexpr BoundingBox2D( const Vec2<T>& minPoint, const Vec2<T>& maxPoint ) noexcept
+	constexpr BoundingBox2D( const Vec2<T> &minPoint, const Vec2<T> &maxPoint ) noexcept
 		: min( minPoint ), max( maxPoint )
 	{
 	}
 
 	// Check if a point is inside the bounding box
-	constexpr bool contains( const Vec2<T>& point ) const noexcept
+	constexpr bool contains( const Vec2<T> &point ) const noexcept
 	{
 		return point.x >= min.x && point.x <= max.x &&
-			   point.y >= min.y && point.y <= max.y;
+			point.y >= min.y && point.y <= max.y;
 	}
 
 	// Check if this bounding box intersects with another
-	constexpr bool intersects( const BoundingBox2D<T>& other ) const noexcept
+	constexpr bool intersects( const BoundingBox2D<T> &other ) const noexcept
 	{
 		return min.x <= other.max.x && max.x >= other.min.x &&
-			   min.y <= other.max.y && max.y >= other.min.y;
+			min.y <= other.max.y && max.y >= other.min.y;
 	}
 
 	// Expand the bounding box to include a point
-	constexpr void expand( const Vec2<T>& point ) noexcept
+	constexpr void expand( const Vec2<T> &point ) noexcept
 	{
 		min.x = std::min( min.x, point.x );
 		min.y = std::min( min.y, point.y );
@@ -51,7 +51,7 @@ struct BoundingBox2D
 	constexpr Vec2<T> center() const noexcept
 	{
 		return Vec2<T>( ( min.x + max.x ) * static_cast<T>( 0.5 ),
-						( min.y + max.y ) * static_cast<T>( 0.5 ) );
+			( min.y + max.y ) * static_cast<T>( 0.5 ) );
 	}
 
 	// Get the size (width, height) of the bounding box
@@ -84,7 +84,7 @@ using BoundingBox2Dd = BoundingBox2D<double>;
 
 // Point in circle test
 template <typename T>
-constexpr bool pointInCircle( const Vec2<T>& point, const Vec2<T>& center, const T radius ) noexcept
+constexpr bool pointInCircle( const Vec2<T> &point, const Vec2<T> &center, const T radius ) noexcept
 {
 	if ( radius <= static_cast<T>( 0 ) )
 		return false;
@@ -96,15 +96,15 @@ constexpr bool pointInCircle( const Vec2<T>& point, const Vec2<T>& center, const
 
 // Point in rectangle test
 template <typename T>
-constexpr bool pointInRect( const Vec2<T>& point, const Vec2<T>& min, const Vec2<T>& max ) noexcept
+constexpr bool pointInRect( const Vec2<T> &point, const Vec2<T> &min, const Vec2<T> &max ) noexcept
 {
 	return point.x >= min.x && point.x <= max.x &&
-		   point.y >= min.y && point.y <= max.y;
+		point.y >= min.y && point.y <= max.y;
 }
 
 // Point in triangle test using barycentric coordinates
 template <typename T>
-constexpr bool pointInTriangle( const Vec2<T>& point, const Vec2<T>& a, const Vec2<T>& b, const Vec2<T>& c ) noexcept
+constexpr bool pointInTriangle( const Vec2<T> &point, const Vec2<T> &a, const Vec2<T> &b, const Vec2<T> &c ) noexcept
 {
 	// Compute barycentric coordinates
 	const Vec2<T> v0 = c - a;
@@ -128,7 +128,7 @@ constexpr bool pointInTriangle( const Vec2<T>& point, const Vec2<T>& a, const Ve
 
 // Point in polygon test using ray casting algorithm
 template <typename T>
-bool pointInPolygon( const Vec2<T>& point, const std::vector<Vec2<T>>& polygon ) noexcept
+bool pointInPolygon( const Vec2<T> &point, const std::vector<Vec2<T>> &polygon ) noexcept
 {
 	if ( polygon.size() < 3 )
 		return false;
@@ -138,11 +138,11 @@ bool pointInPolygon( const Vec2<T>& point, const std::vector<Vec2<T>>& polygon )
 
 	for ( size_t i = 0, j = numVertices - 1; i < numVertices; j = i++ )
 	{
-		const Vec2<T>& vi = polygon[i];
-		const Vec2<T>& vj = polygon[j];
+		const Vec2<T> &vi = polygon[i];
+		const Vec2<T> &vj = polygon[j];
 
 		if ( ( ( vi.y > point.y ) != ( vj.y > point.y ) ) &&
-			 ( point.x < ( vj.x - vi.x ) * ( point.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
+			( point.x < ( vj.x - vi.x ) * ( point.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
 		{
 			inside = !inside;
 		}
@@ -157,7 +157,7 @@ bool pointInPolygon( const Vec2<T>& point, const std::vector<Vec2<T>>& polygon )
 
 // Line-line intersection
 template <typename T>
-bool lineLineIntersection( const Vec2<T>& a1, const Vec2<T>& a2, const Vec2<T>& b1, const Vec2<T>& b2, Vec2<T>& intersection ) noexcept
+bool lineLineIntersection( const Vec2<T> &a1, const Vec2<T> &a2, const Vec2<T> &b1, const Vec2<T> &b2, Vec2<T> &intersection ) noexcept
 {
 	const Vec2<T> da = a2 - a1;
 	const Vec2<T> db = b2 - b1;
@@ -177,7 +177,7 @@ bool lineLineIntersection( const Vec2<T>& a1, const Vec2<T>& a2, const Vec2<T>& 
 
 // Ray-circle intersection
 template <typename T>
-bool rayCircleIntersection( const Vec2<T>& origin, const Vec2<T>& direction, const Vec2<T>& center, const T radius ) noexcept
+bool rayCircleIntersection( const Vec2<T> &origin, const Vec2<T> &direction, const Vec2<T> &center, const T radius ) noexcept
 {
 	if ( radius < static_cast<T>( 0 ) )
 		return false;
@@ -200,7 +200,7 @@ bool rayCircleIntersection( const Vec2<T>& origin, const Vec2<T>& direction, con
 
 // Segment-circle intersection (finite line segment)
 template <typename T>
-bool segmentCircleIntersection( const Vec2<T>& start, const Vec2<T>& end, const Vec2<T>& center, const T radius ) noexcept
+bool segmentCircleIntersection( const Vec2<T> &start, const Vec2<T> &end, const Vec2<T> &center, const T radius ) noexcept
 {
 	if ( radius < static_cast<T>( 0 ) )
 		return false;
@@ -227,7 +227,7 @@ bool segmentCircleIntersection( const Vec2<T>& start, const Vec2<T>& end, const 
 
 // Distance from point to line (infinite line)
 template <typename T>
-T distancePointToLine( const Vec2<T>& point, const Vec2<T>& lineStart, const Vec2<T>& lineEnd ) noexcept
+T distancePointToLine( const Vec2<T> &point, const Vec2<T> &lineStart, const Vec2<T> &lineEnd ) noexcept
 {
 	const Vec2<T> line = lineEnd - lineStart;
 	const T lineLengthSquared = lengthSquared( line );
@@ -244,7 +244,7 @@ T distancePointToLine( const Vec2<T>& point, const Vec2<T>& lineStart, const Vec
 
 // Distance from point to line segment (finite line segment)
 template <typename T>
-T distancePointToSegment( const Vec2<T>& point, const Vec2<T>& segmentStart, const Vec2<T>& segmentEnd ) noexcept
+T distancePointToSegment( const Vec2<T> &point, const Vec2<T> &segmentStart, const Vec2<T> &segmentEnd ) noexcept
 {
 	const Vec2<T> segment = segmentEnd - segmentStart;
 	const Vec2<T> toPoint = point - segmentStart;
@@ -268,7 +268,7 @@ T distancePointToSegment( const Vec2<T>& point, const Vec2<T>& segmentStart, con
 
 // Calculate the area of a triangle
 template <typename T>
-constexpr T triangleArea( const Vec2<T>& a, const Vec2<T>& b, const Vec2<T>& c ) noexcept
+constexpr T triangleArea( const Vec2<T> &a, const Vec2<T> &b, const Vec2<T> &c ) noexcept
 {
 	// Using the cross product formula: |AB × AC| / 2
 	const Vec2<T> ab = b - a;
@@ -279,7 +279,7 @@ constexpr T triangleArea( const Vec2<T>& a, const Vec2<T>& b, const Vec2<T>& c )
 
 // Calculate the area of a polygon using the shoelace formula
 template <typename T>
-T polygonArea( const std::vector<Vec2<T>>& polygon ) noexcept
+T polygonArea( const std::vector<Vec2<T>> &polygon ) noexcept
 {
 	if ( polygon.size() < 3 )
 		return static_cast<T>( 0 );
@@ -299,7 +299,7 @@ T polygonArea( const std::vector<Vec2<T>>& polygon ) noexcept
 
 // Check if a polygon is convex
 template <typename T>
-bool isPolygonConvex( const std::vector<Vec2<T>>& polygon ) noexcept
+bool isPolygonConvex( const std::vector<Vec2<T>> &polygon ) noexcept
 {
 	if ( polygon.size() < 3 )
 		return false;
@@ -310,9 +310,9 @@ bool isPolygonConvex( const std::vector<Vec2<T>>& polygon ) noexcept
 
 	for ( size_t i = 0; i < numVertices; ++i )
 	{
-		const Vec2<T>& a = polygon[i];
-		const Vec2<T>& b = polygon[( i + 1 ) % numVertices];
-		const Vec2<T>& c = polygon[( i + 2 ) % numVertices];
+		const Vec2<T> &a = polygon[i];
+		const Vec2<T> &b = polygon[( i + 1 ) % numVertices];
+		const Vec2<T> &c = polygon[( i + 2 ) % numVertices];
 
 		const Vec2<T> ab = b - a;
 		const Vec2<T> bc = c - b;
