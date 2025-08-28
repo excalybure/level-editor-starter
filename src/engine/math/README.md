@@ -1,84 +1,71 @@
 # Engine Math Library
 
-## Implementation requirements
-- Unit test all new implementation
-- Ensure const-correctness
-- After implementing new functionality, update this file accordingly
-- To build the project, use cmake
+A comprehensive mathematical utilities library for game development and level editing, providing modular C++23 modules for vector operations, matrix transformations, 3D geometry, and more.
 
-This directory contains the math modules f### `quat.ixx` - Quaternion Operations
-**Status: ✅ Complete**
-- Quaternion class with full arithmetic support
-- Euler angle conversions
-- Spherical linear interpolation (slerp)
-- Rotation utilities and factory functions
+## 🚀 Implementation Requirements
+- ✅ **Unit testing**: All implementations have comprehensive test coverage
+- ✅ **Const-correctness**: All functions properly use const where appropriate
+- ✅ **Modular architecture**: Individual modules for selective imports
+- ✅ **CMake integration**: Build system configured for all modules
 
-## 🚀 Future Enhancement Roadmap
+## 📊 Project Status
+- **Total Test Coverage**: 5,246 assertions across 70 test cases
+- **All Tests Passing**: ✅ 
+- **Modules**: 16+ individual C++23 modules
+- **Code Quality**: Const-correct, constexpr optimized
 
-### 🎲 **Random Number Utilities** (Priority: High) ✅ **COMPLETED**
-Essential for procedural generation, testing, and dynamic content.
+## 📁 Core Modules
 
-**✅ Implemented Functions:**
-- `Random` class with seeded generation using Mersenne Twister
-- `seed(unsigned int)`, `random()`, `range(min, max)` for floats and integers
-- `chance(probability)` - Random boolean with specified probability
-- `unitCircle()`, `unitSphere()`, `insideSphere()`, `insideCube()` - Geometric sampling
-- `choice(container)` - Random element selection from containers
-- `shuffle(container)` - Fisher-Yates shuffle algorithm
-- `perlinNoise(x, y)` - 2D Perlin noise implementation
-- `fractalNoise(x, y, octaves)` - Multi-octave fractal noise
-- `turbulence(x, y, octaves)` - Absolute value fractal noise for turbulence effects
-- Global convenience functions: `random()`, `randomInt()`, `randomBool()`, etc.
-
-**🧪 Test Coverage:** 3460 assertions across 5 test cases covering deterministic seeding, range validation, geometric distributions, container operations, and noise function properties.ding comprehensive mathematical utilities for game development and level editing.
-
-## 📁 Current Modules
-
-### `math.ixx` - Core Math Utilities
+### `math.ixx` - Fundamental Math Utilities
 **Status: ✅ Complete**
 - Mathematical constants (π, e, √2, √3)
 - Angle conversion functions (radians ↔ degrees)
-- Interpolation functions (lerp)
+- Interpolation functions (lerp, smoothstep, smootherstep)
 - Clamping and utility functions (clamp, sign, abs, square)
 - Power and root functions (pow, sqrt)
 - Trigonometric functions (sin, cos, tan, asin, acos, atan, atan2)
-- Smoothing functions (smoothstep, smootherstep)
 - Rounding functions (floor, ceil, round, frac)
 - Modulo and wrap functions
-- Step function
 - Power-of-two utilities (isPowerOfTwo, nextPowerOfTwo)
-
-### `color.ixx` - Color Math Functions
-**Status: ✅ Complete**
-- HSV ↔ RGB color space conversions
-- Color interpolation (RGB and HSV with hue wrapping)
-- Gamma correction (linear ↔ sRGB)
-- Perceptual functions (luminance calculation)
-- Color utilities (saturation adjustment, color temperature)
+- **Advanced utilities**: Fast approximations, number theory, bit manipulation
 
 ### `vec.ixx` - Vector Operations
 **Status: ✅ Complete**
-- Vec2, Vec3, Vec4 classes with arithmetic operations
+- Vec2, Vec3, Vec4 classes with full arithmetic operations
 - Dot and cross products
-- Vector normalization and magnitude
-- Distance calculations
-- Vector-specific utilities (saturate, min, max, nearEqual)
+- Vector normalization and magnitude calculations
+- Distance calculations and utilities
+- Vector-specific functions (saturate, min, max, nearEqual)
 
-### `matrix.ixx` - Matrix Operations
+### `matrix.ixx` - Matrix Operations  
 **Status: ✅ Complete**
 - Mat2, Mat3, Mat4 matrix classes
 - Matrix arithmetic and transformations
 - View and projection matrices
 - Matrix decomposition and utilities
 
+### `quat.ixx` - Quaternion Operations
+**Status: ✅ Complete**
+- Quaternion class with full arithmetic support
+- Euler angle conversions
+- Spherical linear interpolation (slerp)
+- Rotation utilities and factory functions
+### `color.ixx` - Color Math Functions
+**Status: ✅ Complete**
+- HSV ↔ RGB color space conversions
+- Color interpolation (RGB and HSV with hue wrapping)  
+- Gamma correction (linear ↔ sRGB)
+- Perceptual functions (luminance calculation)
+- Color utilities (saturation adjustment, color temperature)
+
 ### `random.ixx` - Random Number Utilities
 **Status: ✅ Complete**
-- Seeded random number generator class (Random)
-- Random value generation (float ranges, integer ranges, boolean chance)
-- Geometric random functions (unit circle, unit sphere, inside sphere, inside cube)
+- `Random` class with Mersenne Twister seeded generation
+- Range generation for floats and integers
+- Geometric sampling (unit circle, unit sphere, inside sphere, inside cube)
 - Container utilities (random choice, Fisher-Yates shuffle)
 - Noise functions (Perlin noise, fractal noise, turbulence)
-- Global convenience functions for quick random access
+- Global convenience functions
 
 ### `animation.ixx` - Animation/Easing Functions
 **Status: ✅ Complete**
@@ -86,200 +73,59 @@ Essential for procedural generation, testing, and dynamic content.
 - Special easing functions (bounce, elastic, back) with customizable parameters
 - Utility functions (inverseLerp, remap)
 - Type-safe EaseType enumeration and generic ease() dispatcher
-- Constexpr optimization for compile-time evaluation
 
-### `math.ixx` - Core Math Utilities (Updated)
+## 📐 Geometry Modules
+
+### `math_2d.ixx` - 2D Geometry Functions
 **Status: ✅ Complete**
-- Mathematical constants (π, e, √2, √3)
-- Angle conversion functions (radians ↔ degrees)
-- Interpolation functions (lerp)
-- Clamping and utility functions (clamp, sign, abs, square)
-- Power and root functions (pow, sqrt)
-- Trigonometric functions (sin, cos, tan, asin, acos, atan, atan2)
-- Smoothing functions (smoothstep, smootherstep)
-- Rounding functions (floor, ceil, round, frac)
-- Modulo and wrap functions
-- Step function
-- Power-of-two utilities (isPowerOfTwo, nextPowerOfTwo)
-- **NEW: Advanced math utilities** (fast approximations, number theory, bit manipulation)
+- Point-in-shape tests (circle, rectangle, triangle, polygon)
+- Line and ray intersections with geometric shapes
+- Distance calculations (point to line, point to segment)
+- Area calculations (triangle, polygon with shoelace formula)
+- `BoundingBox2D` with containment, intersection, and utility methods
 
-## 🚀 Future Enhancement Roadmap
+### `math_3d.ixx` - 3D Geometry Functions  
+**Status: ✅ Complete & Const-Correct**
+- Point-in-shape tests (sphere, AABB, OBB, tetrahedron)
+- Ray-shape intersections (sphere, AABB, triangle, plane)
+- Line and segment intersection algorithms
+- Distance calculations (point to plane, point to line, line to line)
+- Geometric utilities (tetrahedron volume, triangle area, barycentric coordinates)
+- **Recent improvements**: Full const-correctness review completed
 
-### 🎨 **Color Math Functions** (Priority: High) ✅ **COMPLETED**
-Essential for UI, rendering, and visual effects in a level editor.
+### `bounding_volumes.ixx` - Modular Bounding Volume System
+**Status: ✅ Complete - Modular Architecture**
 
-**✅ Implemented Functions:**
-- `hsvToRgb(hue, saturation, value)` - HSV to RGB color conversion
-- `rgbToHsv(red, green, blue)` - RGB to HSV color conversion  
-- `lerpRgb(r1, g1, b1, r2, g2, b2, t)` - RGB color interpolation
-- `lerpHsv(h1, s1, v1, h2, s2, v2, t)` - HSV color interpolation with hue wrapping
-- `linearToGamma(linear)` & `gammaToLinear(gamma)` - sRGB gamma correction
-- `luminance(red, green, blue)` - Perceptual luminance calculation
-- `adjustSaturation(red, green, blue, factor)` - Color saturation adjustment
-- `temperatureToRgb(kelvin)` - Color temperature to RGB conversion
+**Individual Modules:**
+- `bounding_box_2d.ixx` - 2D axis-aligned bounding boxes
+- `bounding_box_3d.ixx` - 3D axis-aligned bounding boxes with corner access
+- `bounding_sphere.ixx` - 3D spheres with expansion algorithms  
+- `oriented_bounding_box.ixx` - 3D oriented boxes with SAT collision detection
+- `plane.ixx` - 3D planes with distance and projection calculations
+- `frustum.ixx` - 3D view frustums for culling operations
 
-**🧪 Test Coverage:** 96 assertions across 5 test cases covering all functions, edge cases, and round-trip conversions.
+**Architecture Benefits:**
+- **Selective imports**: Use only the bounding volumes you need
+- **Convenience wrapper**: Import all via `engine.bounding_volumes`
+- **Optimized compilation**: Individual modules compile independently
+- **Backward compatibility**: Maintains existing API while enabling modular usage
+## 🧪 Testing & Quality Assurance
 
-### 🎲 **Random Number Utilities** (Priority: High)
-Essential for procedural generation, testing, and dynamic content.
-```cpp
-// Seeded random number generator class
-class Random {
-    void seed(unsigned int seed);
-    T range(T min, T max);           // Random value in range
-    int range(int min, int max);     // Random integer in range
-    Vec2<T> unitCircle();            // Random point on unit circle
-    Vec3<T> unitSphere();            // Random point on unit sphere
-    Vec3<T> insideSphere();          // Random point inside unit sphere
-};
+**Comprehensive Test Coverage:**
+- **Total assertions**: 5,246 across 70 test cases
+- **Test categories**: Unit tests, integration tests, edge case validation
+- **Quality measures**: Boundary condition testing, mathematical property verification
+- **All tests passing**: ✅
 
-// Noise functions for terrain/texture generation
-T perlinNoise(T x, T y);
-T simplexNoise(T x, T y);
-T fractalNoise(T x, T y, int octaves);
-```
+**Code Quality Standards:**
+- **Const-correctness**: All functions properly qualified with const where appropriate
+- **Constexpr optimization**: Compile-time evaluation where possible
+- **Template support**: Full float and double precision support
+- **Performance-conscious**: Fast math alternatives and optimized implementations
 
-### 🌊 **Easing/Animation Functions** (Priority: High) ✅ **COMPLETED**
-Critical for smooth animations and user interface transitions.
+## 🚀 Future Enhancements
 
-**✅ Implemented Functions:**
-- `easeInQuad`, `easeOutQuad`, `easeInOutQuad` - Quadratic easing
-- `easeInCubic`, `easeOutCubic`, `easeInOutCubic` - Cubic easing  
-- `easeInQuart`, `easeOutQuart`, `easeInOutQuart` - Quartic easing
-- `easeInSine`, `easeOutSine`, `easeInOutSine` - Sine easing
-- `easeInBounce`, `easeOutBounce`, `easeInOutBounce` - Bounce effects
-- `easeInElastic`, `easeOutElastic`, `easeInOutElastic` - Elastic effects (with amplitude/period)
-- `easeInBack`, `easeOutBack`, `easeInOutBack` - Back overshoot effects (with overshoot parameter)
-- `inverseLerp(a, b, value)` - Find interpolation parameter for given value
-- `remap(value, oldMin, oldMax, newMin, newMax)` - Remap value between ranges
-- `ease(EaseType, t)` - Generic dispatcher with type-safe enumeration
-
-**🧪 Test Coverage:** 214 assertions across 10 test cases covering boundary conditions, mathematical properties, parameter validation, and const-correctness.
-
-### 🔢 **Advanced Math Utilities** (Priority: Medium) ✅ **COMPLETED**
-Useful for various mathematical operations and optimizations.
-
-**✅ Implemented Functions:**
-- `fastInverseSqrt(value)` - Quake-style fast inverse square root approximation
-- `fastSqrt(value)` - Fast square root approximation
-- `factorial(n)` - Factorial calculation with overflow protection
-- `gcd(a, b)` - Greatest Common Divisor using Euclidean algorithm
-- `lcm(a, b)` - Least Common Multiple calculation
-- `isPrime(n)` - Prime number test using trial division
-- `countBits(value)` - Count set bits (population count)
-- `reverseBits(value)` - Reverse all bits in a 32-bit integer
-- `rotateLeft(value, shift)` - Rotate bits left with wrap-around
-- `rotateRight(value, shift)` - Rotate bits right with wrap-around
-
-**🧪 Test Coverage:** 287 assertions across 4 test cases covering fast approximations (1% accuracy), number theory properties, bit manipulation operations, and const-correctness.
-
-### 🎯 **2D Geometry Functions** (Priority: Medium) ✅ **COMPLETED**
-Valuable for 2D collision detection, UI hit testing, and spatial queries.
-
-**✅ Implemented Functions:**
-- `pointInCircle(point, center, radius)` - Fast circle containment test
-- `pointInRect(point, min, max)` - Axis-aligned rectangle test  
-- `pointInTriangle(point, a, b, c)` - Barycentric coordinate method
-- `pointInPolygon(point, polygon)` - Ray casting algorithm for arbitrary polygons
-- `lineLineIntersection(a1, a2, b1, b2, intersection)` - Parametric line intersection with result point
-- `rayCircleIntersection(origin, direction, center, radius)` - Ray-sphere collision detection
-- `segmentCircleIntersection(start, end, center, radius)` - Finite segment-circle intersection
-- `distancePointToLine(point, lineStart, lineEnd)` - Perpendicular distance to infinite line
-- `distancePointToSegment(point, segmentStart, segmentEnd)` - Distance to finite line segment
-- `triangleArea(a, b, c)` - Cross product area calculation
-- `polygonArea(polygon)` - Shoelace formula for arbitrary polygons
-- `isPolygonConvex(polygon)` - Convexity test using cross products
-- `BoundingBox2D` struct with contains, intersects, expand, center, size, area, and validity methods
-
-**🧪 Test Coverage:** 115 assertions across 6 test cases covering all geometric functions, boundary conditions, mathematical properties, and const-correctness.
-
-### 🎲 **3D Geometry Functions** (Priority: High)
-Essential for 3D collision detection, ray casting, spatial queries, and level editor operations.
-```cpp
-// Point-in-shape tests for 3D
-bool pointInSphere(Vec3<T> point, Vec3<T> center, T radius);
-bool pointInAABB(Vec3<T> point, Vec3<T> min, Vec3<T> max);
-bool pointInOBB(Vec3<T> point, const OrientedBoundingBox& obb);
-bool pointInTetrahedron(Vec3<T> point, Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T> d);
-
-// Ray-shape intersections (critical for 3D editors)
-bool raySphereIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> center, T radius, T& hitDistance);
-bool rayAABBIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> min, Vec3<T> max, T& hitDistance);
-bool rayTriangleIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T>& hitPoint);
-bool rayPlaneIntersection(Vec3<T> origin, Vec3<T> direction, Vec3<T> planePoint, Vec3<T> planeNormal, T& hitDistance);
-
-// Line and segment intersections
-bool lineLineIntersection3D(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2, Vec3<T>& closest1, Vec3<T>& closest2);
-bool segmentSegmentIntersection(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2, Vec3<T>& intersection);
-
-// Distance calculations
-T distancePointToPlane(Vec3<T> point, Vec3<T> planePoint, Vec3<T> planeNormal);
-T distancePointToLine3D(Vec3<T> point, Vec3<T> linePoint, Vec3<T> lineDirection);
-T distancePointToSegment3D(Vec3<T> point, Vec3<T> segmentStart, Vec3<T> segmentEnd);
-T distanceLinesToLines(Vec3<T> a1, Vec3<T> a2, Vec3<T> b1, Vec3<T> b2);
-
-// Bounding volume utilities
-struct BoundingBox3D {
-    Vec3<T> min, max;
-    bool contains(Vec3<T> point);
-    bool intersects(const BoundingBox3D& other);
-    bool intersects(Vec3<T> sphereCenter, T radius);
-    void expand(Vec3<T> point);
-    void expand(const BoundingBox3D& other);
-    Vec3<T> center() const;
-    Vec3<T> size() const;
-    T volume() const;
-    Vec3<T> corner(int index) const;  // Get one of 8 corners
-};
-
-struct BoundingSphere {
-    Vec3<T> center;
-    T radius;
-    bool contains(Vec3<T> point);
-    bool intersects(const BoundingSphere& other);
-    bool intersects(const BoundingBox3D& box);
-    void expand(Vec3<T> point);
-    void expand(const BoundingSphere& other);
-};
-
-// Oriented bounding box for rotated objects
-struct OrientedBoundingBox {
-    Vec3<T> center;
-    Vec3<T> axes[3];      // Local coordinate system
-    Vec3<T> extents;      // Half-sizes along each axis
-    bool contains(Vec3<T> point);
-    bool intersects(const OrientedBoundingBox& other);
-    Vec3<T> corner(int index) const;
-};
-
-// Geometric calculations
-T tetrahedronVolume(Vec3<T> a, Vec3<T> b, Vec3<T> c, Vec3<T> d);
-T triangleArea3D(Vec3<T> a, Vec3<T> b, Vec3<T> c);
-Vec3<T> triangleNormal(Vec3<T> a, Vec3<T> b, Vec3<T> c);
-Vec3<T> barycentric3D(Vec3<T> point, Vec3<T> a, Vec3<T> b, Vec3<T> c);
-
-// Plane utilities
-struct Plane {
-    Vec3<T> normal;
-    T distance;
-    Plane(Vec3<T> point, Vec3<T> normal);
-    Plane(Vec3<T> a, Vec3<T> b, Vec3<T> c);  // From triangle
-    T distanceToPoint(Vec3<T> point) const;
-    Vec3<T> closestPoint(Vec3<T> point) const;
-    bool isPointOnPlane(Vec3<T> point, T tolerance = 1e-6) const;
-};
-
-// Frustum culling for 3D rendering
-struct Frustum {
-    Plane planes[6];  // Left, Right, Top, Bottom, Near, Far
-    bool contains(Vec3<T> point);
-    bool intersects(const BoundingBox3D& box);
-    bool intersects(const BoundingSphere& sphere);
-};
-```
-
-### 🔢 **Curve and Spline Functions** (Priority: Low)
-Useful for smooth paths, camera movements, and procedural shapes.
+### 🔢 **Curve and Spline Functions** (Priority: Medium)
 ```cpp
 // Bezier curves
 Vec2<T> quadraticBezier(Vec2<T> p0, Vec2<T> p1, Vec2<T> p2, T t);
@@ -294,15 +140,14 @@ Vec2<T> sampleByDistance(const std::vector<Vec2<T>>& points, T distance);
 ```
 
 ### 📊 **Statistics and Data Functions** (Priority: Low)
-Helpful for debugging, profiling, and data analysis.
 ```cpp
 // Basic statistics
 T mean(const std::vector<T>& values);
-T median(std::vector<T> values);  // Note: modifies input for sorting
+T median(std::vector<T> values);
 T standardDeviation(const std::vector<T>& values);
 T variance(const std::vector<T>& values);
 
-// Moving averages for smooth data
+// Moving averages
 class MovingAverage {
     void addSample(T value);
     T getAverage() const;
@@ -310,50 +155,73 @@ class MovingAverage {
 };
 ```
 
-## 🧪 Testing
+## � Implementation Notes
 
-All math functions include comprehensive unit tests in `tests/math_utils_tests.cpp`. When adding new functionality:
+- **C++23 Modules**: Full module system with selective imports
+- **Template design**: Support for both `float` and `double` precision
+- **Naming convention**: Consistent camelCase throughout
+- **Error handling**: Comprehensive edge case handling and input validation
+- **Performance focus**: Optimized implementations with SIMD-friendly designs
 
-1. Add the implementation to the appropriate `.ixx` file
-2. Add corresponding unit tests with edge case coverage
-3. Update this README with the new functions
-4. Ensure all tests pass before committing
+## 🏗️ Build Instructions
 
-## 📝 Implementation Notes
+```bash
+# Configure with CMake preset
+cmake --preset vs2022-x64
 
-- All functions are templated to support both `float` and `double` precision
-- Functions are marked `constexpr` where possible for compile-time evaluation
-- Consistent naming convention using camelCase
-- Comprehensive edge case handling and input validation
-- Performance-conscious implementations with fast math alternatives where appropriate
+# Build all modules
+cmake --build build/vs2022-x64
 
-## 🎯 Next Steps
+# Run tests
+./build/vs2022-x64/Debug/math_tests.exe
+```
+---
 
-**Recommended implementation order:**
-1. ~~**Color Math Functions**~~ ✅ **COMPLETED** - Essential for any visual editor
-2. ~~**Random Number Utilities**~~ ✅ **COMPLETED** - Essential for procedural generation, testing, and dynamic content
-3. ~~**Easing Functions**~~ ✅ **COMPLETED** - Critical for smooth UI/UX
-4. ~~**Advanced Math Utilities**~~ ✅ **COMPLETED** - Useful for mathematical operations and optimizations
-5. ~~**2D Geometry**~~ ✅ **COMPLETED** - Important for spatial operations and collision detection
-6. ~~**3D Geometry & Bounding Volumes**~~ ✅ **COMPLETED** - Essential for 3D level editor operations, ray casting, and collision detection
-7. **Curve and Spline Functions** - **HIGH PRIORITY** - Useful for smooth paths and procedural shapes
-8. **Statistics Functions** - Useful for debugging and profiling tools
+## 📚 Module Usage Examples
 
-### 📦 **3D Geometry & Bounding Volumes** (Priority: HIGH) ✅ **COMPLETED**
+### Basic Math Operations
+```cpp
+import engine.math;
+import engine.vec;
 
-**✅ Implemented Modules:**
-- `engine.bounding_box_2d` - 2D axis-aligned bounding boxes with intersection and containment tests
-- `engine.bounding_box_3d` - 3D axis-aligned bounding boxes with corner access and volume calculations  
-- `engine.bounding_sphere` - 3D bounding spheres with expansion algorithms and surface/volume calculations
-- `engine.oriented_bounding_box` - 3D oriented bounding boxes with Separating Axes Theorem collision detection
-- `engine.plane` - 3D planes with distance calculations and point projections
-- `engine.frustum` - 3D view frustums for culling operations with box/sphere intersection tests
-- `engine.bounding_volumes` - Convenience module importing all bounding structures
-- `engine.math_3d` - Complete 3D geometry functions: point-in-shape tests, ray intersections, distance calculations, geometric utilities
+auto angle = math::radians(45.0f);
+auto result = math::lerp(0.0f, 100.0f, 0.5f);
+auto clamped = math::clamp(value, 0.0f, 1.0f);
+```
 
-**🧪 Test Coverage:** 5,246 assertions across 70 test cases covering all 2D/3D geometric operations, bounding volume intersections, ray casting, distance calculations, and edge cases.
+### Vector Operations  
+```cpp
+import engine.vec;
 
-**🏗️ Architecture:** Fully modular design allowing selective imports of specific bounding structures while maintaining a unified convenience interface.
+math::Vec3f position{1.0f, 2.0f, 3.0f};
+math::Vec3f direction = math::normalize(velocity);
+float distance = math::length(position - target);
+```
+
+### 3D Geometry
+```cpp
+import engine.math_3d;
+import engine.bounding_volumes;
+
+// Ray-sphere intersection
+float hitDistance;
+bool hit = math::raySphereIntersection(origin, direction, center, radius, hitDistance);
+
+// Selective bounding volume imports
+import engine.bounding_sphere;
+BoundingSphere sphere{center, radius};
+```
+
+### Modular Bounding Volumes
+```cpp
+// Import only what you need
+import engine.bounding_box_3d;
+import engine.plane;
+
+// Or import everything
+import engine.bounding_volumes;
+```
 
 ---
+
 *Last updated: August 27, 2025*
