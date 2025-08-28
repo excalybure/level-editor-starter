@@ -170,7 +170,7 @@ Implement a multi-viewport camera system with four docked views (Perspective, To
 ## 📋 Detailed Task Breakdown
 
 ### **Week 1: Foundation**
-- [ ] Update vcpkg dependencies and rebuild
+- [x] Update vcpkg dependencies and rebuild
 - [ ] Create basic D3D12 device initialization
 - [ ] Implement Camera math classes with unit tests
 - [ ] Create basic renderer interface

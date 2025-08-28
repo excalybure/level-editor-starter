@@ -3,7 +3,14 @@
   "version-string": "0.0.1",
   "builtin-baseline": "6ecbbbdf31cba47aafa7cf6189b1e73e10ac61f8",
   "dependencies": [
-    "catch2"
+    "catch2",
+    {
+      "name": "imgui",
+      "features": ["docking-experimental", "win32-binding", "dx12-binding"]
+    },
+    "directx-headers",
+    "directx-dxc",
+    "glm"
   ],
   "description": "Starter scaffold for a C++23 modular world editor with tests"
 }
