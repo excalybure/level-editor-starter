@@ -62,7 +62,7 @@ TEST_CASE( "3D Ray-Shape Intersections", "[3d][geometry][ray]" )
 	{
 		Vec3f center( 0.0f, 0.0f, 0.0f );
 		float radius = 2.0f;
-		float hitDistance;
+		float hitDistance = 0.0f;
 
 		// Ray from outside hitting sphere
 		REQUIRE( raySphereIntersection( Vec3f( -5.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
@@ -83,7 +83,7 @@ TEST_CASE( "3D Ray-Shape Intersections", "[3d][geometry][ray]" )
 	{
 		Vec3f min( -1.0f, -1.0f, -1.0f );
 		Vec3f max( 1.0f, 1.0f, 1.0f );
-		float hitDistance;
+		float hitDistance = 0.0f;
 
 		// Ray hitting box from outside
 		REQUIRE( rayAABBIntersection( Vec3f( -2.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
@@ -124,7 +124,7 @@ TEST_CASE( "3D Ray-Shape Intersections", "[3d][geometry][ray]" )
 	{
 		Vec3f planePoint( 0.0f, 0.0f, 0.0f );
 		Vec3f planeNormal( 0.0f, 0.0f, 1.0f );
-		float hitDistance;
+		float hitDistance = 0.0f;
 
 		// Ray hitting plane
 		REQUIRE( rayPlaneIntersection( Vec3f( 1.0f, 1.0f, -2.0f ), Vec3f( 0.0f, 0.0f, 1.0f ), planePoint, planeNormal, hitDistance ) );

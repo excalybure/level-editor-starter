@@ -169,7 +169,7 @@ T distancePointToLine( const Vec2<T> &point, const Vec2<T> &lineStart, const Vec
 	const Vec2<T> toPoint = point - lineStart;
 	const T cross = line.x * toPoint.y - line.y * toPoint.x;
 
-	return math::abs( cross ) / math::sqrt( lineLengthSquared );
+	return math::abs( cross ) / static_cast<T>( math::sqrt( lineLengthSquared ) );
 }
 
 // Distance from point to line segment (finite line segment)

@@ -249,7 +249,8 @@ constexpr auto lengthSquared( const V &v )
 template <typename V>
 inline auto length( const V &v )
 {
-	return std::sqrt( static_cast<long double>( lengthSquared( v ) ) );
+	using VT = typename V::value_type;
+	return static_cast<VT>( std::sqrt( static_cast<long double>( lengthSquared( v ) ) ) );
 }
 
 // Normalize (returns zero vector if length is (near) zero)
