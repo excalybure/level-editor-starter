@@ -1,0 +1,258 @@
+// Global module fragment - headers go here
+module;
+
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <wrl.h>
+#include <windows.h>
+
+export module engine.renderer;
+
+import std;
+import platform.dx12;
+import engine.vec;
+import engine.matrix;
+import engine.color;
+
+export namespace renderer
+{
+
+// Forward declarations
+class Renderer;
+class Shader;
+class VertexBuffer;
+class IndexBuffer;
+class RenderState;
+
+// Simple RGBA color struct for rendering
+export struct Color
+{
+	float r, g, b, a;
+
+	constexpr Color() : r( 0 ), g( 0 ), b( 0 ), a( 1 ) {}
+	constexpr Color( float r_, float g_, float b_, float a_ = 1.0f ) : r( r_ ), g( g_ ), b( b_ ), a( a_ ) {}
+
+	static constexpr Color white() noexcept { return Color{ 1, 1, 1, 1 }; }
+	static constexpr Color black() noexcept { return Color{ 0, 0, 0, 1 }; }
+	static constexpr Color red() noexcept { return Color{ 1, 0, 0, 1 }; }
+	static constexpr Color green() noexcept { return Color{ 0, 1, 0, 1 }; }
+	static constexpr Color blue() noexcept { return Color{ 0, 0, 1, 1 }; }
+	static constexpr Color transparent() noexcept { return Color{ 0, 0, 0, 0 }; }
+};
+
+// Simple vertex format for basic rendering
+export struct Vertex
+{
+	math::Vec3<> position;
+	Color color;
+
+	constexpr Vertex() = default;
+	constexpr Vertex( const math::Vec3<> &pos, const Color &col ) noexcept
+		: position( pos ), color( col ) {}
+};
+
+// Shader compilation result
+export struct ShaderBlob
+{
+	Microsoft::WRL::ComPtr<ID3DBlob> blob;
+	std::string entryPoint;
+	std::string profile;
+
+	bool IsValid() const noexcept { return blob != nullptr; }
+};
+
+// Basic shader compiler
+export class ShaderCompiler
+{
+public:
+	static ShaderBlob CompileFromSource(
+		const std::string &source,
+		const std::string &entryPoint,
+		const std::string &profile,
+		const std::vector<std::string> &defines = {} );
+
+	static ShaderBlob CompileFromFile(
+		const std::filesystem::path &filePath,
+		const std::string &entryPoint,
+		const std::string &profile,
+		const std::vector<std::string> &defines = {} );
+
+private:
+	static std::string BuildDefineString( const std::vector<std::string> &defines );
+};
+
+// Render state configuration
+export class RenderState
+{
+public:
+	RenderState();
+	~RenderState() = default;
+
+	// Depth testing
+	void SetDepthTest( bool enabled ) noexcept { m_depthTestEnabled = enabled; }
+	void SetDepthWrite( bool enabled ) noexcept { m_depthWriteEnabled = enabled; }
+
+	// Rasterizer state
+	void SetWireframe( bool enabled ) noexcept { m_wireframeEnabled = enabled; }
+	void SetCullMode( D3D12_CULL_MODE mode ) noexcept { m_cullMode = mode; }
+
+	// Blend state
+	void SetBlendEnabled( bool enabled ) noexcept { m_blendEnabled = enabled; }
+
+	// Getters
+	bool IsDepthTestEnabled() const noexcept { return m_depthTestEnabled; }
+	bool IsDepthWriteEnabled() const noexcept { return m_depthWriteEnabled; }
+	bool IsWireframeEnabled() const noexcept { return m_wireframeEnabled; }
+	bool IsBlendEnabled() const noexcept { return m_blendEnabled; }
+	D3D12_CULL_MODE GetCullMode() const noexcept { return m_cullMode; }
+
+	// Apply state to command list
+	void Apply( ID3D12GraphicsCommandList *cmdList ) const;
+
+	// Create D3D12 pipeline state objects
+	D3D12_DEPTH_STENCIL_DESC GetDepthStencilDesc() const;
+	D3D12_RASTERIZER_DESC GetRasterizerDesc() const;
+	D3D12_BLEND_DESC GetBlendDesc() const;
+
+private:
+	bool m_depthTestEnabled = true;
+	bool m_depthWriteEnabled = true;
+	bool m_wireframeEnabled = false;
+	bool m_blendEnabled = false;
+	D3D12_CULL_MODE m_cullMode = D3D12_CULL_MODE_BACK;
+};
+
+// Vertex buffer wrapper
+export class VertexBuffer
+{
+public:
+	VertexBuffer( dx12::Device &device, const std::vector<Vertex> &vertices );
+	~VertexBuffer() = default;
+
+	// No copy/move for now
+	VertexBuffer( const VertexBuffer & ) = delete;
+	VertexBuffer &operator=( const VertexBuffer & ) = delete;
+
+	D3D12_VERTEX_BUFFER_VIEW GetView() const noexcept { return m_vertexBufferView; }
+	UINT GetVertexCount() const noexcept { return m_vertexCount; }
+
+	// Update buffer data (for dynamic buffers)
+	void Update( const std::vector<Vertex> &vertices );
+
+private:
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	UINT m_vertexCount;
+	dx12::Device &m_device;
+
+	void CreateBuffer( const std::vector<Vertex> &vertices );
+};
+
+// Index buffer wrapper
+export class IndexBuffer
+{
+public:
+	IndexBuffer( dx12::Device &device, const std::vector<uint16_t> &indices );
+	~IndexBuffer() = default;
+
+	// No copy/move for now
+	IndexBuffer( const IndexBuffer & ) = delete;
+	IndexBuffer &operator=( const IndexBuffer & ) = delete;
+
+	D3D12_INDEX_BUFFER_VIEW GetView() const noexcept { return m_indexBufferView; }
+	UINT GetIndexCount() const noexcept { return m_indexCount; }
+
+	// Update buffer data
+	void Update( const std::vector<uint16_t> &indices );
+
+private:
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_indexBuffer;
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+	UINT m_indexCount;
+	dx12::Device &m_device;
+
+	void CreateBuffer( const std::vector<uint16_t> &indices );
+};
+
+// Simple immediate-mode renderer
+export class Renderer
+{
+public:
+	explicit Renderer( dx12::Device &device );
+	~Renderer();
+
+	// No copy/move for now
+	Renderer( const Renderer & ) = delete;
+	Renderer &operator=( const Renderer & ) = delete;
+
+	// Frame lifecycle
+	void BeginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain );
+	void EndFrame();
+
+	// Clear operations
+	void Clear( const Color &clearColor = Color{ 0.1f, 0.1f, 0.1f, 1.0f } ) noexcept;
+	void ClearDepth( float depth = 1.0f ) noexcept;
+
+	// Set render state and shaders
+	void SetRenderState( const RenderState &state ) noexcept;
+	void SetViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept;
+
+	// Immediate drawing commands
+	void DrawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;
+	void DrawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;
+
+	// Convenience drawing methods
+	void DrawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color = Color::white() ) noexcept;
+	void DrawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color = Color::white() ) noexcept;
+
+	// Resource management
+	void WaitForGPU() noexcept;
+
+private:
+	dx12::Device &m_device;
+	dx12::CommandContext *m_currentContext = nullptr;
+	dx12::SwapChain *m_currentSwapChain = nullptr;
+
+	// Pipeline state
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+
+	// Render targets
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
+
+	// Constant buffer for view-projection matrix
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
+	void *m_constantBufferData = nullptr;
+
+	// Current render state
+	RenderState m_currentRenderState;
+	math::Mat4<> m_viewProjectionMatrix = math::Mat4<>::identity();
+
+	// Dynamic vertex/index buffers for immediate mode
+	std::unique_ptr<VertexBuffer> m_dynamicVertexBuffer;
+	std::unique_ptr<IndexBuffer> m_dynamicIndexBuffer;
+
+	// Initialization
+	void CreateRootSignature();
+	void CreatePipelineState();
+	void CreateRenderTargets( UINT width, UINT height );
+	void CreateConstantBuffer();
+
+	// Helper methods
+	void UpdateConstantBuffer();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTV() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const;
+};
+
+// Default shaders for basic rendering
+export namespace DefaultShaders
+{
+extern const char *VertexShader;
+extern const char *PixelShader;
+} // namespace DefaultShaders
+
+} // namespace renderer
