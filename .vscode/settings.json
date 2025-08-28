@@ -32,6 +32,7 @@
         "/^Move-Item\\b/i": true,
         "/^.*Get-Content\\b/i": true,
         "/^.*Set-Content\\b/i": true,
+        "/^.*Select-Object\\b/i": true,
         "/^powershell -Command \"Get-Content\\b/i": true
     },
     "files.associations": {

@@ -178,6 +178,17 @@ target_sources(editor.ui PUBLIC
 )
 target_compile_features(editor.ui PUBLIC cxx_std_23)
 
+add_library(platform.dx12)
+target_sources(platform.dx12 PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/platform/dx12/dx12_device.ixx
+  PRIVATE
+    src/platform/dx12/dx12_device.cpp
+)
+target_compile_features(platform.dx12 PUBLIC cxx_std_23)
+# Link DirectX 12 libraries
+target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler)
+
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
@@ -191,7 +202,7 @@ if (MSVC)
     engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
     engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
     engine.math_2d engine.math_3d 
-    runtime.ecs runtime.app platform.win32 editor.ui)
+    runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -227,6 +238,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/curves_tests.cpp
     tests/math_2d_tests.cpp
     tests/math_3d_tests.cpp
+    tests/dx12_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -241,6 +253,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.bounding_box_2d
     engine.math_2d
     engine.math_3d
+    platform.dx12
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)
