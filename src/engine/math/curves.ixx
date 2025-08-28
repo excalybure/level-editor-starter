@@ -219,7 +219,7 @@ T arcLength( const std::vector<Vec2<T>> &points ) noexcept
 	T totalLength = T( 0 );
 	for ( size_t i = 1; i < points.size(); ++i )
 	{
-		totalLength += length( points[i] - points[i - 1] );
+		totalLength += static_cast<T>( length( points[i] - points[i - 1] ) );
 	}
 
 	return totalLength;
@@ -234,7 +234,7 @@ T arcLength( const std::vector<Vec3<T>> &points ) noexcept
 	T totalLength = T( 0 );
 	for ( size_t i = 1; i < points.size(); ++i )
 	{
-		totalLength += length( points[i] - points[i - 1] );
+		totalLength += static_cast<T>( length( points[i] - points[i - 1] ) );
 	}
 
 	return totalLength;
@@ -252,7 +252,7 @@ T bezierArcLength( const Vec2<T> &p0, const Vec2<T> &p1, const Vec2<T> &p2, cons
 	{
 		const T t = T( i ) * step;
 		const Vec2<T> currentPoint = cubicBezier( p0, p1, p2, p3, t );
-		totalLength += length( currentPoint - prevPoint );
+		totalLength += static_cast<T>( length( currentPoint - prevPoint ) );
 		prevPoint = currentPoint;
 	}
 
@@ -293,7 +293,7 @@ Vec2<T> sampleByDistance( const std::vector<Vec2<T>> &points, T distance ) noexc
 	T accumulatedDistance = T( 0 );
 	for ( size_t i = 1; i < points.size(); ++i )
 	{
-		const T segmentLength = length( points[i] - points[i - 1] );
+		const T segmentLength = static_cast<T>( length( points[i] - points[i - 1] ) );
 
 		if ( accumulatedDistance + segmentLength >= distance )
 		{
@@ -324,7 +324,7 @@ Vec3<T> sampleByDistance( const std::vector<Vec3<T>> &points, T distance ) noexc
 	T accumulatedDistance = T( 0 );
 	for ( size_t i = 1; i < points.size(); ++i )
 	{
-		const T segmentLength = length( points[i] - points[i - 1] );
+		const T segmentLength = static_cast<T>( length( points[i] - points[i - 1] ) );
 
 		if ( accumulatedDistance + segmentLength >= distance )
 		{
