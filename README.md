@@ -96,9 +96,10 @@
   - `engine.plane` - 3D planes with distance calculations
   - `engine.frustum` - 3D view frustums for culling
   - `engine.bounding_volumes` - Convenience module importing all bounding structures
+- **Curve & Spline Systems** (`engine.curves`) - Bezier curves, Catmull-Rom splines, arc length parameterization
 
 ### 📊 Test Coverage
-- **5,246 assertions** across **70 test cases** - all passing ✅
+- **5,374 assertions** across **71 test cases** - all passing ✅
 - Comprehensive validation of all mathematical operations
 - Edge case handling for degenerate geometries
 - Performance verification for critical functions

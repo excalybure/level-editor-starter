@@ -64,6 +64,14 @@ target_sources(engine.animation PUBLIC
 target_compile_features(engine.animation PUBLIC cxx_std_23)
 target_link_libraries(engine.animation PUBLIC engine.math)
 
+add_library(engine.curves)
+target_sources(engine.curves PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/curves.ixx
+)
+target_compile_features(engine.curves PUBLIC cxx_std_23)
+target_link_libraries(engine.curves PUBLIC engine.math engine.vec)
+
 add_library(engine.bounding_box_2d)
 target_sources(engine.bounding_box_2d PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -216,6 +224,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/math_utils_tests.cpp
     tests/random_tests.cpp
     tests/animation_tests.cpp
+    tests/curves_tests.cpp
     tests/math_2d_tests.cpp
     tests/math_3d_tests.cpp
   )
@@ -227,6 +236,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.color
     engine.random
     engine.animation
+    engine.curves
     engine.bounding_volumes
     engine.bounding_box_2d
     engine.math_2d
