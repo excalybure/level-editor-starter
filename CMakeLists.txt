@@ -64,6 +64,14 @@ target_sources(engine.animation PUBLIC
 target_compile_features(engine.animation PUBLIC cxx_std_23)
 target_link_libraries(engine.animation PUBLIC engine.math)
 
+add_library(engine.math_2d)
+target_sources(engine.math_2d PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/math/math_2d.ixx
+)
+target_compile_features(engine.math_2d PUBLIC cxx_std_23)
+target_link_libraries(engine.math_2d PUBLIC engine.math engine.vec)
+
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -101,7 +109,7 @@ target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation runtime.ecs runtime.app platform.win32 editor.ui)
+  foreach(tgt IN ITEMS engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation engine.math_2d runtime.ecs runtime.app platform.win32 editor.ui)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -134,6 +142,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/math_utils_tests.cpp
     tests/random_tests.cpp
     tests/animation_tests.cpp
+    tests/math_2d_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -143,6 +152,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.color
     engine.random
     engine.animation
+    engine.math_2d
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)
