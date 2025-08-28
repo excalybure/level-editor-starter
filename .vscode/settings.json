@@ -29,6 +29,7 @@
         "/^Remove-Item\\b/i": true,
         "/^Get-ChildItem\\b/i": true,
         "/^Move-ChildItem\\b/i": true,
+        "/^Move-Item\\b/i": true,
         "/^.*Get-Content\\b/i": true,
         "/^.*Set-Content\\b/i": true,
         "/^powershell -Command \"Get-Content\\b/i": true

@@ -1,5 +1,10 @@
 # Engine Math Library
 
+## Implementation requirements
+- Unit test all new implementation
+- Ensure const-correctness
+- After implementing new functionality, update this file accordingly
+
 This directory contains the math modules f### `quat.ixx` - Quaternion Operations
 **Status: ✅ Complete**
 - Quaternion class with full arithmetic support

@@ -3,7 +3,7 @@ export module engine.math_2d;
 import std;
 import engine.math;
 import engine.vec;
-export import engine.bounding_box;
+export import engine.bounding_box_2d;
 
 export namespace math
 {

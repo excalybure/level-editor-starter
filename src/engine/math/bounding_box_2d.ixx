@@ -1,4 +1,4 @@
-export module engine.bounding_box;
+export module engine.bounding_box_2d;
 
 import std;
 import engine.vec;
