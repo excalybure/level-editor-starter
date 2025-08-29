@@ -128,14 +128,14 @@ T atan2( T y, T x )
 template <typename T>
 constexpr T smoothstep( T edge0, T edge1, T x )
 {
-	T t = clamp( ( x - edge0 ) / ( edge1 - edge0 ), static_cast<T>( 0 ), static_cast<T>( 1 ) );
+	const T t = clamp( ( x - edge0 ) / ( edge1 - edge0 ), static_cast<T>( 0 ), static_cast<T>( 1 ) );
 	return t * t * ( static_cast<T>( 3 ) - static_cast<T>( 2 ) * t );
 }
 
 template <typename T>
 constexpr T smootherstep( T edge0, T edge1, T x )
 {
-	T t = clamp( ( x - edge0 ) / ( edge1 - edge0 ), static_cast<T>( 0 ), static_cast<T>( 1 ) );
+	const T t = clamp( ( x - edge0 ) / ( edge1 - edge0 ), static_cast<T>( 0 ), static_cast<T>( 1 ) );
 	return t * t * t * ( t * ( t * static_cast<T>( 6 ) - static_cast<T>( 15 ) ) + static_cast<T>( 10 ) );
 }
 

@@ -43,9 +43,8 @@ math::Vec3<> Camera::GetForwardVector() const noexcept
 {
 	return math::normalize( m_target - m_position );
 }
-r
-	math::Vec3<>
-	Camera::GetRightVector() const noexcept
+
+math::Vec3<> Camera::GetRightVector() const noexcept
 {
 	const auto forward = GetForwardVector();
 	return math::normalize( math::cross( forward, m_up ) );

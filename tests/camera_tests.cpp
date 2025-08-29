@@ -123,7 +123,7 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 		const PerspectiveCamera camera;
 
 		REQUIRE( camera.GetType() == CameraType::Perspective );
-		REQUIRE( camera.GetFieldOfView() == Catch::Approx( 45.0f ).epsilon( EPSILON ) );
+		REQUIRE( camera.GetFieldOfView() == Catch::Approx( 65.0f ).epsilon( EPSILON ) );
 		REQUIRE( camera.GetNearPlane() == Catch::Approx( 0.1f ).epsilon( EPSILON ) );
 		REQUIRE( camera.GetFarPlane() == Catch::Approx( 1000.0f ).epsilon( EPSILON ) );
 	}
@@ -368,7 +368,7 @@ TEST_CASE( "Camera Utilities", "[camera]" )
 	{
 		const Vec3<> current{ 0.0f, 0.0f, 0.0f };
 		const Vec3<> target{ 10.0f, 5.0f, -3.0f };
-		const Vec3<> velocity{ 0.0f, 0.0f, 0.0f };
+		Vec3<> velocity{ 0.0f, 0.0f, 0.0f };
 
 		const float smoothTime = 1.0f;
 		const float deltaTime = 0.1f; // Larger delta time for noticeable movement

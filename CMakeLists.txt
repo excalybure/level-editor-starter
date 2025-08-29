@@ -203,8 +203,10 @@ add_library(engine.camera)
 target_sources(engine.camera PUBLIC
   FILE_SET CXX_MODULES FILES
     src/engine/camera/camera.ixx
+    src/engine/camera/camera_controller.ixx
   PRIVATE
     src/engine/camera/camera.cpp
+    src/engine/camera/camera_controller.cpp
 )
 target_compile_features(engine.camera PUBLIC cxx_std_23)
 target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math)
@@ -261,6 +263,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/dx12_tests.cpp
     tests/renderer_tests.cpp
     tests/camera_tests.cpp
+    tests/camera_controller_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math

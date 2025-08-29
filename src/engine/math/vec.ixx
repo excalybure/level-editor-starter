@@ -429,4 +429,30 @@ inline V slerp( const V &a, const V &b, T t )
 	return dir * magBlend;
 }
 
+// Approximate equality comparison functions for vectors
+// Useful for testing with floating point precision tolerance
+export template <typename T = float>
+constexpr bool approxEqual( const Vec2<T> &a, const Vec2<T> &b, T epsilon = static_cast<T>( 0.001 ) )
+{
+	return std::abs( a.x - b.x ) <= epsilon &&
+		std::abs( a.y - b.y ) <= epsilon;
+}
+
+export template <typename T = float>
+constexpr bool approxEqual( const Vec3<T> &a, const Vec3<T> &b, T epsilon = static_cast<T>( 0.001 ) )
+{
+	return std::abs( a.x - b.x ) <= epsilon &&
+		std::abs( a.y - b.y ) <= epsilon &&
+		std::abs( a.z - b.z ) <= epsilon;
+}
+
+export template <typename T = float>
+constexpr bool approxEqual( const Vec4<T> &a, const Vec4<T> &b, T epsilon = static_cast<T>( 0.001 ) )
+{
+	return std::abs( a.x - b.x ) <= epsilon &&
+		std::abs( a.y - b.y ) <= epsilon &&
+		std::abs( a.z - b.z ) <= epsilon &&
+		std::abs( a.w - b.w ) <= epsilon;
+}
+
 } // namespace math
