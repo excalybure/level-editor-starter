@@ -154,3 +154,198 @@ TEST_CASE( "Slerp varying magnitudes", "[math][slerp]" )
 	const float ang = math::angle( dir, math::Vec3<>{ 1, 0, 0 } );
 	REQUIRE_THAT( ang, WithinRel( expectedAngle, 1e-3f ) );
 }
+
+TEST_CASE( "Vec3 swizzle accessors", "[math][vec3][swizzle]" )
+{
+	const math::Vec3<> v{ 1.0f, 2.0f, 3.0f };
+
+	SECTION( "2D swizzles" )
+	{
+		auto xy = v.xy();
+		REQUIRE( xy.x == 1.0f );
+		REQUIRE( xy.y == 2.0f );
+
+		auto xz = v.xz();
+		REQUIRE( xz.x == 1.0f );
+		REQUIRE( xz.y == 3.0f );
+
+		auto yz = v.yz();
+		REQUIRE( yz.x == 2.0f );
+		REQUIRE( yz.y == 3.0f );
+	}
+}
+
+TEST_CASE( "Vec4 swizzle accessors", "[math][vec4][swizzle]" )
+{
+	const math::Vec4<> v{ 1.0f, 2.0f, 3.0f, 4.0f };
+
+	SECTION( "2D swizzles" )
+	{
+		auto xy = v.xy();
+		REQUIRE( xy.x == 1.0f );
+		REQUIRE( xy.y == 2.0f );
+
+		auto xz = v.xz();
+		REQUIRE( xz.x == 1.0f );
+		REQUIRE( xz.y == 3.0f );
+
+		auto xw = v.xw();
+		REQUIRE( xw.x == 1.0f );
+		REQUIRE( xw.y == 4.0f );
+
+		auto yz = v.yz();
+		REQUIRE( yz.x == 2.0f );
+		REQUIRE( yz.y == 3.0f );
+
+		auto yw = v.yw();
+		REQUIRE( yw.x == 2.0f );
+		REQUIRE( yw.y == 4.0f );
+
+		auto zw = v.zw();
+		REQUIRE( zw.x == 3.0f );
+		REQUIRE( zw.y == 4.0f );
+	}
+
+	SECTION( "3D swizzles" )
+	{
+		auto xyz = v.xyz();
+		REQUIRE( xyz.x == 1.0f );
+		REQUIRE( xyz.y == 2.0f );
+		REQUIRE( xyz.z == 3.0f );
+
+		auto xzw = v.xzw();
+		REQUIRE( xzw.x == 1.0f );
+		REQUIRE( xzw.y == 3.0f );
+		REQUIRE( xzw.z == 4.0f );
+
+		auto yzw = v.yzw();
+		REQUIRE( yzw.x == 2.0f );
+		REQUIRE( yzw.y == 3.0f );
+		REQUIRE( yzw.z == 4.0f );
+
+		auto xyw = v.xyw();
+		REQUIRE( xyw.x == 1.0f );
+		REQUIRE( xyw.y == 2.0f );
+		REQUIRE( xyw.z == 4.0f );
+	}
+}
+
+TEST_CASE( "Vec swizzle type consistency", "[math][vec][swizzle][types]" )
+{
+	SECTION( "Vec3 swizzles return correct types" )
+	{
+		const math::Vec3<float> vf{ 1.0f, 2.0f, 3.0f };
+		const math::Vec3<double> vd{ 1.0, 2.0, 3.0 };
+		const math::Vec3<int> vi{ 1, 2, 3 };
+
+		// Test that swizzles preserve the template type
+		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2<float>> );
+		static_assert( std::is_same_v<decltype( vd.xz() ), math::Vec2<double>> );
+		static_assert( std::is_same_v<decltype( vi.yz() ), math::Vec2<int>> );
+	}
+
+	SECTION( "Vec4 swizzles return correct types" )
+	{
+		const math::Vec4<float> vf{ 1.0f, 2.0f, 3.0f, 4.0f };
+		const math::Vec4<double> vd{ 1.0, 2.0, 3.0, 4.0 };
+		const math::Vec4<int> vi{ 1, 2, 3, 4 };
+
+		// Test 2D swizzles
+		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2<float>> );
+		static_assert( std::is_same_v<decltype( vd.zw() ), math::Vec2<double>> );
+		static_assert( std::is_same_v<decltype( vi.yw() ), math::Vec2<int>> );
+
+		// Test 3D swizzles
+		static_assert( std::is_same_v<decltype( vf.xyz() ), math::Vec3<float>> );
+		static_assert( std::is_same_v<decltype( vd.xzw() ), math::Vec3<double>> );
+		static_assert( std::is_same_v<decltype( vi.yzw() ), math::Vec3<int>> );
+	}
+}
+
+TEST_CASE( "Vec swizzles with different numeric types", "[math][vec][swizzle][numeric]" )
+{
+	SECTION( "Integer vectors" )
+	{
+		const math::Vec3<int> v3i{ 10, 20, 30 };
+		const math::Vec4<int> v4i{ 10, 20, 30, 40 };
+
+		auto xy = v3i.xy();
+		REQUIRE( xy.x == 10 );
+		REQUIRE( xy.y == 20 );
+
+		auto xzw = v4i.xzw();
+		REQUIRE( xzw.x == 10 );
+		REQUIRE( xzw.y == 30 );
+		REQUIRE( xzw.z == 40 );
+	}
+
+	SECTION( "Double vectors" )
+	{
+		const math::Vec3<double> v3d{ 1.1, 2.2, 3.3 };
+		const math::Vec4<double> v4d{ 1.1, 2.2, 3.3, 4.4 };
+
+		auto xz = v3d.xz();
+		REQUIRE( xz.x == 1.1 );
+		REQUIRE( xz.y == 3.3 );
+
+		auto yzw = v4d.yzw();
+		REQUIRE( yzw.x == 2.2 );
+		REQUIRE( yzw.y == 3.3 );
+		REQUIRE( yzw.z == 4.4 );
+	}
+}
+
+TEST_CASE( "Vec swizzles are constexpr", "[math][vec][swizzle][constexpr]" )
+{
+	SECTION( "Compile-time Vec3 swizzles" )
+	{
+		constexpr math::Vec3<float> v{ 1.0f, 2.0f, 3.0f };
+		
+		constexpr auto xy = v.xy();
+		static_assert( xy.x == 1.0f );
+		static_assert( xy.y == 2.0f );
+
+		constexpr auto xz = v.xz();
+		static_assert( xz.x == 1.0f );
+		static_assert( xz.y == 3.0f );
+
+		constexpr auto yz = v.yz();
+		static_assert( yz.x == 2.0f );
+		static_assert( yz.y == 3.0f );
+	}
+
+	SECTION( "Compile-time Vec4 swizzles" )
+	{
+		constexpr math::Vec4<float> v{ 1.0f, 2.0f, 3.0f, 4.0f };
+		
+		// Test 2D swizzles
+		constexpr auto xy = v.xy();
+		static_assert( xy.x == 1.0f );
+		static_assert( xy.y == 2.0f );
+
+		constexpr auto zw = v.zw();
+		static_assert( zw.x == 3.0f );
+		static_assert( zw.y == 4.0f );
+
+		// Test 3D swizzles
+		constexpr auto xyz = v.xyz();
+		static_assert( xyz.x == 1.0f );
+		static_assert( xyz.y == 2.0f );
+		static_assert( xyz.z == 3.0f );
+
+		constexpr auto xzw = v.xzw();
+		static_assert( xzw.x == 1.0f );
+		static_assert( xzw.y == 3.0f );
+		static_assert( xzw.z == 4.0f );
+
+		constexpr auto yzw = v.yzw();
+		static_assert( yzw.x == 2.0f );
+		static_assert( yzw.y == 3.0f );
+		static_assert( yzw.z == 4.0f );
+
+		constexpr auto xyw = v.xyw();
+		static_assert( xyw.x == 1.0f );
+		static_assert( xyw.y == 2.0f );
+		static_assert( xyw.z == 4.0f );
+	}
+}

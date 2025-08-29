@@ -74,6 +74,11 @@ struct Vec3
 	constexpr Vec3() = default;
 	constexpr Vec3( T x_, T y_, T z_ ) : x{ x_ }, y{ y_ }, z{ z_ } {}
 
+	// Swizzle accessors for 2D components
+	constexpr Vec2<T> xy() const { return Vec2<T>{ x, y }; }
+	constexpr Vec2<T> xz() const { return Vec2<T>{ x, z }; }
+	constexpr Vec2<T> yz() const { return Vec2<T>{ y, z }; }
+
 	constexpr Vec3 operator+( const Vec3 &r ) const { return { x + r.x, y + r.y, z + r.z }; }
 	constexpr Vec3 operator-( const Vec3 &r ) const { return { x - r.x, y - r.y, z - r.z }; }
 	constexpr Vec3 operator*( T s ) const { return { x * s, y * s, z * s }; }
@@ -140,6 +145,20 @@ struct Vec4
 	constexpr Vec4() = default;
 	constexpr Vec4( T x_, T y_, T z_, T w_ ) : x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ } {}
 
+	// Swizzle accessors for 2D components
+	constexpr Vec2<T> xy() const { return Vec2<T>{ x, y }; }
+	constexpr Vec2<T> xz() const { return Vec2<T>{ x, z }; }
+	constexpr Vec2<T> xw() const { return Vec2<T>{ x, w }; }
+	constexpr Vec2<T> yz() const { return Vec2<T>{ y, z }; }
+	constexpr Vec2<T> yw() const { return Vec2<T>{ y, w }; }
+	constexpr Vec2<T> zw() const { return Vec2<T>{ z, w }; }
+
+	// Swizzle accessors for 3D components
+	constexpr Vec3<T> xyz() const { return Vec3<T>{ x, y, z }; }
+	constexpr Vec3<T> xzw() const { return Vec3<T>{ x, z, w }; }
+	constexpr Vec3<T> yzw() const { return Vec3<T>{ y, z, w }; }
+	constexpr Vec3<T> xyw() const { return Vec3<T>{ x, y, w }; }
+
 	constexpr Vec4 operator+( const Vec4 &r ) const { return { x + r.x, y + r.y, z + r.z, w + r.w }; }
 	constexpr Vec4 operator-( const Vec4 &r ) const { return { x - r.x, y - r.y, z - r.z, w - r.w }; }
 	constexpr Vec4 operator*( T s ) const { return { x * s, y * s, z * s, w * s }; }
@@ -147,8 +166,6 @@ struct Vec4
 	constexpr Vec4 operator*( const Vec4 &r ) const { return { x * r.x, y * r.y, z * r.z, w * r.w }; }
 	constexpr Vec4 operator/( const Vec4 &r ) const { return { x / r.x, y / r.y, z / r.z, w / r.w }; }
 	constexpr Vec4 operator-() const { return { -x, -y, -z, -w }; }
-
-	constexpr Vec3<T> xyz() const { return Vec3{ x, y, z }; }
 
 	constexpr Vec4 &operator+=( const Vec4 &r )
 	{
