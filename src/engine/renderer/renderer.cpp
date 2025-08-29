@@ -139,7 +139,7 @@ std::string ShaderCompiler::BuildDefineString( const std::vector<std::string> &d
 // RenderState implementation
 RenderState::RenderState() = default;
 
-void RenderState::Apply( ID3D12GraphicsCommandList *cmdList ) const
+void RenderState::Apply( [[maybe_unused]] ID3D12GraphicsCommandList *cmdList ) const
 {
 	// Note: In D3D12, render state is baked into pipeline state objects
 	// This would typically be used to set dynamic state like viewport, scissors, etc.

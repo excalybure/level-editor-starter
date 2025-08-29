@@ -148,6 +148,8 @@ struct Vec4
 	constexpr Vec4 operator/( const Vec4 &r ) const { return { x / r.x, y / r.y, z / r.z, w / r.w }; }
 	constexpr Vec4 operator-() const { return { -x, -y, -z, -w }; }
 
+	constexpr Vec3<T> xyz() const { return Vec3{ x, y, z }; }
+
 	constexpr Vec4 &operator+=( const Vec4 &r )
 	{
 		x += r.x;

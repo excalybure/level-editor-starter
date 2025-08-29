@@ -153,7 +153,6 @@ void PerspectiveCamera::FocusOnPoint( const math::Vec3<> &point, float distance 
 
 void PerspectiveCamera::FocusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
-	const float maxExtent = std::max( { size.x, size.y, size.z } );
 	const float distance = CameraUtils::CalculateFramingDistance( size, m_fov, 1.0f ); // Assume square aspect
 
 	FocusOnPoint( center, distance );
@@ -334,12 +333,21 @@ float CalculateFramingDistance(
 	float fovDegrees,
 	float aspectRatio ) noexcept
 {
-	const float maxExtent = std::max( { boundsSize.x, boundsSize.y, boundsSize.z } );
 	const float fovRadians = math::radians( fovDegrees );
-	const float halfFov = fovRadians * 0.5f;
+	const float verticalHalfFov = fovRadians * 0.5f;
+	const float horizontalHalfFov = std::atan( std::tan( verticalHalfFov ) * aspectRatio );
 
-	// Calculate distance needed to fit the bounds
-	const float distance = ( maxExtent * 0.5f ) / std::tan( halfFov );
+	// Calculate required distance for both horizontal and vertical extents
+	// We need to consider all three dimensions as they project differently
+	const float maxHorizontalExtent = std::max( boundsSize.x, boundsSize.y );
+	const float maxVerticalExtent = std::max( boundsSize.y, boundsSize.z );
+
+	// Calculate distance needed for horizontal and vertical fitting
+	const float horizontalDistance = ( maxHorizontalExtent * 0.5f ) / std::tan( horizontalHalfFov );
+	const float verticalDistance = ( maxVerticalExtent * 0.5f ) / std::tan( verticalHalfFov );
+
+	// Use the larger distance to ensure the object fits in both dimensions
+	const float distance = std::max( horizontalDistance, verticalDistance );
 
 	// Add some padding
 	return distance * 1.2f;

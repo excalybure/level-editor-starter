@@ -211,6 +211,16 @@ target_sources(engine.camera PUBLIC
 target_compile_features(engine.camera PUBLIC cxx_std_23)
 target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math)
 
+add_library(editor.viewport)
+target_sources(editor.viewport PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/editor/viewport/viewport.ixx
+  PRIVATE
+    src/editor/viewport/viewport.cpp
+)
+target_compile_features(editor.viewport PUBLIC cxx_std_23)
+target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera)
+
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
@@ -223,8 +233,8 @@ if (MSVC)
   foreach(tgt IN ITEMS 
     engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
     engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
-    engine.math_2d engine.math_3d engine.renderer
-    runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui)
+    engine.math_2d engine.math_3d engine.renderer engine.camera
+    runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui editor.viewport)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -264,6 +274,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/renderer_tests.cpp
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
+    tests/viewport_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -281,6 +292,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     platform.dx12
     engine.renderer
     engine.camera
+    editor.viewport
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)

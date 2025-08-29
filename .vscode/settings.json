@@ -9,10 +9,11 @@
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
     "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
     "C_Cpp.default.cppStandard": "c++23",
+    "chat.tools.autoApprove": true,
     "chat.tools.terminal.autoApprove": {
         "rm": true,
         "rmdir": false,
-        "del": false,
+        "del": true,
         "kill": false,
         "curl": false,
         "wget": false,
