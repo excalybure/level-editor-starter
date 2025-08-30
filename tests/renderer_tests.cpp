@@ -103,19 +103,19 @@ TEST_CASE( "Render State", "[renderer]" )
 	SECTION( "Wireframe state" )
 	{
 		RenderState state;
-	state.setWireframe( true );
+		state.setWireframe( true );
 
-	const auto rasterizerDesc = state.getRasterizerDesc();
+		const auto rasterizerDesc = state.getRasterizerDesc();
 		REQUIRE( rasterizerDesc.FillMode == D3D12_FILL_MODE_WIREFRAME );
 	}
 
 	SECTION( "Depth state modifications" )
 	{
 		RenderState state;
-	state.setDepthTest( false );
-	state.setDepthWrite( false );
+		state.setDepthTest( false );
+		state.setDepthWrite( false );
 
-	const auto depthDesc = state.getDepthStencilDesc();
+		const auto depthDesc = state.getDepthStencilDesc();
 		REQUIRE( depthDesc.DepthEnable == FALSE );
 		REQUIRE( depthDesc.DepthWriteMask == D3D12_DEPTH_WRITE_MASK_ZERO );
 	}

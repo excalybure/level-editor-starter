@@ -165,10 +165,10 @@ TEST_CASE( "Viewport Input Handling", "[viewport]" )
 
 	SECTION( "Input ignored when not focused" )
 	{
-	viewport.setFocused( false );
+		viewport.setFocused( false );
 
 		auto mouseMove = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
-			REQUIRE_NOTHROW( viewport.handleInput( mouseMove ) ); // Should not crash but ignore input
+		REQUIRE_NOTHROW( viewport.handleInput( mouseMove ) ); // Should not crash but ignore input
 	}
 }
 
@@ -282,9 +282,9 @@ TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 		const auto *viewport = ViewportFactory::createSingleViewport( manager, ViewportType::Side );
 
 		REQUIRE( viewport != nullptr );
-	REQUIRE( viewport->getType() == ViewportType::Side );
-	REQUIRE( manager.getViewports().size() == 1 );
-	REQUIRE( manager.getActiveViewport() == viewport );
+		REQUIRE( viewport->getType() == ViewportType::Side );
+		REQUIRE( manager.getViewports().size() == 1 );
+		REQUIRE( manager.getActiveViewport() == viewport );
 	}
 }
 
@@ -393,8 +393,8 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 		viewport.setRenderTargetSize( 0, 0 );
 
 		// Should handle gracefully
-	REQUIRE_NOTHROW( viewport.update( 0.016f ) );
-	REQUIRE_NOTHROW( viewport.render() );
+		REQUIRE_NOTHROW( viewport.update( 0.016f ) );
+		REQUIRE_NOTHROW( viewport.render() );
 	}
 
 	SECTION( "Manager with no viewports" )
@@ -402,8 +402,8 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 		ViewportManager manager;
 
 		// Should handle gracefully
-	REQUIRE_NOTHROW( manager.update( 0.016f ) );
-	REQUIRE_NOTHROW( manager.render() );
+		REQUIRE_NOTHROW( manager.update( 0.016f ) );
+		REQUIRE_NOTHROW( manager.render() );
 
 		// Should handle null operations
 		manager.setActiveViewport( nullptr );
