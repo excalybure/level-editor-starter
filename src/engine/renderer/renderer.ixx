@@ -211,7 +211,11 @@ public:
 	ID3D12Resource *getDynamicIndexResource() const noexcept { return m_dynamicIndexBuffer ? m_dynamicIndexBuffer->getResource() : nullptr; }
 
 	// Begin a headless recording session for tests (no swap chain / RTV setup)
-	void beginHeadlessForTests( dx12::CommandContext &context ) noexcept { m_currentContext = &context; m_currentSwapChain = nullptr; }
+	void beginHeadlessForTests( dx12::CommandContext &context ) noexcept
+	{
+		m_currentContext = &context;
+		m_currentSwapChain = nullptr;
+	}
 
 	// Immediate drawing commands
 	void drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;
