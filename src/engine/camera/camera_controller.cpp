@@ -67,7 +67,7 @@ void PerspectiveCameraController::HandleOrbitInput( const InputState &input )
 		if ( !m_isDragging )
 		{
 			m_isDragging = true;
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 		else
 		{
@@ -75,7 +75,7 @@ void PerspectiveCameraController::HandleOrbitInput( const InputState &input )
 			const float deltaPitch = ( input.mouse.y - m_lastMousePos.y ) * m_orbitSensitivity;
 
 			m_perspectiveCamera->Orbit( deltaYaw, deltaPitch );
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
 	else
@@ -95,7 +95,7 @@ void PerspectiveCameraController::HandlePanInput( const InputState &input )
 		if ( !m_isPanning )
 		{
 			m_isPanning = true;
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 		else
 		{
@@ -103,7 +103,7 @@ void PerspectiveCameraController::HandlePanInput( const InputState &input )
 			const float deltaY = ( input.mouse.y - m_lastMousePos.y ) * m_panSensitivity;
 
 			m_perspectiveCamera->Pan( deltaX, deltaY );
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
 	else
@@ -252,7 +252,7 @@ void OrthographicCameraController::HandlePanInput( const InputState &input )
 		if ( !m_isDragging )
 		{
 			m_isDragging = true;
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 		else
 		{
@@ -260,7 +260,7 @@ void OrthographicCameraController::HandlePanInput( const InputState &input )
 			const float deltaY = ( input.mouse.y - m_lastMousePos.y ) * m_panSensitivity;
 
 			m_orthographicCamera->Pan( deltaX, deltaY );
-			m_lastMousePos = math::Vec2<>{ input.mouse.x, input.mouse.y };
+			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
 	else

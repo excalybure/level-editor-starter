@@ -297,10 +297,10 @@ Ray ScreenToWorldRay(
 	const math::Vec4<> rayWorld = invView * rayEye;
 
 	// Extract origin from inverse view matrix (camera position)
-	const math::Vec3<> origin{ invView.row3.x, invView.row3.y, invView.row3.z };
+	const math::Vec3<> origin = invView.row3.xyz();
 
 	// Normalize direction
-	const math::Vec3<> direction = math::normalize( math::Vec3<>{ rayWorld.x, rayWorld.y, rayWorld.z } );
+	const math::Vec3<> direction = math::normalize( rayWorld.xyz() );
 
 	return Ray{ origin, direction };
 }
@@ -319,7 +319,7 @@ math::Vec3<> WorldToScreen(
 	if ( std::abs( clipPos.w ) < 0.0001f )
 		return math::Vec3<>{ -1.0f, -1.0f, -1.0f }; // Invalid
 
-	const math::Vec3<> ndc{ clipPos.x / clipPos.w, clipPos.y / clipPos.w, clipPos.z / clipPos.w };
+	const math::Vec3<> ndc = clipPos.xyz() / clipPos.w;
 
 	// Convert to screen coordinates
 	const float screenX = ( ndc.x + 1.0f ) * 0.5f * screenSize.x;

@@ -336,7 +336,7 @@ TEST_CASE( "Camera Utilities", "[camera]" )
 		const auto projMatrix = Mat4<>::perspective( 45.0f * 3.14159f / 180.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
 
 		const Vec2<> screenSize{ 1920.0f, 1080.0f };
-		const Vec2<> screenCenter{ screenSize.x * 0.5f, screenSize.y * 0.5f };
+		const Vec2<> screenCenter = screenSize * 0.5f;
 
 		const auto ray = CameraUtils::ScreenToWorldRay( screenCenter, screenSize, viewMatrix, projMatrix );
 

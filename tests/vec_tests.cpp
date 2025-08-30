@@ -300,7 +300,7 @@ TEST_CASE( "Vec swizzles are constexpr", "[math][vec][swizzle][constexpr]" )
 	SECTION( "Compile-time Vec3 swizzles" )
 	{
 		constexpr math::Vec3<float> v{ 1.0f, 2.0f, 3.0f };
-		
+
 		constexpr auto xy = v.xy();
 		static_assert( xy.x == 1.0f );
 		static_assert( xy.y == 2.0f );
@@ -317,7 +317,7 @@ TEST_CASE( "Vec swizzles are constexpr", "[math][vec][swizzle][constexpr]" )
 	SECTION( "Compile-time Vec4 swizzles" )
 	{
 		constexpr math::Vec4<float> v{ 1.0f, 2.0f, 3.0f, 4.0f };
-		
+
 		// Test 2D swizzles
 		constexpr auto xy = v.xy();
 		static_assert( xy.x == 1.0f );

@@ -626,7 +626,7 @@ struct Mat4
 		Vec4<T> homogeneous{ v.x, v.y, v.z, static_cast<T>( 1 ) };
 		Vec4<T> result = *this * homogeneous;
 		const T invW = static_cast<T>( 1 ) / result.w;
-		return { result.x * invW, result.y * invW, result.z * invW };
+		return result.xyz() * invW;
 	}
 
 	// Transform a 3D vector as a direction (w=0, no translation)
@@ -634,7 +634,7 @@ struct Mat4
 	{
 		Vec4<T> direction{ v.x, v.y, v.z, static_cast<T>( 0 ) };
 		Vec4<T> result = *this * direction;
-		return { result.x, result.y, result.z };
+		return result.xyz();
 	}
 
 	// Compound assignment operators

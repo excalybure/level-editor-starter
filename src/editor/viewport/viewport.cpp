@@ -197,7 +197,7 @@ math::Vec2<> Viewport::WorldToScreen( const math::Vec3<> &worldPos ) const noexc
 	}
 
 	// Convert NDC to screen coordinates
-	return ViewportUtils::NormalizedToPixel( { clipPos.x, clipPos.y }, m_size );
+	return ViewportUtils::NormalizedToPixel( clipPos.xy(), m_size );
 }
 
 void Viewport::FrameAll() noexcept
