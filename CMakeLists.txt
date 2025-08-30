@@ -291,6 +291,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
+  tests/ecs_tests.cpp
   tests/ui_tests.cpp
   tests/win32_window_tests.cpp
   )
@@ -311,6 +312,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.renderer
     engine.camera
     editor.viewport
+  runtime.ecs
   editor.ui
   platform.win32
     Catch2::Catch2WithMain
