@@ -103,7 +103,7 @@ void Device::begin_frame()
 
 void Device::end_frame()
 {
-	// Transition back to present state  
+	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

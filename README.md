@@ -24,6 +24,78 @@
 
 ---
 
+## Naming Conventions
+
+This project follows **Modern C++ conventions** (avoiding snake_case) for consistency and readability:
+
+### 🏷️ Types & Classes: **PascalCase**
+```cpp
+class ViewportLayout {};
+struct Vec3 {};
+enum class MouseButton { Left, Right, Middle };
+template<typename T> class BoundingBox {};
+```
+
+### 🔧 Functions & Methods: **camelCase**
+```cpp
+void beginFrame();           // Lifecycle functions
+void endFrame();
+bool initialize();
+void shutdown();
+ID3D12Device* getDevice();   // Getters/accessors
+float lengthSquared();       // Math operations
+void setupDockspace();       // Internal functions
+```
+
+### 📦 Variables: **camelCase**
+```cpp
+float clearColor = 0.0f;
+int windowWidth = 800;
+auto lengthSquared = dot(v, v);
+Vec3 cameraPosition{0, 0, 10};
+```
+
+### 👥 Member Variables: **m_** prefix + **camelCase**
+```cpp
+class UI {
+    ViewportLayout m_layout;
+    std::unique_ptr<Impl> m_impl;
+    ComPtr<ID3D12Device> m_device;
+};
+```
+
+### 🔢 Constants: **kPascalCase** (modern style)
+```cpp
+static constexpr float kPi = 3.14159f;
+static constexpr int kMaxEntities = 1000;
+static constexpr Vec3 kWorldUp{0, 0, 1};  // Z-up convention
+```
+
+### 🗂️ Namespaces: **lowercase**
+```cpp
+namespace math {}    // Core math operations
+namespace ecs {}     // Entity-component system  
+namespace dx12 {}    // DirectX 12 abstractions
+namespace editor {}  // Editor-specific code
+```
+
+### 📁 Files & Modules: **lowercase + underscores**
+```cpp
+// Module names
+export module engine.math;
+export module runtime.ecs;
+export module platform.win32.window;
+
+// File names
+math_tests.cpp
+win32_window.ixx
+dx12_device.cpp
+```
+
+**Rationale:** This convention aligns with Unreal Engine, modern DirectX APIs, and contemporary C++ codebases while avoiding snake_case as requested.
+
+---
+
 ## Project Layout (modules)
 ```
 /src
