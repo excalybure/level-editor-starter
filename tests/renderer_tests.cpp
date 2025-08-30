@@ -377,3 +377,43 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 		REQUIRE( ps.find( "SV_TARGET" ) != std::string::npos );
 	}
 }
+
+TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
+{
+	dx12::Device device;
+	if( !requireHeadlessDevice( device, "dynamic reuse" ) ) return;
+	Renderer rendererInst( device );
+	dx12::CommandContext context( device );
+	rendererInst.beginHeadlessForTests( context );
+	std::vector<Vertex> tri = {
+		{ {0,0,0}, Color::red() },
+		{ {1,0,0}, Color::green() },
+		{ {0,1,0}, Color::blue() }
+	};
+	rendererInst.drawVertices( tri );
+	ID3D12Resource* firstVB = rendererInst.getDynamicVertexResource();
+	REQUIRE( rendererInst.getDynamicVertexCapacity() == 3 );
+	tri[1].position.y = 0.2f;
+	rendererInst.drawVertices( tri );
+	REQUIRE( rendererInst.getDynamicVertexResource() == firstVB );
+	tri.push_back( { {0,0,1}, Color::white() } );
+	rendererInst.drawVertices( tri );
+	REQUIRE( rendererInst.getDynamicVertexCapacity() == 4 );
+	REQUIRE( rendererInst.getDynamicVertexResource() != firstVB );
+	rendererInst.endFrame();
+}
+
+TEST_CASE( "Immediate line and cube draw headless", "[renderer][immediate]" )
+{
+	dx12::Device device;
+	if( !requireHeadlessDevice( device, "immediate" ) ) return;
+	Renderer rendererInst( device );
+	dx12::CommandContext context( device );
+	rendererInst.beginHeadlessForTests( context );
+	rendererInst.drawLine( {0,0,0}, {1,1,1}, Color::white() );
+	REQUIRE( rendererInst.getDynamicVertexCapacity() == 2 );
+	rendererInst.drawWireframeCube( {0,0,0}, {1,1,1}, Color::red() );
+	REQUIRE( rendererInst.getDynamicVertexCapacity() >= 8 );
+	REQUIRE( rendererInst.getDynamicIndexCapacity() >= 24 );
+	rendererInst.endFrame();
+}

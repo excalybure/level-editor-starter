@@ -137,6 +137,8 @@ public:
 
 	D3D12_VERTEX_BUFFER_VIEW getView() const noexcept { return m_vertexBufferView; }
 	UINT getVertexCount() const noexcept { return m_vertexCount; }
+	// Test instrumentation: expose underlying resource pointer
+	ID3D12Resource *getResource() const noexcept { return m_vertexBuffer.Get(); }
 
 	// Update buffer data (for dynamic buffers)
 	void update( const std::vector<Vertex> &vertices );
@@ -163,6 +165,7 @@ public:
 
 	D3D12_INDEX_BUFFER_VIEW getView() const noexcept { return m_indexBufferView; }
 	UINT getIndexCount() const noexcept { return m_indexCount; }
+	ID3D12Resource *getResource() const noexcept { return m_indexBuffer.Get(); }
 
 	// Update buffer data
 	void update( const std::vector<uint16_t> &indices );
@@ -200,6 +203,15 @@ public:
 	void setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept;
 	// Accessor (test instrumentation) for verifying setViewProjectionMatrix updates
 	const math::Mat4<> &getViewProjectionMatrix() const noexcept { return m_viewProjectionMatrix; }
+
+	// Test instrumentation: expose dynamic buffer capacities
+	UINT getDynamicVertexCapacity() const noexcept { return m_dynamicVertexBuffer ? m_dynamicVertexBuffer->getVertexCount() : 0; }
+	UINT getDynamicIndexCapacity() const noexcept { return m_dynamicIndexBuffer ? m_dynamicIndexBuffer->getIndexCount() : 0; }
+	ID3D12Resource *getDynamicVertexResource() const noexcept { return m_dynamicVertexBuffer ? m_dynamicVertexBuffer->getResource() : nullptr; }
+	ID3D12Resource *getDynamicIndexResource() const noexcept { return m_dynamicIndexBuffer ? m_dynamicIndexBuffer->getResource() : nullptr; }
+
+	// Begin a headless recording session for tests (no swap chain / RTV setup)
+	void beginHeadlessForTests( dx12::CommandContext &context ) noexcept { m_currentContext = &context; m_currentSwapChain = nullptr; }
 
 	// Immediate drawing commands
 	void drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;

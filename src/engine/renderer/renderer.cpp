@@ -547,17 +547,20 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 
 void Renderer::endFrame()
 {
-	if ( !m_currentContext || !m_currentSwapChain )
+	if ( !m_currentContext )
+	{
 		return;
-
-	// Transition back buffer to present
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	( *m_currentContext )->ResourceBarrier( 1, &barrier );
-
+	}
+	if ( m_currentSwapChain )
+	{
+		// Transition back buffer to present only if we have a swap chain (windowed path)
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		( *m_currentContext )->ResourceBarrier( 1, &barrier );
+	}
 	m_currentContext = nullptr;
 	m_currentSwapChain = nullptr;
 }
