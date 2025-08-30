@@ -29,6 +29,13 @@ bool Device::initializeHeadless()
 	try
 	{
 #ifdef _DEBUG
+		// Guard against double initialization without prior shutdown
+#endif
+		if ( m_device )
+		{
+			return false; // already initialized
+		}
+#ifdef _DEBUG
 		enableDebugLayer();
 #endif
 		createFactory();
@@ -48,6 +55,10 @@ bool Device::initialize( HWND window_handle )
 {
 	try
 	{
+		if ( m_device )
+		{
+			return false; // already initialized
+		}
 		m_hwnd = window_handle;
 
 #ifdef _DEBUG
@@ -85,10 +96,34 @@ void Device::shutdown()
 		CloseHandle( m_fenceEvent );
 		m_fenceEvent = nullptr;
 	}
+
+	// Release COM resources explicitly (safe if already null)
+	for ( UINT i = 0; i < kFrameCount; ++i )
+	{
+		m_renderTargets[i].Reset();
+	}
+	m_swapChain.Reset();
+	m_rtvHeap.Reset();
+	m_imguiDescriptorHeap.Reset();
+	m_commandList.Reset();
+	m_commandAllocator.Reset();
+	m_commandQueue.Reset();
+	m_fence.Reset();
+	m_device.Reset();
+	m_adapter.Reset();
+	m_factory.Reset();
+	m_debugController.Reset();
+	m_frameIndex = 0;
+	m_hwnd = nullptr;
 }
 
 void Device::beginFrame()
 {
+	// In headless mode (no swap chain/RTVs) or if not initialized, this is a no-op
+	if ( !m_device || !m_commandAllocator || !m_commandList || !m_swapChain )
+	{
+		return;
+	}
 	// Reset command allocator and list
 	throwIfFailed( m_commandAllocator->Reset() );
 	throwIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
@@ -123,6 +158,10 @@ void Device::beginFrame()
 
 void Device::endFrame()
 {
+	if ( !m_device || !m_commandList || !m_swapChain )
+	{
+		return; // headless/uninitialized no-op
+	}
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -144,6 +183,10 @@ void Device::endFrame()
 
 void Device::present()
 {
+	if ( !m_device || !m_commandList || !m_swapChain )
+	{
+		return; // headless/uninitialized no-op
+	}
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

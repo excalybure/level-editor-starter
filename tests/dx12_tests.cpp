@@ -100,3 +100,77 @@ TEST_CASE( "D3D12 Command Context", "[dx12]" )
 		}() );
 	}
 }
+
+TEST_CASE( "D3D12 Headless Lifecycle & Idempotence", "[dx12]" )
+{
+	Device device;
+	if ( !requireHeadlessDevice( device, "headless lifecycle" ) )
+		return;
+	// Double init should fail (return false) now
+	REQUIRE_FALSE( device.initializeHeadless() );
+	// Shutdown should be safe & idempotent
+	device.shutdown();
+	device.shutdown(); // second call no crash
+	// Re-initialize after shutdown should succeed again
+	REQUIRE( device.initializeHeadless() );
+}
+
+TEST_CASE( "D3D12 Fence Signal & Wait", "[dx12]" )
+{
+	Device device;
+	if ( !requireHeadlessDevice( device, "fence signal/wait" ) )
+		return;
+	CommandQueue queue( device );
+	Fence fence( device );
+	REQUIRE( fence.getCurrentValue() == 0 );
+	fence.signal( queue );
+	REQUIRE( fence.getCurrentValue() == 1 );
+	fence.waitForCurrentValue(); // should not deadlock
+}
+
+TEST_CASE( "D3D12 CommandContext Reuse", "[dx12]" )
+{
+	Device device;
+	if ( !requireHeadlessDevice( device, "command context reuse" ) )
+		return;
+	CommandContext ctx( device );
+	for ( int i = 0; i < 3; ++i )
+	{
+		REQUIRE_NOTHROW( ctx.reset() );
+		REQUIRE_NOTHROW( ctx.close() );
+	}
+}
+
+TEST_CASE( "D3D12 Headless Frame Functions Are No-Op", "[dx12]" )
+{
+	Device device;
+	if ( !requireHeadlessDevice( device, "headless frame no-op" ) )
+		return;
+	// Should not throw despite lack of swap chain
+	REQUIRE_NOTHROW( device.beginFrame() );
+	REQUIRE_NOTHROW( device.endFrame() );
+	REQUIRE_NOTHROW( device.present() );
+}
+
+TEST_CASE( "D3D12 Multi-Device Independence", "[dx12]" )
+{
+	Device a;
+	Device b;
+	if ( !requireHeadlessDevice( a, "multi-device A" ) )
+		return;
+	if ( !requireHeadlessDevice( b, "multi-device B" ) )
+		return;
+	REQUIRE( a.get() != nullptr );
+	REQUIRE( b.get() != nullptr );
+	// Some drivers / factory scenarios could return the same underlying device (e.g., single WARP adapter)
+	// So we don't assert inequality; we only ensure both are valid.
+}
+
+TEST_CASE( "D3D12 Pre-Initialization Safety", "[dx12]" )
+{
+	Device device; // not initialized
+	// These should just no-op (guards added) and not throw
+	REQUIRE_NOTHROW( device.beginFrame() );
+	REQUIRE_NOTHROW( device.endFrame() );
+	REQUIRE_NOTHROW( device.present() );
+}
