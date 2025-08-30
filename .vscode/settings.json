@@ -14,6 +14,7 @@
         "rm": true,
         "rmdir": false,
         "del": true,
+        "dir": true,
         "kill": false,
         "curl": false,
         "wget": false,

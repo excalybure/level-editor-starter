@@ -8,6 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Help CMake/Ninja with MSVC module dependency scanning
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
+# Find vcpkg packages
+find_package(imgui CONFIG REQUIRED)
+find_package(directx-headers CONFIG REQUIRED)
+
 # Libraries (modules)
 add_library(engine.math)
 target_sources(engine.math PUBLIC
@@ -168,15 +172,26 @@ add_library(platform.win32)
 target_sources(platform.win32 PUBLIC
   FILE_SET CXX_MODULES FILES
     src/platform/win32/win32_window.ixx
+  PRIVATE
+    src/platform/win32/win32_window.cpp
 )
 target_compile_features(platform.win32 PUBLIC cxx_std_23)
+target_link_libraries(platform.win32 PRIVATE imgui::imgui)
 
 add_library(editor.ui)
 target_sources(editor.ui PUBLIC
   FILE_SET CXX_MODULES FILES
     src/editor/ui.ixx
+  PRIVATE
+    src/editor/ui.cpp
 )
 target_compile_features(editor.ui PUBLIC cxx_std_23)
+target_link_libraries(editor.ui PUBLIC 
+  editor.viewport
+  imgui::imgui
+  Microsoft::DirectX-Headers
+  d3d12
+)
 
 add_library(platform.dx12)
 target_sources(platform.dx12 PUBLIC
@@ -187,7 +202,7 @@ target_sources(platform.dx12 PUBLIC
 )
 target_compile_features(platform.dx12 PUBLIC cxx_std_23)
 # Link DirectX 12 libraries
-target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler)
+target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler PRIVATE imgui::imgui)
 
 add_library(engine.renderer)
 target_sources(engine.renderer PUBLIC
@@ -224,7 +239,7 @@ target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.cam
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix runtime.ecs runtime.app platform.win32 editor.ui
+  engine.vec engine.matrix runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 

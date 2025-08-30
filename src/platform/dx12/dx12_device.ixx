@@ -45,8 +45,23 @@ public:
 	Device( const Device & ) = delete;
 	Device &operator=( const Device & ) = delete;
 
+	// Initialize the device with window handle for swap chain and ImGui
+	bool initialize( HWND window_handle );
+	void shutdown();
+
+	// Frame operations
+	void endFrame();
+	void present();
+
 	ID3D12Device *Get() const { return m_device.Get(); }
 	ID3D12Device *operator->() const { return m_device.Get(); }
+
+	// ImGui integration
+	ID3D12Device *get_device() const { return m_device.Get(); }
+	ID3D12DescriptorHeap *get_imgui_descriptor_heap() const { return m_imguiDescriptorHeap.Get(); }
+
+	// Command list for ImGui rendering
+	ID3D12GraphicsCommandList *get_command_list() const { return m_commandList.Get(); }
 
 	// Factory for creating other D3D12 objects
 	IDXGIFactory4 *GetFactory() const { return m_factory.Get(); }
@@ -57,10 +72,43 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> m_device;
 	Microsoft::WRL::ComPtr<ID3D12Debug> m_debugController;
 
+	// Command objects
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
+
+	// Swap chain
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
+	static const UINT FRAME_COUNT = 3;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FRAME_COUNT];
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+	UINT m_rtvDescriptorSize = 0;
+	UINT m_frameIndex = 0;
+
+	// ImGui descriptor heap
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_imguiDescriptorHeap;
+
+	// Synchronization
+	Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
+	UINT64 m_fenceValue = 0;
+	HANDLE m_fenceEvent = nullptr;
+
+	// Window handle
+	HWND m_hwnd = nullptr;
+
+	// Initialization methods
 	void EnableDebugLayer();
 	void CreateFactory();
 	void FindAdapter();
 	void CreateDevice();
+	void CreateCommandObjects();
+	void CreateSwapChain( HWND window_handle );
+	void CreateDescriptorHeaps();
+	void CreateRenderTargetViews();
+	void CreateSynchronizationObjects();
+
+	// Frame methods
+	void WaitForPreviousFrame();
 };
 
 // Command Queue wrapper
