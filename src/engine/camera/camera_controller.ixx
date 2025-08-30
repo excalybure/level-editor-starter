@@ -53,15 +53,15 @@ public:
 	CameraController &operator=( const CameraController & ) = delete;
 
 	// Update camera based on input
-	virtual void Update( const InputState &input ) = 0;
+	virtual void update( const InputState &input ) = 0;
 
 	// Camera management
-	void SetCamera( Camera *camera ) noexcept { m_camera = camera; }
-	Camera *GetCamera() const noexcept { return m_camera; }
+	void setCamera( Camera *camera ) noexcept { m_camera = camera; }
+	Camera *getCamera() const noexcept { return m_camera; }
 
 	// Controller settings
-	void SetEnabled( bool enabled ) noexcept { m_enabled = enabled; }
-	bool IsEnabled() const noexcept { return m_enabled; }
+	void setEnabled( bool enabled ) noexcept { m_enabled = enabled; }
+	bool isEnabled() const noexcept { return m_enabled; }
 
 protected:
 	Camera *m_camera = nullptr;
@@ -79,29 +79,29 @@ public:
 	~PerspectiveCameraController() override = default;
 
 	// Update camera with perspective-specific controls
-	void Update( const InputState &input ) override;
+	void update( const InputState &input ) override;
 
 	// Control sensitivity settings
-	void SetOrbitSensitivity( float sensitivity ) noexcept { m_orbitSensitivity = sensitivity; }
-	void SetPanSensitivity( float sensitivity ) noexcept { m_panSensitivity = sensitivity; }
-	void SetZoomSensitivity( float sensitivity ) noexcept { m_zoomSensitivity = sensitivity; }
+	void setOrbitSensitivity( float sensitivity ) noexcept { m_orbitSensitivity = sensitivity; }
+	void setPanSensitivity( float sensitivity ) noexcept { m_panSensitivity = sensitivity; }
+	void setZoomSensitivity( float sensitivity ) noexcept { m_zoomSensitivity = sensitivity; }
 
-	float GetOrbitSensitivity() const noexcept { return m_orbitSensitivity; }
-	float GetPanSensitivity() const noexcept { return m_panSensitivity; }
-	float GetZoomSensitivity() const noexcept { return m_zoomSensitivity; }
+	float getOrbitSensitivity() const noexcept { return m_orbitSensitivity; }
+	float getPanSensitivity() const noexcept { return m_panSensitivity; }
+	float getZoomSensitivity() const noexcept { return m_zoomSensitivity; }
 
 	// Keyboard movement settings
-	void SetKeyboardMoveSpeed( float speed ) noexcept { m_keyboardMoveSpeed = speed; }
-	float GetKeyboardMoveSpeed() const noexcept { return m_keyboardMoveSpeed; }
+	void setKeyboardMoveSpeed( float speed ) noexcept { m_keyboardMoveSpeed = speed; }
+	float getKeyboardMoveSpeed() const noexcept { return m_keyboardMoveSpeed; }
 
 	// Focus/framing functionality
-	void FocusOnPoint( const math::Vec3<> &point, float distance = 10.0f ) noexcept;
-	void FocusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
+	void focusOnPoint( const math::Vec3<> &point, float distance = 10.0f ) noexcept;
+	void focusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
 
 	// Auto-rotation (for demos/previews)
-	void SetAutoRotate( bool enabled ) noexcept { m_autoRotate = enabled; }
-	void SetAutoRotateSpeed( float speed ) noexcept { m_autoRotateSpeed = speed; }
-	bool GetAutoRotate() const noexcept { return m_autoRotate; }
+	void setAutoRotate( bool enabled ) noexcept { m_autoRotate = enabled; }
+	void setAutoRotateSpeed( float speed ) noexcept { m_autoRotateSpeed = speed; }
+	bool getAutoRotate() const noexcept { return m_autoRotate; }
 
 private:
 	PerspectiveCamera *m_perspectiveCamera = nullptr;
@@ -134,12 +134,12 @@ private:
 	} m_focusState;
 
 	// Handle different input modes
-	void HandleOrbitInput( const InputState &input );
-	void HandlePanInput( const InputState &input );
-	void HandleZoomInput( const InputState &input );
-	void HandleKeyboardInput( const InputState &input );
-	void UpdateFocusing( float deltaTime );
-	void UpdateAutoRotation( float deltaTime );
+	void handleOrbitInput( const InputState &input );
+	void handlePanInput( const InputState &input );
+	void handleZoomInput( const InputState &input );
+	void handleKeyboardInput( const InputState &input );
+	void updateFocusing( float deltaTime );
+	void updateAutoRotation( float deltaTime );
 };
 
 // Controller for orthographic cameras with 2D navigation
@@ -150,22 +150,23 @@ public:
 	~OrthographicCameraController() override = default;
 
 	// Update camera with orthographic-specific controls
-	void Update( const InputState &input ) override;
+	void update( const InputState &input ) override;
+
 
 	// Control sensitivity settings
-	void SetPanSensitivity( float sensitivity ) noexcept { m_panSensitivity = sensitivity; }
-	void SetZoomSensitivity( float sensitivity ) noexcept { m_zoomSensitivity = sensitivity; }
+	void setPanSensitivity( float sensitivity ) noexcept { m_panSensitivity = sensitivity; }
+	void setZoomSensitivity( float sensitivity ) noexcept { m_zoomSensitivity = sensitivity; }
 
-	float GetPanSensitivity() const noexcept { return m_panSensitivity; }
-	float GetZoomSensitivity() const noexcept { return m_zoomSensitivity; }
+	float getPanSensitivity() const noexcept { return m_panSensitivity; }
+	float getZoomSensitivity() const noexcept { return m_zoomSensitivity; }
 
 	// Frame content to fit bounds
-	void FrameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
+	void frameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
 
 	// Zoom limits for orthographic view
-	void SetZoomLimits( float minSize, float maxSize ) noexcept;
-	float GetMinZoom() const noexcept { return m_minOrthographicSize; }
-	float GetMaxZoom() const noexcept { return m_maxOrthographicSize; }
+	void setZoomLimits( float minSize, float maxSize ) noexcept;
+	float getMinZoom() const noexcept { return m_minOrthographicSize; }
+	float getMaxZoom() const noexcept { return m_maxOrthographicSize; }
 
 private:
 	OrthographicCamera *m_orthographicCamera = nullptr;
@@ -183,19 +184,19 @@ private:
 	math::Vec2<> m_lastMousePos{ 0.0f, 0.0f };
 
 	// Handle different input modes
-	void HandlePanInput( const InputState &input );
-	void HandleZoomInput( const InputState &input );
+	void handlePanInput( const InputState &input );
+	void handleZoomInput( const InputState &input );
 };
 
 // Factory functions for creating controllers
 export namespace ControllerFactory
 {
 // Create appropriate controller for camera type
-std::unique_ptr<CameraController> CreateController( Camera *camera );
+std::unique_ptr<CameraController> createController( Camera *camera );
 
 // Create specific controller types
-std::unique_ptr<PerspectiveCameraController> CreatePerspectiveController( PerspectiveCamera *camera );
-std::unique_ptr<OrthographicCameraController> CreateOrthographicController( OrthographicCamera *camera );
+std::unique_ptr<PerspectiveCameraController> createPerspectiveController( PerspectiveCamera *camera );
+std::unique_ptr<OrthographicCameraController> createOrthographicController( OrthographicCamera *camera );
 } // namespace ControllerFactory
 
 // Utility functions for input processing

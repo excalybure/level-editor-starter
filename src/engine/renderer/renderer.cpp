@@ -139,14 +139,14 @@ std::string ShaderCompiler::BuildDefineString( const std::vector<std::string> &d
 // RenderState implementation
 RenderState::RenderState() = default;
 
-void RenderState::Apply( [[maybe_unused]] ID3D12GraphicsCommandList *cmdList ) const
+void RenderState::apply( [[maybe_unused]] ID3D12GraphicsCommandList *cmdList ) const
 {
 	// Note: In D3D12, render state is baked into pipeline state objects
 	// This would typically be used to set dynamic state like viewport, scissors, etc.
 	// For now, this is a placeholder - actual state changes happen during PSO creation
 }
 
-D3D12_DEPTH_STENCIL_DESC RenderState::GetDepthStencilDesc() const
+D3D12_DEPTH_STENCIL_DESC RenderState::getDepthStencilDesc() const
 {
 	D3D12_DEPTH_STENCIL_DESC desc = {};
 	desc.DepthEnable = m_depthTestEnabled;
@@ -156,7 +156,7 @@ D3D12_DEPTH_STENCIL_DESC RenderState::GetDepthStencilDesc() const
 	return desc;
 }
 
-D3D12_RASTERIZER_DESC RenderState::GetRasterizerDesc() const
+D3D12_RASTERIZER_DESC RenderState::getRasterizerDesc() const
 {
 	D3D12_RASTERIZER_DESC desc = {};
 	desc.FillMode = m_wireframeEnabled ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
@@ -173,7 +173,7 @@ D3D12_RASTERIZER_DESC RenderState::GetRasterizerDesc() const
 	return desc;
 }
 
-D3D12_BLEND_DESC RenderState::GetBlendDesc() const
+D3D12_BLEND_DESC RenderState::getBlendDesc() const
 {
 	D3D12_BLEND_DESC desc = {};
 	desc.AlphaToCoverageEnable = FALSE;
@@ -198,10 +198,10 @@ D3D12_BLEND_DESC RenderState::GetBlendDesc() const
 VertexBuffer::VertexBuffer( dx12::Device &device, const std::vector<Vertex> &vertices )
 	: m_device( device ), m_vertexCount( static_cast<UINT>( vertices.size() ) )
 {
-	CreateBuffer( vertices );
+	createBuffer( vertices );
 }
 
-void VertexBuffer::CreateBuffer( const std::vector<Vertex> &vertices )
+void VertexBuffer::createBuffer( const std::vector<Vertex> &vertices )
 {
 	const UINT bufferSize = static_cast<UINT>( vertices.size() * sizeof( Vertex ) );
 
@@ -242,13 +242,13 @@ void VertexBuffer::CreateBuffer( const std::vector<Vertex> &vertices )
 	m_vertexBufferView.StrideInBytes = sizeof( Vertex );
 }
 
-void VertexBuffer::Update( const std::vector<Vertex> &vertices )
+void VertexBuffer::update( const std::vector<Vertex> &vertices )
 {
 	if ( vertices.size() != m_vertexCount )
 	{
 		// Recreate buffer with new size
 		m_vertexCount = static_cast<UINT>( vertices.size() );
-		CreateBuffer( vertices );
+		createBuffer( vertices );
 	}
 	else
 	{
@@ -266,10 +266,10 @@ void VertexBuffer::Update( const std::vector<Vertex> &vertices )
 IndexBuffer::IndexBuffer( dx12::Device &device, const std::vector<uint16_t> &indices )
 	: m_device( device ), m_indexCount( static_cast<UINT>( indices.size() ) )
 {
-	CreateBuffer( indices );
+	createBuffer( indices );
 }
 
-void IndexBuffer::CreateBuffer( const std::vector<uint16_t> &indices )
+void IndexBuffer::createBuffer( const std::vector<uint16_t> &indices )
 {
 	const UINT bufferSize = static_cast<UINT>( indices.size() * sizeof( uint16_t ) );
 
@@ -308,12 +308,12 @@ void IndexBuffer::CreateBuffer( const std::vector<uint16_t> &indices )
 	m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 }
 
-void IndexBuffer::Update( const std::vector<uint16_t> &indices )
+void IndexBuffer::update( const std::vector<uint16_t> &indices )
 {
 	if ( indices.size() != m_indexCount )
 	{
 		m_indexCount = static_cast<UINT>( indices.size() );
-		CreateBuffer( indices );
+		createBuffer( indices );
 	}
 	else
 	{
@@ -330,14 +330,14 @@ void IndexBuffer::Update( const std::vector<uint16_t> &indices )
 Renderer::Renderer( dx12::Device &device )
 	: m_device( device )
 {
-	CreateRootSignature();
-	CreatePipelineState();
-	CreateConstantBuffer();
+	createRootSignature();
+	createPipelineState();
+	createConstantBuffer();
 }
 
 Renderer::~Renderer()
 {
-	WaitForGPU();
+	waitForGPU();
 
 	if ( m_constantBuffer && m_constantBufferData )
 	{
@@ -345,7 +345,7 @@ Renderer::~Renderer()
 	}
 }
 
-void Renderer::CreateRootSignature()
+void Renderer::createRootSignature()
 {
 	// Root parameter for constant buffer
 	D3D12_ROOT_PARAMETER1 rootParameter = {};
@@ -370,7 +370,7 @@ void Renderer::CreateRootSignature()
 		0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) ) );
 }
 
-void Renderer::CreatePipelineState()
+void Renderer::createPipelineState()
 {
 	// Compile shaders
 	const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::VertexShader, "main", "vs_5_0" );
@@ -388,9 +388,9 @@ void Renderer::CreatePipelineState()
 	psoDesc.pRootSignature = m_rootSignature.Get();
 	psoDesc.VS = { vs.blob->GetBufferPointer(), vs.blob->GetBufferSize() };
 	psoDesc.PS = { ps.blob->GetBufferPointer(), ps.blob->GetBufferSize() };
-	psoDesc.RasterizerState = m_currentRenderState.GetRasterizerDesc();
-	psoDesc.BlendState = m_currentRenderState.GetBlendDesc();
-	psoDesc.DepthStencilState = m_currentRenderState.GetDepthStencilDesc();
+	psoDesc.RasterizerState = m_currentRenderState.getRasterizerDesc();
+	psoDesc.BlendState = m_currentRenderState.getBlendDesc();
+	psoDesc.DepthStencilState = m_currentRenderState.getDepthStencilDesc();
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
@@ -401,7 +401,7 @@ void Renderer::CreatePipelineState()
 	dx12::ThrowIfFailed( m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) ) );
 }
 
-void Renderer::CreateConstantBuffer()
+void Renderer::createConstantBuffer()
 {
 	const UINT constantBufferSize = ( sizeof( math::Mat4<> ) + 255 ) & ~255; // Align to 256 bytes
 
@@ -431,7 +431,7 @@ void Renderer::CreateConstantBuffer()
 	dx12::ThrowIfFailed( m_constantBuffer->Map( 0, &readRange, &m_constantBufferData ) );
 }
 
-void Renderer::CreateRenderTargets( UINT width, UINT height )
+void Renderer::createRenderTargets( UINT width, UINT height )
 {
 	// Create RTV descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -477,7 +477,7 @@ void Renderer::CreateRenderTargets( UINT width, UINT height )
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, GetDSV() );
+	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, getDSV() );
 }
 
 void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain )
@@ -488,7 +488,7 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	// Create render targets if needed (first time or resize)
 	if ( !m_rtvHeap )
 	{
-		CreateRenderTargets( 1920, 1080 ); // Default size, should be configurable
+		createRenderTargets( 1920, 1080 ); // Default size, should be configurable
 	}
 
 	// Create RTVs for current swap chain back buffers
@@ -511,8 +511,8 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	context->ResourceBarrier( 1, &barrier );
 
 	// Set render targets
-	D3D12_CPU_DESCRIPTOR_HANDLE currentRTV = GetCurrentRTV();
-	D3D12_CPU_DESCRIPTOR_HANDLE dsv = GetDSV();
+	D3D12_CPU_DESCRIPTOR_HANDLE currentRTV = getCurrentRTV();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsv = getDSV();
 	context->OMSetRenderTargets( 1, &currentRTV, FALSE, &dsv );
 
 	// Set viewport
@@ -546,30 +546,30 @@ void Renderer::endFrame()
 	m_currentSwapChain = nullptr;
 }
 
-void Renderer::Clear( const Color &clearColor ) noexcept
+void Renderer::clear( const Color &clearColor ) noexcept
 {
 	if ( !m_currentContext )
 		return;
 
 	float color[4] = { clearColor.r, clearColor.g, clearColor.b, clearColor.a };
-	( *m_currentContext )->ClearRenderTargetView( GetCurrentRTV(), color, 0, nullptr );
+	( *m_currentContext )->ClearRenderTargetView( getCurrentRTV(), color, 0, nullptr );
 }
 
-void Renderer::ClearDepth( float depth ) noexcept
+void Renderer::clearDepth( float depth ) noexcept
 {
 	if ( !m_currentContext )
 		return;
 
-	( *m_currentContext )->ClearDepthStencilView( GetDSV(), D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr );
+	( *m_currentContext )->ClearDepthStencilView( getDSV(), D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr );
 }
 
-void Renderer::SetViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept
+void Renderer::setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept
 {
 	m_viewProjectionMatrix = viewProj;
-	UpdateConstantBuffer();
+	updateConstantBuffer();
 }
 
-void Renderer::UpdateConstantBuffer()
+void Renderer::updateConstantBuffer()
 {
 	if ( m_constantBufferData )
 	{
@@ -577,7 +577,7 @@ void Renderer::UpdateConstantBuffer()
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE Renderer::GetCurrentRTV() const
+D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getCurrentRTV() const
 {
 	if ( !m_currentSwapChain )
 	{
@@ -591,31 +591,31 @@ D3D12_CPU_DESCRIPTOR_HANDLE Renderer::GetCurrentRTV() const
 	return rtvHandle;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE Renderer::GetDSV() const
+D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getDSV() const
 {
 	return m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
-void Renderer::SetRenderState( const RenderState &state ) noexcept
+void Renderer::setRenderState( const RenderState &state ) noexcept
 {
 	m_currentRenderState = state;
 	// Note: In D3D12, render state changes require PSO recreation
 	// For now, this stores the state - would need PSO caching for production
 }
 
-void Renderer::DrawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
 	if ( !m_currentContext || vertices.empty() )
 		return;
 
 	// Update or create dynamic vertex buffer
-	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->GetVertexCount() < vertices.size() )
+	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
 		m_dynamicVertexBuffer = std::make_unique<VertexBuffer>( m_device, vertices );
 	}
 	else
 	{
-		m_dynamicVertexBuffer->Update( vertices );
+		m_dynamicVertexBuffer->update( vertices );
 	}
 
 	// Set pipeline state and root signature
@@ -627,33 +627,33 @@ void Renderer::DrawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	( *m_currentContext )->IASetPrimitiveTopology( topology );
 
 	// Set vertex buffer and draw
-	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->GetView();
+	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
 	( *m_currentContext )->IASetVertexBuffers( 0, 1, &vbv );
 	( *m_currentContext )->DrawInstanced( static_cast<UINT>( vertices.size() ), 1, 0, 0 );
 }
 
-void Renderer::DrawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
 	if ( !m_currentContext || vertices.empty() || indices.empty() )
 		return;
 
 	// Update buffers
-	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->GetVertexCount() < vertices.size() )
+	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
 		m_dynamicVertexBuffer = std::make_unique<VertexBuffer>( m_device, vertices );
 	}
 	else
 	{
-		m_dynamicVertexBuffer->Update( vertices );
+		m_dynamicVertexBuffer->update( vertices );
 	}
 
-	if ( !m_dynamicIndexBuffer || m_dynamicIndexBuffer->GetIndexCount() < indices.size() )
+	if ( !m_dynamicIndexBuffer || m_dynamicIndexBuffer->getIndexCount() < indices.size() )
 	{
 		m_dynamicIndexBuffer = std::make_unique<IndexBuffer>( m_device, indices );
 	}
 	else
 	{
-		m_dynamicIndexBuffer->Update( indices );
+		m_dynamicIndexBuffer->update( indices );
 	}
 
 	// Set pipeline state
@@ -663,23 +663,24 @@ void Renderer::DrawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	( *m_currentContext )->IASetPrimitiveTopology( topology );
 
 	// Set buffers and draw
-	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->GetView();
-	D3D12_INDEX_BUFFER_VIEW ibv = m_dynamicIndexBuffer->GetView();
+	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
+	D3D12_INDEX_BUFFER_VIEW ibv = m_dynamicIndexBuffer->getView();
 	( *m_currentContext )->IASetVertexBuffers( 0, 1, &vbv );
 	( *m_currentContext )->IASetIndexBuffer( &ibv );
 	( *m_currentContext )->DrawIndexedInstanced( static_cast<UINT>( indices.size() ), 1, 0, 0, 0 );
 }
 
-void Renderer::DrawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color ) noexcept
+void Renderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color ) noexcept
 {
 	const std::vector<Vertex> vertices = {
 		{ start, color },
 		{ end, color }
 	};
-	DrawVertices( vertices, D3D_PRIMITIVE_TOPOLOGY_LINELIST );
+	drawVertices( vertices, D3D_PRIMITIVE_TOPOLOGY_LINELIST );
 }
 
-void Renderer::DrawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color ) noexcept
+
+void Renderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color ) noexcept
 {
 	const math::Vec3<> halfSize = size * 0.5f;
 
@@ -709,10 +710,11 @@ void Renderer::DrawWireframeCube( const math::Vec3<> &center, const math::Vec3<>
     };
 	// clang-format on
 
-	DrawIndexed( vertices, indices, D3D_PRIMITIVE_TOPOLOGY_LINELIST );
+	drawIndexed( vertices, indices, D3D_PRIMITIVE_TOPOLOGY_LINELIST );
 }
 
-void Renderer::WaitForGPU() noexcept
+
+void Renderer::waitForGPU() noexcept
 {
 	// This would typically use a fence to wait for GPU completion
 	// For now, this is a placeholder - actual implementation would need fence synchronization

@@ -19,45 +19,45 @@ Camera::Camera()
 	m_up = math::Vec3<>{ 0.0f, 0.0f, 1.0f };
 }
 
-void Camera::SetPosition( const math::Vec3<> &position ) noexcept
+void Camera::setPosition( const math::Vec3<> &position ) noexcept
 {
 	m_position = position;
 }
 
-void Camera::SetTarget( const math::Vec3<> &target ) noexcept
+void Camera::setTarget( const math::Vec3<> &target ) noexcept
 {
 	m_target = target;
 }
 
-void Camera::SetUp( const math::Vec3<> &up ) noexcept
+void Camera::setUp( const math::Vec3<> &up ) noexcept
 {
 	m_up = math::normalize( up );
 }
 
-math::Mat4<> Camera::GetViewMatrix() const noexcept
+math::Mat4<> Camera::getViewMatrix() const noexcept
 {
 	return math::Mat4<>::lookAt( m_position, m_target, m_up );
 }
 
-math::Vec3<> Camera::GetForwardVector() const noexcept
+math::Vec3<> Camera::getForwardVector() const noexcept
 {
 	return math::normalize( m_target - m_position );
 }
 
-math::Vec3<> Camera::GetRightVector() const noexcept
+math::Vec3<> Camera::getRightVector() const noexcept
 {
-	const auto forward = GetForwardVector();
+	const auto forward = getForwardVector();
 	return math::normalize( math::cross( forward, m_up ) );
 }
 
-math::Vec3<> Camera::GetUpVector() const noexcept
+math::Vec3<> Camera::getUpVector() const noexcept
 {
-	const auto forward = GetForwardVector();
-	const auto right = GetRightVector();
+	const auto forward = getForwardVector();
+	const auto right = getRightVector();
 	return math::cross( right, forward );
 }
 
-float Camera::GetDistance() const noexcept
+float Camera::getDistance() const noexcept
 {
 	return math::length( m_target - m_position );
 }
@@ -76,19 +76,19 @@ PerspectiveCamera::PerspectiveCamera( float fov )
 {
 }
 
-void PerspectiveCamera::SetFieldOfView( float fovDegrees ) noexcept
+void PerspectiveCamera::setFieldOfView( float fovDegrees ) noexcept
 {
 	m_fov = std::clamp( fovDegrees, 1.0f, 179.0f );
 }
 
-math::Mat4<> PerspectiveCamera::GetProjectionMatrix( float aspectRatio ) const noexcept
+math::Mat4<> PerspectiveCamera::getProjectionMatrix( float aspectRatio ) const noexcept
 {
 	return math::Mat4<>::perspective( math::radians( m_fov ), aspectRatio, m_nearPlane, m_farPlane );
 }
 
-void PerspectiveCamera::Orbit( float deltaYaw, float deltaPitch ) noexcept
+void PerspectiveCamera::orbit( float deltaYaw, float deltaPitch ) noexcept
 {
-	const float distance = GetDistance();
+	const float distance = getDistance();
 	if ( distance < 0.001f )
 		return; // Avoid singularity
 
@@ -121,13 +121,13 @@ void PerspectiveCamera::Orbit( float deltaYaw, float deltaPitch ) noexcept
 	m_position = m_target + newOffset;
 }
 
-void PerspectiveCamera::Pan( float deltaX, float deltaY ) noexcept
+void PerspectiveCamera::pan( float deltaX, float deltaY ) noexcept
 {
-	const float distance = GetDistance();
+	const float distance = getDistance();
 	const float panSpeed = distance * 0.001f; // Scale panning with distance
 
-	const math::Vec3<> right = GetRightVector();
-	const math::Vec3<> up = GetUpVector();
+	const math::Vec3<> right = getRightVector();
+	const math::Vec3<> up = getUpVector();
 
 	const math::Vec3<> offset = right * ( -deltaX * panSpeed ) + up * ( deltaY * panSpeed );
 
@@ -135,27 +135,27 @@ void PerspectiveCamera::Pan( float deltaX, float deltaY ) noexcept
 	m_target += offset;
 }
 
-void PerspectiveCamera::Zoom( float deltaDistance ) noexcept
+void PerspectiveCamera::zoom( float deltaDistance ) noexcept
 {
-	const float currentDistance = GetDistance();
+	const float currentDistance = getDistance();
 	const float newDistance = std::max( 0.1f, currentDistance + deltaDistance );
 
 	const math::Vec3<> direction = math::normalize( m_position - m_target );
 	m_position = m_target + direction * newDistance;
 }
 
-void PerspectiveCamera::FocusOnPoint( const math::Vec3<> &point, float distance ) noexcept
+void PerspectiveCamera::focusOnPoint( const math::Vec3<> &point, float distance ) noexcept
 {
 	const math::Vec3<> direction = math::normalize( m_position - m_target );
 	m_target = point;
 	m_position = m_target + direction * distance;
 }
 
-void PerspectiveCamera::FocusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
+void PerspectiveCamera::focusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
 	const float distance = CameraUtils::CalculateFramingDistance( size, m_fov, 1.0f ); // Assume square aspect
 
-	FocusOnPoint( center, distance );
+	focusOnPoint( center, distance );
 }
 
 //=============================================================================
@@ -165,21 +165,21 @@ void PerspectiveCamera::FocusOnBounds( const math::Vec3<> &center, const math::V
 OrthographicCamera::OrthographicCamera()
 	: Camera(), m_viewType( ViewType::Top ), m_orthographicSize( 10.0f )
 {
-	UpdateCameraForViewType();
+	updateCameraForViewType();
 }
 
 OrthographicCamera::OrthographicCamera( ViewType viewType )
 	: Camera(), m_viewType( viewType ), m_orthographicSize( 10.0f )
 {
-	UpdateCameraForViewType();
+	updateCameraForViewType();
 }
 
-void OrthographicCamera::SetOrthographicSize( float size ) noexcept
+void OrthographicCamera::setOrthographicSize( float size ) noexcept
 {
 	m_orthographicSize = std::max( 0.1f, size );
 }
 
-math::Mat4<> OrthographicCamera::GetProjectionMatrix( float aspectRatio ) const noexcept
+math::Mat4<> OrthographicCamera::getProjectionMatrix( float aspectRatio ) const noexcept
 {
 	const float halfHeight = m_orthographicSize;
 	const float halfWidth = halfHeight * aspectRatio;
@@ -187,12 +187,12 @@ math::Mat4<> OrthographicCamera::GetProjectionMatrix( float aspectRatio ) const 
 	return math::Mat4<>::orthographic( -halfWidth, halfWidth, -halfHeight, halfHeight, m_nearPlane, m_farPlane );
 }
 
-void OrthographicCamera::Pan( float deltaX, float deltaY ) noexcept
+void OrthographicCamera::pan( float deltaX, float deltaY ) noexcept
 {
 	const float panSpeed = m_orthographicSize * 0.001f;
 
-	const math::Vec3<> right = GetRightVector();
-	const math::Vec3<> up = GetUpVector();
+	const math::Vec3<> right = getRightVector();
+	const math::Vec3<> up = getUpVector();
 
 	const math::Vec3<> offset = right * ( -deltaX * panSpeed ) + up * ( deltaY * panSpeed );
 
@@ -200,18 +200,18 @@ void OrthographicCamera::Pan( float deltaX, float deltaY ) noexcept
 	m_target += offset;
 }
 
-void OrthographicCamera::Zoom( float deltaSize ) noexcept
+void OrthographicCamera::zoom( float deltaSize ) noexcept
 {
-	SetOrthographicSize( m_orthographicSize + deltaSize );
+	setOrthographicSize( m_orthographicSize + deltaSize );
 }
 
-void OrthographicCamera::SetupView( ViewType viewType ) noexcept
+void OrthographicCamera::setupView( ViewType viewType ) noexcept
 {
 	m_viewType = viewType;
-	UpdateCameraForViewType();
+	updateCameraForViewType();
 }
 
-void OrthographicCamera::FrameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
+void OrthographicCamera::frameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
 	m_target = center;
 
@@ -233,11 +233,11 @@ void OrthographicCamera::FrameBounds( const math::Vec3<> &center, const math::Ve
 		break;
 	}
 
-	SetOrthographicSize( requiredSize );
-	UpdateCameraForViewType();
+	setOrthographicSize( requiredSize );
+	updateCameraForViewType();
 }
 
-void OrthographicCamera::UpdateCameraForViewType() noexcept
+void OrthographicCamera::updateCameraForViewType() noexcept
 {
 	const float distance = 50.0f; // Fixed distance for orthographic projection
 

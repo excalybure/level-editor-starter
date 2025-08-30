@@ -33,7 +33,7 @@ PerspectiveCameraController::PerspectiveCameraController( PerspectiveCamera *cam
 	}
 }
 
-void PerspectiveCameraController::Update( const InputState &input )
+void PerspectiveCameraController::update( const InputState &input )
 {
 	if ( !m_enabled || !m_perspectiveCamera )
 		return;
@@ -41,25 +41,25 @@ void PerspectiveCameraController::Update( const InputState &input )
 	// Handle focusing transition
 	if ( m_focusState.isFocusing )
 	{
-		UpdateFocusing( input.deltaTime );
+		updateFocusing( input.deltaTime );
 	}
 	else
 	{
 		// Handle input-based camera control
-		HandleOrbitInput( input );
-		HandlePanInput( input );
-		HandleZoomInput( input );
-		HandleKeyboardInput( input );
+		handleOrbitInput( input );
+		handlePanInput( input );
+		handleZoomInput( input );
+		handleKeyboardInput( input );
 	}
 
 	// Handle auto-rotation
 	if ( m_autoRotate )
 	{
-		UpdateAutoRotation( input.deltaTime );
+		updateAutoRotation( input.deltaTime );
 	}
 }
 
-void PerspectiveCameraController::HandleOrbitInput( const InputState &input )
+void PerspectiveCameraController::handleOrbitInput( const InputState &input )
 {
 	// Left mouse button for orbiting
 	if ( input.mouse.leftButton && !input.keyboard.shift && !input.keyboard.ctrl )
@@ -74,7 +74,7 @@ void PerspectiveCameraController::HandleOrbitInput( const InputState &input )
 			const float deltaYaw = -( input.mouse.x - m_lastMousePos.x ) * m_orbitSensitivity;
 			const float deltaPitch = ( input.mouse.y - m_lastMousePos.y ) * m_orbitSensitivity;
 
-			m_perspectiveCamera->Orbit( deltaYaw, deltaPitch );
+			m_perspectiveCamera->orbit( deltaYaw, deltaPitch );
 			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
@@ -84,7 +84,7 @@ void PerspectiveCameraController::HandleOrbitInput( const InputState &input )
 	}
 }
 
-void PerspectiveCameraController::HandlePanInput( const InputState &input )
+void PerspectiveCameraController::handlePanInput( const InputState &input )
 {
 	// Middle mouse button or Shift+Left mouse button for panning
 	const bool shouldPan = input.mouse.middleButton ||
@@ -102,7 +102,7 @@ void PerspectiveCameraController::HandlePanInput( const InputState &input )
 			const float deltaX = ( input.mouse.x - m_lastMousePos.x ) * m_panSensitivity;
 			const float deltaY = ( input.mouse.y - m_lastMousePos.y ) * m_panSensitivity;
 
-			m_perspectiveCamera->Pan( deltaX, deltaY );
+			m_perspectiveCamera->pan( deltaX, deltaY );
 			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
@@ -112,24 +112,24 @@ void PerspectiveCameraController::HandlePanInput( const InputState &input )
 	}
 }
 
-void PerspectiveCameraController::HandleZoomInput( const InputState &input )
+void PerspectiveCameraController::handleZoomInput( const InputState &input )
 {
 	// Mouse wheel for zooming
 	if ( std::abs( input.mouse.wheelDelta ) > 0.001f )
 	{
-		const float distance = m_perspectiveCamera->GetDistance();
+		const float distance = m_perspectiveCamera->getDistance();
 		const float zoomAmount = -input.mouse.wheelDelta * distance * 0.1f * m_zoomSensitivity;
-		m_perspectiveCamera->Zoom( zoomAmount );
+		m_perspectiveCamera->zoom( zoomAmount );
 	}
 }
 
-void PerspectiveCameraController::HandleKeyboardInput( const InputState &input )
+void PerspectiveCameraController::handleKeyboardInput( const InputState &input )
 {
 	if ( !input.keyboard.ctrl ) // Don't move when Ctrl is pressed (for shortcuts)
 	{
 		const float speed = m_keyboardMoveSpeed * input.deltaTime;
-		const auto forward = m_perspectiveCamera->GetForwardVector();
-		const auto right = m_perspectiveCamera->GetRightVector();
+		const auto forward = m_perspectiveCamera->getForwardVector();
+		const auto right = m_perspectiveCamera->getRightVector();
 		const auto up = math::Vec3<>{ 0.0f, 0.0f, 1.0f }; // World up in Z-up system
 
 		math::Vec3<> movement{ 0.0f, 0.0f, 0.0f };
@@ -152,22 +152,22 @@ void PerspectiveCameraController::HandleKeyboardInput( const InputState &input )
 
 		if ( math::length( movement ) > 0.001f )
 		{
-			const auto currentPos = m_perspectiveCamera->GetPosition();
-			const auto currentTarget = m_perspectiveCamera->GetTarget();
+			const auto currentPos = m_perspectiveCamera->getPosition();
+			const auto currentTarget = m_perspectiveCamera->getTarget();
 
-			m_perspectiveCamera->SetPosition( currentPos + movement );
-			m_perspectiveCamera->SetTarget( currentTarget + movement );
+			m_perspectiveCamera->setPosition( currentPos + movement );
+			m_perspectiveCamera->setTarget( currentTarget + movement );
 		}
 	}
 
 	// F key for focus/frame
 	if ( input.keyboard.f )
 	{
-		FocusOnPoint( math::Vec3<>{ 0.0f, 0.0f, 0.0f }, 10.0f ); // Focus on origin
+		focusOnPoint( math::Vec3<>{ 0.0f, 0.0f, 0.0f }, 10.0f ); // Focus on origin
 	}
 }
 
-void PerspectiveCameraController::UpdateFocusing( float deltaTime )
+void PerspectiveCameraController::updateFocusing( float deltaTime )
 {
 	m_focusState.focusTime += deltaTime;
 	const float t = std::min( m_focusState.focusTime / m_focusState.focusDuration, 1.0f );
@@ -178,8 +178,8 @@ void PerspectiveCameraController::UpdateFocusing( float deltaTime )
 	const auto currentPos = math::lerp( m_focusState.startPosition, m_focusState.targetPosition, easeT );
 	const auto currentTarget = math::lerp( m_focusState.startLookAt, m_focusState.targetLookAt, easeT );
 
-	m_perspectiveCamera->SetPosition( currentPos );
-	m_perspectiveCamera->SetTarget( currentTarget );
+	m_perspectiveCamera->setPosition( currentPos );
+	m_perspectiveCamera->setTarget( currentTarget );
 
 	if ( t >= 1.0f )
 	{
@@ -187,16 +187,16 @@ void PerspectiveCameraController::UpdateFocusing( float deltaTime )
 	}
 }
 
-void PerspectiveCameraController::UpdateAutoRotation( float deltaTime )
+void PerspectiveCameraController::updateAutoRotation( float deltaTime )
 {
 	const float rotationAmount = m_autoRotateSpeed * deltaTime;
-	m_perspectiveCamera->Orbit( rotationAmount, 0.0f );
+	m_perspectiveCamera->orbit( rotationAmount, 0.0f );
 }
 
-void PerspectiveCameraController::FocusOnPoint( const math::Vec3<> &point, float distance ) noexcept
+void PerspectiveCameraController::focusOnPoint( const math::Vec3<> &point, float distance ) noexcept
 {
-	const auto currentPos = m_perspectiveCamera->GetPosition();
-	const auto currentTarget = m_perspectiveCamera->GetTarget();
+	const auto currentPos = m_perspectiveCamera->getPosition();
+	const auto currentTarget = m_perspectiveCamera->getTarget();
 
 	// Calculate new position maintaining current viewing angle
 	const auto currentDirection = math::normalize( currentPos - currentTarget );
@@ -212,10 +212,10 @@ void PerspectiveCameraController::FocusOnPoint( const math::Vec3<> &point, float
 	m_focusState.focusDuration = 1.0f;
 }
 
-void PerspectiveCameraController::FocusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
+void PerspectiveCameraController::focusOnBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
 	// Use the camera's FocusOnBounds method directly
-	m_perspectiveCamera->FocusOnBounds( center, size );
+	m_perspectiveCamera->focusOnBounds( center, size );
 
 	// Could add smooth transition here if desired
 }
@@ -233,16 +233,16 @@ OrthographicCameraController::OrthographicCameraController( OrthographicCamera *
 	}
 }
 
-void OrthographicCameraController::Update( const InputState &input )
+void OrthographicCameraController::update( const InputState &input )
 {
 	if ( !m_enabled || !m_orthographicCamera )
 		return;
 
-	HandlePanInput( input );
-	HandleZoomInput( input );
+	handlePanInput( input );
+	handleZoomInput( input );
 }
 
-void OrthographicCameraController::HandlePanInput( const InputState &input )
+void OrthographicCameraController::handlePanInput( const InputState &input )
 {
 	// Left mouse button or middle mouse button for panning
 	const bool shouldPan = input.mouse.leftButton || input.mouse.middleButton;
@@ -259,7 +259,7 @@ void OrthographicCameraController::HandlePanInput( const InputState &input )
 			const float deltaX = ( input.mouse.x - m_lastMousePos.x ) * m_panSensitivity;
 			const float deltaY = ( input.mouse.y - m_lastMousePos.y ) * m_panSensitivity;
 
-			m_orthographicCamera->Pan( deltaX, deltaY );
+			m_orthographicCamera->pan( deltaX, deltaY );
 			m_lastMousePos = { input.mouse.x, input.mouse.y };
 		}
 	}
@@ -269,12 +269,12 @@ void OrthographicCameraController::HandlePanInput( const InputState &input )
 	}
 }
 
-void OrthographicCameraController::HandleZoomInput( const InputState &input )
+void OrthographicCameraController::handleZoomInput( const InputState &input )
 {
 	// Mouse wheel for zooming
 	if ( std::abs( input.mouse.wheelDelta ) > 0.001f )
 	{
-		const float currentSize = m_orthographicCamera->GetOrthographicSize();
+		const float currentSize = m_orthographicCamera->getOrthographicSize();
 		const float zoomAmount = input.mouse.wheelDelta * currentSize * 0.1f * m_zoomSensitivity;
 
 		const float newSize = std::clamp(
@@ -282,16 +282,16 @@ void OrthographicCameraController::HandleZoomInput( const InputState &input )
 			m_minOrthographicSize,
 			m_maxOrthographicSize );
 
-		m_orthographicCamera->SetOrthographicSize( newSize );
+		m_orthographicCamera->setOrthographicSize( newSize );
 	}
 }
 
-void OrthographicCameraController::FrameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
+void OrthographicCameraController::frameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
-	m_orthographicCamera->FrameBounds( center, size );
+	m_orthographicCamera->frameBounds( center, size );
 }
 
-void OrthographicCameraController::SetZoomLimits( float minSize, float maxSize ) noexcept
+void OrthographicCameraController::setZoomLimits( float minSize, float maxSize ) noexcept
 {
 	m_minOrthographicSize = std::max( 0.001f, minSize );
 	m_maxOrthographicSize = std::max( m_minOrthographicSize, maxSize );
@@ -304,12 +304,12 @@ void OrthographicCameraController::SetZoomLimits( float minSize, float maxSize )
 namespace ControllerFactory
 {
 
-std::unique_ptr<CameraController> CreateController( Camera *camera )
+std::unique_ptr<CameraController> createController( Camera *camera )
 {
 	if ( !camera )
 		return nullptr;
 
-	switch ( camera->GetType() )
+	switch ( camera->getType() )
 	{
 	case CameraType::Perspective:
 		if ( auto *perspCamera = dynamic_cast<PerspectiveCamera *>( camera ) )
@@ -329,7 +329,7 @@ std::unique_ptr<CameraController> CreateController( Camera *camera )
 	return nullptr;
 }
 
-std::unique_ptr<PerspectiveCameraController> CreatePerspectiveController( PerspectiveCamera *camera )
+std::unique_ptr<PerspectiveCameraController> createPerspectiveController( PerspectiveCamera *camera )
 {
 	if ( !camera )
 		return nullptr;
@@ -337,7 +337,7 @@ std::unique_ptr<PerspectiveCameraController> CreatePerspectiveController( Perspe
 	return std::make_unique<PerspectiveCameraController>( camera );
 }
 
-std::unique_ptr<OrthographicCameraController> CreateOrthographicController( OrthographicCamera *camera )
+std::unique_ptr<OrthographicCameraController> createOrthographicController( OrthographicCamera *camera )
 {
 	if ( !camera )
 		return nullptr;

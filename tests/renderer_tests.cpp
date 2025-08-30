@@ -48,7 +48,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                 )";
 
 				const auto blob = ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
-				REQUIRE( blob.IsValid() );
+				REQUIRE( blob.isValid() );
 				REQUIRE( blob.entryPoint == "main" );
 				REQUIRE( blob.profile == "vs_5_0" );
 			}
@@ -72,7 +72,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                 )";
 
 				const auto blob = ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
-				REQUIRE( blob.IsValid() );
+				REQUIRE( blob.isValid() );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -88,34 +88,34 @@ TEST_CASE( "Render State", "[renderer]" )
 	{
 		const RenderState state;
 
-		const auto depthDesc = state.GetDepthStencilDesc();
+		const auto depthDesc = state.getDepthStencilDesc();
 		REQUIRE( depthDesc.DepthEnable == TRUE );
 		REQUIRE( depthDesc.DepthWriteMask == D3D12_DEPTH_WRITE_MASK_ALL );
 
-		const auto rasterizerDesc = state.GetRasterizerDesc();
+		const auto rasterizerDesc = state.getRasterizerDesc();
 		REQUIRE( rasterizerDesc.FillMode == D3D12_FILL_MODE_SOLID );
 		REQUIRE( rasterizerDesc.CullMode == D3D12_CULL_MODE_BACK );
 
-		const auto blendDesc = state.GetBlendDesc();
+		const auto blendDesc = state.getBlendDesc();
 		REQUIRE( blendDesc.RenderTarget[0].BlendEnable == FALSE );
 	}
 
 	SECTION( "Wireframe state" )
 	{
 		RenderState state;
-		state.SetWireframe( true );
+	state.setWireframe( true );
 
-		const auto rasterizerDesc = state.GetRasterizerDesc();
+	const auto rasterizerDesc = state.getRasterizerDesc();
 		REQUIRE( rasterizerDesc.FillMode == D3D12_FILL_MODE_WIREFRAME );
 	}
 
 	SECTION( "Depth state modifications" )
 	{
 		RenderState state;
-		state.SetDepthTest( false );
-		state.SetDepthWrite( false );
+	state.setDepthTest( false );
+	state.setDepthWrite( false );
 
-		const auto depthDesc = state.GetDepthStencilDesc();
+	const auto depthDesc = state.getDepthStencilDesc();
 		REQUIRE( depthDesc.DepthEnable == FALSE );
 		REQUIRE( depthDesc.DepthWriteMask == D3D12_DEPTH_WRITE_MASK_ZERO );
 	}
@@ -137,9 +137,9 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 				};
 
 				const VertexBuffer vb( device, vertices );
-				REQUIRE( vb.GetVertexCount() == 3 );
+				REQUIRE( vb.getVertexCount() == 3 );
 
-				const auto view = vb.GetView();
+				const auto view = vb.getView();
 				REQUIRE( view.SizeInBytes == vertices.size() * sizeof( Vertex ) );
 				REQUIRE( view.StrideInBytes == sizeof( Vertex ) );
 			}
@@ -160,9 +160,9 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 				const std::vector<uint16_t> indices = { 0, 1, 2 };
 
 				const IndexBuffer ib( device, indices );
-				REQUIRE( ib.GetIndexCount() == 3 );
+				REQUIRE( ib.getIndexCount() == 3 );
 
-				const auto view = ib.GetView();
+				const auto view = ib.getView();
 				REQUIRE( view.SizeInBytes == indices.size() * sizeof( uint16_t ) );
 				REQUIRE( view.Format == DXGI_FORMAT_R16_UINT );
 			}

@@ -14,7 +14,7 @@ using namespace Catch;
 constexpr float EPSILON = 0.001f;
 
 // Helper function to create test input state
-InputState CreateTestInput()
+InputState createTestInput()
 {
 	InputState input;
 	input.deltaTime = 0.016f; // 60 FPS
@@ -26,50 +26,50 @@ TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 	SECTION( "Create controller for perspective camera" )
 	{
 		auto perspCamera = std::make_unique<PerspectiveCamera>();
-		auto controller = ControllerFactory::CreateController( perspCamera.get() );
+		auto controller = ControllerFactory::createController( perspCamera.get() );
 
 		REQUIRE( controller != nullptr );
-		REQUIRE( controller->GetCamera() == perspCamera.get() );
-		REQUIRE( controller->IsEnabled() );
+		REQUIRE( controller->getCamera() == perspCamera.get() );
+		REQUIRE( controller->isEnabled() );
 	}
 
 	SECTION( "Create controller for orthographic camera" )
 	{
 		auto orthoCamera = std::make_unique<OrthographicCamera>();
-		auto controller = ControllerFactory::CreateController( orthoCamera.get() );
+		auto controller = ControllerFactory::createController( orthoCamera.get() );
 
 		REQUIRE( controller != nullptr );
-		REQUIRE( controller->GetCamera() == orthoCamera.get() );
-		REQUIRE( controller->IsEnabled() );
+		REQUIRE( controller->getCamera() == orthoCamera.get() );
+		REQUIRE( controller->isEnabled() );
 	}
 
 	SECTION( "Create specific perspective controller" )
 	{
 		auto perspCamera = std::make_unique<PerspectiveCamera>();
-		auto controller = ControllerFactory::CreatePerspectiveController( perspCamera.get() );
+		auto controller = ControllerFactory::createPerspectiveController( perspCamera.get() );
 
 		REQUIRE( controller != nullptr );
-		REQUIRE( controller->GetCamera() == perspCamera.get() );
+		REQUIRE( controller->getCamera() == perspCamera.get() );
 	}
 
 	SECTION( "Create specific orthographic controller" )
 	{
 		auto orthoCamera = std::make_unique<OrthographicCamera>();
-		auto controller = ControllerFactory::CreateOrthographicController( orthoCamera.get() );
+		auto controller = ControllerFactory::createOrthographicController( orthoCamera.get() );
 
 		REQUIRE( controller != nullptr );
-		REQUIRE( controller->GetCamera() == orthoCamera.get() );
+		REQUIRE( controller->getCamera() == orthoCamera.get() );
 	}
 
 	SECTION( "Null camera returns null controller" )
 	{
-		auto controller = ControllerFactory::CreateController( nullptr );
+		auto controller = ControllerFactory::createController( nullptr );
 		REQUIRE( controller == nullptr );
 
-		auto perspController = ControllerFactory::CreatePerspectiveController( nullptr );
+		auto perspController = ControllerFactory::createPerspectiveController( nullptr );
 		REQUIRE( perspController == nullptr );
 
-		auto orthoController = ControllerFactory::CreateOrthographicController( nullptr );
+		auto orthoController = ControllerFactory::createOrthographicController( nullptr );
 		REQUIRE( orthoController == nullptr );
 	}
 }
@@ -81,122 +81,119 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 
 	SECTION( "Controller initialization" )
 	{
-		REQUIRE( controller->GetOrbitSensitivity() == Approx( 0.5f ) );
-		REQUIRE( controller->GetPanSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->GetZoomSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->GetKeyboardMoveSpeed() == Approx( 10.0f ) );
-		REQUIRE_FALSE( controller->GetAutoRotate() );
+		REQUIRE( controller->getOrbitSensitivity() == Approx( 0.5f ) );
+		REQUIRE( controller->getPanSensitivity() == Approx( 1.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Approx( 1.0f ) );
+		REQUIRE( controller->getKeyboardMoveSpeed() == Approx( 10.0f ) );
+		REQUIRE_FALSE( controller->getAutoRotate() );
 	}
 
 	SECTION( "Sensitivity settings" )
 	{
-		controller->SetOrbitSensitivity( 2.0f );
-		controller->SetPanSensitivity( 1.5f );
-		controller->SetZoomSensitivity( 0.8f );
-		controller->SetKeyboardMoveSpeed( 20.0f );
+		controller->setOrbitSensitivity( 2.0f );
+		controller->setPanSensitivity( 1.5f );
+		controller->setZoomSensitivity( 0.8f );
+		controller->setKeyboardMoveSpeed( 20.0f );
 
-		REQUIRE( controller->GetOrbitSensitivity() == Approx( 2.0f ) );
-		REQUIRE( controller->GetPanSensitivity() == Approx( 1.5f ) );
-		REQUIRE( controller->GetZoomSensitivity() == Approx( 0.8f ) );
-		REQUIRE( controller->GetKeyboardMoveSpeed() == Approx( 20.0f ) );
+		REQUIRE( controller->getOrbitSensitivity() == Approx( 2.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Approx( 1.5f ) );
+		REQUIRE( controller->getZoomSensitivity() == Approx( 0.8f ) );
+		REQUIRE( controller->getKeyboardMoveSpeed() == Approx( 20.0f ) );
 	}
 
 	SECTION( "Auto rotation" )
 	{
-		controller->SetAutoRotate( true );
-		controller->SetAutoRotateSpeed( 45.0f );
+		controller->setAutoRotate( true );
+		controller->setAutoRotateSpeed( 45.0f );
 
-		REQUIRE( controller->GetAutoRotate() );
+		REQUIRE( controller->getAutoRotate() );
 
 		// Test auto rotation by updating with time
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.deltaTime = 1.0f; // 1 second
 
-		const auto initialPos = camera->GetPosition();
-		controller->Update( input );
-		const auto newPos = camera->GetPosition();
-
+		const auto initialPos = camera->getPosition();
+		controller->update( input );
+		const auto newPos = camera->getPosition();
+		const auto newTarget = camera->getTarget();
 		// Position should have changed due to auto rotation
 		REQUIRE_FALSE( approxEqual( initialPos, newPos ) );
 	}
 
 	SECTION( "Mouse orbit input" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.leftButton = true;
 		input.mouse.x = 100.0f;
 		input.mouse.y = 100.0f;
-
-		const auto initialTarget = camera->GetTarget();
+		const auto initialTarget = camera->getTarget();
 
 		// First update establishes drag state
-		controller->Update( input );
+		controller->update( input );
 
 		// Second update with mouse movement
 		input.mouse.x = 110.0f; // Move mouse right
 		input.mouse.y = 90.0f;	// Move mouse up
-		controller->Update( input );
+		controller->update( input );
 
 		// Camera should have orbited (position changed, target same)
-		REQUIRE( approxEqual( camera->GetTarget(), initialTarget ) );
+		REQUIRE( approxEqual( camera->getTarget(), initialTarget ) );
 		// Position should have changed due to orbit
 		// (Exact values depend on orbit implementation)
 	}
 
 	SECTION( "Mouse pan input with shift" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.leftButton = true;
 		input.keyboard.shift = true;
 		input.mouse.x = 100.0f;
 		input.mouse.y = 100.0f;
-
-		const auto initialDistance = camera->GetDistance();
+		const auto initialDistance = camera->getDistance();
 
 		// First update establishes drag state
-		controller->Update( input );
+		controller->update( input );
 
 		// Second update with mouse movement
 		input.mouse.x = 110.0f;
 		input.mouse.y = 110.0f;
-		controller->Update( input );
+		controller->update( input );
 
 		// Distance should remain approximately the same for pan
-		REQUIRE( camera->GetDistance() == Approx( initialDistance ).margin( 0.1f ) );
+		REQUIRE( camera->getDistance() == Approx( initialDistance ).margin( 0.1f ) );
 	}
 
 	SECTION( "Mouse wheel zoom" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.wheelDelta = 1.0f; // Zoom in
-
-		const auto initialDistance = camera->GetDistance();
-		controller->Update( input );
+		const auto initialDistance = camera->getDistance();
+		controller->update( input );
 
 		// Distance should have decreased (zoomed in)
-		REQUIRE( camera->GetDistance() < initialDistance );
+		REQUIRE( camera->getDistance() < initialDistance );
 
 		// Test zoom out
 		input.mouse.wheelDelta = -1.0f;
-		const auto afterZoomInDistance = camera->GetDistance();
-		controller->Update( input );
+		const auto afterZoomInDistance = camera->getDistance();
+		controller->update( input );
 
 		// Distance should have increased (zoomed out)
-		REQUIRE( camera->GetDistance() > afterZoomInDistance );
+		REQUIRE( camera->getDistance() > afterZoomInDistance );
 	}
 
 	SECTION( "Keyboard WASD movement" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.keyboard.w = true; // Move forward
 
-		const auto initialPos = camera->GetPosition();
-		const auto initialTarget = camera->GetTarget();
+		const auto initialPos = camera->getPosition();
+		const auto initialTarget = camera->getTarget();
 
-		controller->Update( input );
+		controller->update( input );
 
-		const auto newPos = camera->GetPosition();
-		const auto newTarget = camera->GetTarget();
+		const auto newPos = camera->getPosition();
+		const auto newTarget = camera->getTarget();
 
 		// Both position and target should have moved forward
 		const auto movement = newPos - initialPos;
@@ -211,39 +208,39 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		const math::Vec3<> targetPoint{ 5.0f, 5.0f, 5.0f };
 		const float targetDistance = 15.0f;
 
-		controller->FocusOnPoint( targetPoint, targetDistance );
+		controller->focusOnPoint( targetPoint, targetDistance );
 
 		// Since focusing is animated, we need to simulate time passing
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		for ( int i = 0; i < 100; ++i ) // Simulate 1.6 seconds
 		{
-			controller->Update( input );
+			controller->update( input );
 		}
 
 		// Camera should be looking at the target point
-		REQUIRE( approxEqual( camera->GetTarget(), targetPoint, 0.1f ) );
-		REQUIRE( camera->GetDistance() == Approx( targetDistance ).margin( 0.1f ) );
+		REQUIRE( approxEqual( camera->getTarget(), targetPoint, 0.1f ) );
+		REQUIRE( camera->getDistance() == Approx( targetDistance ).margin( 0.1f ) );
 	}
 
 	SECTION( "Controller enable/disable" )
 	{
-		const auto initialPos = camera->GetPosition();
+		const auto initialPos = camera->getPosition();
 
-		controller->SetEnabled( false );
-		REQUIRE_FALSE( controller->IsEnabled() );
+		controller->setEnabled( false );
+		REQUIRE_FALSE( controller->isEnabled() );
 
 		// Input should be ignored when disabled
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.keyboard.w = true;
-		controller->Update( input );
+		controller->update( input );
 
-		REQUIRE( approxEqual( camera->GetPosition(), initialPos ) );
+		REQUIRE( approxEqual( camera->getPosition(), initialPos ) );
 
 		// Re-enable and test
-		controller->SetEnabled( true );
-		controller->Update( input );
+		controller->setEnabled( true );
+		controller->update( input );
 
-		REQUIRE_FALSE( approxEqual( camera->GetPosition(), initialPos ) );
+		REQUIRE_FALSE( approxEqual( camera->getPosition(), initialPos ) );
 	}
 }
 
@@ -252,91 +249,88 @@ TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]
 	auto camera = std::make_unique<OrthographicCamera>();
 	auto controller = std::make_unique<OrthographicCameraController>( camera.get() );
 
-	SECTION( "Controller initialization" )
 	{
-		REQUIRE( controller->GetPanSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->GetZoomSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->GetMinZoom() == Approx( 0.1f ) );
-		REQUIRE( controller->GetMaxZoom() == Approx( 1000.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Approx( 1.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Approx( 1.0f ) );
+		REQUIRE( controller->getMinZoom() == Approx( 0.1f ) );
+		REQUIRE( controller->getMaxZoom() == Approx( 1000.0f ) );
 	}
 
 	SECTION( "Sensitivity and zoom limit settings" )
 	{
-		controller->SetPanSensitivity( 2.0f );
-		controller->SetZoomSensitivity( 1.5f );
-		controller->SetZoomLimits( 0.5f, 500.0f );
+		controller->setPanSensitivity( 2.0f );
+		controller->setZoomSensitivity( 1.5f );
+		controller->setZoomLimits( 0.5f, 500.0f );
 
-		REQUIRE( controller->GetPanSensitivity() == Approx( 2.0f ) );
-		REQUIRE( controller->GetZoomSensitivity() == Approx( 1.5f ) );
-		REQUIRE( controller->GetMinZoom() == Approx( 0.5f ) );
-		REQUIRE( controller->GetMaxZoom() == Approx( 500.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Approx( 2.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Approx( 1.5f ) );
+		REQUIRE( controller->getMinZoom() == Approx( 0.5f ) );
+		REQUIRE( controller->getMaxZoom() == Approx( 500.0f ) );
 	}
 
 	SECTION( "Mouse pan input" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.leftButton = true;
 		input.mouse.x = 100.0f;
 		input.mouse.y = 100.0f;
-
-		const auto initialPos = camera->GetPosition();
+		const auto initialPos = camera->getPosition();
 
 		// First update establishes drag state
-		controller->Update( input );
+		controller->update( input );
 
 		// Second update with mouse movement
 		input.mouse.x = 110.0f;
 		input.mouse.y = 110.0f;
-		controller->Update( input );
+		controller->update( input );
 
 		// Position should have changed due to panning
-		REQUIRE_FALSE( approxEqual( camera->GetPosition(), initialPos ) );
+		REQUIRE_FALSE( approxEqual( camera->getPosition(), initialPos ) );
 	}
 
 	SECTION( "Mouse wheel zoom" )
 	{
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.wheelDelta = 1.0f; // Zoom in
-
-		const auto initialSize = camera->GetOrthographicSize();
-		controller->Update( input );
+		const auto initialSize = camera->getOrthographicSize();
+		controller->update( input );
 
 		// Size should have decreased (zoomed in)
-		REQUIRE( camera->GetOrthographicSize() < initialSize );
+		REQUIRE( camera->getOrthographicSize() < initialSize );
 
 		// Test zoom out
 		input.mouse.wheelDelta = -1.0f;
-		const auto afterZoomInSize = camera->GetOrthographicSize();
-		controller->Update( input );
+		const auto afterZoomInSize = camera->getOrthographicSize();
+		controller->update( input );
 
 		// Size should have increased (zoomed out)
-		REQUIRE( camera->GetOrthographicSize() > afterZoomInSize );
+		REQUIRE( camera->getOrthographicSize() > afterZoomInSize );
 	}
 
 	SECTION( "Zoom limits enforcement" )
 	{
-		controller->SetZoomLimits( 5.0f, 20.0f );
+		controller->setZoomLimits( 5.0f, 20.0f );
 
 		// Set camera to minimum zoom
-		camera->SetOrthographicSize( 5.0f );
+		camera->setOrthographicSize( 5.0f );
 
 		// Try to zoom in further
-		auto input = CreateTestInput();
+		auto input = createTestInput();
 		input.mouse.wheelDelta = 10.0f; // Large zoom in
-		controller->Update( input );
+		controller->update( input );
 
 		// Should be clamped to minimum
-		REQUIRE( camera->GetOrthographicSize() >= 5.0f );
+		REQUIRE( camera->getOrthographicSize() >= 5.0f );
 
 		// Set camera to maximum zoom
-		camera->SetOrthographicSize( 20.0f );
+		camera->setOrthographicSize( 20.0f );
 
 		// Try to zoom out further
 		input.mouse.wheelDelta = -10.0f; // Large zoom out
-		controller->Update( input );
+		controller->update( input );
 
 		// Should be clamped to maximum
-		REQUIRE( camera->GetOrthographicSize() <= 20.0f );
+		REQUIRE( camera->getOrthographicSize() <= 20.0f );
 	}
 
 	SECTION( "Frame bounds" )
@@ -344,11 +338,11 @@ TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]
 		const math::Vec3<> center{ 10.0f, 10.0f, 0.0f };
 		const math::Vec3<> size{ 4.0f, 6.0f, 2.0f };
 
-		controller->FrameBounds( center, size );
+		controller->frameBounds( center, size );
 
 		// Camera should be positioned to frame the bounds
-		// (Exact behavior depends on FrameBounds implementation)
-		REQUIRE( math::length( camera->GetPosition() - center ) > 0.0f );
+		// (Exact behavior depends on frameBounds implementation)
+		REQUIRE( math::length( camera->getPosition() - center ) > 0.0f );
 	}
 }
 

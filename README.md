@@ -21,6 +21,7 @@
 - **UI:** Dear ImGui (docking + viewports), ImGuizmo (manipulators).
 - **Assets:** glTF 2.0 for mesh import.
 - **Testing:** Catch2 unit tests + GitHub Actions CI (later).
+- **Building:** You will use cmake to build the code base
 
 ---
 

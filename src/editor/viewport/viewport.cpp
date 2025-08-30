@@ -49,8 +49,8 @@ void Viewport::update( float deltaTime )
 	m_currentInput.deltaTime = deltaTime;
 
 	// Update camera through controller
-	m_controller->SetCamera( m_camera.get() );
-	m_controller->Update( m_currentInput );
+	m_controller->setCamera( m_camera.get() );
+	m_controller->update( m_currentInput );
 }
 
 void Viewport::render()
@@ -117,16 +117,16 @@ ViewportRay Viewport::getPickingRay( const math::Vec2<> &screenPos ) const noexc
 	const math::Vec2<> ndc = ViewportUtils::pixelToNormalized( screenPos, m_size );
 
 	// Get camera matrices
-	const auto viewMatrix = m_camera->GetViewMatrix();
-	const auto projMatrix = m_camera->GetProjectionMatrix( getAspectRatio() );
+	const auto viewMatrix = m_camera->getViewMatrix();
+	const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
 
 	// Convert NDC to camera ray
 	math::Vec3<> rayOrigin, rayDirection;
 
-	if ( m_camera->GetViewType() == camera::ViewType::Perspective )
+	if ( m_camera->getViewType() == camera::ViewType::Perspective )
 	{
 		// Perspective projection - ray starts from camera position
-		rayOrigin = m_camera->GetPosition();
+		rayOrigin = m_camera->getPosition();
 
 		// Calculate ray direction through screen point
 		// Inverse transform from NDC back to world space
@@ -152,7 +152,7 @@ ViewportRay Viewport::getPickingRay( const math::Vec2<> &screenPos ) const noexc
 	else
 	{
 		// Orthographic projection - ray is parallel to view direction
-		rayDirection = -m_camera->GetForwardVector(); // Camera looks down -Z, so forward is camera's -Z
+		rayDirection = -m_camera->getForwardVector(); // Camera looks down -Z, so forward is camera's -Z
 
 		// Ray origin is on the near plane at the screen position
 		const auto invViewProj = ( projMatrix * viewMatrix ).inverse();
@@ -184,8 +184,8 @@ math::Vec2<> Viewport::worldToScreen( const math::Vec3<> &worldPos ) const noexc
 		return { 0, 0 };
 
 	// Transform world position to screen coordinates
-	const auto viewMatrix = m_camera->GetViewMatrix();
-	const auto projMatrix = m_camera->GetProjectionMatrix( getAspectRatio() );
+	const auto viewMatrix = m_camera->getViewMatrix();
+	const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
 	const auto viewProj = projMatrix * viewMatrix;
 
 	math::Vec4<> clipPos = viewProj * math::Vec4<>{ worldPos.x, worldPos.y, worldPos.z, 1.0f };
@@ -218,13 +218,13 @@ void Viewport::frameSelection( const math::Vec3<> &center, const math::Vec3<> &s
 	if ( !m_controller || !m_camera )
 		return;
 
-	if ( m_camera->GetViewType() == camera::ViewType::Perspective )
+	if ( m_camera->getViewType() == camera::ViewType::Perspective )
 	{
 		// For perspective, position camera at appropriate distance
 		auto *perspController = dynamic_cast<camera::PerspectiveCameraController *>( m_controller.get() );
 		if ( perspController )
 		{
-			perspController->FocusOnBounds( center, size );
+			perspController->focusOnBounds( center, size );
 		}
 	}
 	else
@@ -233,7 +233,7 @@ void Viewport::frameSelection( const math::Vec3<> &center, const math::Vec3<> &s
 		auto *orthoController = dynamic_cast<camera::OrthographicCameraController *>( m_controller.get() );
 		if ( orthoController )
 		{
-			orthoController->FrameBounds( center, size );
+			orthoController->frameBounds( center, size );
 		}
 	}
 }
@@ -247,23 +247,23 @@ void Viewport::resetView() noexcept
 	switch ( m_type )
 	{
 	case ViewportType::Perspective:
-		m_camera->SetPosition( { 5, 5, 5 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
+		m_camera->setPosition( { 5, 5, 5 } );
+		m_camera->setTarget( { 0, 0, 0 } );
 		break;
 
 	case ViewportType::Top: // Looking down Z-axis
-		m_camera->SetPosition( { 0, 0, 10 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
+		m_camera->setPosition( { 0, 0, 10 } );
+		m_camera->setTarget( { 0, 0, 0 } );
 		break;
 
 	case ViewportType::Front: // Looking down Y-axis
-		m_camera->SetPosition( { 0, 10, 0 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
+		m_camera->setPosition( { 0, 10, 0 } );
+		m_camera->setTarget( { 0, 0, 0 } );
 		break;
 
 	case ViewportType::Side: // Looking down X-axis
-		m_camera->SetPosition( { 10, 0, 0 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
+		m_camera->setPosition( { 10, 0, 0 } );
+		m_camera->setTarget( { 0, 0, 0 } );
 		break;
 	}
 
@@ -357,8 +357,8 @@ void Viewport::initializeCamera()
 	case ViewportType::Perspective: {
 		m_camera = std::make_unique<camera::PerspectiveCamera>();
 		m_controller = std::make_unique<camera::PerspectiveCameraController>( static_cast<camera::PerspectiveCamera *>( m_camera.get() ) );
-		m_camera->SetPosition( { 5, 5, 5 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
+		m_camera->setPosition( { 5, 5, 5 } );
+		m_camera->setTarget( { 0, 0, 0 } );
 	}
 	break;
 
@@ -374,7 +374,7 @@ void Viewport::initializeCamera()
 
 	if ( m_camera )
 	{
-		m_camera->SetUp( { 0, 0, 1 } ); // Z-up coordinate system
+		m_camera->setUp( { 0, 0, 1 } ); // Z-up coordinate system
 	}
 }
 
@@ -387,21 +387,21 @@ void Viewport::setupOrthographicView()
 	switch ( m_type )
 	{
 	case ViewportType::Top: // Looking down Z-axis (XY plane)
-		m_camera->SetPosition( { 0, 0, 10 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
-		m_camera->SetUp( { 0, 1, 0 } ); // Y is up in top view
+		m_camera->setPosition( { 0, 0, 10 } );
+		m_camera->setTarget( { 0, 0, 0 } );
+		m_camera->setUp( { 0, 1, 0 } ); // Y is up in top view
 		break;
 
 	case ViewportType::Front: // Looking down Y-axis (XZ plane)
-		m_camera->SetPosition( { 0, 10, 0 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
-		m_camera->SetUp( { 0, 0, 1 } ); // Z is up in front view
+		m_camera->setPosition( { 0, 10, 0 } );
+		m_camera->setTarget( { 0, 0, 0 } );
+		m_camera->setUp( { 0, 0, 1 } ); // Z is up in front view
 		break;
 
 	case ViewportType::Side: // Looking down X-axis (YZ plane)
-		m_camera->SetPosition( { 10, 0, 0 } );
-		m_camera->SetTarget( { 0, 0, 0 } );
-		m_camera->SetUp( { 0, 0, 1 } ); // Z is up in side view
+		m_camera->setPosition( { 10, 0, 0 } );
+		m_camera->setTarget( { 0, 0, 0 } );
+		m_camera->setUp( { 0, 0, 1 } ); // Z is up in side view
 		break;
 
 	default:
@@ -540,7 +540,7 @@ void ViewportManager::synchronizeViews( Viewport *sourceViewport )
 			{
 				// For view sync, typically we'd sync the target position
 				// but keep each view's specific orientation
-				camera->SetTarget( sourceCamera->GetTarget() );
+				camera->setTarget( sourceCamera->getTarget() );
 			}
 		}
 	}
