@@ -79,7 +79,7 @@ public:
 
 	// Window properties
 	void getSize( int &width, int &height ) const;
-	bool is_focused() const { return m_focused; }
+	bool isFocused() const { return m_focused; }
 
 	// Native handles for graphics API integration
 	void *getHandle() const { return m_hwnd; }
@@ -88,19 +88,19 @@ public:
 private:
 	HWND m_hwnd = nullptr;
 	HINSTANCE m_hinstance = nullptr;
-	bool m_should_close = false;
+	bool m_shouldClose = false;
 	bool m_focused = true;
 	int m_width = 0;
 	int m_height = 0;
 
 	// Event queue
-	std::queue<WindowEvent> m_event_queue;
+	std::queue<WindowEvent> m_eventQueue;
 
 	// Win32 window procedure
-	static LRESULT CALLBACK window_proc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam );
+	static LRESULT CALLBACK windowProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam );
 
 	// Helper to add events to queue
-	void add_event( const WindowEvent &event );
+	void addEvent( const WindowEvent &event );
 };
 
 } // namespace platform

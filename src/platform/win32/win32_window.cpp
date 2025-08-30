@@ -35,7 +35,7 @@ bool Win32Window::create( const char *title, int width, int height )
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof( WNDCLASSEXW );
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = window_proc;
+	wc.lpfnWndProc = windowProc;
 	wc.hInstance = m_hinstance;
 	wc.hCursor = LoadCursor( nullptr, IDC_ARROW );
 	wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
@@ -91,10 +91,10 @@ bool Win32Window::poll()
 		DispatchMessage( &msg );
 
 		if ( msg.message == WM_QUIT )
-			m_should_close = true;
+			m_shouldClose = true;
 	}
 
-	return !m_should_close;
+	return !m_shouldClose;
 #else
 	return false;
 #endif
@@ -102,11 +102,11 @@ bool Win32Window::poll()
 
 bool Win32Window::getEvent( WindowEvent &event )
 {
-	if ( m_event_queue.empty() )
+	if ( m_eventQueue.empty() )
 		return false;
 
-	event = m_event_queue.front();
-	m_event_queue.pop();
+	event = m_eventQueue.front();
+	m_eventQueue.pop();
 	return true;
 }
 
@@ -116,13 +116,13 @@ void Win32Window::getSize( int &width, int &height ) const
 	height = m_height;
 }
 
-void Win32Window::add_event( const WindowEvent &event )
+void Win32Window::addEvent( const WindowEvent &event )
 {
-	m_event_queue.push( event );
+	m_eventQueue.push( event );
 }
 
 #if defined( _WIN32 )
-LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
+LRESULT CALLBACK Win32Window::windowProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
 	Win32Window *window = nullptr;
 
@@ -147,8 +147,8 @@ LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, L
 		{
 		case WM_CLOSE:
 			event.type = WindowEvent::Type::Close;
-			window->add_event( event );
-			window->m_should_close = true;
+			window->addEvent( event );
+			window->m_shouldClose = true;
 			return 0;
 
 		case WM_SIZE: {
@@ -160,82 +160,69 @@ LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, L
 			event.type = WindowEvent::Type::Resize;
 			event.resize.width = width;
 			event.resize.height = height;
-			window->add_event( event );
+			window->addEvent( event );
 		}
 			return 0;
 
 		case WM_SETFOCUS:
 			window->m_focused = true;
 			event.type = WindowEvent::Type::Focus;
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 
 		case WM_KILLFOCUS:
 			window->m_focused = false;
 			event.type = WindowEvent::Type::LostFocus;
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 
 		case WM_MOUSEMOVE:
 			event.type = WindowEvent::Type::MouseMove;
 			event.mouse.x = static_cast<float>( GET_X_LPARAM( lparam ) );
 			event.mouse.y = static_cast<float>( GET_Y_LPARAM( lparam ) );
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		case WM_MBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONUP: {
+			// Unified mouse button handling (DOWN/UP)
 			event.type = WindowEvent::Type::MouseButton;
 			event.mouse.x = static_cast<float>( GET_X_LPARAM( lparam ) );
 			event.mouse.y = static_cast<float>( GET_Y_LPARAM( lparam ) );
+			// Map button index
+			int buttonIndex = -1;
 			switch ( msg )
 			{
 			case WM_LBUTTONDOWN:
-				event.mouse.button = 0;
+			case WM_LBUTTONUP:
+				buttonIndex = 0;
 				break;
 			case WM_RBUTTONDOWN:
-				event.mouse.button = 1;
+			case WM_RBUTTONUP:
+				buttonIndex = 1;
 				break;
 			case WM_MBUTTONDOWN:
-				event.mouse.button = 2;
-				break;
-			default:
-				event.mouse.button = -1;
-				break;
-			}
-			event.mouse.pressed = true;
-			window->add_event( event );
-			return 0;
-		case WM_LBUTTONUP:
-		case WM_RBUTTONUP:
-		case WM_MBUTTONUP:
-			event.type = WindowEvent::Type::MouseButton;
-			event.mouse.x = static_cast<float>( GET_X_LPARAM( lparam ) );
-			event.mouse.y = static_cast<float>( GET_Y_LPARAM( lparam ) );
-			switch ( msg )
-			{
-			case WM_LBUTTONUP:
-				event.mouse.button = 0;
-				break;
-			case WM_RBUTTONUP:
-				event.mouse.button = 1;
-				break;
 			case WM_MBUTTONUP:
-				event.mouse.button = 2;
+				buttonIndex = 2;
 				break;
 			default:
-				event.mouse.button = -1;
 				break;
 			}
-			event.mouse.pressed = false;
-			window->add_event( event );
+			event.mouse.button = buttonIndex;
+			// Pressed flag based on message variant
+			event.mouse.pressed = ( msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN );
+			window->addEvent( event );
 			return 0;
+		}
 
 		case WM_MOUSEWHEEL:
 			event.type = WindowEvent::Type::MouseWheel;
 			event.mouse.wheelDelta = static_cast<float>( GET_WHEEL_DELTA_WPARAM( wparam ) ) / WHEEL_DELTA;
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 
 		case WM_KEYDOWN:
@@ -246,7 +233,7 @@ LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, L
 			event.keyboard.ctrl = ( GetKeyState( VK_CONTROL ) & 0x8000 ) != 0;
 			event.keyboard.shift = ( GetKeyState( VK_SHIFT ) & 0x8000 ) != 0;
 			event.keyboard.alt = ( GetKeyState( VK_MENU ) & 0x8000 ) != 0;
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 
 		case WM_KEYUP:
@@ -257,7 +244,7 @@ LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, L
 			event.keyboard.ctrl = ( GetKeyState( VK_CONTROL ) & 0x8000 ) != 0;
 			event.keyboard.shift = ( GetKeyState( VK_SHIFT ) & 0x8000 ) != 0;
 			event.keyboard.alt = ( GetKeyState( VK_MENU ) & 0x8000 ) != 0;
-			window->add_event( event );
+			window->addEvent( event );
 			return 0;
 		}
 	}
