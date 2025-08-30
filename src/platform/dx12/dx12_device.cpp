@@ -29,14 +29,13 @@ bool Device::initializeHeadless()
 	try
 	{
 #ifdef _DEBUG
-		EnableDebugLayer();
+		enableDebugLayer();
 #endif
-		CreateFactory();
-		FindAdapter();
-		CreateDevice();
-		CreateCommandObjects();
-		// No swap chain / RTV / ImGui heaps; create synchronization objects so basic GPU sync works
-		CreateSynchronizationObjects();
+		createFactory();
+		findAdapter();
+		createDevice();
+		createCommandObjects();
+		createSynchronizationObjects();
 		return true;
 	}
 	catch ( const std::exception & )
@@ -52,17 +51,17 @@ bool Device::initialize( HWND window_handle )
 		m_hwnd = window_handle;
 
 #ifdef _DEBUG
-		EnableDebugLayer();
+		enableDebugLayer();
 #endif
 
-		CreateFactory();
-		FindAdapter();
-		CreateDevice();
-		CreateCommandObjects();
-		CreateSwapChain( window_handle );
-		CreateDescriptorHeaps();
-		CreateRenderTargetViews();
-		CreateSynchronizationObjects();
+		createFactory();
+		findAdapter();
+		createDevice();
+		createCommandObjects();
+		createSwapChain( window_handle );
+		createDescriptorHeaps();
+		createRenderTargetViews();
+		createSynchronizationObjects();
 
 		return true;
 	}
@@ -77,7 +76,7 @@ void Device::shutdown()
 	// Wait for GPU to finish
 	if ( m_commandQueue )
 	{
-		WaitForPreviousFrame();
+		waitForPreviousFrame();
 	}
 
 	// Close fence event
@@ -165,10 +164,10 @@ void Device::present()
 	ThrowIfFailed( m_swapChain->Present( 1, 0 ) );
 
 	// Wait for frame to complete
-	WaitForPreviousFrame();
+	waitForPreviousFrame();
 }
 
-void Device::EnableDebugLayer()
+void Device::enableDebugLayer()
 {
 	// Enable the D3D12 debug layer
 	if ( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &m_debugController ) ) ) )
@@ -177,7 +176,7 @@ void Device::EnableDebugLayer()
 	}
 }
 
-void Device::CreateFactory()
+void Device::createFactory()
 {
 	UINT dxgiFactoryFlags = 0;
 
@@ -188,7 +187,7 @@ void Device::CreateFactory()
 	ThrowIfFailed( CreateDXGIFactory2( dxgiFactoryFlags, IID_PPV_ARGS( &m_factory ) ) );
 }
 
-void Device::FindAdapter()
+void Device::findAdapter()
 {
 	for ( UINT adapterIndex = 0; SUCCEEDED( m_factory->EnumAdapters1( adapterIndex, &m_adapter ) ); ++adapterIndex )
 	{
@@ -216,7 +215,7 @@ void Device::FindAdapter()
 	}
 }
 
-void Device::CreateDevice()
+void Device::createDevice()
 {
 	ThrowIfFailed( D3D12CreateDevice(
 		m_adapter.Get(),
@@ -224,7 +223,7 @@ void Device::CreateDevice()
 		IID_PPV_ARGS( &m_device ) ) );
 }
 
-void Device::CreateCommandObjects()
+void Device::createCommandObjects()
 {
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -250,7 +249,7 @@ void Device::CreateCommandObjects()
 	ThrowIfFailed( m_commandList->Close() );
 }
 
-void Device::CreateSwapChain( HWND window_handle )
+void Device::createSwapChain( HWND window_handle )
 {
 	// Get window dimensions
 	RECT rect;
@@ -284,7 +283,7 @@ void Device::CreateSwapChain( HWND window_handle )
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
 
-void Device::CreateDescriptorHeaps()
+void Device::createDescriptorHeaps()
 {
 	// Create RTV descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -303,7 +302,7 @@ void Device::CreateDescriptorHeaps()
 	ThrowIfFailed( m_device->CreateDescriptorHeap( &imguiDesc, IID_PPV_ARGS( &m_imguiDescriptorHeap ) ) );
 }
 
-void Device::CreateRenderTargetViews()
+void Device::createRenderTargetViews()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -316,7 +315,7 @@ void Device::CreateRenderTargetViews()
 	}
 }
 
-void Device::CreateSynchronizationObjects()
+void Device::createSynchronizationObjects()
 {
 	ThrowIfFailed( m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &m_fence ) ) );
 	m_fenceValue = 1;
@@ -329,7 +328,7 @@ void Device::CreateSynchronizationObjects()
 	}
 }
 
-void Device::WaitForPreviousFrame()
+void Device::waitForPreviousFrame()
 {
 	// Signal and increment fence value
 	const UINT64 fenceValueLocal = m_fenceValue;
@@ -358,17 +357,17 @@ CommandQueue::CommandQueue( Device &device, D3D12_COMMAND_LIST_TYPE type )
 
 CommandQueue::~CommandQueue() = default;
 
-void CommandQueue::ExecuteCommandLists( UINT numCommandLists, ID3D12CommandList *const *commandLists )
+void CommandQueue::executeCommandLists( UINT numCommandLists, ID3D12CommandList *const *commandLists )
 {
 	m_commandQueue->ExecuteCommandLists( numCommandLists, commandLists );
 }
 
-void CommandQueue::Signal( ID3D12Fence *fence, UINT64 value )
+void CommandQueue::signal( ID3D12Fence *fence, UINT64 value )
 {
 	ThrowIfFailed( m_commandQueue->Signal( fence, value ) );
 }
 
-void CommandQueue::WaitForFence( ID3D12Fence *fence, UINT64 value )
+void CommandQueue::waitForFence( ID3D12Fence *fence, UINT64 value )
 {
 	if ( fence->GetCompletedValue() < value )
 	{
@@ -394,8 +393,8 @@ SwapChain::SwapChain( Device &device, CommandQueue &commandQueue, HWND hwnd, UIN
 	swapChainDesc.SampleDesc.Count = 1;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed( device.GetFactory()->CreateSwapChainForHwnd(
-		commandQueue.Get(),
+	ThrowIfFailed( device.getFactory()->CreateSwapChainForHwnd(
+		commandQueue.get(),
 		hwnd,
 		&swapChainDesc,
 		nullptr,
@@ -403,17 +402,17 @@ SwapChain::SwapChain( Device &device, CommandQueue &commandQueue, HWND hwnd, UIN
 		&swapChain ) );
 
 	// Disable Alt+Enter fullscreen transitions
-	ThrowIfFailed( device.GetFactory()->MakeWindowAssociation( hwnd, DXGI_MWA_NO_ALT_ENTER ) );
+	ThrowIfFailed( device.getFactory()->MakeWindowAssociation( hwnd, DXGI_MWA_NO_ALT_ENTER ) );
 
 	// Query for IDXGISwapChain3 interface
 	ThrowIfFailed( swapChain.As( &m_swapChain ) );
 
-	CreateBackBuffers();
+	createBackBuffers();
 }
 
 SwapChain::~SwapChain() = default;
 
-void SwapChain::CreateBackBuffers()
+void SwapChain::createBackBuffers()
 {
 	for ( UINT i = 0; i < BufferCount; i++ )
 	{
@@ -421,17 +420,17 @@ void SwapChain::CreateBackBuffers()
 	}
 }
 
-void SwapChain::Present( UINT syncInterval )
+void SwapChain::present( UINT syncInterval )
 {
 	ThrowIfFailed( m_swapChain->Present( syncInterval, 0 ) );
 }
 
-UINT SwapChain::GetCurrentBackBufferIndex() const
+UINT SwapChain::getCurrentBackBufferIndex() const
 {
 	return m_swapChain->GetCurrentBackBufferIndex();
 }
 
-void SwapChain::Resize( UINT width, UINT height )
+void SwapChain::resize( UINT width, UINT height )
 {
 	if ( m_width == width && m_height == height )
 		return;
@@ -448,12 +447,12 @@ void SwapChain::Resize( UINT width, UINT height )
 	m_width = width;
 	m_height = height;
 
-	CreateBackBuffers();
+	createBackBuffers();
 }
 
-ID3D12Resource *SwapChain::GetCurrentBackBuffer() const
+ID3D12Resource *SwapChain::getCurrentBackBuffer() const
 {
-	return m_backBuffers[GetCurrentBackBufferIndex()].Get();
+	return m_backBuffers[getCurrentBackBufferIndex()].Get();
 }
 
 // CommandContext implementation
@@ -469,13 +468,13 @@ CommandContext::CommandContext( Device &device, D3D12_COMMAND_LIST_TYPE type )
 
 CommandContext::~CommandContext() = default;
 
-void CommandContext::Reset()
+void CommandContext::reset()
 {
 	ThrowIfFailed( m_commandAllocator->Reset() );
 	ThrowIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
 }
 
-void CommandContext::Close()
+void CommandContext::close()
 {
 	ThrowIfFailed( m_commandList->Close() );
 }
@@ -501,13 +500,13 @@ Fence::~Fence()
 	}
 }
 
-void Fence::Signal( CommandQueue &commandQueue )
+void Fence::signal( CommandQueue &commandQueue )
 {
 	++m_currentValue;
-	commandQueue.Signal( m_fence.Get(), m_currentValue );
+	commandQueue.signal( m_fence.Get(), m_currentValue );
 }
 
-void Fence::WaitForValue( UINT64 value )
+void Fence::waitForValue( UINT64 value )
 {
 	if ( m_fence->GetCompletedValue() < value )
 	{
@@ -516,9 +515,9 @@ void Fence::WaitForValue( UINT64 value )
 	}
 }
 
-void Fence::WaitForCurrentValue()
+void Fence::waitForCurrentValue()
 {
-	WaitForValue( m_currentValue );
+	waitForValue( m_currentValue );
 }
 
 } // namespace dx12

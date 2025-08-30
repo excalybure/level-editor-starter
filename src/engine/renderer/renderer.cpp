@@ -497,7 +497,7 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 
 	for ( UINT i = 0; i < dx12::SwapChain::BufferCount; i++ )
 	{
-		ID3D12Resource *backBuffer = swapChain.GetCurrentBackBuffer();
+		ID3D12Resource *backBuffer = swapChain.getCurrentBackBuffer();
 		m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
 		rtvHandle.ptr += rtvDescriptorSize;
 	}
@@ -505,7 +505,7 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	// Transition back buffer to render target
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = swapChain.GetCurrentBackBuffer();
+	barrier.Transition.pResource = swapChain.getCurrentBackBuffer();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	context->ResourceBarrier( 1, &barrier );
@@ -537,7 +537,7 @@ void Renderer::endFrame()
 	// Transition back buffer to present
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = m_currentSwapChain->GetCurrentBackBuffer();
+	barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	( *m_currentContext )->ResourceBarrier( 1, &barrier );
@@ -587,7 +587,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getCurrentRTV() const
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-	rtvHandle.ptr += rtvDescriptorSize * m_currentSwapChain->GetCurrentBackBufferIndex();
+	rtvHandle.ptr += rtvDescriptorSize * m_currentSwapChain->getCurrentBackBufferIndex();
 	return rtvHandle;
 }
 

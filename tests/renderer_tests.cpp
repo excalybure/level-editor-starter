@@ -131,7 +131,8 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "VertexBuffer" ) ) return; // Skip if unsupported
+				if ( !requireHeadlessDevice( device, "VertexBuffer" ) )
+					return; // Skip if unsupported
 
 				const std::vector<Vertex> vertices = {
 					{ Vec3<>{ 0.0f, 1.0f, 0.0f }, Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
@@ -159,7 +160,8 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "IndexBuffer" ) ) return;
+				if ( !requireHeadlessDevice( device, "IndexBuffer" ) )
+					return;
 
 				const std::vector<uint16_t> indices = { 0, 1, 2 };
 
@@ -186,7 +188,8 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "Renderer creation" ) ) return;
+				if ( !requireHeadlessDevice( device, "Renderer creation" ) )
+					return;
 				const Renderer renderer( device );
 				// Just test that it constructs without throwing
 			}

@@ -56,7 +56,7 @@ public:
 	void endFrame();
 	void present();
 
-	ID3D12Device *Get() const { return m_device.Get(); }
+	ID3D12Device *get() const { return m_device.Get(); }
 	ID3D12Device *operator->() const { return m_device.Get(); }
 
 	// ImGui integration
@@ -67,7 +67,7 @@ public:
 	ID3D12GraphicsCommandList *getCommandList() const { return m_commandList.Get(); }
 
 	// Factory for creating other D3D12 objects
-	IDXGIFactory4 *GetFactory() const { return m_factory.Get(); }
+	IDXGIFactory4 *getFactory() const { return m_factory.Get(); }
 
 private:
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
@@ -100,18 +100,18 @@ private:
 	HWND m_hwnd = nullptr;
 
 	// Initialization methods
-	void EnableDebugLayer();
-	void CreateFactory();
-	void FindAdapter();
-	void CreateDevice();
-	void CreateCommandObjects();
-	void CreateSwapChain( HWND window_handle );
-	void CreateDescriptorHeaps();
-	void CreateRenderTargetViews();
-	void CreateSynchronizationObjects();
+	void enableDebugLayer();
+	void createFactory();
+	void findAdapter();
+	void createDevice();
+	void createCommandObjects();
+	void createSwapChain( HWND window_handle );
+	void createDescriptorHeaps();
+	void createRenderTargetViews();
+	void createSynchronizationObjects();
 
 	// Frame methods
-	void WaitForPreviousFrame();
+	void waitForPreviousFrame();
 };
 
 // Command Queue wrapper
@@ -125,15 +125,15 @@ public:
 	CommandQueue( const CommandQueue & ) = delete;
 	CommandQueue &operator=( const CommandQueue & ) = delete;
 
-	ID3D12CommandQueue *Get() const { return m_commandQueue.Get(); }
+	ID3D12CommandQueue *get() const { return m_commandQueue.Get(); }
 	ID3D12CommandQueue *operator->() const { return m_commandQueue.Get(); }
 
 	// Execute command lists
-	void ExecuteCommandLists( UINT numCommandLists, ID3D12CommandList *const *commandLists );
+	void executeCommandLists( UINT numCommandLists, ID3D12CommandList *const *commandLists );
 
 	// Signal and wait for fence
-	void Signal( ID3D12Fence *fence, UINT64 value );
-	void WaitForFence( ID3D12Fence *fence, UINT64 value );
+	void signal( ID3D12Fence *fence, UINT64 value );
+	void waitForFence( ID3D12Fence *fence, UINT64 value );
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
@@ -150,20 +150,20 @@ public:
 	SwapChain( const SwapChain & ) = delete;
 	SwapChain &operator=( const SwapChain & ) = delete;
 
-	IDXGISwapChain3 *Get() const { return m_swapChain.Get(); }
+	IDXGISwapChain3 *get() const { return m_swapChain.Get(); }
 	IDXGISwapChain3 *operator->() const { return m_swapChain.Get(); }
 
 	// Present the current back buffer
-	void Present( UINT syncInterval = 1 );
+	void present( UINT syncInterval = 1 );
 
 	// Get current back buffer index
-	UINT GetCurrentBackBufferIndex() const;
+	UINT getCurrentBackBufferIndex() const;
 
 	// Resize the swap chain
-	void Resize( UINT width, UINT height );
+	void resize( UINT width, UINT height );
 
 	// Get back buffer render target view
-	ID3D12Resource *GetCurrentBackBuffer() const;
+	ID3D12Resource *getCurrentBackBuffer() const;
 
 	static constexpr UINT BufferCount = 2;
 
@@ -175,7 +175,7 @@ private:
 	CommandQueue &m_commandQueue;
 	UINT m_width, m_height;
 
-	void CreateBackBuffers();
+	void createBackBuffers();
 };
 
 // Basic command allocator and list management
@@ -189,14 +189,14 @@ public:
 	CommandContext( const CommandContext & ) = delete;
 	CommandContext &operator=( const CommandContext & ) = delete;
 
-	ID3D12GraphicsCommandList *Get() const { return m_commandList.Get(); }
+	ID3D12GraphicsCommandList *get() const { return m_commandList.Get(); }
 	ID3D12GraphicsCommandList *operator->() const { return m_commandList.Get(); }
 
 	// Reset for new frame
-	void Reset();
+	void reset();
 
 	// Close command list for execution
-	void Close();
+	void close();
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
@@ -216,16 +216,16 @@ public:
 	Fence( const Fence & ) = delete;
 	Fence &operator=( const Fence & ) = delete;
 
-	ID3D12Fence *Get() const { return m_fence.Get(); }
+	ID3D12Fence *get() const { return m_fence.Get(); }
 	ID3D12Fence *operator->() const { return m_fence.Get(); }
 
 	// Get current fence value
-	UINT64 GetCurrentValue() const { return m_currentValue; }
+	UINT64 getCurrentValue() const { return m_currentValue; }
 
 	// Signal and wait
-	void Signal( CommandQueue &commandQueue );
-	void WaitForValue( UINT64 value );
-	void WaitForCurrentValue();
+	void signal( CommandQueue &commandQueue );
+	void waitForValue( UINT64 value );
+	void waitForCurrentValue();
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;

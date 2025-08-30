@@ -18,9 +18,10 @@ TEST_CASE( "D3D12 Device Creation", "[dx12]" )
 			try
 			{
 				Device device;
-				if ( !requireHeadlessDevice( device, "D3D12 device creation" ) ) return; // Skip on unsupported
-				REQUIRE( device.Get() != nullptr );
-				REQUIRE( device.GetFactory() != nullptr );
+				if ( !requireHeadlessDevice( device, "D3D12 device creation" ) )
+					return; // Skip on unsupported
+				REQUIRE( device.get() != nullptr );
+				REQUIRE( device.getFactory() != nullptr );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -40,9 +41,10 @@ TEST_CASE( "D3D12 Command Queue", "[dx12]" )
 			try
 			{
 				Device device;
-				if ( !requireHeadlessDevice( device, "D3D12 command queue" ) ) return;
+				if ( !requireHeadlessDevice( device, "D3D12 command queue" ) )
+					return;
 				CommandQueue queue( device );
-				REQUIRE( queue.Get() != nullptr );
+				REQUIRE( queue.get() != nullptr );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -60,10 +62,11 @@ TEST_CASE( "D3D12 Fence", "[dx12]" )
 			try
 			{
 				Device device;
-				if ( !requireHeadlessDevice( device, "D3D12 fence" ) ) return;
+				if ( !requireHeadlessDevice( device, "D3D12 fence" ) )
+					return;
 				Fence fence( device );
-				REQUIRE( fence.Get() != nullptr );
-				REQUIRE( fence.GetCurrentValue() == 0 );
+				REQUIRE( fence.get() != nullptr );
+				REQUIRE( fence.getCurrentValue() == 0 );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -81,13 +84,14 @@ TEST_CASE( "D3D12 Command Context", "[dx12]" )
 			try
 			{
 				Device device;
-				if ( !requireHeadlessDevice( device, "D3D12 command context" ) ) return;
+				if ( !requireHeadlessDevice( device, "D3D12 command context" ) )
+					return;
 				CommandContext context( device );
-				REQUIRE( context.Get() != nullptr );
+				REQUIRE( context.get() != nullptr );
 
 				// Test reset functionality
-				context.Reset();
-				context.Close();
+				context.reset();
+				context.close();
 			}
 			catch ( const std::runtime_error &e )
 			{
