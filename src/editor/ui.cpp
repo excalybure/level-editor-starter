@@ -56,6 +56,12 @@ bool UI::initialize( void *window_handle, void *d3d_device, void *d3d_descriptor
 	ID3D12Device *device = static_cast<ID3D12Device *>( d3d_device );
 	ID3D12DescriptorHeap *heap = static_cast<ID3D12DescriptorHeap *>( d3d_descriptor_heap );
 
+	// Basic validation to allow safe negative-path unit tests without crashing inside backends
+	if ( !hwnd || !device || !heap )
+	{
+		return false;
+	}
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

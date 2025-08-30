@@ -291,6 +291,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
+  tests/ui_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
@@ -309,6 +310,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.renderer
     engine.camera
     editor.viewport
+  editor.ui
+  platform.win32
     Catch2::Catch2WithMain
   )
   target_compile_features(math_tests PUBLIC cxx_std_23)
