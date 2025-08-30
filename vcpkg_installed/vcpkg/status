@@ -21,3 +21,61 @@ Abi: 32db60481dc4a41ecc0c77e29a3c5d0eb984df9baab41294f9e620ec62d1a1e2
 Description: A modern, C++-native, test framework for unit-tests, TDD and BDD.
 Status: install ok installed
 
+Package: directx-dxc
+Version: 2025-05-30
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: fc012b4a428560208d25d82d9825bc99d2f74d8d11fc94f9fae33a3d8d73a541
+Description: DirectX Shader Compiler (LLVM/Clang)
+Status: install ok installed
+
+Package: directx-headers
+Version: 1.616.0
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 5871963c4e528bd7e0130305a48ce7ba6a80be90026e31986b74fed245a79dbe
+Description: Official DirectX 12 Headers
+Status: install ok installed
+
+Package: glm
+Version: 1.0.1
+Port-Version: 3
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ee28fbca4ed6909fdb8660caadb4d5f9ccf99179693790961275e872ceae36fb
+Description: OpenGL Mathematics (GLM)
+Status: install ok installed
+
+Package: imgui
+Version: 1.91.9
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 753e6928e52e940b705e83b02146f8606c097b95fb627035fc64cacb8a0c1b2b
+Description: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies.
+Status: install ok installed
+
+Package: imgui
+Feature: docking-experimental
+Architecture: x64-windows
+Multi-Arch: same
+Description: Build with docking support
+Status: install ok installed
+
+Package: imgui
+Feature: dx12-binding
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available DirectX12 binding
+Status: install ok installed
+
+Package: imgui
+Feature: win32-binding
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available Win32 binding
+Status: install ok installed
+
