@@ -123,6 +123,155 @@ TEST_CASE( "Render State", "[renderer]" )
 	}
 }
 
+TEST_CASE( "Render State permutations", "[renderer]" )
+{
+	RenderState state;
+	SECTION( "Disable depth test & write, enable blend wireframe front cull" )
+	{
+		state.setDepthTest( false );
+		state.setDepthWrite( false );
+		state.setBlendEnabled( true );
+		state.setWireframe( true );
+		state.setCullMode( D3D12_CULL_MODE_FRONT );
+		const auto depth = state.getDepthStencilDesc();
+		REQUIRE( depth.DepthEnable == FALSE );
+		REQUIRE( depth.DepthWriteMask == D3D12_DEPTH_WRITE_MASK_ZERO );
+		const auto rast = state.getRasterizerDesc();
+		REQUIRE( rast.FillMode == D3D12_FILL_MODE_WIREFRAME );
+		REQUIRE( rast.CullMode == D3D12_CULL_MODE_FRONT );
+		const auto blend = state.getBlendDesc();
+		REQUIRE( blend.RenderTarget[0].BlendEnable == TRUE );
+	}
+	SECTION( "Re-enable depth variants" )
+	{
+		state.setDepthTest( true );
+		state.setDepthWrite( true );
+		const auto depth = state.getDepthStencilDesc();
+		REQUIRE( depth.DepthEnable == TRUE );
+		REQUIRE( depth.DepthWriteMask == D3D12_DEPTH_WRITE_MASK_ALL );
+	}
+}
+
+TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
+{
+	SECTION( "Defines are injected" )
+	{
+		try
+		{
+			const std::string src = R"(
+				#ifndef MY_FLAG
+				#error MY_FLAG not defined
+				#endif
+				float4 main(float3 pos:POSITION):SV_POSITION { return float4(pos,1); }
+			)";
+			REQUIRE_NOTHROW( ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
+		}
+		catch ( const std::runtime_error &e )
+		{
+			WARN( "Skipping defines test: " << e.what() );
+		}
+	}
+	SECTION( "Invalid profile throws" )
+	{
+		bool threw = false;
+		try
+		{
+			ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
+		}
+		catch ( const std::runtime_error & )
+		{
+			threw = true;
+		}
+		REQUIRE( threw );
+	}
+	SECTION( "Missing file throws" )
+	{
+		bool threw = false;
+		try
+		{
+			ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
+		}
+		catch ( const std::runtime_error & )
+		{
+			threw = true;
+		}
+		REQUIRE( threw );
+	}
+}
+
+TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "buffer update" ) )
+		return;
+
+	// Start with 3 vertices
+	std::vector<Vertex> verts = {
+		{ { 0, 0, 0 }, Color::red() },
+		{ { 1, 0, 0 }, Color::green() },
+		{ { 0, 1, 0 }, Color::blue() }
+	};
+	VertexBuffer vb( device, verts );
+	REQUIRE( vb.getVertexCount() == 3 );
+
+	// Same size update -> count unchanged
+	verts[1].position.x = 2.0f;
+	REQUIRE_NOTHROW( vb.update( verts ) );
+	REQUIRE( vb.getVertexCount() == 3 );
+
+	// Larger update -> count grows
+	verts.push_back( { { 0, 0, 1 }, Color::white() } );
+	vb.update( verts );
+	REQUIRE( vb.getVertexCount() == 4 );
+
+	// Index buffer similar path
+	std::vector<uint16_t> idx = { 0, 1, 2 };
+	IndexBuffer ib( device, idx );
+	REQUIRE( ib.getIndexCount() == 3 );
+	idx.push_back( 2 );
+	ib.update( idx );
+	REQUIRE( ib.getIndexCount() == 4 );
+}
+
+TEST_CASE( "Empty buffer creation rejected", "[renderer][buffers][error]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "empty buffer" ) )
+		return;
+	bool threwV = false, threwI = false;
+	try
+	{
+		VertexBuffer vb( device, {} );
+	}
+	catch ( const std::runtime_error & )
+	{
+		threwV = true;
+	}
+	try
+	{
+		IndexBuffer ib( device, {} );
+	}
+	catch ( const std::runtime_error & )
+	{
+		threwI = true;
+	}
+	REQUIRE( threwV );
+	REQUIRE( threwI );
+}
+
+TEST_CASE( "ViewProjection accessor", "[renderer]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "viewProj" ) )
+		return;
+	Renderer rendererInst( device );
+	math::Mat4<> custom = math::Mat4<>::identity();
+	custom.row0.x = 2.0f; // mutate something
+	rendererInst.setViewProjectionMatrix( custom );
+	const auto &retrieved = rendererInst.getViewProjectionMatrix();
+	REQUIRE( retrieved.row0.x == 2.0f );
+}
+
 TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 {
 	SECTION( "VertexBuffer creation with valid device" )

@@ -198,6 +198,8 @@ public:
 	// Set render state and shaders
 	void setRenderState( const RenderState &state ) noexcept;
 	void setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept;
+	// Accessor (test instrumentation) for verifying setViewProjectionMatrix updates
+	const math::Mat4<> &getViewProjectionMatrix() const noexcept { return m_viewProjectionMatrix; }
 
 	// Immediate drawing commands
 	void drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;

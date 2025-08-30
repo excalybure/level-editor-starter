@@ -74,11 +74,19 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 	compileFlags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-	const std::string defineString = BuildDefineString( defines );
+	// Prepend generated #defines to source if any
+	std::string fullSource;
+	if ( !defines.empty() )
+	{
+		fullSource = BuildDefineString( defines );
+		fullSource += source;
+	}
+	const char *finalSource = defines.empty() ? source.c_str() : fullSource.c_str();
+	const size_t finalSourceSize = defines.empty() ? source.length() : fullSource.length();
 
 	HRESULT hr = D3DCompile(
-		source.c_str(),
-		source.length(),
+		finalSource,
+		finalSourceSize,
 		nullptr,
 		nullptr,
 		nullptr,
@@ -203,6 +211,10 @@ VertexBuffer::VertexBuffer( dx12::Device &device, const std::vector<Vertex> &ver
 
 void VertexBuffer::createBuffer( const std::vector<Vertex> &vertices )
 {
+	if ( vertices.empty() )
+	{
+		throw std::runtime_error( "VertexBuffer: empty vertex array" );
+	}
 	const UINT bufferSize = static_cast<UINT>( vertices.size() * sizeof( Vertex ) );
 
 	// Create upload heap
@@ -271,6 +283,10 @@ IndexBuffer::IndexBuffer( dx12::Device &device, const std::vector<uint16_t> &ind
 
 void IndexBuffer::createBuffer( const std::vector<uint16_t> &indices )
 {
+	if ( indices.empty() )
+	{
+		throw std::runtime_error( "IndexBuffer: empty index array" );
+	}
 	const UINT bufferSize = static_cast<UINT>( indices.size() * sizeof( uint16_t ) );
 
 	// Create upload heap
