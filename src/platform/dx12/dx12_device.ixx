@@ -47,6 +47,8 @@ public:
 
 	// Initialize the device with window handle for swap chain and ImGui
 	bool initialize( HWND window_handle );
+	// Headless initialization (no window / swap chain) for tests or compute-only scenarios
+	bool initializeHeadless();
 	void shutdown();
 
 	// Frame operations

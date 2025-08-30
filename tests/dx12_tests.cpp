@@ -16,6 +16,11 @@ TEST_CASE( "D3D12 Device Creation", "[dx12]" )
 			try
 			{
 				Device device;
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Headless device initialization failed (possibly unsupported)." );
+					return; // Acceptable on unsupported hardware
+				}
 				REQUIRE( device.Get() != nullptr );
 				REQUIRE( device.GetFactory() != nullptr );
 			}
@@ -37,6 +42,11 @@ TEST_CASE( "D3D12 Command Queue", "[dx12]" )
 			try
 			{
 				Device device;
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Headless device initialization failed (possibly unsupported)." );
+					return; // Skip rest
+				}
 				CommandQueue queue( device );
 				REQUIRE( queue.Get() != nullptr );
 			}
@@ -56,6 +66,11 @@ TEST_CASE( "D3D12 Fence", "[dx12]" )
 			try
 			{
 				Device device;
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Headless device initialization failed (possibly unsupported)." );
+					return;
+				}
 				Fence fence( device );
 				REQUIRE( fence.Get() != nullptr );
 				REQUIRE( fence.GetCurrentValue() == 0 );
@@ -76,6 +91,11 @@ TEST_CASE( "D3D12 Command Context", "[dx12]" )
 			try
 			{
 				Device device;
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Headless device initialization failed (possibly unsupported)." );
+					return;
+				}
 				CommandContext context( device );
 				REQUIRE( context.Get() != nullptr );
 

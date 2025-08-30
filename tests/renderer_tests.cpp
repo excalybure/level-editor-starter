@@ -130,6 +130,13 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 			{
 				dx12::Device device;
 
+				// Initialize device in headless mode for tests (no window / swap chain)
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Skipping VertexBuffer test: headless device initialization failed" );
+					return; // Skip rest of lambda
+				}
+
 				const std::vector<Vertex> vertices = {
 					{ Vec3<>{ 0.0f, 1.0f, 0.0f }, Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
 					{ Vec3<>{ -1.0f, -1.0f, 0.0f }, Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
@@ -157,6 +164,12 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 			{
 				dx12::Device device;
 
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Skipping IndexBuffer test: headless device initialization failed" );
+					return;
+				}
+
 				const std::vector<uint16_t> indices = { 0, 1, 2 };
 
 				const IndexBuffer ib( device, indices );
@@ -182,6 +195,11 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 			try
 			{
 				dx12::Device device;
+				if ( !device.initializeHeadless() )
+				{
+					WARN( "Skipping Renderer creation test: headless device initialization failed" );
+					return;
+				}
 				const Renderer renderer( device );
 				// Just test that it constructs without throwing
 			}

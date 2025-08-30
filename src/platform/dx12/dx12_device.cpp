@@ -24,6 +24,27 @@ Device::~Device()
 	shutdown();
 }
 
+bool Device::initializeHeadless()
+{
+	try
+	{
+#ifdef _DEBUG
+		EnableDebugLayer();
+#endif
+		CreateFactory();
+		FindAdapter();
+		CreateDevice();
+		CreateCommandObjects();
+		// No swap chain / RTV / ImGui heaps; create synchronization objects so basic GPU sync works
+		CreateSynchronizationObjects();
+		return true;
+	}
+	catch ( const std::exception & )
+	{
+		return false;
+	}
+}
+
 bool Device::initialize( HWND window_handle )
 {
 	try
