@@ -229,13 +229,45 @@ public:
 	void waitForGPU() noexcept;
 
 private:
+	// Key for pipeline state cache
+	struct PipelineStateKey
+	{
+		bool depthTest;
+		bool depthWrite;
+		bool wireframe;
+		bool blend;
+		D3D12_CULL_MODE cullMode;
+		bool operator==( const PipelineStateKey &o ) const noexcept
+		{
+			return depthTest == o.depthTest && depthWrite == o.depthWrite && wireframe == o.wireframe && blend == o.blend && cullMode == o.cullMode;
+		}
+	};
+	struct PipelineStateKeyHash
+	{
+		std::size_t operator()( const PipelineStateKey &k ) const noexcept
+		{
+			// Pack bits into a small integer for hashing
+			uint32_t bits = ( k.depthTest ? 1u : 0u ) |
+				( ( k.depthWrite ? 1u : 0u ) << 1 ) |
+				( ( k.wireframe ? 1u : 0u ) << 2 ) |
+				( ( k.blend ? 1u : 0u ) << 3 ) |
+				( ( static_cast<uint32_t>( k.cullMode ) & 0x3u ) << 4 );
+			return std::hash<uint32_t>{}( bits );
+		}
+	};
+
 	dx12::Device &m_device;
 	dx12::CommandContext *m_currentContext = nullptr;
 	dx12::SwapChain *m_currentSwapChain = nullptr;
 
 	// Pipeline state
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+	// Cached compiled default shaders
+	Microsoft::WRL::ComPtr<ID3DBlob> m_vsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> m_psBlob;
+	// Active PSO pointer (cached lookup)
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_activePipelineState;
+	std::unordered_map<PipelineStateKey, Microsoft::WRL::ComPtr<ID3D12PipelineState>, PipelineStateKeyHash> m_psoCache;
 
 	// Render targets
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
@@ -256,7 +288,8 @@ private:
 
 	// Initialization
 	void createRootSignature();
-	void createPipelineState();
+	void compileDefaultShaders();
+	void createPipelineStateForKey( const PipelineStateKey &key );
 	void createRenderTargets( UINT width, UINT height );
 	void createConstantBuffer();
 
@@ -264,6 +297,12 @@ private:
 	void updateConstantBuffer();
 	D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRTV() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE getDSV() const;
+	PipelineStateKey makeKeyFromState( const RenderState &state ) const noexcept;
+	void ensurePipelineForCurrentState();
+
+public:
+	// Test instrumentation: get current PSO cache size
+	size_t getPipelineStateCacheSize() const noexcept { return m_psoCache.size(); }
 };
 
 // Default shaders for basic rendering

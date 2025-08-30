@@ -347,7 +347,7 @@ Renderer::Renderer( dx12::Device &device )
 	: m_device( device )
 {
 	createRootSignature();
-	createPipelineState();
+	compileDefaultShaders();
 	createConstantBuffer();
 }
 
@@ -386,27 +386,45 @@ void Renderer::createRootSignature()
 		0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) ) );
 }
 
-void Renderer::createPipelineState()
+void Renderer::compileDefaultShaders()
 {
-	// Compile shaders
-	const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::kVertexShader, "main", "vs_5_0" );
-	const auto ps = ShaderCompiler::CompileFromSource( DefaultShaders::kPixelShader, "main", "ps_5_0" );
+	if ( !m_vsBlob || !m_psBlob )
+	{
+		const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::kVertexShader, "main", "vs_5_0" );
+		const auto ps = ShaderCompiler::CompileFromSource( DefaultShaders::kPixelShader, "main", "ps_5_0" );
+		m_vsBlob = vs.blob;
+		m_psBlob = ps.blob;
+	}
+}
 
-	// Input layout
+Renderer::PipelineStateKey Renderer::makeKeyFromState( const RenderState &state ) const noexcept
+{
+	return PipelineStateKey{ state.isDepthTestEnabled(), state.isDepthWriteEnabled(), state.isWireframeEnabled(), state.isBlendEnabled(), state.getCullMode() };
+}
+
+void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
+{
+	// Build a temporary RenderState reflecting the key
+	RenderState temp;
+	temp.setDepthTest( key.depthTest );
+	temp.setDepthWrite( key.depthWrite );
+	temp.setWireframe( key.wireframe );
+	temp.setBlendEnabled( key.blend );
+	temp.setCullMode( key.cullMode );
+
 	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
-	// Pipeline state description
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { inputLayout, _countof( inputLayout ) };
 	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = { vs.blob->GetBufferPointer(), vs.blob->GetBufferSize() };
-	psoDesc.PS = { ps.blob->GetBufferPointer(), ps.blob->GetBufferSize() };
-	psoDesc.RasterizerState = m_currentRenderState.getRasterizerDesc();
-	psoDesc.BlendState = m_currentRenderState.getBlendDesc();
-	psoDesc.DepthStencilState = m_currentRenderState.getDepthStencilDesc();
+	psoDesc.VS = { m_vsBlob->GetBufferPointer(), m_vsBlob->GetBufferSize() };
+	psoDesc.PS = { m_psBlob->GetBufferPointer(), m_psBlob->GetBufferSize() };
+	psoDesc.RasterizerState = temp.getRasterizerDesc();
+	psoDesc.BlendState = temp.getBlendDesc();
+	psoDesc.DepthStencilState = temp.getDepthStencilDesc();
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
@@ -414,7 +432,22 @@ void Renderer::createPipelineState()
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 
-	dx12::throwIfFailed( m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) ) );
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
+	dx12::throwIfFailed( m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pso ) ) );
+	m_psoCache.emplace( key, pso );
+}
+
+void Renderer::ensurePipelineForCurrentState()
+{
+	compileDefaultShaders();
+	const auto key = makeKeyFromState( m_currentRenderState );
+	auto it = m_psoCache.find( key );
+	if ( it == m_psoCache.end() )
+	{
+		createPipelineStateForKey( key );
+		it = m_psoCache.find( key );
+	}
+	m_activePipelineState = it->second;
 }
 
 void Renderer::createConstantBuffer()
@@ -618,8 +651,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getDSV() const
 void Renderer::setRenderState( const RenderState &state ) noexcept
 {
 	m_currentRenderState = state;
-	// Note: In D3D12, render state changes require PSO recreation
-	// For now, this stores the state - would need PSO caching for production
+	// Invalidate active PSO; will lazily fetch from cache
+	m_activePipelineState.Reset();
 }
 
 void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
@@ -638,7 +671,8 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	}
 
 	// Set pipeline state and root signature
-	( *m_currentContext )->SetPipelineState( m_pipelineState.Get() );
+	ensurePipelineForCurrentState();
+	( *m_currentContext )->SetPipelineState( m_activePipelineState.Get() );
 	( *m_currentContext )->SetGraphicsRootSignature( m_rootSignature.Get() );
 	( *m_currentContext )->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
 
@@ -676,7 +710,8 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	}
 
 	// Set pipeline state
-	( *m_currentContext )->SetPipelineState( m_pipelineState.Get() );
+	ensurePipelineForCurrentState();
+	( *m_currentContext )->SetPipelineState( m_activePipelineState.Get() );
 	( *m_currentContext )->SetGraphicsRootSignature( m_rootSignature.Get() );
 	( *m_currentContext )->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
 	( *m_currentContext )->IASetPrimitiveTopology( topology );
