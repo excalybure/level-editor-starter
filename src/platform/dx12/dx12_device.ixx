@@ -26,7 +26,7 @@ class CommandQueue;
 class SwapChain;
 
 // Helper function to check HRESULT
-inline void ThrowIfFailed( HRESULT hr )
+inline void throwIfFailed( HRESULT hr )
 {
 	if ( FAILED( hr ) )
 	{
@@ -82,8 +82,8 @@ private:
 
 	// Swap chain
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
-	static const UINT FRAME_COUNT = 3;
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FRAME_COUNT];
+	static const UINT kFrameCount = 3;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[kFrameCount];
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 	UINT m_rtvDescriptorSize = 0;
 	UINT m_frameIndex = 0;
@@ -165,11 +165,11 @@ public:
 	// Get back buffer render target view
 	ID3D12Resource *getCurrentBackBuffer() const;
 
-	static constexpr UINT BufferCount = 2;
+	static constexpr UINT kBufferCount = 2;
 
 private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_backBuffers[BufferCount];
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_backBuffers[kBufferCount];
 
 	Device &m_device;
 	CommandQueue &m_commandQueue;

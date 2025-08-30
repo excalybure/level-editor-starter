@@ -194,12 +194,12 @@ class SimpleNoise
 {
 private:
 	// Permutation table for noise generation
-	static constexpr int NOISE_SIZE = 256;
-	static constexpr int NOISE_MASK = NOISE_SIZE - 1;
+	static constexpr int kNoiseSize = 256;
+	static constexpr int kNoiseMask = kNoiseSize - 1;
 
 	// Pre-computed permutation table (based on Ken Perlin's reference implementation)
 	// clang-format off
-    static constexpr int permutation[NOISE_SIZE] = {
+	static constexpr int permutation[kNoiseSize] = {
         151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
         8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
         35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,
@@ -235,8 +235,8 @@ public:
 	static float perlinNoise( const float x, const float y )
 	{
 		// Find unit square containing point
-		const int xi = static_cast<int>( math::floor( x ) ) & NOISE_MASK;
-		const int yi = static_cast<int>( math::floor( y ) ) & NOISE_MASK;
+		const int xi = static_cast<int>( math::floor( x ) ) & kNoiseMask;
+		const int yi = static_cast<int>( math::floor( y ) ) & kNoiseMask;
 
 		// Find relative position in square
 		const float xf = x - math::floor( x );

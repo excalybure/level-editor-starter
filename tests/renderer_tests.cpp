@@ -205,11 +205,11 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 {
 	SECTION( "Default vertex shader is valid string" )
 	{
-		REQUIRE( DefaultShaders::VertexShader != nullptr );
-		REQUIRE( std::string( DefaultShaders::VertexShader ).length() > 0 );
+		REQUIRE( DefaultShaders::kVertexShader != nullptr );
+		REQUIRE( std::string( DefaultShaders::kVertexShader ).length() > 0 );
 
 		// Check for basic vertex shader components
-		const std::string vs( DefaultShaders::VertexShader );
+		const std::string vs( DefaultShaders::kVertexShader );
 		REQUIRE( vs.find( "VSInput" ) != std::string::npos );
 		REQUIRE( vs.find( "PSInput" ) != std::string::npos );
 		REQUIRE( vs.find( "POSITION" ) != std::string::npos );
@@ -219,11 +219,11 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 
 	SECTION( "Default pixel shader is valid string" )
 	{
-		REQUIRE( DefaultShaders::PixelShader != nullptr );
-		REQUIRE( std::string( DefaultShaders::PixelShader ).length() > 0 );
+		REQUIRE( DefaultShaders::kPixelShader != nullptr );
+		REQUIRE( std::string( DefaultShaders::kPixelShader ).length() > 0 );
 
 		// Check for basic pixel shader components
-		const std::string ps( DefaultShaders::PixelShader );
+		const std::string ps( DefaultShaders::kPixelShader );
 		REQUIRE( ps.find( "PSInput" ) != std::string::npos );
 		REQUIRE( ps.find( "SV_TARGET" ) != std::string::npos );
 	}

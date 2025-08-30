@@ -90,8 +90,8 @@ void Device::shutdown()
 void Device::beginFrame()
 {
 	// Reset command allocator and list
-	ThrowIfFailed( m_commandAllocator->Reset() );
-	ThrowIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
+	throwIfFailed( m_commandAllocator->Reset() );
+	throwIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
 
 	// Get current back buffer
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -135,7 +135,7 @@ void Device::endFrame()
 	m_commandList->ResourceBarrier( 1, &barrier );
 
 	// Close command list
-	ThrowIfFailed( m_commandList->Close() );
+	throwIfFailed( m_commandList->Close() );
 
 	// Execute command list
 	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
@@ -156,12 +156,12 @@ void Device::present()
 	m_commandList->ResourceBarrier( 1, &barrier );
 
 	// Execute command list
-	ThrowIfFailed( m_commandList->Close() );
+	throwIfFailed( m_commandList->Close() );
 	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists( _countof( ppCommandLists ), ppCommandLists );
 
 	// Present
-	ThrowIfFailed( m_swapChain->Present( 1, 0 ) );
+	throwIfFailed( m_swapChain->Present( 1, 0 ) );
 
 	// Wait for frame to complete
 	waitForPreviousFrame();
@@ -184,7 +184,7 @@ void Device::createFactory()
 	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-	ThrowIfFailed( CreateDXGIFactory2( dxgiFactoryFlags, IID_PPV_ARGS( &m_factory ) ) );
+	throwIfFailed( CreateDXGIFactory2( dxgiFactoryFlags, IID_PPV_ARGS( &m_factory ) ) );
 }
 
 void Device::findAdapter()
@@ -217,7 +217,7 @@ void Device::findAdapter()
 
 void Device::createDevice()
 {
-	ThrowIfFailed( D3D12CreateDevice(
+	throwIfFailed( D3D12CreateDevice(
 		m_adapter.Get(),
 		D3D_FEATURE_LEVEL_11_0,
 		IID_PPV_ARGS( &m_device ) ) );
@@ -230,15 +230,15 @@ void Device::createCommandObjects()
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-	ThrowIfFailed( m_device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &m_commandQueue ) ) );
+	throwIfFailed( m_device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &m_commandQueue ) ) );
 
 	// Create command allocator
-	ThrowIfFailed( m_device->CreateCommandAllocator(
+	throwIfFailed( m_device->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS( &m_commandAllocator ) ) );
 
 	// Create command list
-	ThrowIfFailed( m_device->CreateCommandList(
+	throwIfFailed( m_device->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		m_commandAllocator.Get(),
@@ -246,7 +246,7 @@ void Device::createCommandObjects()
 		IID_PPV_ARGS( &m_commandList ) ) );
 
 	// Close the command list initially
-	ThrowIfFailed( m_commandList->Close() );
+	throwIfFailed( m_commandList->Close() );
 }
 
 void Device::createSwapChain( HWND window_handle )
@@ -259,7 +259,7 @@ void Device::createSwapChain( HWND window_handle )
 
 	// Create swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = FRAME_COUNT;
+	swapChainDesc.BufferCount = kFrameCount;
 	swapChainDesc.Width = width;
 	swapChainDesc.Height = height;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -268,7 +268,7 @@ void Device::createSwapChain( HWND window_handle )
 	swapChainDesc.SampleDesc.Count = 1;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed( m_factory->CreateSwapChainForHwnd(
+	throwIfFailed( m_factory->CreateSwapChainForHwnd(
 		m_commandQueue.Get(),
 		window_handle,
 		&swapChainDesc,
@@ -277,9 +277,9 @@ void Device::createSwapChain( HWND window_handle )
 		&swapChain ) );
 
 	// Disable Alt+Enter fullscreen toggle
-	ThrowIfFailed( m_factory->MakeWindowAssociation( window_handle, DXGI_MWA_NO_ALT_ENTER ) );
+	throwIfFailed( m_factory->MakeWindowAssociation( window_handle, DXGI_MWA_NO_ALT_ENTER ) );
 
-	ThrowIfFailed( swapChain.As( &m_swapChain ) );
+	throwIfFailed( swapChain.As( &m_swapChain ) );
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
 
@@ -287,10 +287,10 @@ void Device::createDescriptorHeaps()
 {
 	// Create RTV descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = FRAME_COUNT;
+	rtvHeapDesc.NumDescriptors = kFrameCount;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
+	throwIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
 
 	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
@@ -299,7 +299,7 @@ void Device::createDescriptorHeaps()
 	imguiDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	imguiDesc.NumDescriptors = 1;
 	imguiDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	ThrowIfFailed( m_device->CreateDescriptorHeap( &imguiDesc, IID_PPV_ARGS( &m_imguiDescriptorHeap ) ) );
+	throwIfFailed( m_device->CreateDescriptorHeap( &imguiDesc, IID_PPV_ARGS( &m_imguiDescriptorHeap ) ) );
 }
 
 void Device::createRenderTargetViews()
@@ -307,9 +307,9 @@ void Device::createRenderTargetViews()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
 	// Create RTVs for each frame
-	for ( UINT n = 0; n < FRAME_COUNT; n++ )
+	for ( UINT n = 0; n < kFrameCount; n++ )
 	{
-		ThrowIfFailed( m_swapChain->GetBuffer( n, IID_PPV_ARGS( &m_renderTargets[n] ) ) );
+		throwIfFailed( m_swapChain->GetBuffer( n, IID_PPV_ARGS( &m_renderTargets[n] ) ) );
 		m_device->CreateRenderTargetView( m_renderTargets[n].Get(), nullptr, rtvHandle );
 		rtvHandle.ptr += m_rtvDescriptorSize;
 	}
@@ -317,14 +317,14 @@ void Device::createRenderTargetViews()
 
 void Device::createSynchronizationObjects()
 {
-	ThrowIfFailed( m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &m_fence ) ) );
+	throwIfFailed( m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &m_fence ) ) );
 	m_fenceValue = 1;
 
 	// Create event handle for fence signaling
 	m_fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
 	if ( m_fenceEvent == nullptr )
 	{
-		ThrowIfFailed( HRESULT_FROM_WIN32( GetLastError() ) );
+		throwIfFailed( HRESULT_FROM_WIN32( GetLastError() ) );
 	}
 }
 
@@ -332,13 +332,13 @@ void Device::waitForPreviousFrame()
 {
 	// Signal and increment fence value
 	const UINT64 fenceValueLocal = m_fenceValue;
-	ThrowIfFailed( m_commandQueue->Signal( m_fence.Get(), fenceValueLocal ) );
+	throwIfFailed( m_commandQueue->Signal( m_fence.Get(), fenceValueLocal ) );
 	m_fenceValue++;
 
 	// Wait until frame is finished
 	if ( m_fence->GetCompletedValue() < fenceValueLocal )
 	{
-		ThrowIfFailed( m_fence->SetEventOnCompletion( fenceValueLocal, m_fenceEvent ) );
+		throwIfFailed( m_fence->SetEventOnCompletion( fenceValueLocal, m_fenceEvent ) );
 		WaitForSingleObject( m_fenceEvent, INFINITE );
 	}
 }
@@ -352,7 +352,7 @@ CommandQueue::CommandQueue( Device &device, D3D12_COMMAND_LIST_TYPE type )
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.NodeMask = 0;
 
-	ThrowIfFailed( device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &m_commandQueue ) ) );
+	throwIfFailed( device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &m_commandQueue ) ) );
 }
 
 CommandQueue::~CommandQueue() = default;
@@ -364,7 +364,7 @@ void CommandQueue::executeCommandLists( UINT numCommandLists, ID3D12CommandList 
 
 void CommandQueue::signal( ID3D12Fence *fence, UINT64 value )
 {
-	ThrowIfFailed( m_commandQueue->Signal( fence, value ) );
+	throwIfFailed( m_commandQueue->Signal( fence, value ) );
 }
 
 void CommandQueue::waitForFence( ID3D12Fence *fence, UINT64 value )
@@ -372,7 +372,7 @@ void CommandQueue::waitForFence( ID3D12Fence *fence, UINT64 value )
 	if ( fence->GetCompletedValue() < value )
 	{
 		HANDLE eventHandle = CreateEvent( nullptr, FALSE, FALSE, nullptr );
-		ThrowIfFailed( fence->SetEventOnCompletion( value, eventHandle ) );
+		throwIfFailed( fence->SetEventOnCompletion( value, eventHandle ) );
 		WaitForSingleObject( eventHandle, INFINITE );
 		CloseHandle( eventHandle );
 	}
@@ -384,7 +384,7 @@ SwapChain::SwapChain( Device &device, CommandQueue &commandQueue, HWND hwnd, UIN
 {
 	// Create swap chain description
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = BufferCount;
+	swapChainDesc.BufferCount = kBufferCount;
 	swapChainDesc.Width = width;
 	swapChainDesc.Height = height;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -393,7 +393,7 @@ SwapChain::SwapChain( Device &device, CommandQueue &commandQueue, HWND hwnd, UIN
 	swapChainDesc.SampleDesc.Count = 1;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed( device.getFactory()->CreateSwapChainForHwnd(
+	throwIfFailed( device.getFactory()->CreateSwapChainForHwnd(
 		commandQueue.get(),
 		hwnd,
 		&swapChainDesc,
@@ -402,10 +402,10 @@ SwapChain::SwapChain( Device &device, CommandQueue &commandQueue, HWND hwnd, UIN
 		&swapChain ) );
 
 	// Disable Alt+Enter fullscreen transitions
-	ThrowIfFailed( device.getFactory()->MakeWindowAssociation( hwnd, DXGI_MWA_NO_ALT_ENTER ) );
+	throwIfFailed( device.getFactory()->MakeWindowAssociation( hwnd, DXGI_MWA_NO_ALT_ENTER ) );
 
 	// Query for IDXGISwapChain3 interface
-	ThrowIfFailed( swapChain.As( &m_swapChain ) );
+	throwIfFailed( swapChain.As( &m_swapChain ) );
 
 	createBackBuffers();
 }
@@ -414,15 +414,15 @@ SwapChain::~SwapChain() = default;
 
 void SwapChain::createBackBuffers()
 {
-	for ( UINT i = 0; i < BufferCount; i++ )
+	for ( UINT i = 0; i < kBufferCount; i++ )
 	{
-		ThrowIfFailed( m_swapChain->GetBuffer( i, IID_PPV_ARGS( &m_backBuffers[i] ) ) );
+		throwIfFailed( m_swapChain->GetBuffer( i, IID_PPV_ARGS( &m_backBuffers[i] ) ) );
 	}
 }
 
 void SwapChain::present( UINT syncInterval )
 {
-	ThrowIfFailed( m_swapChain->Present( syncInterval, 0 ) );
+	throwIfFailed( m_swapChain->Present( syncInterval, 0 ) );
 }
 
 UINT SwapChain::getCurrentBackBufferIndex() const
@@ -436,13 +436,13 @@ void SwapChain::resize( UINT width, UINT height )
 		return;
 
 	// Release back buffers
-	for ( UINT i = 0; i < BufferCount; i++ )
+	for ( UINT i = 0; i < kBufferCount; i++ )
 	{
 		m_backBuffers[i].Reset();
 	}
 
 	// Resize swap chain
-	ThrowIfFailed( m_swapChain->ResizeBuffers( BufferCount, width, height, DXGI_FORMAT_UNKNOWN, 0 ) );
+	throwIfFailed( m_swapChain->ResizeBuffers( kBufferCount, width, height, DXGI_FORMAT_UNKNOWN, 0 ) );
 
 	m_width = width;
 	m_height = height;
@@ -459,31 +459,31 @@ ID3D12Resource *SwapChain::getCurrentBackBuffer() const
 CommandContext::CommandContext( Device &device, D3D12_COMMAND_LIST_TYPE type )
 	: m_device( device ), m_type( type )
 {
-	ThrowIfFailed( device->CreateCommandAllocator( type, IID_PPV_ARGS( &m_commandAllocator ) ) );
-	ThrowIfFailed( device->CreateCommandList( 0, type, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS( &m_commandList ) ) );
+	throwIfFailed( device->CreateCommandAllocator( type, IID_PPV_ARGS( &m_commandAllocator ) ) );
+	throwIfFailed( device->CreateCommandList( 0, type, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS( &m_commandList ) ) );
 
 	// Command lists are created in the recording state, close it for now
-	ThrowIfFailed( m_commandList->Close() );
+	throwIfFailed( m_commandList->Close() );
 }
 
 CommandContext::~CommandContext() = default;
 
 void CommandContext::reset()
 {
-	ThrowIfFailed( m_commandAllocator->Reset() );
-	ThrowIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
+	throwIfFailed( m_commandAllocator->Reset() );
+	throwIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
 }
 
 void CommandContext::close()
 {
-	ThrowIfFailed( m_commandList->Close() );
+	throwIfFailed( m_commandList->Close() );
 }
 
 // Fence implementation
 Fence::Fence( Device &device, UINT64 initialValue )
 	: m_currentValue( initialValue )
 {
-	ThrowIfFailed( device->CreateFence( initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &m_fence ) ) );
+	throwIfFailed( device->CreateFence( initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &m_fence ) ) );
 
 	m_fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
 	if ( !m_fenceEvent )
@@ -510,7 +510,7 @@ void Fence::waitForValue( UINT64 value )
 {
 	if ( m_fence->GetCompletedValue() < value )
 	{
-		ThrowIfFailed( m_fence->SetEventOnCompletion( value, m_fenceEvent ) );
+		throwIfFailed( m_fence->SetEventOnCompletion( value, m_fenceEvent ) );
 		WaitForSingleObject( m_fenceEvent, INFINITE );
 	}
 }

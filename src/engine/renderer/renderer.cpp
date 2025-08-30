@@ -16,7 +16,7 @@ namespace renderer
 {
 
 // Default vertex and pixel shaders
-const char *DefaultShaders::VertexShader = R"(
+const char *DefaultShaders::kVertexShader = R"(
 cbuffer ConstantBuffer : register(b0)
 {
     float4x4 viewProjectionMatrix;
@@ -43,7 +43,7 @@ PSInput main(VSInput input)
 }
 )";
 
-const char *DefaultShaders::PixelShader = R"(
+const char *DefaultShaders::kPixelShader = R"(
 struct PSInput
 {
     float4 position : SV_POSITION;
@@ -221,7 +221,7 @@ void VertexBuffer::createBuffer( const std::vector<Vertex> &vertices )
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	dx12::ThrowIfFailed( m_device->CreateCommittedResource(
+	dx12::throwIfFailed( m_device->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
@@ -232,7 +232,7 @@ void VertexBuffer::createBuffer( const std::vector<Vertex> &vertices )
 	// Copy vertex data
 	void *mappedData;
 	const D3D12_RANGE readRange = { 0, 0 };
-	dx12::ThrowIfFailed( m_vertexBuffer->Map( 0, &readRange, &mappedData ) );
+	dx12::throwIfFailed( m_vertexBuffer->Map( 0, &readRange, &mappedData ) );
 	memcpy( mappedData, vertices.data(), bufferSize );
 	m_vertexBuffer->Unmap( 0, nullptr );
 
@@ -256,7 +256,7 @@ void VertexBuffer::update( const std::vector<Vertex> &vertices )
 		const UINT bufferSize = static_cast<UINT>( vertices.size() * sizeof( Vertex ) );
 		void *mappedData;
 		D3D12_RANGE readRange = { 0, 0 };
-		dx12::ThrowIfFailed( m_vertexBuffer->Map( 0, &readRange, &mappedData ) );
+		dx12::throwIfFailed( m_vertexBuffer->Map( 0, &readRange, &mappedData ) );
 		memcpy( mappedData, vertices.data(), bufferSize );
 		m_vertexBuffer->Unmap( 0, nullptr );
 	}
@@ -287,7 +287,7 @@ void IndexBuffer::createBuffer( const std::vector<uint16_t> &indices )
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	dx12::ThrowIfFailed( m_device->CreateCommittedResource(
+	dx12::throwIfFailed( m_device->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
@@ -298,7 +298,7 @@ void IndexBuffer::createBuffer( const std::vector<uint16_t> &indices )
 	// Copy index data
 	void *mappedData;
 	D3D12_RANGE readRange = { 0, 0 };
-	dx12::ThrowIfFailed( m_indexBuffer->Map( 0, &readRange, &mappedData ) );
+	dx12::throwIfFailed( m_indexBuffer->Map( 0, &readRange, &mappedData ) );
 	memcpy( mappedData, indices.data(), bufferSize );
 	m_indexBuffer->Unmap( 0, nullptr );
 
@@ -320,7 +320,7 @@ void IndexBuffer::update( const std::vector<uint16_t> &indices )
 		const UINT bufferSize = static_cast<UINT>( indices.size() * sizeof( uint16_t ) );
 		void *mappedData;
 		D3D12_RANGE readRange = { 0, 0 };
-		dx12::ThrowIfFailed( m_indexBuffer->Map( 0, &readRange, &mappedData ) );
+		dx12::throwIfFailed( m_indexBuffer->Map( 0, &readRange, &mappedData ) );
 		memcpy( mappedData, indices.data(), bufferSize );
 		m_indexBuffer->Unmap( 0, nullptr );
 	}
@@ -363,18 +363,18 @@ void Renderer::createRootSignature()
 
 	Microsoft::WRL::ComPtr<ID3DBlob> signature;
 	Microsoft::WRL::ComPtr<ID3DBlob> error;
-	dx12::ThrowIfFailed( D3D12SerializeVersionedRootSignature(
+	dx12::throwIfFailed( D3D12SerializeVersionedRootSignature(
 		&rootSigDesc, &signature, &error ) );
 
-	dx12::ThrowIfFailed( m_device->CreateRootSignature(
+	dx12::throwIfFailed( m_device->CreateRootSignature(
 		0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) ) );
 }
 
 void Renderer::createPipelineState()
 {
 	// Compile shaders
-	const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::VertexShader, "main", "vs_5_0" );
-	const auto ps = ShaderCompiler::CompileFromSource( DefaultShaders::PixelShader, "main", "ps_5_0" );
+	const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::kVertexShader, "main", "vs_5_0" );
+	const auto ps = ShaderCompiler::CompileFromSource( DefaultShaders::kPixelShader, "main", "ps_5_0" );
 
 	// Input layout
 	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -398,7 +398,7 @@ void Renderer::createPipelineState()
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 
-	dx12::ThrowIfFailed( m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) ) );
+	dx12::throwIfFailed( m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) ) );
 }
 
 void Renderer::createConstantBuffer()
@@ -418,7 +418,7 @@ void Renderer::createConstantBuffer()
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	dx12::ThrowIfFailed( m_device->CreateCommittedResource(
+	dx12::throwIfFailed( m_device->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
@@ -428,7 +428,7 @@ void Renderer::createConstantBuffer()
 
 	// Map the constant buffer
 	D3D12_RANGE readRange = { 0, 0 };
-	dx12::ThrowIfFailed( m_constantBuffer->Map( 0, &readRange, &m_constantBufferData ) );
+	dx12::throwIfFailed( m_constantBuffer->Map( 0, &readRange, &m_constantBufferData ) );
 }
 
 void Renderer::createRenderTargets( UINT width, UINT height )
@@ -438,14 +438,14 @@ void Renderer::createRenderTargets( UINT width, UINT height )
 	rtvHeapDesc.NumDescriptors = 2; // Back buffer count
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dx12::ThrowIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
+	dx12::throwIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
 
 	// Create DSV descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dx12::ThrowIfFailed( m_device->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS( &m_dsvHeap ) ) );
+	dx12::throwIfFailed( m_device->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS( &m_dsvHeap ) ) );
 
 	// Create depth buffer
 	D3D12_HEAP_PROPERTIES depthHeapProps = {};
@@ -465,7 +465,7 @@ void Renderer::createRenderTargets( UINT width, UINT height )
 	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
 	depthClearValue.DepthStencil.Depth = 1.0f;
 
-	dx12::ThrowIfFailed( m_device->CreateCommittedResource(
+	dx12::throwIfFailed( m_device->CreateCommittedResource(
 		&depthHeapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&depthDesc,
@@ -495,7 +495,7 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
-	for ( UINT i = 0; i < dx12::SwapChain::BufferCount; i++ )
+	for ( UINT i = 0; i < dx12::SwapChain::kBufferCount; i++ )
 	{
 		ID3D12Resource *backBuffer = swapChain.getCurrentBackBuffer();
 		m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );

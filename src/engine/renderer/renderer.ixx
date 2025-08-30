@@ -251,8 +251,8 @@ private:
 // Default shaders for basic rendering
 export namespace DefaultShaders
 {
-extern const char *VertexShader;
-extern const char *PixelShader;
+extern const char *kVertexShader;
+extern const char *kPixelShader;
 } // namespace DefaultShaders
 
 } // namespace renderer
