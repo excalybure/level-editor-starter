@@ -27,6 +27,9 @@ Win32Window::~Win32Window()
 bool Win32Window::create( const char *title, int width, int height )
 {
 #if defined( _WIN32 )
+	// Prevent double creation on the same instance (would otherwise leak the old HWND)
+	if ( m_hwnd )
+		return false;
 	m_hinstance = GetModuleHandle( nullptr );
 	m_width = width;
 	m_height = height;
@@ -41,8 +44,14 @@ bool Win32Window::create( const char *title, int width, int height )
 	wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
 	wc.lpszClassName = L"LevelEditorWindow";
 
+	// RegisterClassExW returns 0 on failure, but attempting to register the same class
+	// multiple times across tests or multiple windows is benign. Accept ERROR_CLASS_ALREADY_EXISTS.
 	if ( !RegisterClassExW( &wc ) )
-		return false;
+	{
+		const DWORD err = GetLastError();
+		if ( err != ERROR_CLASS_ALREADY_EXISTS )
+			return false; // genuine failure
+	}
 
 	// Calculate window size including borders
 	RECT rect = { 0, 0, width, height };
@@ -154,6 +163,11 @@ LRESULT CALLBACK Win32Window::windowProc( HWND hwnd, UINT msg, WPARAM wparam, LP
 		case WM_SIZE: {
 			int width = LOWORD( lparam );
 			int height = HIWORD( lparam );
+			// Only enqueue a resize event if the client size actually changed
+			if ( width == window->m_width && height == window->m_height )
+			{
+				return 0; // no-op resize
+			}
 			window->m_width = width;
 			window->m_height = height;
 

@@ -292,6 +292,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
   tests/ui_tests.cpp
+  tests/win32_window_tests.cpp
   )
   target_link_libraries(math_tests PRIVATE 
     engine.math
