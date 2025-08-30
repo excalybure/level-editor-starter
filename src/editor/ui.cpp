@@ -1,13 +1,13 @@
-module editor.ui;
-
-import std;
-
 // Include ImGui implementation in the global module fragment to avoid conflicts
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include <d3d12.h>
 #include <windows.h>
+
+module editor.ui;
+
+import std;
 
 namespace editor
 {
@@ -108,7 +108,7 @@ void UI::shutdown()
 	m_initialized = false;
 }
 
-void UI::endFrame()
+void UI::beginFrame()
 {
 	if ( !m_initialized )
 		return;

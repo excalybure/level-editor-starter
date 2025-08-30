@@ -9,10 +9,6 @@ module;
 #include <windows.h>
 #include <comdef.h>
 
-// ImGui integration
-#include "imgui.h"
-#include "imgui_impl_dx12.h"
-
 module platform.dx12;
 
 import std;
@@ -71,7 +67,7 @@ void Device::shutdown()
 	}
 }
 
-void Device::endFrame()
+void Device::begin_frame()
 {
 	// Reset command allocator and list
 	ThrowIfFailed( m_commandAllocator->Reset() );
@@ -103,6 +99,27 @@ void Device::endFrame()
 	// Set descriptor heaps for ImGui
 	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
 	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+}
+
+void Device::end_frame()
+{
+	// Transition back to present state  
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = m_renderTargets[m_frameIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	m_commandList->ResourceBarrier( 1, &barrier );
+
+	// Close command list
+	ThrowIfFailed( m_commandList->Close() );
+
+	// Execute command list
+	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
+	m_commandQueue->ExecuteCommandLists( _countof( ppCommandLists ), ppCommandLists );
 }
 
 void Device::present()

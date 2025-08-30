@@ -6,10 +6,6 @@ module;
 #include <windows.h>
 #include <windowsx.h>
 #include <string>
-
-// ImGui integration
-#include "imgui.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 #endif
 
 module platform.win32.win32_window;
@@ -128,10 +124,6 @@ void Win32Window::add_event( const WindowEvent &event )
 #if defined( _WIN32 )
 LRESULT CALLBACK Win32Window::window_proc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
-	// Let ImGui handle the message first
-	if ( ImGui_ImplWin32_WndProcHandler( hwnd, msg, wparam, lparam ) )
-		return true;
-
 	Win32Window *window = nullptr;
 
 	if ( msg == WM_NCCREATE )

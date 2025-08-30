@@ -52,7 +52,7 @@ public:
 	void shutdown();
 
 	// Frame management
-	void endFrame();
+	void beginFrame();
 	void endFrame();
 
 	// Get viewport layout configuration

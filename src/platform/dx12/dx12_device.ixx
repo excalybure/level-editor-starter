@@ -50,7 +50,8 @@ public:
 	void shutdown();
 
 	// Frame operations
-	void endFrame();
+	void begin_frame();
+	void end_frame();
 	void present();
 
 	ID3D12Device *Get() const { return m_device.Get(); }

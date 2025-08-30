@@ -176,7 +176,6 @@ target_sources(platform.win32 PUBLIC
     src/platform/win32/win32_window.cpp
 )
 target_compile_features(platform.win32 PUBLIC cxx_std_23)
-target_link_libraries(platform.win32 PRIVATE imgui::imgui)
 
 add_library(editor.ui)
 target_sources(editor.ui PUBLIC
@@ -186,11 +185,13 @@ target_sources(editor.ui PUBLIC
     src/editor/ui.cpp
 )
 target_compile_features(editor.ui PUBLIC cxx_std_23)
-target_link_libraries(editor.ui PUBLIC 
-  editor.viewport
+target_link_libraries(editor.ui PRIVATE 
   imgui::imgui
   Microsoft::DirectX-Headers
   d3d12
+)
+target_link_libraries(editor.ui PUBLIC 
+  editor.viewport
 )
 
 add_library(platform.dx12)
@@ -202,7 +203,7 @@ target_sources(platform.dx12 PUBLIC
 )
 target_compile_features(platform.dx12 PUBLIC cxx_std_23)
 # Link DirectX 12 libraries
-target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler PRIVATE imgui::imgui)
+target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler)
 
 add_library(engine.renderer)
 target_sources(engine.renderer PUBLIC

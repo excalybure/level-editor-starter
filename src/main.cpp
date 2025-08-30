@@ -42,13 +42,16 @@ int main()
 	while ( window.poll() )
 	{
 		// Begin D3D12 frame
-		device.endFrame();
+		device.begin_frame();
 
 		// Begin UI frame (sets up docking)
-		ui.endFrame();
+		ui.beginFrame();
 
 		// End UI frame (renders ImGui)
 		ui.endFrame();
+
+		// End D3D12 frame
+		device.end_frame();
 
 		// Present D3D12 frame
 		device.present();
