@@ -29,16 +29,16 @@ struct UI::Impl
 	bool first_layout = true;
 
 	// Setup the main dockspace
-	void setup_dockspace( ViewportLayout &layout );
+	void setupDockspace( ViewportLayout &layout );
 
 	// Setup initial docked layout
-	void setup_initial_layout( ImGuiID dockspace_id );
+	void setupInitialLayout( ImGuiID dockspace_id );
 
 	// Render viewport windows
-	void render_viewport_windows( ViewportLayout &layout );
+	void renderViewportWindows( ViewportLayout &layout );
 
 	// Render individual viewport pane
-	void render_viewport_pane( const ViewportLayout::ViewportPane &pane );
+	void renderViewportPane( const ViewportLayout::ViewportPane &pane );
 };
 
 UI::UI() : m_impl( std::make_unique<Impl>() )
@@ -119,8 +119,8 @@ void UI::beginFrame()
 	ImGui::NewFrame();
 
 	// Setup the main dockspace and render viewports
-	m_impl->setup_dockspace( m_layout );
-	m_impl->render_viewport_windows( m_layout );
+	m_impl->setupDockspace( m_layout );
+	m_impl->renderViewportWindows( m_layout );
 }
 
 void UI::endFrame()
@@ -146,14 +146,14 @@ void UI::endFrame()
 	}
 }
 
-bool UI::wants_capture_mouse() const
+bool UI::wantsCaptureMouse() const
 {
 	if ( !m_initialized )
 		return false;
 	return ImGui::GetIO().WantCaptureMouse;
 }
 
-bool UI::wants_capture_keyboard() const
+bool UI::wantsCaptureKeyboard() const
 {
 	if ( !m_initialized )
 		return false;
@@ -161,7 +161,7 @@ bool UI::wants_capture_keyboard() const
 }
 
 // Implementation details
-void UI::Impl::setup_dockspace( ViewportLayout &layout )
+void UI::Impl::setupDockspace( ViewportLayout &layout )
 {
 	// Create a fullscreen dockspace window
 	const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -195,7 +195,7 @@ void UI::Impl::setup_dockspace( ViewportLayout &layout )
 	// Setup initial layout on first run
 	if ( first_layout )
 	{
-		setup_initial_layout( dockspace_id );
+		setupInitialLayout( dockspace_id );
 		first_layout = false;
 	}
 
@@ -240,7 +240,7 @@ void UI::Impl::setup_dockspace( ViewportLayout &layout )
 	}
 }
 
-void UI::Impl::setup_initial_layout( ImGuiID dockspace_id )
+void UI::Impl::setupInitialLayout( ImGuiID dockspace_id )
 {
 	// For now, just use the default ImGui docking behavior
 	// In a full implementation, you would use ImGui::DockBuilderXXX functions
@@ -248,18 +248,18 @@ void UI::Impl::setup_initial_layout( ImGuiID dockspace_id )
 	// which may not be available in the current vcpkg version
 }
 
-void UI::Impl::render_viewport_windows( ViewportLayout &layout )
+void UI::Impl::renderViewportWindows( ViewportLayout &layout )
 {
 	for ( const auto &pane : layout.panes )
 	{
 		if ( pane.isOpen )
 		{
-			render_viewport_pane( pane );
+			renderViewportPane( pane );
 		}
 	}
 }
 
-void UI::Impl::render_viewport_pane( const ViewportLayout::ViewportPane &pane )
+void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 {
 	ImGui::SetNextWindowSizeConstraints( to_imgui_vec2( pane.minSize ), ImVec2( FLT_MAX, FLT_MAX ) );
 

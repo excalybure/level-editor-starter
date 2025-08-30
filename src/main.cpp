@@ -16,7 +16,7 @@ int main()
 
 	// Initialize D3D12 device
 	dx12::Device device;
-	if ( !device.initialize( static_cast<HWND>( window.get_handle() ) ) )
+	if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
 	{
 		std::cerr << "Failed to initialize D3D12 device\n";
 		return 1;
@@ -25,9 +25,9 @@ int main()
 	// Initialize UI system
 	editor::UI ui;
 	if ( !ui.initialize(
-			 static_cast<void *>( window.get_handle() ),
-			 static_cast<void *>( device.get_device() ),
-			 static_cast<void *>( device.get_imgui_descriptor_heap() ) ) )
+			 static_cast<void *>( window.getHandle() ),
+			 static_cast<void *>( device.getDevice() ),
+			 static_cast<void *>( device.getImguiDescriptorHeap() ) ) )
 	{
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;
@@ -42,7 +42,7 @@ int main()
 	while ( window.poll() )
 	{
 		// Begin D3D12 frame
-		device.begin_frame();
+		device.beginFrame();
 
 		// Begin UI frame (sets up docking)
 		ui.beginFrame();
@@ -51,7 +51,7 @@ int main()
 		ui.endFrame();
 
 		// End D3D12 frame
-		device.end_frame();
+		device.endFrame();
 
 		// Present D3D12 frame
 		device.present();

@@ -100,7 +100,7 @@ bool Win32Window::poll()
 #endif
 }
 
-bool Win32Window::get_event( WindowEvent &event )
+bool Win32Window::getEvent( WindowEvent &event )
 {
 	if ( m_event_queue.empty() )
 		return false;
@@ -110,7 +110,7 @@ bool Win32Window::get_event( WindowEvent &event )
 	return true;
 }
 
-void Win32Window::get_size( int &width, int &height ) const
+void Win32Window::getSize( int &width, int &height ) const
 {
 	width = m_width;
 	height = m_height;

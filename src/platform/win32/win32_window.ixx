@@ -75,15 +75,15 @@ public:
 	bool poll();
 
 	// Get the next event (returns false if no events)
-	bool get_event( WindowEvent &event );
+	bool getEvent( WindowEvent &event );
 
 	// Window properties
-	void get_size( int &width, int &height ) const;
+	void getSize( int &width, int &height ) const;
 	bool is_focused() const { return m_focused; }
 
 	// Native handles for graphics API integration
-	void *get_handle() const { return m_hwnd; }
-	void *get_instance() const { return m_hinstance; }
+	void *getHandle() const { return m_hwnd; }
+	void *getInstance() const { return m_hinstance; }
 
 private:
 	HWND m_hwnd = nullptr;

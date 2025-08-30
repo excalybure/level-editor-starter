@@ -480,7 +480,7 @@ void Renderer::CreateRenderTargets( UINT width, UINT height )
 	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, GetDSV() );
 }
 
-void Renderer::BeginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain )
+void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain )
 {
 	m_currentContext = &context;
 	m_currentSwapChain = &swapChain;
@@ -529,7 +529,7 @@ void Renderer::BeginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	context->RSSetScissorRects( 1, &scissorRect );
 }
 
-void Renderer::EndFrame()
+void Renderer::endFrame()
 {
 	if ( !m_currentContext || !m_currentSwapChain )
 		return;

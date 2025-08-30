@@ -79,53 +79,53 @@ public:
 	Viewport &operator=( const Viewport & ) = delete;
 
 	// Viewport properties
-	ViewportType GetType() const noexcept { return m_type; }
-	const math::Vec2<int> &GetSize() const noexcept { return m_size; }
-	float GetAspectRatio() const noexcept;
+	ViewportType getType() const noexcept { return m_type; }
+	const math::Vec2<int> &getSize() const noexcept { return m_size; }
+	float getAspectRatio() const noexcept;
 
 	// Active state management
-	void SetActive( bool active ) noexcept { m_isActive = active; }
-	bool IsActive() const noexcept { return m_isActive; }
+	void setActive( bool active ) noexcept { m_isActive = active; }
+	bool isActive() const noexcept { return m_isActive; }
 
 	// Focus management (for input handling)
-	void SetFocused( bool focused ) noexcept { m_isFocused = focused; }
-	bool IsFocused() const noexcept { return m_isFocused; }
+	void setFocused( bool focused ) noexcept { m_isFocused = focused; }
+	bool isFocused() const noexcept { return m_isFocused; }
 
 	// Camera access
-	camera::Camera *GetCamera() const noexcept { return m_camera.get(); }
-	camera::CameraController *GetController() const noexcept { return m_controller.get(); }
+	camera::Camera *getCamera() const noexcept { return m_camera.get(); }
+	camera::CameraController *getController() const noexcept { return m_controller.get(); }
 
 	// Render target management
-	void SetRenderTargetSize( int width, int height );
-	void *GetRenderTargetHandle() const noexcept { return m_renderTargetHandle; }
+	void setRenderTargetSize( int width, int height );
+	void *getRenderTargetHandle() const noexcept { return m_renderTargetHandle; }
 
 	// Frame update and rendering
-	void Update( float deltaTime );
-	void Render();
+	void update( float deltaTime );
+	void render();
 
 	// Input handling
-	void HandleInput( const ViewportInputEvent &event );
+	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
-	ViewportRay GetPickingRay( const math::Vec2<> &screenPos ) const noexcept;
-	math::Vec3<> ScreenToWorld( const math::Vec2<> &screenPos, float depth = 0.0f ) const noexcept;
-	math::Vec2<> WorldToScreen( const math::Vec3<> &worldPos ) const noexcept;
+	ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept;
+	math::Vec3<> screenToWorld( const math::Vec2<> &screenPos, float depth = 0.0f ) const noexcept;
+	math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept;
 
 	// View operations
-	void FrameAll() noexcept;
-	void FrameSelection( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
-	void ResetView() noexcept;
+	void frameAll() noexcept;
+	void frameSelection( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
+	void resetView() noexcept;
 
 	// Grid and gizmo settings
-	void SetGridVisible( bool visible ) noexcept { m_showGrid = visible; }
-	bool IsGridVisible() const noexcept { return m_showGrid; }
+	void setGridVisible( bool visible ) noexcept { m_showGrid = visible; }
+	bool isGridVisible() const noexcept { return m_showGrid; }
 
-	void SetGizmosVisible( bool visible ) noexcept { m_showGizmos = visible; }
-	bool AreGizmosVisible() const noexcept { return m_showGizmos; }
+	void setGizmosVisible( bool visible ) noexcept { m_showGizmos = visible; }
+	bool areGizmosVisible() const noexcept { return m_showGizmos; }
 
 	// View synchronization (for linked views)
-	void SetViewSyncEnabled( bool enabled ) noexcept { m_viewSyncEnabled = enabled; }
-	bool IsViewSyncEnabled() const noexcept { return m_viewSyncEnabled; }
+	void setViewSyncEnabled( bool enabled ) noexcept { m_viewSyncEnabled = enabled; }
+	bool isViewSyncEnabled() const noexcept { return m_viewSyncEnabled; }
 
 private:
 	ViewportType m_type;
@@ -146,8 +146,8 @@ private:
 	void *m_renderTargetHandle = nullptr;
 
 	// Input state conversion
-	camera::InputState ConvertToInputState( const ViewportInputEvent &event ) const;
-	void UpdateInputState( const ViewportInputEvent &event );
+	camera::InputState convertToInputState( const ViewportInputEvent &event ) const;
+	void updateInputState( const ViewportInputEvent &event );
 
 	// Current input state for controller
 	camera::InputState m_currentInput;
@@ -157,8 +157,8 @@ private:
 	bool m_mouseTracking = false;
 
 	// Initialize camera based on viewport type
-	void InitializeCamera();
-	void SetupOrthographicView();
+	void initializeCamera();
+	void setupOrthographicView();
 };
 
 // Multi-viewport manager coordinating multiple viewports
@@ -173,36 +173,36 @@ public:
 	ViewportManager &operator=( const ViewportManager & ) = delete;
 
 	// Viewport management
-	Viewport *CreateViewport( ViewportType type );
-	void DestroyViewport( Viewport *viewport );
-	void DestroyAllViewports();
+	Viewport *createViewport( ViewportType type );
+	void destroyViewport( Viewport *viewport );
+	void destroyAllViewports();
 
 	// Access viewports
-	Viewport *GetActiveViewport() const noexcept { return m_activeViewport; }
-	Viewport *GetFocusedViewport() const noexcept { return m_focusedViewport; }
-	const std::vector<std::unique_ptr<Viewport>> &GetViewports() const noexcept { return m_viewports; }
+	Viewport *getActiveViewport() const noexcept { return m_activeViewport; }
+	Viewport *getFocusedViewport() const noexcept { return m_focusedViewport; }
+	const std::vector<std::unique_ptr<Viewport>> &getViewports() const noexcept { return m_viewports; }
 
 	// Active viewport management
-	void SetActiveViewport( Viewport *viewport ) noexcept;
-	void SetFocusedViewport( Viewport *viewport ) noexcept;
+	void setActiveViewport( Viewport *viewport ) noexcept;
+	void setFocusedViewport( Viewport *viewport ) noexcept;
 
 	// Frame update
-	void Update( float deltaTime );
-	void Render();
+	void update( float deltaTime );
+	void render();
 
 	// Global input handling and routing
-	void HandleGlobalInput( const ViewportInputEvent &event );
+	void handleGlobalInput( const ViewportInputEvent &event );
 
 	// View synchronization across viewports
-	void SynchronizeViews( Viewport *sourceViewport );
+	void synchronizeViews( Viewport *sourceViewport );
 
 	// Global viewport operations
-	void FrameAllInAllViewports() noexcept;
-	void ResetAllViews() noexcept;
+	void frameAllInAllViewports() noexcept;
+	void resetAllViews() noexcept;
 
 	// Settings
-	void SetGlobalGridVisible( bool visible ) noexcept;
-	void SetGlobalGizmosVisible( bool visible ) noexcept;
+	void setGlobalGridVisible( bool visible ) noexcept;
+	void setGlobalGizmosVisible( bool visible ) noexcept;
 
 private:
 	std::vector<std::unique_ptr<Viewport>> m_viewports;
@@ -210,7 +210,7 @@ private:
 	Viewport *m_focusedViewport = nullptr;
 
 	// Find viewport by pointer
-	auto FindViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );
+	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );
 };
 
 // Factory functions for creating standard viewport layouts
@@ -225,23 +225,23 @@ struct StandardLayout
 	Viewport *side = nullptr;
 };
 
-StandardLayout CreateStandardLayout( ViewportManager &manager );
+StandardLayout createStandardLayout( ViewportManager &manager );
 
 // Create single viewport of specified type
-Viewport *CreateSingleViewport( ViewportManager &manager, ViewportType type );
+Viewport *createSingleViewport( ViewportManager &manager, ViewportType type );
 } // namespace ViewportFactory
 
 // Utility functions for viewport operations
 export namespace ViewportUtils
 {
 // Convert between viewport coordinate systems
-math::Vec2<> NormalizedToPixel( const math::Vec2<> &normalized, const math::Vec2<int> &size ) noexcept;
-math::Vec2<> PixelToNormalized( const math::Vec2<> &pixel, const math::Vec2<int> &size ) noexcept;
+math::Vec2<> normalizedToPixel( const math::Vec2<> &normalized, const math::Vec2<int> &size ) noexcept;
+math::Vec2<> pixelToNormalized( const math::Vec2<> &pixel, const math::Vec2<int> &size ) noexcept;
 
 // Viewport type utilities
-const char *GetViewportTypeName( ViewportType type ) noexcept;
-bool IsOrthographicType( ViewportType type ) noexcept;
-camera::ViewType GetCameraViewType( ViewportType viewportType ) noexcept;
+const char *getViewportTypeName( ViewportType type ) noexcept;
+bool isOrthographicType( ViewportType type ) noexcept;
+camera::ViewType getCameraViewType( ViewportType viewportType ) noexcept;
 
 // Calculate optimal viewport sizes for multi-viewport layouts
 struct ViewportLayout
@@ -252,14 +252,14 @@ struct ViewportLayout
 	math::Vec2<int> sidePos, sideSize;
 };
 
-ViewportLayout CalculateStandardLayout( const math::Vec2<int> &totalSize ) noexcept;
+ViewportLayout calculateStandardLayout( const math::Vec2<int> &totalSize ) noexcept;
 
 // Input event creation helpers
-ViewportInputEvent CreateMouseMoveEvent( float x, float y, float deltaX, float deltaY ) noexcept;
-ViewportInputEvent CreateMouseButtonEvent( int button, bool pressed, float x, float y ) noexcept;
-ViewportInputEvent CreateMouseWheelEvent( float delta, float x, float y ) noexcept;
-ViewportInputEvent CreateKeyEvent( int keyCode, bool pressed, bool shift, bool ctrl, bool alt ) noexcept;
-ViewportInputEvent CreateResizeEvent( int width, int height ) noexcept;
+ViewportInputEvent createMouseMoveEvent( float x, float y, float deltaX, float deltaY ) noexcept;
+ViewportInputEvent createMouseButtonEvent( int button, bool pressed, float x, float y ) noexcept;
+ViewportInputEvent createMouseWheelEvent( float delta, float x, float y ) noexcept;
+ViewportInputEvent createKeyEvent( int keyCode, bool pressed, bool shift, bool ctrl, bool alt ) noexcept;
+ViewportInputEvent createResizeEvent( int width, int height ) noexcept;
 } // namespace ViewportUtils
 
 } // namespace editor

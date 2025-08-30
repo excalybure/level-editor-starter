@@ -188,8 +188,8 @@ public:
 	Renderer &operator=( const Renderer & ) = delete;
 
 	// Frame lifecycle
-	void BeginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain );
-	void EndFrame();
+	void beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain );
+	void endFrame();
 
 	// Clear operations
 	void Clear( const Color &clearColor = Color{ 0.1f, 0.1f, 0.1f, 1.0f } ) noexcept;

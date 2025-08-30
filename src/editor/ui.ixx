@@ -56,12 +56,12 @@ public:
 	void endFrame();
 
 	// Get viewport layout configuration
-	const ViewportLayout &get_layout() const { return m_layout; }
-	ViewportLayout &get_layout() { return m_layout; }
+	const ViewportLayout &getLayout() const { return m_layout; }
+	ViewportLayout &getLayout() { return m_layout; }
 
 	// Check if ImGui wants to capture mouse/keyboard
-	bool wants_capture_mouse() const;
-	bool wants_capture_keyboard() const;
+	bool wantsCaptureMouse() const;
+	bool wantsCaptureKeyboard() const;
 
 private:
 	ViewportLayout m_layout;

@@ -67,7 +67,7 @@ void Device::shutdown()
 	}
 }
 
-void Device::begin_frame()
+void Device::beginFrame()
 {
 	// Reset command allocator and list
 	ThrowIfFailed( m_commandAllocator->Reset() );
@@ -101,7 +101,7 @@ void Device::begin_frame()
 	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
 }
 
-void Device::end_frame()
+void Device::endFrame()
 {
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};

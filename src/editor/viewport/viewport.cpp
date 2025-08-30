@@ -19,28 +19,28 @@ namespace editor
 Viewport::Viewport( ViewportType type )
 	: m_type( type )
 {
-	InitializeCamera();
+	initializeCamera();
 
 	// Initialize input state
 	m_currentInput = {};
 	m_currentInput.deltaTime = 0.0f;
 }
 
-float Viewport::GetAspectRatio() const noexcept
+float Viewport::getAspectRatio() const noexcept
 {
 	if ( m_size.y <= 0 )
 		return 1.0f;
 	return static_cast<float>( m_size.x ) / static_cast<float>( m_size.y );
 }
 
-void Viewport::SetRenderTargetSize( int width, int height )
+void Viewport::setRenderTargetSize( int width, int height )
 {
 	m_size = { width, height };
 
 	// Camera aspect ratio is handled in GetProjectionMatrix calls
 }
 
-void Viewport::Update( float deltaTime )
+void Viewport::update( float deltaTime )
 {
 	if ( !m_controller || !m_camera )
 		return;
@@ -53,7 +53,7 @@ void Viewport::Update( float deltaTime )
 	m_controller->Update( m_currentInput );
 }
 
-void Viewport::Render()
+void Viewport::render()
 {
 	// Placeholder for render implementation
 	// This will integrate with the renderer system once available
@@ -65,12 +65,12 @@ void Viewport::Render()
 	}
 }
 
-void Viewport::HandleInput( const ViewportInputEvent &event )
+void Viewport::handleInput( const ViewportInputEvent &event )
 {
 	if ( !m_isFocused || !m_controller )
 		return;
 
-	UpdateInputState( event );
+	updateInputState( event );
 
 	// Handle view-specific operations
 	switch ( event.type )
@@ -89,13 +89,13 @@ void Viewport::HandleInput( const ViewportInputEvent &event )
 		case 'F': // Frame all
 			if ( !event.keyboard.shift )
 			{
-				FrameAll();
+				frameAll();
 			}
 			break;
 		case 'R': // Reset view
 			if ( event.keyboard.ctrl )
 			{
-				ResetView();
+				resetView();
 			}
 			break;
 		}
@@ -106,7 +106,7 @@ void Viewport::HandleInput( const ViewportInputEvent &event )
 	}
 }
 
-ViewportRay Viewport::GetPickingRay( const math::Vec2<> &screenPos ) const noexcept
+ViewportRay Viewport::getPickingRay( const math::Vec2<> &screenPos ) const noexcept
 {
 	if ( !m_camera )
 	{
@@ -114,11 +114,11 @@ ViewportRay Viewport::GetPickingRay( const math::Vec2<> &screenPos ) const noexc
 	}
 
 	// Convert screen coordinates to normalized device coordinates
-	const math::Vec2<> ndc = ViewportUtils::PixelToNormalized( screenPos, m_size );
+	const math::Vec2<> ndc = ViewportUtils::pixelToNormalized( screenPos, m_size );
 
 	// Get camera matrices
 	const auto viewMatrix = m_camera->GetViewMatrix();
-	const auto projMatrix = m_camera->GetProjectionMatrix( GetAspectRatio() );
+	const auto projMatrix = m_camera->GetProjectionMatrix( getAspectRatio() );
 
 	// Convert NDC to camera ray
 	math::Vec3<> rayOrigin, rayDirection;
@@ -168,24 +168,24 @@ ViewportRay Viewport::GetPickingRay( const math::Vec2<> &screenPos ) const noexc
 	return { rayOrigin, rayDirection, 1000.0f };
 }
 
-math::Vec3<> Viewport::ScreenToWorld( const math::Vec2<> &screenPos, float depth ) const noexcept
+math::Vec3<> Viewport::screenToWorld( const math::Vec2<> &screenPos, float depth ) const noexcept
 {
 	if ( !m_camera )
 		return { 0, 0, 0 };
 
 	// Get picking ray and extend to specified depth
-	const auto ray = GetPickingRay( screenPos );
+	const auto ray = getPickingRay( screenPos );
 	return ray.origin + ray.direction * depth;
 }
 
-math::Vec2<> Viewport::WorldToScreen( const math::Vec3<> &worldPos ) const noexcept
+math::Vec2<> Viewport::worldToScreen( const math::Vec3<> &worldPos ) const noexcept
 {
 	if ( !m_camera )
 		return { 0, 0 };
 
 	// Transform world position to screen coordinates
 	const auto viewMatrix = m_camera->GetViewMatrix();
-	const auto projMatrix = m_camera->GetProjectionMatrix( GetAspectRatio() );
+	const auto projMatrix = m_camera->GetProjectionMatrix( getAspectRatio() );
 	const auto viewProj = projMatrix * viewMatrix;
 
 	math::Vec4<> clipPos = viewProj * math::Vec4<>{ worldPos.x, worldPos.y, worldPos.z, 1.0f };
@@ -197,10 +197,10 @@ math::Vec2<> Viewport::WorldToScreen( const math::Vec3<> &worldPos ) const noexc
 	}
 
 	// Convert NDC to screen coordinates
-	return ViewportUtils::NormalizedToPixel( clipPos.xy(), m_size );
+	return ViewportUtils::normalizedToPixel( clipPos.xy(), m_size );
 }
 
-void Viewport::FrameAll() noexcept
+void Viewport::frameAll() noexcept
 {
 	if ( !m_controller )
 		return;
@@ -210,10 +210,10 @@ void Viewport::FrameAll() noexcept
 	const math::Vec3<> center{ 0, 0, 0 };
 	const math::Vec3<> size{ 20, 20, 20 }; // Default scene bounds
 
-	FrameSelection( center, size );
+	frameSelection( center, size );
 }
 
-void Viewport::FrameSelection( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
+void Viewport::frameSelection( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
 	if ( !m_controller || !m_camera )
 		return;
@@ -238,7 +238,7 @@ void Viewport::FrameSelection( const math::Vec3<> &center, const math::Vec3<> &s
 	}
 }
 
-void Viewport::ResetView() noexcept
+void Viewport::resetView() noexcept
 {
 	if ( !m_camera )
 		return;
@@ -274,7 +274,7 @@ void Viewport::ResetView() noexcept
 	}
 }
 
-camera::InputState Viewport::ConvertToInputState( const ViewportInputEvent &event ) const
+camera::InputState Viewport::convertToInputState( const ViewportInputEvent &event ) const
 {
 	camera::InputState state = m_currentInput; // Copy current state
 
@@ -344,12 +344,12 @@ camera::InputState Viewport::ConvertToInputState( const ViewportInputEvent &even
 	return state;
 }
 
-void Viewport::UpdateInputState( const ViewportInputEvent &event )
+void Viewport::updateInputState( const ViewportInputEvent &event )
 {
-	m_currentInput = ConvertToInputState( event );
+	m_currentInput = convertToInputState( event );
 }
 
-void Viewport::InitializeCamera()
+void Viewport::initializeCamera()
 {
 	// Create appropriate camera and controller based on viewport type
 	switch ( m_type )
@@ -365,9 +365,9 @@ void Viewport::InitializeCamera()
 	case ViewportType::Top:
 	case ViewportType::Front:
 	case ViewportType::Side: {
-		m_camera = std::make_unique<camera::OrthographicCamera>( ViewportUtils::GetCameraViewType( m_type ) );
+		m_camera = std::make_unique<camera::OrthographicCamera>( ViewportUtils::getCameraViewType( m_type ) );
 		m_controller = std::make_unique<camera::OrthographicCameraController>( static_cast<camera::OrthographicCamera *>( m_camera.get() ) );
-		SetupOrthographicView();
+		setupOrthographicView();
 	}
 	break;
 	}
@@ -378,7 +378,7 @@ void Viewport::InitializeCamera()
 	}
 }
 
-void Viewport::SetupOrthographicView()
+void Viewport::setupOrthographicView()
 {
 	if ( !m_camera )
 		return;
@@ -413,7 +413,7 @@ void Viewport::SetupOrthographicView()
 // ViewportManager Implementation
 //=============================================================================
 
-Viewport *ViewportManager::CreateViewport( ViewportType type )
+Viewport *ViewportManager::createViewport( ViewportType type )
 {
 	auto viewport = std::make_unique<Viewport>( type );
 	auto *ptr = viewport.get();
@@ -423,16 +423,16 @@ Viewport *ViewportManager::CreateViewport( ViewportType type )
 	// If this is the first viewport, make it active
 	if ( m_viewports.size() == 1 )
 	{
-		SetActiveViewport( ptr );
-		SetFocusedViewport( ptr );
+		setActiveViewport( ptr );
+		setFocusedViewport( ptr );
 	}
 
 	return ptr;
 }
 
-void ViewportManager::DestroyViewport( Viewport *viewport )
+void ViewportManager::destroyViewport( Viewport *viewport )
 {
-	auto it = FindViewport( viewport );
+	auto it = findViewport( viewport );
 	if ( it != m_viewports.end() )
 	{
 		// Clear references if this viewport is active/focused
@@ -450,92 +450,92 @@ void ViewportManager::DestroyViewport( Viewport *viewport )
 		// Set new active viewport if we have any left
 		if ( !m_viewports.empty() && !m_activeViewport )
 		{
-			SetActiveViewport( m_viewports[0].get() );
-			SetFocusedViewport( m_viewports[0].get() );
+			setActiveViewport( m_viewports[0].get() );
+			setFocusedViewport( m_viewports[0].get() );
 		}
 	}
 }
 
-void ViewportManager::DestroyAllViewports()
+void ViewportManager::destroyAllViewports()
 {
 	m_activeViewport = nullptr;
 	m_focusedViewport = nullptr;
 	m_viewports.clear();
 }
 
-void ViewportManager::SetActiveViewport( Viewport *viewport ) noexcept
+void ViewportManager::setActiveViewport( Viewport *viewport ) noexcept
 {
 	if ( m_activeViewport )
 	{
-		m_activeViewport->SetActive( false );
+		m_activeViewport->setActive( false );
 	}
 
 	m_activeViewport = viewport;
 
 	if ( m_activeViewport )
 	{
-		m_activeViewport->SetActive( true );
+		m_activeViewport->setActive( true );
 	}
 }
 
-void ViewportManager::SetFocusedViewport( Viewport *viewport ) noexcept
+void ViewportManager::setFocusedViewport( Viewport *viewport ) noexcept
 {
 	if ( m_focusedViewport )
 	{
-		m_focusedViewport->SetFocused( false );
+		m_focusedViewport->setFocused( false );
 	}
 
 	m_focusedViewport = viewport;
 
 	if ( m_focusedViewport )
 	{
-		m_focusedViewport->SetFocused( true );
+		m_focusedViewport->setFocused( true );
 	}
 }
 
-void ViewportManager::Update( float deltaTime )
+void ViewportManager::update( float deltaTime )
 {
 	for ( auto &viewport : m_viewports )
 	{
-		viewport->Update( deltaTime );
+		viewport->update( deltaTime );
 	}
 }
 
-void ViewportManager::Render()
+void ViewportManager::render()
 {
 	for ( auto &viewport : m_viewports )
 	{
-		if ( viewport->IsActive() )
+		if ( viewport->isActive() )
 		{
-			viewport->Render();
+			viewport->render();
 		}
 	}
 }
 
-void ViewportManager::HandleGlobalInput( const ViewportInputEvent &event )
+void ViewportManager::handleGlobalInput( const ViewportInputEvent &event )
 {
 	// Route input to focused viewport
 	if ( m_focusedViewport )
 	{
-		m_focusedViewport->HandleInput( event );
+		m_focusedViewport->handleInput( event );
 	}
 }
 
-void ViewportManager::SynchronizeViews( Viewport *sourceViewport )
+void ViewportManager::synchronizeViews( Viewport *sourceViewport )
 {
-	if ( !sourceViewport || !sourceViewport->IsViewSyncEnabled() )
+	if ( !sourceViewport || !sourceViewport->isViewSyncEnabled() )
 		return;
 
-	auto *sourceCamera = sourceViewport->GetCamera();
+	auto *sourceCamera = sourceViewport->getCamera();
 	if ( !sourceCamera )
 		return;
 
 	// Synchronize other viewports with sync enabled
 	for ( auto &viewport : m_viewports )
 	{
-		if ( viewport.get() != sourceViewport && viewport->IsViewSyncEnabled() )
+		if ( viewport.get() != sourceViewport && viewport->isViewSyncEnabled() )
 		{
-			auto *camera = viewport->GetCamera();
+			auto *camera = viewport->getCamera();
 			if ( camera )
 			{
 				// For view sync, typically we'd sync the target position
@@ -546,39 +546,39 @@ void ViewportManager::SynchronizeViews( Viewport *sourceViewport )
 	}
 }
 
-void ViewportManager::FrameAllInAllViewports() noexcept
+void ViewportManager::frameAllInAllViewports() noexcept
 {
 	for ( auto &viewport : m_viewports )
 	{
-		viewport->FrameAll();
+		viewport->frameAll();
 	}
 }
 
-void ViewportManager::ResetAllViews() noexcept
+void ViewportManager::resetAllViews() noexcept
 {
 	for ( auto &viewport : m_viewports )
 	{
-		viewport->ResetView();
+		viewport->resetView();
 	}
 }
 
-void ViewportManager::SetGlobalGridVisible( bool visible ) noexcept
+void ViewportManager::setGlobalGridVisible( bool visible ) noexcept
 {
 	for ( auto &viewport : m_viewports )
 	{
-		viewport->SetGridVisible( visible );
+		viewport->setGridVisible( visible );
 	}
 }
 
-void ViewportManager::SetGlobalGizmosVisible( bool visible ) noexcept
+void ViewportManager::setGlobalGizmosVisible( bool visible ) noexcept
 {
 	for ( auto &viewport : m_viewports )
 	{
-		viewport->SetGizmosVisible( visible );
+		viewport->setGizmosVisible( visible );
 	}
 }
 
-auto ViewportManager::FindViewport( Viewport *viewport ) -> decltype( m_viewports.begin() )
+auto ViewportManager::findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() )
 {
 	return std::find_if( m_viewports.begin(), m_viewports.end(), [viewport]( const auto &vp ) { return vp.get() == viewport; } );
 }
@@ -587,32 +587,32 @@ auto ViewportManager::FindViewport( Viewport *viewport ) -> decltype( m_viewport
 // ViewportFactory Implementation
 //=============================================================================
 
-ViewportFactory::StandardLayout ViewportFactory::CreateStandardLayout( ViewportManager &manager )
+ViewportFactory::StandardLayout ViewportFactory::createStandardLayout( ViewportManager &manager )
 {
 	StandardLayout layout;
 
-	layout.perspective = manager.CreateViewport( ViewportType::Perspective );
-	layout.top = manager.CreateViewport( ViewportType::Top );
-	layout.front = manager.CreateViewport( ViewportType::Front );
-	layout.side = manager.CreateViewport( ViewportType::Side );
+	layout.perspective = manager.createViewport( ViewportType::Perspective );
+	layout.top = manager.createViewport( ViewportType::Top );
+	layout.front = manager.createViewport( ViewportType::Front );
+	layout.side = manager.createViewport( ViewportType::Side );
 
 	// Set perspective as active by default
-	manager.SetActiveViewport( layout.perspective );
-	manager.SetFocusedViewport( layout.perspective );
+	manager.setActiveViewport( layout.perspective );
+	manager.setFocusedViewport( layout.perspective );
 
 	return layout;
 }
 
-Viewport *ViewportFactory::CreateSingleViewport( ViewportManager &manager, ViewportType type )
+Viewport *ViewportFactory::createSingleViewport( ViewportManager &manager, ViewportType type )
 {
-	return manager.CreateViewport( type );
+	return manager.createViewport( type );
 }
 
 //=============================================================================
 // ViewportUtils Implementation
 //=============================================================================
 
-math::Vec2<> ViewportUtils::NormalizedToPixel( const math::Vec2<> &normalized, const math::Vec2<int> &size ) noexcept
+math::Vec2<> ViewportUtils::normalizedToPixel( const math::Vec2<> &normalized, const math::Vec2<int> &size ) noexcept
 {
 	return {
 		( normalized.x * 0.5f + 0.5f ) * static_cast<float>( size.x ),
@@ -620,7 +620,7 @@ math::Vec2<> ViewportUtils::NormalizedToPixel( const math::Vec2<> &normalized, c
 	};
 }
 
-math::Vec2<> ViewportUtils::PixelToNormalized( const math::Vec2<> &pixel, const math::Vec2<int> &size ) noexcept
+math::Vec2<> ViewportUtils::pixelToNormalized( const math::Vec2<> &pixel, const math::Vec2<int> &size ) noexcept
 {
 	if ( size.x <= 0 || size.y <= 0 )
 		return { 0, 0 };
@@ -631,7 +631,7 @@ math::Vec2<> ViewportUtils::PixelToNormalized( const math::Vec2<> &pixel, const 
 	};
 }
 
-const char *ViewportUtils::GetViewportTypeName( ViewportType type ) noexcept
+const char *ViewportUtils::getViewportTypeName( ViewportType type ) noexcept
 {
 	switch ( type )
 	{
@@ -648,12 +648,12 @@ const char *ViewportUtils::GetViewportTypeName( ViewportType type ) noexcept
 	}
 }
 
-bool ViewportUtils::IsOrthographicType( ViewportType type ) noexcept
+bool ViewportUtils::isOrthographicType( ViewportType type ) noexcept
 {
 	return type != ViewportType::Perspective;
 }
 
-camera::ViewType ViewportUtils::GetCameraViewType( ViewportType viewportType ) noexcept
+camera::ViewType ViewportUtils::getCameraViewType( ViewportType viewportType ) noexcept
 {
 	switch ( viewportType )
 	{
@@ -669,7 +669,7 @@ camera::ViewType ViewportUtils::GetCameraViewType( ViewportType viewportType ) n
 	}
 }
 
-ViewportUtils::ViewportLayout ViewportUtils::CalculateStandardLayout( const math::Vec2<int> &totalSize ) noexcept
+ViewportUtils::ViewportLayout ViewportUtils::calculateStandardLayout( const math::Vec2<int> &totalSize ) noexcept
 {
 	ViewportLayout layout;
 
@@ -696,7 +696,7 @@ ViewportUtils::ViewportLayout ViewportUtils::CalculateStandardLayout( const math
 	return layout;
 }
 
-ViewportInputEvent ViewportUtils::CreateMouseMoveEvent( float x, float y, float deltaX, float deltaY ) noexcept
+ViewportInputEvent ViewportUtils::createMouseMoveEvent( float x, float y, float deltaX, float deltaY ) noexcept
 {
 	ViewportInputEvent event;
 	event.type = ViewportInputEvent::Type::MouseMove;
@@ -707,7 +707,7 @@ ViewportInputEvent ViewportUtils::CreateMouseMoveEvent( float x, float y, float 
 	return event;
 }
 
-ViewportInputEvent ViewportUtils::CreateMouseButtonEvent( int button, bool pressed, float x, float y ) noexcept
+ViewportInputEvent ViewportUtils::createMouseButtonEvent( int button, bool pressed, float x, float y ) noexcept
 {
 	ViewportInputEvent event;
 	event.type = ViewportInputEvent::Type::MouseButton;
@@ -718,7 +718,7 @@ ViewportInputEvent ViewportUtils::CreateMouseButtonEvent( int button, bool press
 	return event;
 }
 
-ViewportInputEvent ViewportUtils::CreateMouseWheelEvent( float delta, float x, float y ) noexcept
+ViewportInputEvent ViewportUtils::createMouseWheelEvent( float delta, float x, float y ) noexcept
 {
 	ViewportInputEvent event;
 	event.type = ViewportInputEvent::Type::MouseWheel;
@@ -728,7 +728,7 @@ ViewportInputEvent ViewportUtils::CreateMouseWheelEvent( float delta, float x, f
 	return event;
 }
 
-ViewportInputEvent ViewportUtils::CreateKeyEvent( int keyCode, bool pressed, bool shift, bool ctrl, bool alt ) noexcept
+ViewportInputEvent ViewportUtils::createKeyEvent( int keyCode, bool pressed, bool shift, bool ctrl, bool alt ) noexcept
 {
 	ViewportInputEvent event;
 	event.type = pressed ? ViewportInputEvent::Type::KeyPress : ViewportInputEvent::Type::KeyRelease;
@@ -739,7 +739,7 @@ ViewportInputEvent ViewportUtils::CreateKeyEvent( int keyCode, bool pressed, boo
 	return event;
 }
 
-ViewportInputEvent ViewportUtils::CreateResizeEvent( int width, int height ) noexcept
+ViewportInputEvent ViewportUtils::createResizeEvent( int width, int height ) noexcept
 {
 	ViewportInputEvent event;
 	event.type = ViewportInputEvent::Type::Resize;

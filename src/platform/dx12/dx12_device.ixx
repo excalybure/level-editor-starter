@@ -50,19 +50,19 @@ public:
 	void shutdown();
 
 	// Frame operations
-	void begin_frame();
-	void end_frame();
+	void beginFrame();
+	void endFrame();
 	void present();
 
 	ID3D12Device *Get() const { return m_device.Get(); }
 	ID3D12Device *operator->() const { return m_device.Get(); }
 
 	// ImGui integration
-	ID3D12Device *get_device() const { return m_device.Get(); }
-	ID3D12DescriptorHeap *get_imgui_descriptor_heap() const { return m_imguiDescriptorHeap.Get(); }
+	ID3D12Device *getDevice() const { return m_device.Get(); }
+	ID3D12DescriptorHeap *getImguiDescriptorHeap() const { return m_imguiDescriptorHeap.Get(); }
 
 	// Command list for ImGui rendering
-	ID3D12GraphicsCommandList *get_command_list() const { return m_commandList.Get(); }
+	ID3D12GraphicsCommandList *getCommandList() const { return m_commandList.Get(); }
 
 	// Factory for creating other D3D12 objects
 	IDXGIFactory4 *GetFactory() const { return m_factory.Get(); }
