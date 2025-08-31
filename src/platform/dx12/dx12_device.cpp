@@ -13,9 +13,31 @@ module;
 module platform.dx12;
 
 import std;
+import runtime.console;
 
 namespace dx12
 {
+
+// Helper function to check HRESULT
+void throwIfFailed( HRESULT hr, ID3D12Device *device )
+{
+	if ( FAILED( hr ) )
+	{
+		// Check if it's a device removed error and get more info
+		if ( hr == DXGI_ERROR_DEVICE_REMOVED && device )
+		{
+			HRESULT removedReason = device->GetDeviceRemovedReason();
+			console::fatal( "D3D12 DEVICE REMOVED! HRESULT: {:#x}, Removal Reason: {:#x}",
+				static_cast<unsigned int>( hr ),
+				static_cast<unsigned int>( removedReason ) );
+		}
+		else
+		{
+			console::fatal( "D3D12 operation failed with HRESULT: {:#x}",
+				static_cast<unsigned int>( hr ) );
+		}
+	}
+}
 
 // Device implementation
 Device::Device() = default;

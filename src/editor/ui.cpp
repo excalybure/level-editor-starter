@@ -34,9 +34,6 @@ struct UI::Impl
 	// Viewport manager for coordinated viewport management
 	ViewportManager viewportManager;
 
-	// D3D12 device for render target operations
-	dx12::Device *device = nullptr;
-
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -67,18 +64,18 @@ UI::~UI()
 	shutdown();
 }
 
-bool UI::initialize( void *window_handle, dx12::Device *dx12Device )
+bool UI::initialize( void *window_handle, dx12::Device *device )
 {
 	HWND hwnd = static_cast<HWND>( window_handle );
 
 	// Basic validation to allow safe negative-path unit tests without crashing inside backends
-	if ( !hwnd || !dx12Device )
+	if ( !hwnd || !device )
 	{
 		return false;
 	}
 
 	// Initialize viewports with D3D12 device first
-	if ( !m_impl->initializeViewports( dx12Device ) )
+	if ( !m_impl->initializeViewports( device ) )
 	{
 		return false;
 	}
@@ -108,12 +105,12 @@ bool UI::initialize( void *window_handle, dx12::Device *dx12Device )
 		return false;
 
 	if ( !ImGui_ImplDX12_Init(
-			 dx12Device->getDevice(),
+			 device->getDevice(),
 			 3, // Number of frames in flight
 			 DXGI_FORMAT_R8G8B8A8_UNORM,
-			 dx12Device->getImguiDescriptorHeap(),
-			 dx12Device->getImguiDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			 dx12Device->getImguiDescriptorHeap()->GetGPUDescriptorHandleForHeapStart() ) )
+			 device->getImguiDescriptorHeap(),
+			 device->getImguiDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+			 device->getImguiDescriptorHeap()->GetGPUDescriptorHandleForHeapStart() ) )
 	{
 		ImGui_ImplWin32_Shutdown();
 		return false;

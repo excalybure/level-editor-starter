@@ -216,7 +216,7 @@ target_sources(platform.dx12 PUBLIC
 )
 target_compile_features(platform.dx12 PUBLIC cxx_std_23)
 # Link DirectX 12 libraries
-target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler)
+target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler runtime.console)
 
 add_library(engine.renderer)
 target_sources(engine.renderer PUBLIC

@@ -30,27 +30,7 @@ class Texture;
 class TextureManager;
 
 // Helper function to check HRESULT
-inline void throwIfFailed( HRESULT hr, ID3D12Device *device = nullptr )
-{
-	if ( FAILED( hr ) )
-	{
-		char errorMsg[512];
-
-		// Check if it's a device removed error and get more info
-		if ( hr == DXGI_ERROR_DEVICE_REMOVED && device )
-		{
-			HRESULT removedReason = device->GetDeviceRemovedReason();
-			sprintf_s( errorMsg, "D3D12 DEVICE REMOVED! HRESULT: 0x%08X, Removal Reason: 0x%08X", hr, removedReason );
-		}
-		else
-		{
-			sprintf_s( errorMsg, "D3D12 operation failed with HRESULT: 0x%08X", hr );
-		}
-
-		printf( "%s\n", errorMsg );
-		throw std::runtime_error( errorMsg );
-	}
-}
+void throwIfFailed( HRESULT hr, ID3D12Device *device = nullptr );
 
 // D3D12 Texture class for viewport render targets
 export class Texture
