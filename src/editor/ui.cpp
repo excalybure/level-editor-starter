@@ -1,6 +1,7 @@
 // Include ImGui implementation in the global module fragment to avoid conflicts
 module; // start global module fragment so we can include headers before the module declaration
 #include "imgui.h"
+#include "imgui_internal.h" // For DockBuilder API
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include <d3d12.h>
@@ -255,12 +256,50 @@ void UI::Impl::setupDockspace( ViewportLayout &layout )
 	}
 }
 
-void UI::Impl::setupInitialLayout( [[maybe_unused]] ImGuiID inDockspaceId )
+void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 {
-	// For now, just use the default ImGui docking behavior
-	// In a full implementation, you would use ImGui::DockBuilderXXX functions
-	// to create a specific layout, but those require the docking branch
-	// which may not be available in the current vcpkg version
+	// Only set up the initial layout if the dockspace is empty (first run or reset)
+	// This preserves user's layout modifications between runs
+	ImGuiDockNode *node = ImGui::DockBuilderGetNode( inDockspaceId );
+	if ( node == nullptr || node->IsEmpty() )
+	{
+		// Clear any existing layout and rebuild
+		ImGui::DockBuilderRemoveNode( inDockspaceId );							  // Clear out existing layout
+		ImGui::DockBuilderAddNode( inDockspaceId, ImGuiDockNodeFlags_DockSpace ); // Add back the dockspace node
+		ImGui::DockBuilderSetNodeSize( inDockspaceId, ImGui::GetMainViewport()->WorkSize );
+
+		// Split the dockspace into regions for our four viewports
+		// We'll create a 2x2 grid layout:
+		// +-------------+-------------+
+		// | Perspective |    Top      |
+		// |     3D      |   (XY)      |
+		// +-------------+-------------+
+		// |   Front     |    Side     |
+		// |   (XZ)      |   (YZ)      |
+		// +-------------+-------------+
+
+		ImGuiID dockLeftColumn, dockRightColumn;
+		ImGuiID dockTopLeft, dockBottomLeft;
+		ImGuiID dockTopRight, dockBottomRight;
+
+		// First split: divide main dockspace into left and right columns
+		ImGui::DockBuilderSplitNode( inDockspaceId, ImGuiDir_Left, 0.5f, &dockLeftColumn, &dockRightColumn );
+
+		// Split left column into top and bottom
+		ImGui::DockBuilderSplitNode( dockLeftColumn, ImGuiDir_Up, 0.5f, &dockTopLeft, &dockBottomLeft );
+
+		// Split right column into top and bottom
+		ImGui::DockBuilderSplitNode( dockRightColumn, ImGuiDir_Up, 0.5f, &dockTopRight, &dockBottomRight );
+
+		// Dock each viewport window to its designated area
+		ImGui::DockBuilderDockWindow( "Perspective", dockTopLeft );	  // Top-left: 3D Perspective
+		ImGui::DockBuilderDockWindow( "Top (XY)", dockTopRight );	  // Top-right: Top view
+		ImGui::DockBuilderDockWindow( "Front (XZ)", dockBottomLeft ); // Bottom-left: Front view
+		ImGui::DockBuilderDockWindow( "Side (YZ)", dockBottomRight ); // Bottom-right: Side view
+
+		// Finalize the layout
+		ImGui::DockBuilderFinish( inDockspaceId );
+	}
 }
 
 void UI::Impl::renderViewportWindows( ViewportLayout &layout )

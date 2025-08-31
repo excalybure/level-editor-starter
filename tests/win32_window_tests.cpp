@@ -453,22 +453,22 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 	Win32Window window;
 	REQUIRE( window.create( "ImGuiInputTest", 200, 150 ) );
 	HWND hwnd = static_cast<HWND>( window.getHandle() );
-	
+
 	// Drain initial events
 	drainAllEvents( window );
 
 	// Test that mouse and keyboard events still work after ImGui integration
 	// This ensures ImGui_ImplWin32_WndProcHandler is properly integrated
 	// and doesn't break existing functionality
-	
+
 	SECTION( "Mouse events still processed" )
 	{
 		const int mx = 100, my = 50;
 		REQUIRE( PostMessage( hwnd, WM_MOUSEMOVE, 0, MAKELPARAM( mx, my ) ) != 0 );
 		REQUIRE( PostMessage( hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM( mx, my ) ) != 0 );
-		
+
 		REQUIRE( window.poll() );
-		
+
 		int moveCount = 0, buttonCount = 0;
 		platform::WindowEvent ev;
 		while ( window.getEvent( ev ) )
@@ -485,20 +485,20 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 				REQUIRE( ev.mouse.button == 0 ); // Left button
 			}
 		}
-		
+
 		// Events should still be processed even with ImGui integration
 		REQUIRE( moveCount >= 1 );
 		REQUIRE( buttonCount >= 1 );
 	}
-	
+
 	SECTION( "Keyboard events still processed" )
 	{
 		const WPARAM vkSpace = VK_SPACE;
 		REQUIRE( PostMessage( hwnd, WM_KEYDOWN, vkSpace, 0 ) != 0 );
 		REQUIRE( PostMessage( hwnd, WM_KEYUP, vkSpace, 0 ) != 0 );
-		
+
 		REQUIRE( window.poll() );
-		
+
 		int keyDownCount = 0, keyUpCount = 0;
 		platform::WindowEvent ev;
 		while ( window.getEvent( ev ) )
@@ -516,7 +516,7 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 				REQUIRE( ev.keyboard.pressed == false );
 			}
 		}
-		
+
 		// Events should still be processed even with ImGui integration
 		REQUIRE( keyDownCount >= 1 );
 		REQUIRE( keyUpCount >= 1 );
@@ -527,16 +527,16 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 		// This test ensures that calling ImGui_ImplWin32_WndProcHandler
 		// doesn't crash or interfere with normal message processing
 		// Even without ImGui context initialized, the handler should be safe to call
-		
+
 		// Send a variety of messages that ImGui typically handles
 		REQUIRE( PostMessage( hwnd, WM_MOUSEMOVE, 0, MAKELPARAM( 10, 20 ) ) != 0 );
 		REQUIRE( PostMessage( hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM( 10, 20 ) ) != 0 );
 		REQUIRE( PostMessage( hwnd, WM_CHAR, 'A', 0 ) != 0 );
 		REQUIRE( PostMessage( hwnd, WM_KEYDOWN, VK_RETURN, 0 ) != 0 );
-		
+
 		// Should not crash and should process messages normally
 		REQUIRE( window.poll() );
-		
+
 		// Just verify we get some events - the exact count doesn't matter
 		// as long as the integration doesn't break message processing
 		platform::WindowEvent ev;
@@ -545,10 +545,10 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 		{
 			eventCount++;
 		}
-		
+
 		REQUIRE( eventCount > 0 );
 	}
-	
+
 #else
 	WARN( "Win32 window ImGui integration tests skipped: not on Win32 platform" );
 #endif
