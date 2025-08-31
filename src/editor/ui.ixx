@@ -65,9 +65,13 @@ public:
 	bool wantsCaptureMouse() const;
 	bool wantsCaptureKeyboard() const;
 
+	// Check if user requested to exit via menu
+	bool shouldExit() const;
+
 private:
 	ViewportLayout m_layout;
 	bool m_initialized = false;
+	mutable bool m_shouldExit = false;
 
 	// Implementation details hidden from module interface
 	struct Impl;

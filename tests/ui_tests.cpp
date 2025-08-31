@@ -159,3 +159,16 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 	WARN( "UI integration test skipped: not on Win32 platform" );
 #endif
 }
+
+TEST_CASE( "UI exit functionality", "[ui]" )
+{
+	UI ui; // Not initialized - testing state only
+
+	SECTION( "shouldExit returns false by default" )
+	{
+		REQUIRE_FALSE( ui.shouldExit() );
+	}
+
+	// Note: We can't easily test the menu-triggered exit without full UI initialization
+	// and event simulation, but we can verify the state management works correctly
+}

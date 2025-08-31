@@ -39,7 +39,7 @@ int main()
 	std::cout << "Starting Level Editor with ImGui Docking...\n";
 
 	// Main loop
-	while ( window.poll() )
+	while ( window.poll() && !ui.shouldExit() )
 	{
 		// Begin D3D12 frame
 		device.beginFrame();

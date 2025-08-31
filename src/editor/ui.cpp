@@ -31,7 +31,7 @@ struct UI::Impl
 	bool firstLayout = true;
 
 	// Setup the main dockspace
-	void setupDockspace( ViewportLayout &layout );
+	void setupDockspace( ViewportLayout &layout, UI &ui );
 
 	// Setup initial docked layout
 	void setupInitialLayout( ImGuiID inDockspaceId );
@@ -127,7 +127,7 @@ void UI::beginFrame()
 	ImGui::NewFrame();
 
 	// Setup the main dockspace and render viewports
-	m_impl->setupDockspace( m_layout );
+	m_impl->setupDockspace( m_layout, *this );
 	m_impl->renderViewportWindows( m_layout );
 }
 
@@ -177,8 +177,13 @@ bool UI::wantsCaptureKeyboard() const
 	return ImGui::GetIO().WantCaptureKeyboard;
 }
 
+bool UI::shouldExit() const
+{
+	return m_shouldExit;
+}
+
 // Implementation details
-void UI::Impl::setupDockspace( ViewportLayout &layout )
+void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 {
 	// Create a fullscreen dockspace window
 	const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -231,7 +236,9 @@ void UI::Impl::setupDockspace( ViewportLayout &layout )
 			}
 			ImGui::Separator();
 			if ( ImGui::MenuItem( "Exit" ) )
-			{ /* TODO: Implement */
+			{
+				// Set the exit flag when user selects Exit from menu
+				ui.m_shouldExit = true;
 			}
 			ImGui::EndMenu();
 		}
