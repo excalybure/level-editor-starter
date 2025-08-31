@@ -48,7 +48,7 @@ void resetConsoleColor()
 }
 #endif
 
-void printWithColor( const std::string &message, const char *ansiColor = nullptr, WORD winColor = 0 )
+void printWithColor( const std::string &message, [[maybe_unused]] const char *ansiColor = nullptr, [[maybe_unused]] WORD winColor = 0 )
 {
 #ifdef _WIN32
 	// Use Windows Console API for better compatibility

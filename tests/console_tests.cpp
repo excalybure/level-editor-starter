@@ -32,6 +32,25 @@ TEST_CASE( "Console module functionality", "[console]" )
 		REQUIRE_NOTHROW( console::error( testMessage ) );
 	}
 
+	SECTION( "Variadic template functions with std::format" )
+	{
+		int value = 42;
+		float floatValue = 3.14f;
+		const char *name = "Test";
+
+		// Test format strings with various argument types
+		REQUIRE_NOTHROW( console::info( "Integer value: {}", value ) );
+		REQUIRE_NOTHROW( console::debug( "Float value: {:.2f}", floatValue ) );
+		REQUIRE_NOTHROW( console::warning( "String value: {}", name ) );
+		REQUIRE_NOTHROW( console::error( "Multiple values: {} {} {}", value, floatValue, name ) );
+
+		// Test with no arguments (just format string)
+		REQUIRE_NOTHROW( console::info( "No arguments" ) );
+
+		// Test with complex formatting
+		REQUIRE_NOTHROW( console::debug( "Hex value: {:#x}, Binary: {:#b}", value, value ) );
+	}
+
 	// Note: We don't test console::fatal() because it calls std::exit()
 	// which would terminate the test runner
 }

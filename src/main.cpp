@@ -7,12 +7,6 @@ import editor.ui;
 
 int main()
 {
-	// Test the console module
-	console::info( "Level Editor starting up..." );
-	console::debug( "Testing debug messages" );
-	console::warning( "This is a warning message" );
-	console::error( "This is an error message (but not fatal)" );
-
 	// Create the window
 	platform::Win32Window window;
 	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )

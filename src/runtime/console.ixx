@@ -4,6 +4,7 @@ module;
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <format>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -28,4 +29,35 @@ void error( const char *message );
 void warning( const char *message );
 void info( const char *message );
 void debug( const char *message );
+
+// Variadic template functions with std::format
+template <typename... Args>
+void fatal( std::format_string<Args...> fmt, Args &&...args )
+{
+	fatal( std::format( fmt, std::forward<Args>( args )... ) );
+}
+
+template <typename... Args>
+void error( std::format_string<Args...> fmt, Args &&...args )
+{
+	error( std::format( fmt, std::forward<Args>( args )... ) );
+}
+
+template <typename... Args>
+void warning( std::format_string<Args...> fmt, Args &&...args )
+{
+	warning( std::format( fmt, std::forward<Args>( args )... ) );
+}
+
+template <typename... Args>
+void info( std::format_string<Args...> fmt, Args &&...args )
+{
+	info( std::format( fmt, std::forward<Args>( args )... ) );
+}
+
+template <typename... Args>
+void debug( std::format_string<Args...> fmt, Args &&...args )
+{
+	debug( std::format( fmt, std::forward<Args>( args )... ) );
+}
 } // namespace console
