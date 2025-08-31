@@ -24,6 +24,8 @@ export namespace dx12
 class Device;
 class CommandQueue;
 class SwapChain;
+class Texture;
+class TextureManager;
 
 // Helper function to check HRESULT
 inline void throwIfFailed( HRESULT hr )
@@ -33,6 +35,90 @@ inline void throwIfFailed( HRESULT hr )
 		throw std::runtime_error( "D3D12 operation failed" );
 	}
 }
+
+// D3D12 Texture class for viewport render targets
+export class Texture
+{
+public:
+	Texture() = default;
+	~Texture() = default;
+
+	// No copy/move for now
+	Texture( const Texture & ) = delete;
+	Texture &operator=( const Texture & ) = delete;
+
+	// Create a render target texture
+	bool createRenderTarget(
+		Device *device,
+		UINT width,
+		UINT height,
+		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM );
+
+	// Create shader resource view for ImGui integration
+	bool createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle );
+
+	// Resize the texture (recreates the resource)
+	bool resize( Device *device, UINT width, UINT height );
+
+	// Resource access
+	ID3D12Resource *getResource() const { return m_resource.Get(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE getRtvHandle() const { return m_rtvHandle; }
+	D3D12_GPU_DESCRIPTOR_HANDLE getSrvGpuHandle() const { return m_srvGpuHandle; }
+	void *getImGuiTextureId() const { return (void *)m_srvGpuHandle.ptr; }
+
+	// Properties
+	UINT getWidth() const { return m_width; }
+	UINT getHeight() const { return m_height; }
+	DXGI_FORMAT getFormat() const { return m_format; }
+
+	// Resource state management
+	void transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOURCE_STATES newState );
+
+	// Allow TextureManager to access private members
+	friend class TextureManager;
+
+private:
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_resource;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE m_srvGpuHandle = {};
+
+	UINT m_width = 0;
+	UINT m_height = 0;
+	DXGI_FORMAT m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	D3D12_RESOURCE_STATES m_currentState = D3D12_RESOURCE_STATE_COMMON;
+
+	Device *m_device = nullptr;
+};
+
+// Texture manager for viewport render targets
+export class TextureManager
+{
+public:
+	TextureManager() = default;
+	~TextureManager() = default;
+
+	// Initialize with device and descriptor heaps
+	bool initialize( Device *device );
+	void shutdown();
+
+	// Create a new viewport render target
+	std::shared_ptr<Texture> createViewportRenderTarget( UINT width, UINT height );
+
+	// Get next available SRV descriptor handle
+	D3D12_CPU_DESCRIPTOR_HANDLE getNextSrvHandle();
+
+private:
+	Device *m_device = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+
+	UINT m_rtvDescriptorSize = 0;
+	UINT m_srvDescriptorSize = 0;
+	UINT m_currentRtvIndex = 0;
+	UINT m_currentSrvIndex = 0;
+
+	static const UINT kMaxTextures = 64; // Support up to 64 viewport render targets
+};
 
 // D3D12 Device wrapper
 export class Device
@@ -69,6 +155,9 @@ public:
 	// Factory for creating other D3D12 objects
 	IDXGIFactory4 *getFactory() const { return m_factory.Get(); }
 
+	// Texture management for viewport render targets
+	TextureManager *getTextureManager() { return &m_textureManager; }
+
 private:
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
 	Microsoft::WRL::ComPtr<IDXGIAdapter1> m_adapter;
@@ -98,6 +187,9 @@ private:
 
 	// Window handle
 	HWND m_hwnd = nullptr;
+
+	// Texture manager for viewport render targets
+	TextureManager m_textureManager;
 
 	// Initialization methods
 	void enableDebugLayer();

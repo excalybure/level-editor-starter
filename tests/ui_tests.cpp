@@ -97,10 +97,10 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 	SECTION( "Viewport access for all types" )
 	{
 		// All viewport types should be accessible
-		const auto* perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-		const auto* topViewport = ui.getViewport( ViewportType::Top );
-		const auto* frontViewport = ui.getViewport( ViewportType::Front );
-		const auto* sideViewport = ui.getViewport( ViewportType::Side );
+		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( ViewportType::Top );
+		const auto *frontViewport = ui.getViewport( ViewportType::Front );
+		const auto *sideViewport = ui.getViewport( ViewportType::Side );
 
 		REQUIRE( perspectiveViewport != nullptr );
 		REQUIRE( topViewport != nullptr );
@@ -116,12 +116,12 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 
 	SECTION( "Const viewport access" )
 	{
-		const UI& constUI = ui;
+		const UI &constUI = ui;
 
-		const auto* perspectiveViewport = constUI.getViewport( ViewportType::Perspective );
-		const auto* topViewport = constUI.getViewport( ViewportType::Top );
-		const auto* frontViewport = constUI.getViewport( ViewportType::Front );
-		const auto* sideViewport = constUI.getViewport( ViewportType::Side );
+		const auto *perspectiveViewport = constUI.getViewport( ViewportType::Perspective );
+		const auto *topViewport = constUI.getViewport( ViewportType::Top );
+		const auto *frontViewport = constUI.getViewport( ViewportType::Front );
+		const auto *sideViewport = constUI.getViewport( ViewportType::Side );
 
 		REQUIRE( perspectiveViewport != nullptr );
 		REQUIRE( topViewport != nullptr );
@@ -132,15 +132,15 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 	SECTION( "Viewport consistency between calls" )
 	{
 		// Multiple calls to getViewport should return the same instance
-		const auto* viewport1 = ui.getViewport( ViewportType::Perspective );
-		const auto* viewport2 = ui.getViewport( ViewportType::Perspective );
+		const auto *viewport1 = ui.getViewport( ViewportType::Perspective );
+		const auto *viewport2 = ui.getViewport( ViewportType::Perspective );
 
 		REQUIRE( viewport1 == viewport2 );
-		
+
 		// Same for const version
-		const UI& constUI = ui;
-		const auto* constViewport1 = constUI.getViewport( ViewportType::Perspective );
-		const auto* constViewport2 = constUI.getViewport( ViewportType::Perspective );
+		const UI &constUI = ui;
+		const auto *constViewport1 = constUI.getViewport( ViewportType::Perspective );
+		const auto *constViewport2 = constUI.getViewport( ViewportType::Perspective );
 
 		REQUIRE( constViewport1 == constViewport2 );
 		REQUIRE( constViewport1 == viewport1 ); // Should be the same underlying object
@@ -148,10 +148,10 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 
 	SECTION( "Viewport cameras are initialized" )
 	{
-		const auto* perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-		const auto* topViewport = ui.getViewport( ViewportType::Top );
-		const auto* frontViewport = ui.getViewport( ViewportType::Front );
-		const auto* sideViewport = ui.getViewport( ViewportType::Side );
+		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( ViewportType::Top );
+		const auto *frontViewport = ui.getViewport( ViewportType::Front );
+		const auto *sideViewport = ui.getViewport( ViewportType::Side );
 
 		// All viewports should have cameras
 		REQUIRE( perspectiveViewport->getCamera() != nullptr );
@@ -168,12 +168,12 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 
 	SECTION( "Viewport layout correspondence" )
 	{
-		const auto& layout = ui.getLayout();
-		
+		const auto &layout = ui.getLayout();
+
 		// Verify that UI layout panes correspond to actual viewports
-		for ( const auto& pane : layout.panes )
+		for ( const auto &pane : layout.panes )
 		{
-			const auto* viewport = ui.getViewport( pane.type );
+			const auto *viewport = ui.getViewport( pane.type );
 			REQUIRE( viewport != nullptr );
 			REQUIRE( viewport->getType() == pane.type );
 		}
@@ -186,12 +186,12 @@ TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
 
 	SECTION( "Initial viewport states" )
 	{
-		const auto* viewport = ui.getViewport( ViewportType::Perspective );
+		const auto *viewport = ui.getViewport( ViewportType::Perspective );
 
 		// Viewports should start inactive and unfocused
 		REQUIRE_FALSE( viewport->isActive() );
 		REQUIRE_FALSE( viewport->isFocused() );
-		
+
 		// But should have default settings enabled
 		REQUIRE( viewport->isGridVisible() );
 		REQUIRE( viewport->areGizmosVisible() );
@@ -199,16 +199,16 @@ TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
 
 	SECTION( "Viewport state modifications persist" )
 	{
-		auto* viewport = ui.getViewport( ViewportType::Perspective );
-		
+		auto *viewport = ui.getViewport( ViewportType::Perspective );
+
 		// Modify state
 		viewport->setActive( true );
 		viewport->setFocused( true );
 		viewport->setGridVisible( false );
 		viewport->setGizmosVisible( false );
-		
+
 		// Get viewport again and verify persistence
-		const auto* sameViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *sameViewport = ui.getViewport( ViewportType::Perspective );
 		REQUIRE( sameViewport->isActive() );
 		REQUIRE( sameViewport->isFocused() );
 		REQUIRE_FALSE( sameViewport->isGridVisible() );
@@ -217,13 +217,13 @@ TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
 
 	SECTION( "Different viewports have independent state" )
 	{
-		auto* perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-		const auto* topViewport = ui.getViewport( ViewportType::Top );
+		auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( ViewportType::Top );
 
 		// Modify one viewport
 		perspectiveViewport->setActive( true );
 		perspectiveViewport->setFocused( true );
-		
+
 		// Other viewport should be unaffected
 		REQUIRE_FALSE( topViewport->isActive() );
 		REQUIRE_FALSE( topViewport->isFocused() );
@@ -245,8 +245,8 @@ TEST_CASE( "UI pane toggling persists", "[ui]" )
 TEST_CASE( "UI initialize rejects null pointers", "[ui]" )
 {
 	UI ui;
-	// Pass nulls to initialization, expect failure (platform backend cannot init)
-	bool ok = ui.initialize( nullptr, nullptr, nullptr );
+	// Pass nulls to initialization, expect failure
+	bool ok = ui.initialize( nullptr, nullptr );
 	REQUIRE_FALSE( ok );
 	// Still treated as uninitialized; capture functions false
 	REQUIRE_FALSE( ui.wantsCaptureMouse() );
@@ -270,10 +270,8 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 	}
 
 	UI ui;
-	// Use device + its ImGui descriptor heap
-	auto imguiHeap = device.getImguiDescriptorHeap();
-	REQUIRE( imguiHeap != nullptr );
-	REQUIRE( ui.initialize( window.getHandle(), device.getDevice(), imguiHeap ) );
+	// Use device directly with new signature
+	REQUIRE( ui.initialize( window.getHandle(), &device ) );
 
 	SECTION( "Multiple frames do not crash and maintain layout" )
 	{

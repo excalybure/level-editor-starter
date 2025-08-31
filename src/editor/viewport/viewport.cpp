@@ -1,6 +1,5 @@
-// Viewport Management implementation
-// Manages individual viewport instances with cameras, render targets, and input handling
-
+// Viewport Management implementation for multi-viewport 3D editor
+// Implements viewport instances with cameras, render targets, and input handling
 module editor.viewport;
 
 import std;
@@ -8,6 +7,7 @@ import engine.vec;
 import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
+import platform.dx12;
 
 namespace editor
 {
@@ -37,7 +37,36 @@ void Viewport::setRenderTargetSize( int width, int height )
 {
 	m_size = { width, height };
 
+	// Resize existing render target if it exists
+	if ( m_renderTarget )
+	{
+		// Note: resize may recreate the texture
+		m_renderTarget->resize( nullptr, width, height ); // Device will be passed by ViewportManager
+	}
+
 	// Camera aspect ratio is handled in GetProjectionMatrix calls
+}
+
+bool Viewport::createRenderTarget( dx12::Device *device, int width, int height )
+{
+	if ( !device )
+		return false;
+
+	// Create render target texture through device texture manager
+	m_renderTarget = device->getTextureManager()->createViewportRenderTarget( width, height );
+	if ( !m_renderTarget )
+		return false;
+
+	// Update size and handle
+	m_size = { static_cast<int>( width ), static_cast<int>( height ) };
+	m_renderTargetHandle = m_renderTarget->getImGuiTextureId();
+
+	return true;
+}
+
+void *Viewport::getImGuiTextureId() const noexcept
+{
+	return m_renderTarget ? m_renderTarget->getImGuiTextureId() : nullptr;
 }
 
 void Viewport::update( float deltaTime )
@@ -408,11 +437,38 @@ void Viewport::setupOrthographicView()
 //=============================================================================
 // ViewportManager Implementation
 //=============================================================================
+// ViewportManager Implementation
+//=============================================================================
+
+bool ViewportManager::initialize( dx12::Device *device )
+{
+	if ( !device )
+		return false;
+
+	m_device = device;
+	return true;
+}
+
+void ViewportManager::shutdown()
+{
+	// Destroy all viewports first
+	destroyAllViewports();
+	m_device = nullptr;
+}
 
 Viewport *ViewportManager::createViewport( ViewportType type )
 {
+	if ( !m_device )
+		return nullptr;
+
 	auto viewport = std::make_unique<Viewport>( type );
 	auto *ptr = viewport.get();
+
+	// Create D3D12 render target with default size
+	if ( !ptr->createRenderTarget( m_device, 800, 600 ) )
+	{
+		return nullptr; // Failed to create render target
+	}
 
 	m_viewports.push_back( std::move( viewport ) );
 

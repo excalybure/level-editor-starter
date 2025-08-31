@@ -30,11 +30,8 @@ struct UI::Impl
 	ImGuiID dockspaceId = 0;
 	bool firstLayout = true;
 
-	// Viewport instances for each type
-	std::unique_ptr<Viewport> perspectiveViewport;
-	std::unique_ptr<Viewport> topViewport;
-	std::unique_ptr<Viewport> frontViewport;
-	std::unique_ptr<Viewport> sideViewport;
+	// Viewport manager for coordinated viewport management
+	ViewportManager viewportManager;
 
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
@@ -48,8 +45,9 @@ struct UI::Impl
 	// Render individual viewport pane
 	void renderViewportPane( const ViewportLayout::ViewportPane &pane );
 
-	// Initialize viewports
-	void initializeViewports();
+	// Initialize viewports with D3D12 device
+	bool initializeViewports( dx12::Device *device );
+	void shutdownViewports();
 
 	// Get viewport by type
 	Viewport *getViewport( ViewportType type );
@@ -57,8 +55,7 @@ struct UI::Impl
 
 UI::UI() : m_impl( std::make_unique<Impl>() )
 {
-	// Initialize viewports
-	m_impl->initializeViewports();
+	// Viewport initialization will happen in initialize() once we have the D3D12 device
 }
 
 UI::~UI()
@@ -66,14 +63,18 @@ UI::~UI()
 	shutdown();
 }
 
-bool UI::initialize( void *window_handle, void *d3d_device, void *d3d_descriptor_heap )
+bool UI::initialize( void *window_handle, dx12::Device *dx12Device )
 {
 	HWND hwnd = static_cast<HWND>( window_handle );
-	ID3D12Device *device = static_cast<ID3D12Device *>( d3d_device );
-	ID3D12DescriptorHeap *heap = static_cast<ID3D12DescriptorHeap *>( d3d_descriptor_heap );
 
 	// Basic validation to allow safe negative-path unit tests without crashing inside backends
-	if ( !hwnd || !device || !heap )
+	if ( !hwnd || !dx12Device )
+	{
+		return false;
+	}
+
+	// Initialize viewports with D3D12 device first
+	if ( !m_impl->initializeViewports( dx12Device ) )
 	{
 		return false;
 	}
@@ -103,12 +104,12 @@ bool UI::initialize( void *window_handle, void *d3d_device, void *d3d_descriptor
 		return false;
 
 	if ( !ImGui_ImplDX12_Init(
-			 device,
+			 dx12Device->getDevice(),
 			 3, // Number of frames in flight
 			 DXGI_FORMAT_R8G8B8A8_UNORM,
-			 heap,
-			 heap->GetCPUDescriptorHandleForHeapStart(),
-			 heap->GetGPUDescriptorHandleForHeapStart() ) )
+			 dx12Device->getImguiDescriptorHeap(),
+			 dx12Device->getImguiDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+			 dx12Device->getImguiDescriptorHeap()->GetGPUDescriptorHandleForHeapStart() ) )
 	{
 		ImGui_ImplWin32_Shutdown();
 		return false;
@@ -122,6 +123,9 @@ void UI::shutdown()
 {
 	if ( !m_initialized )
 		return;
+
+	// Shutdown viewports first
+	m_impl->shutdownViewports();
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -361,8 +365,8 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 			viewport->setFocused( hasFocus );
 			viewport->setActive( hasFocus );
 
-			// Get render target texture (will be nullptr until D3D12 integration)
-			void *textureHandle = viewport->getRenderTargetHandle();
+			// Get render target texture for ImGui rendering
+			void *textureHandle = viewport->getImGuiTextureId();
 
 			if ( textureHandle )
 			{
@@ -413,29 +417,39 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 }
 
 // UI::Impl viewport management methods
-void UI::Impl::initializeViewports()
+bool UI::Impl::initializeViewports( dx12::Device *device )
 {
-	perspectiveViewport = std::make_unique<Viewport>( ViewportType::Perspective );
-	topViewport = std::make_unique<Viewport>( ViewportType::Top );
-	frontViewport = std::make_unique<Viewport>( ViewportType::Front );
-	sideViewport = std::make_unique<Viewport>( ViewportType::Side );
+	if ( !device )
+		return false;
+
+	// Initialize viewport manager with D3D12 device
+	if ( !viewportManager.initialize( device ) )
+		return false;
+
+	// Create all four viewports
+	viewportManager.createViewport( ViewportType::Perspective );
+	viewportManager.createViewport( ViewportType::Top );
+	viewportManager.createViewport( ViewportType::Front );
+	viewportManager.createViewport( ViewportType::Side );
+
+	return true;
+}
+
+void UI::Impl::shutdownViewports()
+{
+	viewportManager.shutdown();
 }
 
 Viewport *UI::Impl::getViewport( ViewportType type )
 {
-	switch ( type )
+	// Find the viewport of the specified type in the manager
+	const auto &viewports = viewportManager.getViewports();
+	for ( const auto &viewport : viewports )
 	{
-	case ViewportType::Perspective:
-		return perspectiveViewport.get();
-	case ViewportType::Top:
-		return topViewport.get();
-	case ViewportType::Front:
-		return frontViewport.get();
-	case ViewportType::Side:
-		return sideViewport.get();
-	default:
-		return nullptr;
+		if ( viewport->getType() == type )
+			return viewport.get();
 	}
+	return nullptr;
 }
 
 // UI public viewport access methods

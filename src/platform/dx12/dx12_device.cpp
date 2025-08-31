@@ -44,6 +44,13 @@ bool Device::initializeHeadless()
 		createDevice();
 		createCommandObjects();
 		createSynchronizationObjects();
+
+		// Initialize texture manager even in headless mode for viewport render targets
+		if ( !m_textureManager.initialize( this ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 	catch ( const std::exception & )
@@ -75,6 +82,12 @@ bool Device::initialize( HWND window_handle )
 		createRenderTargetViews();
 		createSynchronizationObjects();
 
+		// Initialize texture manager for viewport render targets
+		if ( !m_textureManager.initialize( this ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 	catch ( const std::exception & )
@@ -85,6 +98,9 @@ bool Device::initialize( HWND window_handle )
 
 void Device::shutdown()
 {
+	// Shutdown texture manager first
+	m_textureManager.shutdown();
+
 	// Wait for GPU to finish
 	if ( m_commandQueue )
 	{

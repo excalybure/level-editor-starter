@@ -203,6 +203,7 @@ target_sources(platform.dx12 PUBLIC
     src/platform/dx12/dx12_device.ixx
   PRIVATE
     src/platform/dx12/dx12_device.cpp
+    src/platform/dx12/dx12_texture.cpp
 )
 target_compile_features(platform.dx12 PUBLIC cxx_std_23)
 # Link DirectX 12 libraries
@@ -238,7 +239,7 @@ target_sources(editor.viewport PUBLIC
     src/editor/viewport/viewport.cpp
 )
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
-target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera)
+target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12)
 
 # Executable
 add_executable(level_editor src/main.cpp)

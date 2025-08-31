@@ -22,12 +22,11 @@ int main()
 		return 1;
 	}
 
-	// Initialize UI system
+	// Initialize UI system with D3D12 device
 	editor::UI ui;
 	if ( !ui.initialize(
 			 static_cast<void *>( window.getHandle() ),
-			 static_cast<void *>( device.getDevice() ),
-			 static_cast<void *>( device.getImguiDescriptorHeap() ) ) )
+			 &device ) )
 	{
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;

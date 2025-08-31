@@ -2,6 +2,7 @@ export module editor.ui;
 
 import std;
 import editor.viewport;
+import platform.dx12;
 
 export namespace editor
 {
@@ -45,8 +46,8 @@ public:
 	UI( const UI & ) = delete;
 	UI &operator=( const UI & ) = delete;
 
-	// Initialize ImGui with D3D12 backend
-	bool initialize( void *window_handle, void *d3d_device, void *d3d_descriptor_heap );
+	// Initialize ImGui with D3D12 device
+	bool initialize( void *window_handle, dx12::Device *device );
 
 	// Cleanup ImGui resources
 	void shutdown();

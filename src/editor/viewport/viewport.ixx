@@ -7,6 +7,7 @@ import engine.vec;
 import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
+import platform.dx12;
 
 export namespace editor
 {
@@ -98,6 +99,8 @@ public:
 	// Render target management
 	void setRenderTargetSize( int width, int height );
 	void *getRenderTargetHandle() const noexcept { return m_renderTargetHandle; }
+	bool createRenderTarget( dx12::Device *device, int width, int height );
+	void *getImGuiTextureId() const noexcept;
 
 	// Frame update and rendering
 	void update( float deltaTime );
@@ -142,8 +145,9 @@ private:
 	std::unique_ptr<camera::Camera> m_camera;
 	std::unique_ptr<camera::CameraController> m_controller;
 
-	// Render target (will be D3D12 texture/ImGui integration)
-	void *m_renderTargetHandle = nullptr;
+	// D3D12 render target for this viewport
+	std::shared_ptr<dx12::Texture> m_renderTarget;
+	void *m_renderTargetHandle = nullptr; // For backward compatibility
 
 	// Input state conversion
 	camera::InputState convertToInputState( const ViewportInputEvent &event ) const;
@@ -165,12 +169,16 @@ private:
 export class ViewportManager
 {
 public:
-	ViewportManager() {}
+	ViewportManager() = default;
 	~ViewportManager() = default;
 
 	// No copy/move for now
 	ViewportManager( const ViewportManager & ) = delete;
 	ViewportManager &operator=( const ViewportManager & ) = delete;
+
+	// Initialize with D3D12 device for render target creation
+	bool initialize( dx12::Device *device );
+	void shutdown();
 
 	// Viewport management
 	Viewport *createViewport( ViewportType type );
@@ -208,6 +216,9 @@ private:
 	std::vector<std::unique_ptr<Viewport>> m_viewports;
 	Viewport *m_activeViewport = nullptr;
 	Viewport *m_focusedViewport = nullptr;
+
+	// D3D12 device for render target creation
+	dx12::Device *m_device = nullptr;
 
 	// Find viewport by pointer
 	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );
