@@ -279,7 +279,7 @@ if(ENABLE_TESTS)
 endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
-  add_executable(math_tests 
+  add_executable(unit_test_runner 
     tests/vec_tests.cpp
     tests/matrix_tests.cpp
     tests/quat_tests.cpp
@@ -300,7 +300,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   tests/ui_tests.cpp
   tests/win32_window_tests.cpp
   )
-  target_link_libraries(math_tests PRIVATE 
+  target_link_libraries(unit_test_runner PRIVATE 
     engine.math
     engine.vec 
     engine.matrix 
@@ -323,11 +323,11 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   platform.win32
     Catch2::Catch2WithMain
   )
-  target_compile_features(math_tests PUBLIC cxx_std_23)
+  target_compile_features(unit_test_runner PUBLIC cxx_std_23)
   if (MSVC)
-    target_compile_options(math_tests PRIVATE /W4 /permissive- /std:c++latest)
+    target_compile_options(unit_test_runner PRIVATE /W4 /permissive- /std:c++latest)
   endif()
 
-  add_test(NAME math COMMAND math_tests)
+  add_test(NAME unit_tests COMMAND unit_test_runner)
 endif()
 
