@@ -25,6 +25,9 @@ CMakeFiles/
 Thumbs.db
 .DS_Store
 
+# ImGui settings (user-specific)
+imgui.ini
+
 # Generated modules/interface units
 **/*.ifc
 
