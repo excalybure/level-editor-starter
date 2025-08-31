@@ -30,6 +30,12 @@ struct UI::Impl
 	ImGuiID dockspaceId = 0;
 	bool firstLayout = true;
 
+	// Viewport instances for each type
+	std::unique_ptr<Viewport> perspectiveViewport;
+	std::unique_ptr<Viewport> topViewport;
+	std::unique_ptr<Viewport> frontViewport;
+	std::unique_ptr<Viewport> sideViewport;
+
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -41,10 +47,18 @@ struct UI::Impl
 
 	// Render individual viewport pane
 	void renderViewportPane( const ViewportLayout::ViewportPane &pane );
+
+	// Initialize viewports
+	void initializeViewports();
+
+	// Get viewport by type
+	Viewport *getViewport( ViewportType type );
 };
 
 UI::UI() : m_impl( std::make_unique<Impl>() )
 {
+	// Initialize viewports
+	m_impl->initializeViewports();
 }
 
 UI::~UI()
@@ -329,41 +343,110 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 		// Get the content region size
 		const ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
-		// For now, just show placeholder content
-		const char *viewporInfo = "";
-		switch ( pane.type )
+		// Get the corresponding viewport
+		Viewport *viewport = getViewport( pane.type );
+
+		if ( viewport )
 		{
-		case ViewportType::Perspective:
-			viewporInfo = "3D Perspective View\nCamera controls: Mouse to orbit, WASD to move";
-			break;
-		case ViewportType::Top:
-			viewporInfo = "Top View (XY Plane)\nLooking down Z-axis";
-			break;
-		case ViewportType::Front:
-			viewporInfo = "Front View (XZ Plane)\nLooking down Y-axis";
-			break;
-		case ViewportType::Side:
-			viewporInfo = "Side View (YZ Plane)\nLooking down X-axis";
-			break;
+			// Update viewport size if it has changed
+			const auto &currentSize = viewport->getSize();
+			if ( currentSize.x != static_cast<int>( contentSize.x ) ||
+				currentSize.y != static_cast<int>( contentSize.y ) )
+			{
+				viewport->setRenderTargetSize( static_cast<int>( contentSize.x ), static_cast<int>( contentSize.y ) );
+			}
+
+			// Check if this viewport has focus
+			bool hasFocus = ImGui::IsWindowFocused();
+			viewport->setFocused( hasFocus );
+			viewport->setActive( hasFocus );
+
+			// Get render target texture (will be nullptr until D3D12 integration)
+			void *textureHandle = viewport->getRenderTargetHandle();
+
+			if ( textureHandle )
+			{
+				// Render the actual 3D viewport content
+				ImGui::Image( reinterpret_cast<ImTextureID>( textureHandle ), contentSize );
+			}
+			else
+			{
+				// Show placeholder content until render targets are implemented
+				const char *viewportInfo = ViewportUtils::getViewportTypeName( pane.type );
+				const char *cameraInfo = "";
+
+				// Get camera information
+				if ( auto *camera = viewport->getCamera() )
+				{
+					const auto &pos = camera->getPosition();
+					const auto &target = camera->getTarget();
+					static char cameraBuffer[256];
+					sprintf_s( cameraBuffer, sizeof( cameraBuffer ), "\nCamera: (%.1f, %.1f, %.1f)\nTarget: (%.1f, %.1f, %.1f)\nAspect: %.2f", pos.x, pos.y, pos.z, target.x, target.y, target.z, viewport->getAspectRatio() );
+					cameraInfo = cameraBuffer;
+				}
+
+				// Combine viewport and camera info
+				static char fullInfo[512];
+				sprintf_s( fullInfo, sizeof( fullInfo ), "%s\n%s\n\nTODO: D3D12 render targets", viewportInfo, cameraInfo );
+
+				// Center the text in the viewport
+				const ImVec2 text_size = ImGui::CalcTextSize( fullInfo );
+				const ImVec2 center = ImVec2(
+					( contentSize.x - text_size.x ) * 0.5f,
+					( contentSize.y - text_size.y ) * 0.5f );
+
+				ImGui::SetCursorPos( center );
+				ImGui::TextUnformatted( fullInfo );
+			}
+
+			// Show viewport status for debugging
+			ImGui::SetCursorPos( ImVec2( 5, 5 ) );
+			ImGui::Text( "Size: %.0fx%.0f %s", contentSize.x, contentSize.y, hasFocus ? "(focused)" : "" );
 		}
-
-		// Center the text in the viewport
-		const ImVec2 text_size = ImGui::CalcTextSize( viewporInfo );
-		const ImVec2 center = ImVec2(
-			( contentSize.x - text_size.x ) * 0.5f,
-			( contentSize.y - text_size.y ) * 0.5f );
-
-		ImGui::SetCursorPos( center );
-		ImGui::TextUnformatted( viewporInfo );
-
-		// TODO: Render actual 3D viewport content here
-		// This is where we'll integrate the Viewport class from editor.viewport
-
-		// Show viewport dimensions for debugging
-		ImGui::SetCursorPos( ImVec2( 5, 5 ) );
-		ImGui::Text( "Size: %.0fx%.0f", contentSize.x, contentSize.y );
+		else
+		{
+			// Fallback if viewport is null
+			ImGui::TextUnformatted( "Viewport not initialized" );
+		}
 	}
 	ImGui::End();
+}
+
+// UI::Impl viewport management methods
+void UI::Impl::initializeViewports()
+{
+	perspectiveViewport = std::make_unique<Viewport>( ViewportType::Perspective );
+	topViewport = std::make_unique<Viewport>( ViewportType::Top );
+	frontViewport = std::make_unique<Viewport>( ViewportType::Front );
+	sideViewport = std::make_unique<Viewport>( ViewportType::Side );
+}
+
+Viewport *UI::Impl::getViewport( ViewportType type )
+{
+	switch ( type )
+	{
+	case ViewportType::Perspective:
+		return perspectiveViewport.get();
+	case ViewportType::Top:
+		return topViewport.get();
+	case ViewportType::Front:
+		return frontViewport.get();
+	case ViewportType::Side:
+		return sideViewport.get();
+	default:
+		return nullptr;
+	}
+}
+
+// UI public viewport access methods
+Viewport *UI::getViewport( ViewportType type )
+{
+	return m_impl->getViewport( type );
+}
+
+const Viewport *UI::getViewport( ViewportType type ) const
+{
+	return m_impl->getViewport( type );
 }
 
 } // namespace editor

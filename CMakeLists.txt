@@ -297,6 +297,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   tests/ecs_tests.cpp
   tests/app_tests.cpp
   tests/renderer_integration_tests.cpp
+  tests/integration_tests.cpp
   tests/ui_tests.cpp
   tests/win32_window_tests.cpp
   )

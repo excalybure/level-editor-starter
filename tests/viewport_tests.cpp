@@ -440,3 +440,160 @@ TEST_CASE( "Viewport Types Coverage", "[viewport][types]" )
 		REQUIRE( manager.getViewports().size() == 4 );
 	}
 }
+
+TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
+{
+	SECTION( "Perspective camera positioning" )
+	{
+		Viewport viewport( ViewportType::Perspective );
+		const auto* camera = viewport.getCamera();
+		
+		const auto& position = camera->getPosition();
+		const auto& target = camera->getTarget();
+		const auto& up = camera->getUp();
+		
+		// Should be positioned for isometric-like view
+		REQUIRE_THAT( position.x, WithinAbs( 5.0f, 0.001f ) );
+		REQUIRE_THAT( position.y, WithinAbs( 5.0f, 0.001f ) );
+		REQUIRE_THAT( position.z, WithinAbs( 5.0f, 0.001f ) );
+		
+		// Should look at origin
+		REQUIRE_THAT( target.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should have Z-up orientation
+		REQUIRE_THAT( up.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.z, WithinAbs( 1.0f, 0.001f ) );
+	}
+
+	SECTION( "Top view camera positioning" )
+	{
+		Viewport viewport( ViewportType::Top );
+		const auto* camera = viewport.getCamera();
+
+		const auto& position = camera->getPosition();
+		const auto& target = camera->getTarget();
+		const auto& up = camera->getUp();
+		
+		// Should look down Z-axis
+		REQUIRE_THAT( position.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( position.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( position.z, WithinAbs( 10.0f, 0.001f ) );
+		
+		// Should look at origin
+		REQUIRE_THAT( target.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should have Y-forward when looking down
+		REQUIRE_THAT( up.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.y, WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( up.z, WithinAbs( 0.0f, 0.001f ) );
+	}
+
+	SECTION( "Front view camera positioning" )
+	{
+		Viewport viewport( ViewportType::Front );
+		const auto* camera = viewport.getCamera();
+
+		const auto& position = camera->getPosition();
+		const auto& target = camera->getTarget();
+		const auto& up = camera->getUp();
+		
+		// Should look down Y-axis
+		REQUIRE_THAT( position.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( position.y, WithinAbs( 10.0f, 0.001f ) );
+		REQUIRE_THAT( position.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should look at origin
+		REQUIRE_THAT( target.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should have Z-up
+		REQUIRE_THAT( up.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.z, WithinAbs( 1.0f, 0.001f ) );
+	}
+
+	SECTION( "Side view camera positioning" )
+	{
+		Viewport viewport( ViewportType::Side );
+		const auto* camera = viewport.getCamera();
+
+		const auto& position = camera->getPosition();
+		const auto& target = camera->getTarget();
+		const auto& up = camera->getUp();
+		
+		// Should look down X-axis
+		REQUIRE_THAT( position.x, WithinAbs( 10.0f, 0.001f ) );
+		REQUIRE_THAT( position.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( position.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should look at origin
+		REQUIRE_THAT( target.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( target.z, WithinAbs( 0.0f, 0.001f ) );
+		
+		// Should have Z-up
+		REQUIRE_THAT( up.x, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( up.z, WithinAbs( 1.0f, 0.001f ) );
+	}
+}
+
+TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
+{
+	SECTION( "Picking ray from center of viewport" )
+	{
+		Viewport viewport( ViewportType::Perspective );
+		viewport.setRenderTargetSize( 800, 600 );
+		
+		// Get picking ray from center of screen
+		const auto ray = viewport.getPickingRay( math::Vec2<>( 400.0f, 300.0f ) );
+		
+		// Ray should have valid origin and direction
+		REQUIRE( length( ray.direction ) > 0.99f ); // Should be normalized
+		REQUIRE( length( ray.direction ) < 1.01f );
+	}
+
+	SECTION( "Picking rays from different screen positions" )
+	{
+		Viewport viewport( ViewportType::Perspective );
+		viewport.setRenderTargetSize( 800, 600 );
+		
+		// Get rays from corners
+		const auto topLeftRay = viewport.getPickingRay( math::Vec2<>( 0.0f, 0.0f ) );
+		const auto topRightRay = viewport.getPickingRay( math::Vec2<>( 800.0f, 0.0f ) );
+		const auto bottomLeftRay = viewport.getPickingRay( math::Vec2<>( 0.0f, 600.0f ) );
+		const auto bottomRightRay = viewport.getPickingRay( math::Vec2<>( 800.0f, 600.0f ) );
+		
+		// All rays should have normalized directions
+		REQUIRE_THAT( length( topLeftRay.direction ), WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( length( topRightRay.direction ), WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( length( bottomLeftRay.direction ), WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( length( bottomRightRay.direction ), WithinAbs( 1.0f, 0.001f ) );
+		
+		// Rays from different positions should have different directions
+		REQUIRE( !( topLeftRay.direction.x == topRightRay.direction.x && 
+		            topLeftRay.direction.y == topRightRay.direction.y && 
+		            topLeftRay.direction.z == topRightRay.direction.z ) );
+		REQUIRE( !( topLeftRay.direction.x == bottomLeftRay.direction.x && 
+		            topLeftRay.direction.y == bottomLeftRay.direction.y && 
+		            topLeftRay.direction.z == bottomLeftRay.direction.z ) );
+	}
+
+	SECTION( "Orthographic viewport picking rays" )
+	{
+		Viewport viewport( ViewportType::Top );
+		viewport.setRenderTargetSize( 800, 600 );
+
+		const auto ray = viewport.getPickingRay( math::Vec2<>( 400.0f, 300.0f ) );
+
+		// For top view, rays should generally point downward (negative Z direction)
+		// (exact direction depends on camera setup, but should be consistent)
+		REQUIRE_THAT( length( ray.direction ), WithinAbs( 1.0f, 0.001f ) );
+	}
+}

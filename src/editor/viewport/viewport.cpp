@@ -359,6 +359,7 @@ void Viewport::initializeCamera()
 		m_controller = std::make_unique<camera::PerspectiveCameraController>( static_cast<camera::PerspectiveCamera *>( m_camera.get() ) );
 		m_camera->setPosition( { 5, 5, 5 } );
 		m_camera->setTarget( { 0, 0, 0 } );
+		m_camera->setUp( { 0, 0, 1 } ); // Z-up coordinate system for perspective
 	}
 	break;
 
@@ -367,14 +368,9 @@ void Viewport::initializeCamera()
 	case ViewportType::Side: {
 		m_camera = std::make_unique<camera::OrthographicCamera>( ViewportUtils::getCameraViewType( m_type ) );
 		m_controller = std::make_unique<camera::OrthographicCameraController>( static_cast<camera::OrthographicCamera *>( m_camera.get() ) );
-		setupOrthographicView();
+		setupOrthographicView(); // Sets up per-view up vectors
 	}
 	break;
-	}
-
-	if ( m_camera )
-	{
-		m_camera->setUp( { 0, 0, 1 } ); // Z-up coordinate system
 	}
 }
 

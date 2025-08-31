@@ -68,6 +68,10 @@ public:
 	// Check if user requested to exit via menu
 	bool shouldExit() const;
 
+	// Viewport management
+	Viewport *getViewport( ViewportType type );
+	const Viewport *getViewport( ViewportType type ) const;
+
 private:
 	ViewportLayout m_layout;
 	bool m_initialized = false;
