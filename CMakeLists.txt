@@ -176,6 +176,9 @@ target_sources(platform.win32 PUBLIC
     src/platform/win32/win32_window.cpp
 )
 target_compile_features(platform.win32 PUBLIC cxx_std_23)
+target_link_libraries(platform.win32 PRIVATE 
+  imgui::imgui
+)
 
 add_library(editor.ui)
 target_sources(editor.ui PUBLIC

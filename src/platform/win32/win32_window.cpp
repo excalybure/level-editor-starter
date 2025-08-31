@@ -6,9 +6,16 @@ module;
 #include <windows.h>
 #include <windowsx.h>
 #include <string>
+#include "imgui.h"
+#include "imgui_impl_win32.h"
 #endif
 
 module platform.win32.win32_window;
+
+#if defined( _WIN32 )
+// Forward declare the ImGui Win32 message handler
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 namespace platform
 {
@@ -131,6 +138,10 @@ void Win32Window::addEvent( const WindowEvent &event )
 #if defined( _WIN32 )
 LRESULT CALLBACK Win32Window::windowProc( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
+	// Forward messages to ImGui first
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+		return true;
+
 	Win32Window *window = nullptr;
 
 	if ( msg == WM_NCCREATE )
