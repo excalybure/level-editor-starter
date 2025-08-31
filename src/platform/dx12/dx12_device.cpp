@@ -8,6 +8,7 @@ module;
 #include <wrl.h>
 #include <windows.h>
 #include <comdef.h>
+// ImGui headers (render integration moved here so we can issue draw calls on the active command list)
 
 module platform.dx12;
 
@@ -162,6 +163,7 @@ void Device::endFrame()
 	{
 		return; // headless/uninitialized no-op
 	}
+
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -187,23 +189,8 @@ void Device::present()
 	{
 		return; // headless/uninitialized no-op
 	}
-	// Transition back to present state
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = m_renderTargets[m_frameIndex].Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	m_commandList->ResourceBarrier( 1, &barrier );
-
-	// Execute command list
-	throwIfFailed( m_commandList->Close() );
-	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
-	m_commandQueue->ExecuteCommandLists( _countof( ppCommandLists ), ppCommandLists );
-
-	// Present
+	// Command list already transitioned to PRESENT, closed and executed in endFrame().
+	// Simply present the swap chain.
 	throwIfFailed( m_swapChain->Present( 1, 0 ) );
 
 	// Wait for frame to complete

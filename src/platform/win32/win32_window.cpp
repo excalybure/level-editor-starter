@@ -58,7 +58,7 @@ bool Win32Window::create( const char *title, int width, int height )
 	AdjustWindowRect( &rect, WS_OVERLAPPEDWINDOW, FALSE );
 
 	// Convert title to wide string
-	int title_len = MultiByteToWideChar( CP_UTF8, 0, title, -1, nullptr, 0 );
+	const int title_len = MultiByteToWideChar( CP_UTF8, 0, title, -1, nullptr, 0 );
 	std::wstring wide_title( title_len, 0 );
 	MultiByteToWideChar( CP_UTF8, 0, title, -1, wide_title.data(), title_len );
 

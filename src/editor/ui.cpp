@@ -1,4 +1,5 @@
 // Include ImGui implementation in the global module fragment to avoid conflicts
+module; // start global module fragment so we can include headers before the module declaration
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
@@ -25,14 +26,14 @@ Vec2 from_imgui_vec2( const ImVec2 &v )
 // Implementation details hidden using pImpl pattern
 struct UI::Impl
 {
-	ImGuiID dockspace_id = 0;
-	bool first_layout = true;
+	ImGuiID dockspaceId = 0;
+	bool firstLayout = true;
 
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout );
 
 	// Setup initial docked layout
-	void setupInitialLayout( ImGuiID dockspace_id );
+	void setupInitialLayout( ImGuiID inDockspaceId );
 
 	// Render viewport windows
 	void renderViewportWindows( ViewportLayout &layout );
@@ -137,13 +138,10 @@ void UI::endFrame()
 	// End the dockspace
 	ImGui::End(); // End dockspace window
 
-	// Rendering
+	// Finalize ImGui command lists
 	ImGui::Render();
 
-	// Note: ImGui_ImplDX12_RenderDrawData should be called by the graphics system
-	// after setting up the command list properly. For now, we'll skip this.
-
-	// Update and Render additional Platform Windows
+	// Platform windows (multi-viewport) need to be updated before the caller records ImGui draw data
 	ImGuiIO &io = ImGui::GetIO();
 	if ( io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
 	{
@@ -193,16 +191,15 @@ void UI::Impl::setupDockspace( ViewportLayout &layout )
 	ImGui::PopStyleVar( 3 );
 
 	// Create the dockspace
-	ImGuiID dockspace_id = ImGui::GetID( "LevelEditorDockspace" );
-	this->dockspace_id = dockspace_id;
+	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
 
-	ImGui::DockSpace( dockspace_id, ImVec2( 0.0f, 0.0f ), ImGuiDockNodeFlags_None );
+	ImGui::DockSpace( dockspaceId, ImVec2( 0.0f, 0.0f ), ImGuiDockNodeFlags_None );
 
 	// Setup initial layout on first run
-	if ( first_layout )
+	if ( firstLayout )
 	{
-		setupInitialLayout( dockspace_id );
-		first_layout = false;
+		setupInitialLayout( dockspaceId );
+		firstLayout = false;
 	}
 
 	// Add menu bar
@@ -246,7 +243,7 @@ void UI::Impl::setupDockspace( ViewportLayout &layout )
 	}
 }
 
-void UI::Impl::setupInitialLayout( ImGuiID dockspace_id )
+void UI::Impl::setupInitialLayout( [[maybe_unused]] ImGuiID inDockspaceId )
 {
 	// For now, just use the default ImGui docking behavior
 	// In a full implementation, you would use ImGui::DockBuilderXXX functions
@@ -272,41 +269,41 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 	if ( ImGui::Begin( pane.name, const_cast<bool *>( &pane.isOpen ) ) )
 	{
 		// Get the content region size
-		ImVec2 content_size = ImGui::GetContentRegionAvail();
+		const ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
 		// For now, just show placeholder content
-		const char *viewport_info = "";
+		const char *viewporInfo = "";
 		switch ( pane.type )
 		{
 		case ViewportType::Perspective:
-			viewport_info = "3D Perspective View\nCamera controls: Mouse to orbit, WASD to move";
+			viewporInfo = "3D Perspective View\nCamera controls: Mouse to orbit, WASD to move";
 			break;
 		case ViewportType::Top:
-			viewport_info = "Top View (XY Plane)\nLooking down Z-axis";
+			viewporInfo = "Top View (XY Plane)\nLooking down Z-axis";
 			break;
 		case ViewportType::Front:
-			viewport_info = "Front View (XZ Plane)\nLooking down Y-axis";
+			viewporInfo = "Front View (XZ Plane)\nLooking down Y-axis";
 			break;
 		case ViewportType::Side:
-			viewport_info = "Side View (YZ Plane)\nLooking down X-axis";
+			viewporInfo = "Side View (YZ Plane)\nLooking down X-axis";
 			break;
 		}
 
 		// Center the text in the viewport
-		ImVec2 text_size = ImGui::CalcTextSize( viewport_info );
-		ImVec2 center = ImVec2(
-			( content_size.x - text_size.x ) * 0.5f,
-			( content_size.y - text_size.y ) * 0.5f );
+		const ImVec2 text_size = ImGui::CalcTextSize( viewporInfo );
+		const ImVec2 center = ImVec2(
+			( contentSize.x - text_size.x ) * 0.5f,
+			( contentSize.y - text_size.y ) * 0.5f );
 
 		ImGui::SetCursorPos( center );
-		ImGui::TextUnformatted( viewport_info );
+		ImGui::TextUnformatted( viewporInfo );
 
 		// TODO: Render actual 3D viewport content here
 		// This is where we'll integrate the Viewport class from editor.viewport
 
 		// Show viewport dimensions for debugging
 		ImGui::SetCursorPos( ImVec2( 5, 5 ) );
-		ImGui::Text( "Size: %.0fx%.0f", content_size.x, content_size.y );
+		ImGui::Text( "Size: %.0fx%.0f", contentSize.x, contentSize.y );
 	}
 	ImGui::End();
 }
