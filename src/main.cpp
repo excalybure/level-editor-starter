@@ -1,4 +1,5 @@
 import runtime.app;
+import runtime.console;
 import platform.win32.win32_window;
 import platform.dx12;
 import editor.ui;
@@ -6,11 +7,17 @@ import editor.ui;
 
 int main()
 {
+	// Test the console module
+	console::info( "Level Editor starting up..." );
+	console::debug( "Testing debug messages" );
+	console::warning( "This is a warning message" );
+	console::error( "This is an error message (but not fatal)" );
+
 	// Create the window
 	platform::Win32Window window;
 	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )
 	{
-		std::cerr << "Failed to create window\n";
+		console::fatal( "Failed to create window" );
 		return 1;
 	}
 
@@ -18,7 +25,7 @@ int main()
 	dx12::Device device;
 	if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
 	{
-		std::cerr << "Failed to initialize D3D12 device\n";
+		console::fatal( "Failed to initialize D3D12 device" );
 		return 1;
 	}
 

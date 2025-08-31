@@ -168,6 +168,15 @@ target_sources(runtime.app PUBLIC
 )
 target_compile_features(runtime.app PUBLIC cxx_std_23)
 
+add_library(runtime.console)
+target_sources(runtime.console PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/console.ixx
+  PRIVATE
+    src/runtime/console.cpp
+)
+target_compile_features(runtime.console PUBLIC cxx_std_23)
+
 add_library(platform.win32)
 target_sources(platform.win32 PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -244,7 +253,7 @@ target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.cam
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui
+  engine.vec engine.matrix runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 
@@ -254,7 +263,7 @@ if (MSVC)
     engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
     engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
     engine.math_2d engine.math_3d engine.renderer engine.camera
-    runtime.ecs runtime.app platform.win32 platform.dx12 editor.ui editor.viewport)
+    runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui editor.viewport)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -301,6 +310,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   tests/integration_tests.cpp
   tests/ui_tests.cpp
   tests/win32_window_tests.cpp
+  tests/console_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -321,6 +331,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     editor.viewport
   runtime.ecs
   runtime.app
+  runtime.console
   editor.ui
   platform.win32
     Catch2::Catch2WithMain
