@@ -14,10 +14,10 @@
             "preLaunchTask": "CMake: Build All (Debug)"
         },
         {
-            "name": "Debug Math Tests",
+            "name": "Debug unit_test_runner",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/vs2022-x64/Debug/math_tests.exe",
+            "program": "${workspaceFolder}/build/vs2022-x64/Debug/unit_test_runner.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

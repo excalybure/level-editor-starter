@@ -2,6 +2,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 import platform.dx12;
+import runtime.console;
 
 // Utility to attempt headless initialization and emit a WARN then early-return from a test section
 // Usage:
@@ -12,8 +13,8 @@ inline bool requireHeadlessDevice( dx12::Device &device, const char *context = n
 	if ( device.initializeHeadless() )
 		return true;
 	if ( context )
-		WARN( "Skipping " << context << ": headless device initialization failed" );
+		console::error( "Skipping {}: headless device initialization failed", context );
 	else
-		WARN( "Skipping test: headless device initialization failed" );
+		console::error( "Skipping test: headless device initialization failed" );
 	return false;
 }

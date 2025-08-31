@@ -1,10 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include "test_dx12_helpers.h"
 
 // Test the integration between UI and Viewport systems
 import editor.ui;
 import editor.viewport;
 import engine.vec;
+import platform.dx12;
 
 using namespace editor;
 using namespace math;
@@ -12,10 +14,98 @@ using Catch::Matchers::WithinAbs;
 
 TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][viewport]" )
 {
-	UI ui;
+	SECTION( "UI basic functionality in headless mode" )
+	{
+		// Test basic UI functionality that doesn't require full initialization
+		UI ui;
+
+		// Test that getViewport returns nullptr before initialization (safe behavior)
+		REQUIRE( ui.getViewport( ViewportType::Perspective ) == nullptr );
+		REQUIRE( ui.getViewport( ViewportType::Top ) == nullptr );
+		REQUIRE( ui.getViewport( ViewportType::Front ) == nullptr );
+		REQUIRE( ui.getViewport( ViewportType::Side ) == nullptr );
+
+		// Test that layout is available even without initialization
+		const auto &layout = ui.getLayout();
+		REQUIRE( layout.panes.size() == 4 ); // Should have 4 viewport panes
+
+		// Verify all expected viewport types are in layout
+		bool foundPerspective = false, foundTop = false, foundFront = false, foundSide = false;
+		for ( const auto &pane : layout.panes )
+		{
+			switch ( pane.type )
+			{
+			case ViewportType::Perspective:
+				foundPerspective = true;
+				break;
+			case ViewportType::Top:
+				foundTop = true;
+				break;
+			case ViewportType::Front:
+				foundFront = true;
+				break;
+			case ViewportType::Side:
+				foundSide = true;
+				break;
+			}
+
+			// Each pane should have a non-empty name
+			REQUIRE( std::string( pane.name ).length() > 0 );
+		}
+
+		REQUIRE( foundPerspective );
+		REQUIRE( foundTop );
+		REQUIRE( foundFront );
+		REQUIRE( foundSide );
+	}
+
+	SECTION( "UI initialization requires valid parameters" )
+	{
+		UI ui;
+		dx12::Device device;
+
+		// Should fail with null window handle
+		REQUIRE_FALSE( ui.initialize( nullptr, &device ) );
+
+		// Should fail with null device
+		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 );
+		REQUIRE_FALSE( ui.initialize( dummyHwnd, nullptr ) );
+
+		// Should fail with both null
+		REQUIRE_FALSE( ui.initialize( nullptr, nullptr ) );
+	}
+
+	SECTION( "UI layout structure is consistent" )
+	{
+		UI ui;
+		const auto &layout = ui.getLayout();
+
+		// Layout should have exactly 4 viewport panes
+		REQUIRE( layout.panes.size() == 4 );
+
+		// Every pane should have a valid type and name
+		for ( const auto &pane : layout.panes )
+		{
+			// Verify type is valid
+			REQUIRE( ( pane.type == ViewportType::Perspective ||
+				pane.type == ViewportType::Top ||
+				pane.type == ViewportType::Front ||
+				pane.type == ViewportType::Side ) );
+
+			// Verify name is not empty
+			REQUIRE( std::string( pane.name ).length() > 0 );
+		}
+	}
 
 	SECTION( "All viewports have proper camera setup through UI" )
 	{
+		dx12::Device device;
+		REQUIRE( requireHeadlessDevice( device, "All viewports have proper camera setup through UI" ) );
+
+		UI ui;
+		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
+		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+
 		// Test that UI-managed viewports have properly configured cameras
 		const ViewportType types[] = {
 			ViewportType::Perspective,
@@ -50,7 +140,15 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 	SECTION( "Viewport state changes persist through UI access" )
 	{
+		dx12::Device device;
+		REQUIRE( requireHeadlessDevice( device, "Viewport state changes persist through UI access" ) );
+
+		UI ui;
+		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
+		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+
 		auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		REQUIRE( perspectiveViewport != nullptr );
 
 		// Change viewport state
 		perspectiveViewport->setActive( true );
@@ -72,6 +170,13 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 	SECTION( "UI layout consistency with viewport types" )
 	{
+		dx12::Device device;
+		REQUIRE( requireHeadlessDevice( device, "UI layout consistency with viewport types" ) );
+
+		UI ui;
+		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
+		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+
 		const auto &layout = ui.getLayout();
 
 		// Every pane in the layout should have a corresponding viewport

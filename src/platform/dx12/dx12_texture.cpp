@@ -182,7 +182,10 @@ bool Texture::clearRenderTarget( Device *device, const float clearColor[4] )
 bool TextureManager::initialize( Device *device )
 {
 	if ( !device )
+	{
+		console::error( "TextureManager::initialize: Invalid device (device == nullptr)" );
 		return false;
+	}
 
 	m_device = device;
 
@@ -207,8 +210,9 @@ bool TextureManager::initialize( Device *device )
 
 		return true;
 	}
-	catch ( const std::exception & )
+	catch ( const std::exception &e )
 	{
+		console::error( "TextureManager::initialize: Failed to create RTV heap ({})", e.what() );
 		return false;
 	}
 }
@@ -235,6 +239,12 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	if ( width == 0 || height == 0 )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: Invalid dimensions {}x{}", width, height );
+		return nullptr;
+	}
+
+	if ( !m_srvHeap )
+	{
+		console::error( "TextureManager::createViewportRenderTarget: SRV heap is null" );
 		return nullptr;
 	}
 

@@ -65,6 +65,7 @@ bool Device::initializeHeadless()
 		findAdapter();
 		createDevice();
 		createCommandObjects();
+		createDescriptorHeaps(); // Add descriptor heaps for headless mode
 		createSynchronizationObjects();
 
 		// Initialize texture manager even in headless mode for viewport render targets
@@ -75,8 +76,9 @@ bool Device::initializeHeadless()
 
 		return true;
 	}
-	catch ( const std::exception & )
+	catch ( const std::exception &e )
 	{
+		console::error( "Device::initializeHeadless: Failed because {}", e.what() );
 		return false;
 	}
 }
@@ -112,8 +114,9 @@ bool Device::initialize( HWND window_handle )
 
 		return true;
 	}
-	catch ( const std::exception & )
+	catch ( const std::exception &e )
 	{
+		console::error( "Device::initialize: Failed because {}", e.what() );
 		return false;
 	}
 }

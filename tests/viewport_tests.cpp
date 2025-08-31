@@ -7,6 +7,9 @@
 #include <vector>
 
 import editor.viewport;
+import platform.dx12;
+
+#include "test_dx12_helpers.h"
 
 using namespace editor;
 using Catch::Matchers::WithinAbs;
@@ -195,18 +198,24 @@ TEST_CASE( "Viewport View Operations", "[viewport]" )
 
 TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 {
-	ViewportManager manager;
-
-	SECTION( "Create and destroy viewports" )
+	SECTION( "ViewportManager requires D3D12 initialization" )
 	{
+		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "ViewportManager Basic Operations" ) );
+		REQUIRE( manager.initialize( &device ) );
+
+		// Basic state checks should work after successful initialization
 		REQUIRE( manager.getViewports().empty() );
 		REQUIRE( manager.getActiveViewport() == nullptr );
 		REQUIRE( manager.getFocusedViewport() == nullptr );
 
+		// Test viewport creation
 		auto *viewport1 = manager.createViewport( ViewportType::Perspective );
 		REQUIRE( viewport1 != nullptr );
 		REQUIRE( manager.getViewports().size() == 1 );
-		REQUIRE( manager.getActiveViewport() == viewport1 ); // First viewport becomes active
+		REQUIRE( manager.getActiveViewport() == viewport1 );
 		REQUIRE( manager.getFocusedViewport() == viewport1 );
 
 		auto *viewport2 = manager.createViewport( ViewportType::Top );
@@ -223,8 +232,30 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		REQUIRE( manager.getActiveViewport() == nullptr );
 	}
 
+	SECTION( "ViewportManager handles null operations gracefully" )
+	{
+		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "ViewportManager null operations" ) );
+		REQUIRE( manager.initialize( &device ) );
+
+		// Should handle null operations without crashing
+		REQUIRE_NOTHROW( manager.destroyViewport( nullptr ) );
+		manager.setActiveViewport( nullptr );
+		manager.setFocusedViewport( nullptr );
+		REQUIRE( manager.getActiveViewport() == nullptr );
+		REQUIRE( manager.getFocusedViewport() == nullptr );
+	}
+
 	SECTION( "Active and focused viewport management" )
 	{
+		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "Active and focused viewport management" ) );
+		REQUIRE( manager.initialize( &device ) );
+
 		auto *viewport1 = manager.createViewport( ViewportType::Perspective );
 		auto *viewport2 = manager.createViewport( ViewportType::Top );
 
@@ -246,6 +277,12 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 	SECTION( "Update and render operations" )
 	{
+		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "Update and render operations" ) );
+		REQUIRE( manager.initialize( &device ) );
+
 		[[maybe_unused]] auto *viewport1 = manager.createViewport( ViewportType::Perspective );
 		[[maybe_unused]] auto *viewport2 = manager.createViewport( ViewportType::Top );
 
@@ -258,6 +295,10 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 {
 	ViewportManager manager;
+	dx12::Device device;
+
+	REQUIRE( requireHeadlessDevice( device, "ViewportFactory Standard Layout" ) );
+	REQUIRE( manager.initialize( &device ) );
 
 	SECTION( "Create standard 4-viewport layout" )
 	{
@@ -311,21 +352,21 @@ TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 {
 	SECTION( "Mouse events" )
 	{
-		auto moveEvent = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
+		const auto moveEvent = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
 		REQUIRE( moveEvent.type == ViewportInputEvent::Type::MouseMove );
 		REQUIRE( moveEvent.mouse.x == 100.0f );
 		REQUIRE( moveEvent.mouse.y == 200.0f );
 		REQUIRE( moveEvent.mouse.deltaX == 5.0f );
 		REQUIRE( moveEvent.mouse.deltaY == -3.0f );
 
-		auto buttonEvent = ViewportUtils::createMouseButtonEvent( 1, true, 150.0f, 250.0f );
+		const auto buttonEvent = ViewportUtils::createMouseButtonEvent( 1, true, 150.0f, 250.0f );
 		REQUIRE( buttonEvent.type == ViewportInputEvent::Type::MouseButton );
 		REQUIRE( buttonEvent.mouse.button == 1 );
 		REQUIRE( buttonEvent.mouse.pressed == true );
 		REQUIRE( buttonEvent.mouse.x == 150.0f );
 		REQUIRE( buttonEvent.mouse.y == 250.0f );
 
-		auto wheelEvent = ViewportUtils::createMouseWheelEvent( -120.0f, 300.0f, 400.0f );
+		const auto wheelEvent = ViewportUtils::createMouseWheelEvent( -120.0f, 300.0f, 400.0f );
 		REQUIRE( wheelEvent.type == ViewportInputEvent::Type::MouseWheel );
 		REQUIRE( wheelEvent.mouse.wheelDelta == -120.0f );
 		REQUIRE( wheelEvent.mouse.x == 300.0f );
@@ -334,14 +375,14 @@ TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 
 	SECTION( "Keyboard events" )
 	{
-		auto keyPress = ViewportUtils::createKeyEvent( 'A', true, true, false, true );
+		const auto keyPress = ViewportUtils::createKeyEvent( 'A', true, true, false, true );
 		REQUIRE( keyPress.type == ViewportInputEvent::Type::KeyPress );
 		REQUIRE( keyPress.keyboard.keyCode == 'A' );
 		REQUIRE( keyPress.keyboard.shift == true );
 		REQUIRE( keyPress.keyboard.ctrl == false );
 		REQUIRE( keyPress.keyboard.alt == true );
 
-		auto keyRelease = ViewportUtils::createKeyEvent( 'B', false, false, true, false );
+		const auto keyRelease = ViewportUtils::createKeyEvent( 'B', false, false, true, false );
 		REQUIRE( keyRelease.type == ViewportInputEvent::Type::KeyRelease );
 		REQUIRE( keyRelease.keyboard.keyCode == 'B' );
 		REQUIRE( keyRelease.keyboard.ctrl == true );
@@ -351,7 +392,7 @@ TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 
 	SECTION( "Resize events" )
 	{
-		auto resizeEvent = ViewportUtils::createResizeEvent( 1280, 720 );
+		const auto resizeEvent = ViewportUtils::createResizeEvent( 1280, 720 );
 		REQUIRE( resizeEvent.type == ViewportInputEvent::Type::Resize );
 		REQUIRE( resizeEvent.resize.width == 1280 );
 		REQUIRE( resizeEvent.resize.height == 720 );
@@ -400,6 +441,10 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 	SECTION( "Manager with no viewports" )
 	{
 		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "Manager with no viewports" ) );
+		REQUIRE( manager.initialize( &device ) );
 
 		// Should handle gracefully
 		REQUIRE_NOTHROW( manager.update( 0.016f ) );
@@ -415,6 +460,10 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 	SECTION( "Destroy null viewport" )
 	{
 		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "Destroy null viewport" ) );
+		REQUIRE( manager.initialize( &device ) );
 
 		// Should not crash
 		REQUIRE_NOTHROW( manager.destroyViewport( nullptr ) );
@@ -426,6 +475,10 @@ TEST_CASE( "Viewport Types Coverage", "[viewport][types]" )
 	SECTION( "All viewport types can be created" )
 	{
 		ViewportManager manager;
+		dx12::Device device;
+
+		REQUIRE( requireHeadlessDevice( device, "All viewport types can be created" ) );
+		REQUIRE( manager.initialize( &device ) );
 
 		const auto *perspective = manager.createViewport( ViewportType::Perspective );
 		const auto *top = manager.createViewport( ViewportType::Top );
