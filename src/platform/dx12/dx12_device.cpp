@@ -207,7 +207,7 @@ void Device::present()
 	}
 	// Command list already transitioned to PRESENT, closed and executed in endFrame().
 	// Simply present the swap chain.
-	throwIfFailed( m_swapChain->Present( 1, 0 ) );
+	throwIfFailed( m_swapChain->Present( 1, 0 ), m_device.Get() );
 
 	// Wait for frame to complete
 	waitForPreviousFrame();
@@ -340,10 +340,11 @@ void Device::createDescriptorHeaps()
 
 	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
-	// Create ImGui descriptor heap
+	// Create ImGui descriptor heap - reserve indices 16+ for viewport textures
+	// ImGui uses index 0 for font texture, we reserve 16-79 for 64 viewport textures
 	D3D12_DESCRIPTOR_HEAP_DESC imguiDesc = {};
 	imguiDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	imguiDesc.NumDescriptors = 1;
+	imguiDesc.NumDescriptors = 80; // 16 reserved for ImGui + 64 for viewport textures
 	imguiDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	throwIfFailed( m_device->CreateDescriptorHeap( &imguiDesc, IID_PPV_ARGS( &m_imguiDescriptorHeap ) ) );
 }

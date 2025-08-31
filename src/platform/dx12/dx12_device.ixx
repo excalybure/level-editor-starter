@@ -7,6 +7,8 @@ module;
 #include <DirectXMath.h>
 #include <wrl.h>
 #include <windows.h>
+#include <cstdio>
+#include <stdexcept>
 
 export module platform.dx12;
 
@@ -28,11 +30,25 @@ class Texture;
 class TextureManager;
 
 // Helper function to check HRESULT
-inline void throwIfFailed( HRESULT hr )
+inline void throwIfFailed( HRESULT hr, ID3D12Device *device = nullptr )
 {
 	if ( FAILED( hr ) )
 	{
-		throw std::runtime_error( "D3D12 operation failed" );
+		char errorMsg[512];
+
+		// Check if it's a device removed error and get more info
+		if ( hr == DXGI_ERROR_DEVICE_REMOVED && device )
+		{
+			HRESULT removedReason = device->GetDeviceRemovedReason();
+			sprintf_s( errorMsg, "D3D12 DEVICE REMOVED! HRESULT: 0x%08X, Removal Reason: 0x%08X", hr, removedReason );
+		}
+		else
+		{
+			sprintf_s( errorMsg, "D3D12 operation failed with HRESULT: 0x%08X", hr );
+		}
+
+		printf( "%s\n", errorMsg );
+		throw std::runtime_error( errorMsg );
 	}
 }
 
@@ -55,10 +71,13 @@ public:
 		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM );
 
 	// Create shader resource view for ImGui integration
-	bool createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle );
+	bool createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle );
 
 	// Resize the texture (recreates the resource)
 	bool resize( Device *device, UINT width, UINT height );
+
+	// Clear the render target texture with a solid color
+	bool clearRenderTarget( Device *device, const float clearColor[4] );
 
 	// Resource access
 	ID3D12Resource *getResource() const { return m_resource.Get(); }
@@ -74,12 +93,13 @@ public:
 	// Resource state management
 	void transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOURCE_STATES newState );
 
-	// Allow TextureManager to access private members
+	// Allow TextureManager to access private members for GPU handle management
 	friend class TextureManager;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_resource;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE m_srvCpuHandle = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE m_srvGpuHandle = {};
 
 	UINT m_width = 0;
@@ -107,6 +127,10 @@ public:
 	// Get next available SRV descriptor handle
 	D3D12_CPU_DESCRIPTOR_HANDLE getNextSrvHandle();
 
+	// Constants
+	static const UINT kMaxTextures = 64;	// Support up to 64 viewport render targets
+	static const UINT kSrvIndexOffset = 16; // Start our textures at index 16 to avoid ImGui conflicts
+
 private:
 	Device *m_device = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
@@ -116,8 +140,6 @@ private:
 	UINT m_srvDescriptorSize = 0;
 	UINT m_currentRtvIndex = 0;
 	UINT m_currentSrvIndex = 0;
-
-	static const UINT kMaxTextures = 64; // Support up to 64 viewport render targets
 };
 
 // D3D12 Device wrapper

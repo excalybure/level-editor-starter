@@ -64,6 +64,14 @@ bool Viewport::createRenderTarget( dx12::Device *device, int width, int height )
 	return true;
 }
 
+bool Viewport::clearRenderTarget( dx12::Device *device, const float clearColor[4] )
+{
+	if ( !m_renderTarget || !device )
+		return false;
+
+	return m_renderTarget->clearRenderTarget( device, clearColor );
+}
+
 void *Viewport::getImGuiTextureId() const noexcept
 {
 	return m_renderTarget ? m_renderTarget->getImGuiTextureId() : nullptr;

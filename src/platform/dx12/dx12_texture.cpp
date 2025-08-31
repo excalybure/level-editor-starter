@@ -5,6 +5,8 @@ module;
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <windows.h>
+#include <cstdio> // For printf debugging
+#include <cassert>
 
 module platform.dx12;
 
@@ -15,8 +17,17 @@ namespace dx12
 
 bool Texture::createRenderTarget( Device *device, UINT width, UINT height, DXGI_FORMAT format )
 {
-	if ( !device || width == 0 || height == 0 )
+	if ( !device )
+	{
+		printf( "Texture::createRenderTarget: Device is null\n" );
 		return false;
+	}
+
+	if ( width == 0 || height == 0 )
+	{
+		printf( "Texture::createRenderTarget: Invalid dimensions %ux%u\n", width, height );
+		return false;
+	}
 
 	m_device = device;
 	m_width = width;
@@ -72,10 +83,13 @@ bool Texture::createRenderTarget( Device *device, UINT width, UINT height, DXGI_
 	}
 }
 
-bool Texture::createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle )
+bool Texture::createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle )
 {
 	if ( !device || !m_resource )
+	{
+		printf( "Texture::createShaderResourceView: Invalid device (%p) or resource (%p)\n", device, m_resource.Get() );
 		return false;
+	}
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -84,20 +98,10 @@ bool Texture::createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HAN
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 
-	device->get()->CreateShaderResourceView( m_resource.Get(), &srvDesc, srvHandle );
+	// Create the shader resource view
+	device->get()->CreateShaderResourceView( m_resource.Get(), &srvDesc, srvCpuHandle );
 
-	// Convert CPU handle to GPU handle for ImGui
-	// Note: This requires the SRV heap to be shader visible
-	ID3D12DescriptorHeap *srvHeap = device->getImguiDescriptorHeap();
-	if ( srvHeap )
-	{
-		D3D12_GPU_DESCRIPTOR_HANDLE gpuHandleStart = srvHeap->GetGPUDescriptorHandleForHeapStart();
-		D3D12_CPU_DESCRIPTOR_HANDLE cpuHandleStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
-
-		UINT64 offset = srvHandle.ptr - cpuHandleStart.ptr;
-		m_srvGpuHandle.ptr = gpuHandleStart.ptr + offset;
-	}
-
+	// GPU handle will be set by TextureManager after this call
 	return true;
 }
 
@@ -116,7 +120,21 @@ bool Texture::resize( Device *device, UINT width, UINT height )
 	m_resource.Reset();
 
 	// Create new resource with new dimensions
-	return createRenderTarget( device, width, height, m_format );
+	if ( !createRenderTarget( device, width, height, m_format ) )
+		return false;
+
+	// Update the SRV to point to the new resource
+	assert( m_srvCpuHandle.ptr != 0 );
+	if ( m_srvCpuHandle.ptr != 0 )
+	{
+		if ( !createShaderResourceView( device, m_srvCpuHandle ) )
+		{
+			printf( "Texture::resize: Failed to update SRV!\n" );
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void Texture::transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOURCE_STATES newState )
@@ -134,6 +152,28 @@ void Texture::transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOUR
 
 	commandList->ResourceBarrier( 1, &barrier );
 	m_currentState = newState;
+}
+
+bool Texture::clearRenderTarget( Device *device, const float clearColor[4] )
+{
+	if ( !device || !m_resource || m_rtvHandle.ptr == 0 )
+		return false;
+
+	// Get command list
+	ID3D12GraphicsCommandList *commandList = device->getCommandList();
+	if ( !commandList )
+		return false;
+
+	// Transition to render target state if needed
+	transitionTo( commandList, D3D12_RESOURCE_STATE_RENDER_TARGET );
+
+	// Set render target (needed for clearing)
+	commandList->OMSetRenderTargets( 1, &m_rtvHandle, FALSE, nullptr );
+
+	// Clear the render target
+	commandList->ClearRenderTargetView( m_rtvHandle, clearColor, 0, nullptr );
+
+	return true;
 }
 
 // TextureManager implementation
@@ -155,14 +195,13 @@ bool TextureManager::initialize( Device *device )
 		throwIfFailed( device->get()->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
 		m_rtvDescriptorSize = device->get()->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
-		// Create SRV descriptor heap for shader resource views (ImGui textures)
-		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-		srvHeapDesc.NumDescriptors = kMaxTextures;
-		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-		throwIfFailed( device->get()->CreateDescriptorHeap( &srvHeapDesc, IID_PPV_ARGS( &m_srvHeap ) ) );
+		// Use ImGui's descriptor heap but reserve indices safely
+		// ImGui typically uses index 0 for font texture, we'll start from index 16 for safety
+		m_srvHeap = device->getImguiDescriptorHeap();
 		m_srvDescriptorSize = device->get()->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+
+		m_currentRtvIndex = 0;
+		m_currentSrvIndex = 0;
 
 		return true;
 	}
@@ -174,7 +213,8 @@ bool TextureManager::initialize( Device *device )
 
 void TextureManager::shutdown()
 {
-	m_srvHeap.Reset();
+	// Don't reset m_srvHeap since we don't own it (it's ImGui's heap)
+	m_srvHeap = nullptr;
 	m_rtvHeap.Reset();
 	m_device = nullptr;
 	m_currentRtvIndex = 0;
@@ -183,14 +223,37 @@ void TextureManager::shutdown()
 
 std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width, UINT height )
 {
-	if ( !m_device || m_currentRtvIndex >= kMaxTextures || m_currentSrvIndex >= kMaxTextures )
+	// Validate input parameters
+	if ( !m_device )
+	{
+		printf( "TextureManager::createViewportRenderTarget: Device is null\n" );
 		return nullptr;
+	}
+
+	if ( width == 0 || height == 0 )
+	{
+		printf( "TextureManager::createViewportRenderTarget: Invalid dimensions %ux%u\n", width, height );
+		return nullptr;
+	}
+
+	if ( m_currentRtvIndex >= kMaxTextures || m_currentSrvIndex >= kMaxTextures )
+	{
+		printf( "TextureManager::createViewportRenderTarget: Descriptor heap full (RTV: %u/%u, SRV: %u/%u)\n",
+			m_currentRtvIndex,
+			kMaxTextures,
+			m_currentSrvIndex,
+			kMaxTextures );
+		return nullptr;
+	}
 
 	auto texture = std::make_shared<Texture>();
 
 	// Create the render target
 	if ( !texture->createRenderTarget( m_device, width, height ) )
+	{
+		printf( "TextureManager::createViewportRenderTarget: Failed to create render target %ux%u\n", width, height );
 		return nullptr;
+	}
 
 	// Get RTV handle
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -201,11 +264,24 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	texture->m_rtvHandle = rtvHandle;
 
 	// Get SRV handle and create shader resource view
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
-	srvHandle.ptr += m_currentSrvIndex * m_srvDescriptorSize;
+	D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+	srvCpuHandle.ptr += ( kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
 
-	if ( !texture->createShaderResourceView( m_device, srvHandle ) )
+	if ( !texture->createShaderResourceView( m_device, srvCpuHandle ) )
 		return nullptr;
+
+	// Store the SRV CPU handle for future updates during resize
+	texture->m_srvCpuHandle = srvCpuHandle;
+
+	// Calculate GPU handle for ImGui using ImGui's heap
+	const D3D12_GPU_DESCRIPTOR_HANDLE gpuHandleStart = m_srvHeap->GetGPUDescriptorHandleForHeapStart();
+	const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandleStart = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+	const UINT64 offset = srvCpuHandle.ptr - cpuHandleStart.ptr;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+	gpuHandle.ptr = gpuHandleStart.ptr + offset;
+
+	// Store the GPU handle in the texture (need to add this to the texture class)
+	texture->m_srvGpuHandle = gpuHandle;
 
 	++m_currentRtvIndex;
 	++m_currentSrvIndex;
@@ -219,7 +295,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureManager::getNextSrvHandle()
 		return {};
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += m_currentSrvIndex * m_srvDescriptorSize;
+	handle.ptr += ( kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
 	return handle;
 }
 

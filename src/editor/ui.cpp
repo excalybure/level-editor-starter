@@ -6,6 +6,7 @@ module; // start global module fragment so we can include headers before the mod
 #include "imgui_impl_dx12.h"
 #include <d3d12.h>
 #include <windows.h>
+#include <cstdio> // For printf debugging
 
 module editor.ui;
 
@@ -32,6 +33,9 @@ struct UI::Impl
 
 	// Viewport manager for coordinated viewport management
 	ViewportManager viewportManager;
+
+	// D3D12 device for render target operations
+	dx12::Device *device = nullptr;
 
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
@@ -352,23 +356,28 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 
 		if ( viewport )
 		{
-			// Update viewport size if it has changed
+			// Update viewport size if it has changed and is valid
 			const auto &currentSize = viewport->getSize();
-			if ( currentSize.x != static_cast<int>( contentSize.x ) ||
-				currentSize.y != static_cast<int>( contentSize.y ) )
+			const int newWidth = static_cast<int>( contentSize.x );
+			const int newHeight = static_cast<int>( contentSize.y );
+			const bool isValid = newWidth > 0 && newHeight > 0;
+
+			// Only update render target size if dimensions are valid (> 0)
+			if ( isValid && ( currentSize.x != newWidth || currentSize.y != newHeight ) )
 			{
-				viewport->setRenderTargetSize( static_cast<int>( contentSize.x ), static_cast<int>( contentSize.y ) );
+				// Set the viewport render target size
+				viewport->setRenderTargetSize( newWidth, newHeight );
 			}
 
 			// Check if this viewport has focus
-			bool hasFocus = ImGui::IsWindowFocused();
+			const bool hasFocus = ImGui::IsWindowFocused();
 			viewport->setFocused( hasFocus );
 			viewport->setActive( hasFocus );
 
 			// Get render target texture for ImGui rendering
 			void *textureHandle = viewport->getImGuiTextureId();
 
-			if ( textureHandle )
+			if ( isValid && textureHandle )
 			{
 				// Render the actual 3D viewport content
 				ImGui::Image( reinterpret_cast<ImTextureID>( textureHandle ), contentSize );

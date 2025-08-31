@@ -100,6 +100,7 @@ public:
 	void setRenderTargetSize( int width, int height );
 	void *getRenderTargetHandle() const noexcept { return m_renderTargetHandle; }
 	bool createRenderTarget( dx12::Device *device, int width, int height );
+	bool clearRenderTarget( dx12::Device *device, const float clearColor[4] );
 	void *getImGuiTextureId() const noexcept;
 
 	// Frame update and rendering

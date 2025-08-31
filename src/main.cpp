@@ -37,35 +37,52 @@ int main()
 
 	std::cout << "Starting Level Editor with ImGui Docking...\n";
 
-	// Main loop
-	while ( window.poll() && !ui.shouldExit() )
+	// Main loop with exception handling
+	try
 	{
-		// Begin D3D12 frame
-		device.beginFrame();
+		while ( window.poll() && !ui.shouldExit() )
+		{
+			// Begin D3D12 frame
+			device.beginFrame();
+			// Begin UI frame (sets up docking)
+			ui.beginFrame();
+			// End UI frame (renders ImGui)
+			ui.endFrame();
+			// Submit ImGui draw data to command list
+			ui.renderDrawData( static_cast<void *>( device.getCommandList() ) );
+			// End D3D12 frame
+			device.endFrame();
+			// Present D3D12 frame
+			device.present();
 
-		// Begin UI frame (sets up docking)
-		ui.beginFrame();
+			// App tick
+			app.tick();
+		}
+	}
+	catch ( const std::exception &e )
+	{
+		std::cerr << "Exception caught in main loop: " << e.what() << std::endl;
+		std::cerr << "Application will exit with error code 1" << std::endl;
 
-		// End UI frame (renders ImGui)
-		ui.endFrame();
+		// Cleanup before exit
+		ui.shutdown();
+		device.shutdown();
+		return 1;
+	}
+	catch ( ... )
+	{
+		std::cerr << "Unknown exception caught in main loop" << std::endl;
+		std::cerr << "Application will exit with error code 1" << std::endl;
 
-		// Submit ImGui draw data to command list
-		ui.renderDrawData( static_cast<void *>( device.getCommandList() ) );
-
-		// End D3D12 frame
-		device.endFrame();
-
-		// Present D3D12 frame
-		device.present();
-
-		// App tick
-		app.tick();
+		// Cleanup before exit
+		ui.shutdown();
+		device.shutdown();
+		return 1;
 	}
 
 	// Cleanup
 	ui.shutdown();
 	device.shutdown();
 
-	std::cout << "Exit level editor (ImGui docking integrated)\n";
 	return 0;
 }

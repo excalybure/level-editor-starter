@@ -10,7 +10,6 @@ REM Check if CMake is available
 cmake --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo ERROR: CMake is not installed or not in PATH
-    pause
     exit /b 1
 )
 
@@ -20,7 +19,6 @@ if not exist "build\vs2022-x64" (
     cmake --preset vs2022-x64
     if %errorlevel% neq 0 (
         echo ERROR: CMake configuration failed
-        pause
         exit /b 1
     )
 ) else (
@@ -32,7 +30,6 @@ if not exist "build\vs2022-x64" (
         cmake --preset vs2022-x64
         if %errorlevel% neq 0 (
             echo ERROR: CMake configuration failed
-            pause
             exit /b 1
         )
     )
@@ -43,7 +40,6 @@ echo Building project...
 cmake --build build\vs2022-x64 --config Debug
 if %errorlevel% neq 0 (
     echo ERROR: Build failed
-    pause
     exit /b 1
 )
 
