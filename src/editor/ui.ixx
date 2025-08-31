@@ -54,6 +54,8 @@ public:
 	// Frame management
 	void beginFrame();
 	void endFrame();
+	// Submit ImGui draw data to the provided D3D12 graphics command list
+	void renderDrawData( void *command_list );
 
 	// Get viewport layout configuration
 	const ViewportLayout &getLayout() const { return m_layout; }

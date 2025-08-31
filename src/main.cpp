@@ -50,6 +50,9 @@ int main()
 		// End UI frame (renders ImGui)
 		ui.endFrame();
 
+		// Submit ImGui draw data to command list
+		ui.renderDrawData( static_cast<void *>( device.getCommandList() ) );
+
 		// End D3D12 frame
 		device.endFrame();
 

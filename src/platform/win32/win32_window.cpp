@@ -10,8 +10,6 @@ module;
 
 module platform.win32.win32_window;
 
-import std;
-
 namespace platform
 {
 
@@ -263,7 +261,7 @@ LRESULT CALLBACK Win32Window::windowProc( HWND hwnd, UINT msg, WPARAM wparam, LP
 		}
 	}
 
-	return DefWindowProc( hwnd, msg, wparam, lparam );
+	return DefWindowProcW( hwnd, msg, wparam, lparam );
 }
 #endif
 

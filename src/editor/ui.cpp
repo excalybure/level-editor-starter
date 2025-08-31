@@ -150,6 +150,18 @@ void UI::endFrame()
 	}
 }
 
+void UI::renderDrawData( void *command_list )
+{
+	if ( !m_initialized || !command_list )
+		return;
+	// Command list assumed to be in a recording state with render target + descriptor heap bound
+	ImDrawData *drawData = ImGui::GetDrawData();
+	if ( drawData )
+	{
+		ImGui_ImplDX12_RenderDrawData( drawData, static_cast<ID3D12GraphicsCommandList *>( command_list ) );
+	}
+}
+
 bool UI::wantsCaptureMouse() const
 {
 	if ( !m_initialized )
