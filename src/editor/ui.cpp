@@ -6,7 +6,6 @@ module; // start global module fragment so we can include headers before the mod
 #include "imgui_impl_dx12.h"
 #include <d3d12.h>
 #include <windows.h>
-#include <cstdio> // For printf debugging
 
 module editor.ui;
 
@@ -386,27 +385,26 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 				const char *cameraInfo = "";
 
 				// Get camera information
+				static std::string cameraBuffer;
 				if ( auto *camera = viewport->getCamera() )
 				{
 					const auto &pos = camera->getPosition();
 					const auto &target = camera->getTarget();
-					static char cameraBuffer[256];
-					sprintf_s( cameraBuffer, sizeof( cameraBuffer ), "\nCamera: (%.1f, %.1f, %.1f)\nTarget: (%.1f, %.1f, %.1f)\nAspect: %.2f", pos.x, pos.y, pos.z, target.x, target.y, target.z, viewport->getAspectRatio() );
-					cameraInfo = cameraBuffer;
+					cameraBuffer = std::format( "\nCamera: ({:.1f}, {:.1f}, {:.1f})\nTarget: ({:.1f}, {:.1f}, {:.1f})\nAspect: {:.2f}", pos.x, pos.y, pos.z, target.x, target.y, target.z, viewport->getAspectRatio() );
+					cameraInfo = cameraBuffer.c_str();
 				}
 
 				// Combine viewport and camera info
-				static char fullInfo[512];
-				sprintf_s( fullInfo, sizeof( fullInfo ), "%s\n%s\n\nTODO: D3D12 render targets", viewportInfo, cameraInfo );
+				static std::string fullInfo = std::format( "{}\n{}\n\nTODO: D3D12 render targets", viewportInfo, cameraInfo );
 
 				// Center the text in the viewport
-				const ImVec2 text_size = ImGui::CalcTextSize( fullInfo );
+				const ImVec2 text_size = ImGui::CalcTextSize( fullInfo.c_str() );
 				const ImVec2 center = ImVec2(
 					( contentSize.x - text_size.x ) * 0.5f,
 					( contentSize.y - text_size.y ) * 0.5f );
 
 				ImGui::SetCursorPos( center );
-				ImGui::TextUnformatted( fullInfo );
+				ImGui::TextUnformatted( fullInfo.c_str() );
 			}
 
 			// Show viewport status for debugging

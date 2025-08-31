@@ -5,12 +5,12 @@ module;
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <windows.h>
-#include <cstdio> // For printf debugging
 #include <cassert>
 
 module platform.dx12;
 
 import std;
+import runtime.console;
 
 namespace dx12
 {
@@ -19,13 +19,13 @@ bool Texture::createRenderTarget( Device *device, UINT width, UINT height, DXGI_
 {
 	if ( !device )
 	{
-		printf( "Texture::createRenderTarget: Device is null\n" );
+		console::error( "Texture::createRenderTarget: Device is null" );
 		return false;
 	}
 
 	if ( width == 0 || height == 0 )
 	{
-		printf( "Texture::createRenderTarget: Invalid dimensions %ux%u\n", width, height );
+		console::error( "Texture::createRenderTarget: Invalid dimensions {}x{}", width, height );
 		return false;
 	}
 
@@ -87,7 +87,9 @@ bool Texture::createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HAN
 {
 	if ( !device || !m_resource )
 	{
-		printf( "Texture::createShaderResourceView: Invalid device (%p) or resource (%p)\n", device, m_resource.Get() );
+		console::error( "Texture::createShaderResourceView: Invalid device ({}) or resource ({})",
+			static_cast<void *>( device ),
+			static_cast<void *>( m_resource.Get() ) );
 		return false;
 	}
 
@@ -129,7 +131,7 @@ bool Texture::resize( Device *device, UINT width, UINT height )
 	{
 		if ( !createShaderResourceView( device, m_srvCpuHandle ) )
 		{
-			printf( "Texture::resize: Failed to update SRV!\n" );
+			console::error( "Texture::resize: Failed to update SRV!" );
 			return false;
 		}
 	}
@@ -226,19 +228,19 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	// Validate input parameters
 	if ( !m_device )
 	{
-		printf( "TextureManager::createViewportRenderTarget: Device is null\n" );
+		console::error( "TextureManager::createViewportRenderTarget: Device is null" );
 		return nullptr;
 	}
 
 	if ( width == 0 || height == 0 )
 	{
-		printf( "TextureManager::createViewportRenderTarget: Invalid dimensions %ux%u\n", width, height );
+		console::error( "TextureManager::createViewportRenderTarget: Invalid dimensions {}x{}", width, height );
 		return nullptr;
 	}
 
 	if ( m_currentRtvIndex >= kMaxTextures || m_currentSrvIndex >= kMaxTextures )
 	{
-		printf( "TextureManager::createViewportRenderTarget: Descriptor heap full (RTV: %u/%u, SRV: %u/%u)\n",
+		console::error( "TextureManager::createViewportRenderTarget: Descriptor heap full (RTV: {}/{}, SRV: {}/{})",
 			m_currentRtvIndex,
 			kMaxTextures,
 			m_currentSrvIndex,
@@ -251,7 +253,7 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	// Create the render target
 	if ( !texture->createRenderTarget( m_device, width, height ) )
 	{
-		printf( "TextureManager::createViewportRenderTarget: Failed to create render target %ux%u\n", width, height );
+		console::error( "TextureManager::createViewportRenderTarget: Failed to create render target {}x{}", width, height );
 		return nullptr;
 	}
 
