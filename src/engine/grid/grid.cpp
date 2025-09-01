@@ -385,6 +385,8 @@ bool GridRenderer::createPipelineState()
 	psoDesc.SampleDesc.Count = 1;
 	psoDesc.SampleDesc.Quality = 0;
 
+	psoDesc.SampleMask = UINT_MAX; // 0xffffffff - enable all samples
+
 	HRESULT hr = m_device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) );
 	return SUCCEEDED( hr );
 }
