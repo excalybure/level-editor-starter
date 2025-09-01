@@ -282,7 +282,7 @@ void Device::findAdapter()
 
 	if ( !m_adapter )
 	{
-		throw std::runtime_error( "No compatible D3D12 adapter found" );
+		console::errorAndThrow( "No compatible D3D12 adapter found" );
 	}
 }
 
@@ -560,7 +560,7 @@ Fence::Fence( Device &device, UINT64 initialValue )
 	m_fenceEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
 	if ( !m_fenceEvent )
 	{
-		throw std::runtime_error( "Failed to create fence event" );
+		console::errorAndThrow( "Failed to create fence event" );
 	}
 }
 
