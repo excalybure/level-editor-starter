@@ -5,6 +5,7 @@ module;
 #include <string>
 #include <cstdlib>
 #include <format>
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,6 +20,7 @@ export namespace console
 // Console output functions with color coding
 void fatal( const std::string &message );
 void error( const std::string &message );
+void errorAndThrow( const std::string &message ); // Prints error and throws std::runtime_error
 void warning( const std::string &message );
 void info( const std::string &message );
 void debug( const std::string &message );
@@ -26,6 +28,7 @@ void debug( const std::string &message );
 // Overloads for C-style strings
 void fatal( const char *message );
 void error( const char *message );
+void errorAndThrow( const char *message ); // Prints error and throws std::runtime_error
 void warning( const char *message );
 void info( const char *message );
 void debug( const char *message );
@@ -41,6 +44,12 @@ template <typename... Args>
 void error( std::format_string<Args...> fmt, Args &&...args )
 {
 	error( std::format( fmt, std::forward<Args>( args )... ) );
+}
+
+template <typename... Args>
+void errorAndThrow( std::format_string<Args...> fmt, Args &&...args )
+{
+	errorAndThrow( std::format( fmt, std::forward<Args>( args )... ) );
 }
 
 template <typename... Args>

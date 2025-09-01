@@ -11,6 +11,7 @@ module;
 module engine.renderer;
 
 import std;
+import runtime.console;
 
 namespace renderer
 {
@@ -102,11 +103,11 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 		if ( errorBlob )
 		{
 			const std::string error = static_cast<const char *>( errorBlob->GetBufferPointer() );
-			throw std::runtime_error( "Shader compilation failed: " + error );
+			console::errorAndThrow( "Shader compilation failed: {}", error );
 		}
 		else
 		{
-			throw std::runtime_error( "Shader compilation failed with unknown error" );
+			console::errorAndThrow( "Shader compilation failed with unknown error" );
 		}
 	}
 
@@ -121,13 +122,13 @@ ShaderBlob ShaderCompiler::CompileFromFile(
 {
 	if ( !std::filesystem::exists( filePath ) )
 	{
-		throw std::runtime_error( "Shader file not found: " + filePath.string() );
+		console::errorAndThrow( "Shader file not found: " + filePath.string() );
 	}
 
 	std::ifstream file( filePath );
 	if ( !file.is_open() )
 	{
-		throw std::runtime_error( "Failed to open shader file: " + filePath.string() );
+		console::errorAndThrow( "Failed to open shader file: " + filePath.string() );
 	}
 
 	const std::string source( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
@@ -213,7 +214,7 @@ void VertexBuffer::createBuffer( const std::vector<Vertex> &vertices )
 {
 	if ( vertices.empty() )
 	{
-		throw std::runtime_error( "VertexBuffer: empty vertex array" );
+		console::errorAndThrow( "VertexBuffer: empty vertex array" );
 	}
 	const UINT bufferSize = static_cast<UINT>( vertices.size() * sizeof( Vertex ) );
 
@@ -285,7 +286,7 @@ void IndexBuffer::createBuffer( const std::vector<uint16_t> &indices )
 {
 	if ( indices.empty() )
 	{
-		throw std::runtime_error( "IndexBuffer: empty index array" );
+		console::errorAndThrow( "IndexBuffer: empty index array" );
 	}
 	const UINT bufferSize = static_cast<UINT>( indices.size() * sizeof( uint16_t ) );
 

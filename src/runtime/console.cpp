@@ -4,6 +4,7 @@ module;
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -98,6 +99,18 @@ void error( const std::string &message )
 	std::cout << std::endl;
 }
 
+void errorAndThrow( const std::string &message )
+{
+	std::cout << "[ERROR] ";
+#ifdef _WIN32
+	printWithColor( message, RED, WIN_RED );
+#else
+	printWithColor( message, RED, 0 );
+#endif
+	std::cout << std::endl;
+	throw std::runtime_error( message );
+}
+
 void warning( const std::string &message )
 {
 	std::cout << "[WARNING] ";
@@ -139,6 +152,10 @@ void fatal( const char *message )
 void error( const char *message )
 {
 	error( std::string( message ) );
+}
+void errorAndThrow( const char *message )
+{
+	errorAndThrow( std::string( message ) );
 }
 void warning( const char *message )
 {
