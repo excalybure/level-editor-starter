@@ -106,7 +106,7 @@ public:
 
 	// Frame update and rendering
 	void update( float deltaTime );
-	void render();
+	void render( dx12::Device *device );
 
 	// Input handling
 	void handleInput( const ViewportInputEvent &event );

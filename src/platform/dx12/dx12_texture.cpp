@@ -56,12 +56,12 @@ bool Texture::createRenderTarget( Device *device, UINT width, UINT height, DXGI_
 	heapProps.CreationNodeMask = 1;
 	heapProps.VisibleNodeMask = 1;
 
-	// Clear value for render target
+	// Clear value for render target - match the clear color used in clearRenderTarget
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = format;
-	clearValue.Color[0] = 0.2f; // Background color - dark gray
-	clearValue.Color[1] = 0.2f;
-	clearValue.Color[2] = 0.2f;
+	clearValue.Color[0] = 0.1f; // Background color - dark gray to match viewport clear
+	clearValue.Color[1] = 0.1f;
+	clearValue.Color[2] = 0.1f;
 	clearValue.Color[3] = 1.0f;
 
 	try

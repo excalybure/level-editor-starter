@@ -346,10 +346,10 @@ bool GridRenderer::createPipelineState()
 	psoDesc.RasterizerState.ForcedSampleCount = 0;
 	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-	// Depth stencil state (read-only depth test)
-	psoDesc.DepthStencilState.DepthEnable = TRUE;
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO; // Don't write depth
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	// Depth stencil state (disable depth testing for viewport rendering)
+	psoDesc.DepthStencilState.DepthEnable = FALSE; // Disable depth testing
+	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 	psoDesc.DepthStencilState.StencilEnable = FALSE;
 
 	// Input layout (none needed for fullscreen triangle)
@@ -361,7 +361,7 @@ bool GridRenderer::createPipelineState()
 	// Render target format
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer
 
 	// Sample desc
 	psoDesc.SampleDesc.Count = 1;

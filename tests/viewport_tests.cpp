@@ -191,8 +191,8 @@ TEST_CASE( "Viewport View Operations", "[viewport]" )
 
 	SECTION( "Update and render operations" )
 	{
-		REQUIRE_NOTHROW( viewport.update( 0.016f ) ); // 60 FPS
-		REQUIRE_NOTHROW( viewport.render() );
+		REQUIRE_NOTHROW( viewport.update( 0.016f ) );  // 60 FPS
+		REQUIRE_NOTHROW( viewport.render( nullptr ) ); // Test graceful handling of null device
 	}
 }
 
@@ -435,7 +435,7 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 
 		// Should handle gracefully
 		REQUIRE_NOTHROW( viewport.update( 0.016f ) );
-		REQUIRE_NOTHROW( viewport.render() );
+		REQUIRE_NOTHROW( viewport.render( nullptr ) ); // Test graceful handling of null device
 	}
 
 	SECTION( "Manager with no viewports" )

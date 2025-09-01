@@ -151,6 +151,9 @@ void UI::beginFrame()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+	// Render all viewports to their render targets first
+	m_impl->viewportManager.render();
+
 	// Setup the main dockspace and render viewports
 	m_impl->setupDockspace( m_layout, *this );
 	m_impl->renderViewportWindows( m_layout );

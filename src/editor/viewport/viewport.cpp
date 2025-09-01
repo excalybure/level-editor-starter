@@ -92,15 +92,20 @@ void Viewport::update( float deltaTime )
 	m_controller->update( m_currentInput );
 }
 
-void Viewport::render()
+void Viewport::render( dx12::Device *device )
 {
-	if ( !m_camera )
+	if ( !m_camera || !m_renderTarget || !device )
+		return;
+
+	// Clear the render target with a nice dark gray color
+	const float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	if ( !clearRenderTarget( device, clearColor ) )
 		return;
 
 	// Render grid if enabled and available
-	if ( m_showGrid && m_gridRenderer && m_renderTarget )
+	if ( m_showGrid && m_gridRenderer )
 	{
-		// Get camera matrices
+		// Get camera matrices with proper aspect ratio
 		const auto viewMatrix = m_camera->getViewMatrix();
 		const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
 
@@ -108,7 +113,10 @@ void Viewport::render()
 		const float viewportWidth = static_cast<float>( m_size.x );
 		const float viewportHeight = static_cast<float>( m_size.y );
 
-		m_gridRenderer->render( *m_camera, viewMatrix, projMatrix, viewportWidth, viewportHeight );
+		if ( !m_gridRenderer->render( *m_camera, viewMatrix, projMatrix, viewportWidth, viewportHeight ) )
+		{
+			console::warning( "Grid rendering failed for viewport" );
+		}
 	}
 }
 
@@ -579,11 +587,14 @@ void ViewportManager::update( float deltaTime )
 
 void ViewportManager::render()
 {
+	if ( !m_device )
+		return;
+
 	for ( auto &viewport : m_viewports )
 	{
 		if ( viewport->isActive() )
 		{
-			viewport->render();
+			viewport->render( m_device );
 		}
 	}
 }
