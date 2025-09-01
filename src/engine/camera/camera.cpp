@@ -244,16 +244,22 @@ void OrthographicCamera::updateCameraForViewType() noexcept
 	switch ( m_viewType )
 	{
 	case ViewType::Top: // XY plane, looking down Z-axis
+		// Constrain target to the XY plane so we never drift below/above unintentionally
+		m_target.z = 0.0f;
 		m_position = m_target + math::Vec3<>{ 0.0f, 0.0f, distance };
 		m_up = math::Vec3<>{ 0.0f, 1.0f, 0.0f }; // Y is up in top view
 		break;
 
 	case ViewType::Front: // XZ plane, looking down Y-axis
+		// Constrain target to the XZ plane
+		m_target.y = 0.0f;
 		m_position = m_target + math::Vec3<>{ 0.0f, -distance, 0.0f };
 		m_up = math::Vec3<>{ 0.0f, 0.0f, 1.0f }; // Z is up in front view
 		break;
 
 	case ViewType::Side: // YZ plane, looking down X-axis
+		// Constrain target to the YZ plane
+		m_target.x = 0.0f;
 		m_position = m_target + math::Vec3<>{ distance, 0.0f, 0.0f };
 		m_up = math::Vec3<>{ 0.0f, 0.0f, 1.0f }; // Z is up in side view
 		break;

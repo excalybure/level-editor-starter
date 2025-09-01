@@ -650,7 +650,8 @@ void ViewportManager::render()
 		if ( viewport->isActive() )
 		{
 			activeViewports++;
-			pix::ScopedEvent pixIndividualViewport( commandList, pix::MarkerColor::LightBlue, std::format( "Viewport {} Render", activeViewports ) );
+			const char *viewportName = ViewportUtils::getViewportTypeName( viewport->getType() );
+			pix::ScopedEvent pixIndividualViewport( commandList, pix::MarkerColor::LightBlue, std::format( "Viewport {} Render", viewportName ) );
 			viewport->render( m_device );
 		}
 	}

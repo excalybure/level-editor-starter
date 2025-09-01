@@ -91,6 +91,8 @@ struct GridConstants
 	int showGrid;
 	int showAxes;
 	float axisThickness;
+	int viewType;	  // 0=Perspective, 1=Top, 2=Front, 3=Side
+	float padding[3]; // Ensure 16-byte alignment
 };
 } // namespace
 
@@ -479,6 +481,26 @@ void GridRenderer::updateConstantBuffer( const camera::Camera &camera,
 	// Visibility flags
 	constants.showGrid = m_settings.showGrid ? 1 : 0;
 	constants.showAxes = m_settings.showAxes ? 1 : 0;
+
+	// Set view type for shader to distinguish between camera modes
+	switch ( camera.getViewType() )
+	{
+	case camera::ViewType::Perspective:
+		constants.viewType = 0; // Perspective view
+		break;
+	case camera::ViewType::Top:
+		constants.viewType = 1; // Top orthographic view (XY plane)
+		break;
+	case camera::ViewType::Front:
+		constants.viewType = 2; // Front orthographic view (XZ plane)
+		break;
+	case camera::ViewType::Side:
+		constants.viewType = 3; // Side orthographic view (YZ plane)
+		break;
+	default:
+		constants.viewType = 0; // Default to perspective
+		break;
+	}
 
 	// Copy to GPU buffer
 	std::memcpy( m_constantBufferData, &constants, sizeof( GridConstants ) );

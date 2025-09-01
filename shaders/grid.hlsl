@@ -51,18 +51,20 @@ cbuffer GridConstants : register(b0)
     int showGrid;
     int showAxes;
     float axisThickness;
+    int viewType; // 0=Perspective, 1=Top, 2=Front, 3=Side
+    float3 padding; // Ensure 16-byte alignment
 };
 
 // Vertex Shader - Generate fullscreen quad
-VertexOutput VSMain(VertexInput input)
+VertexOutput VSMain(const VertexInput input)
 {
     VertexOutput output;
     
     // Generate fullscreen triangle
     // vertexID 0: (-1, -1), vertexID 1: (3, -1), vertexID 2: (-1, 3)
     // This covers the entire screen with just 3 vertices
-    float2 uv = float2((input.vertexID << 1) & 2, input.vertexID & 2);
-    float2 clipPos = uv * 2.0f - 1.0f;
+    const float2 uv = float2((input.vertexID << 1) & 2, input.vertexID & 2);
+    const float2 clipPos = uv * 2.0f - 1.0f;
     
     output.position = float4(clipPos, 0.0f, 1.0f);
     
@@ -82,83 +84,143 @@ VertexOutput VSMain(VertexInput input)
 }
 
 // Grid line computation functions
-float gridLine(float coord, float spacing, float thickness)
+float gridLine(const float coord, const float spacing, const float thickness)
 {
-    float grid = abs(frac(coord / spacing + 0.5) - 0.5) / fwidth(coord / spacing);
+    const float grid = abs(frac(coord / spacing + 0.5) - 0.5) / fwidth(coord / spacing);
     return 1.0 - min(grid / thickness, 1.0);
 }
 
-float axisLine(float coord, float thickness)
+float axisLine(const float coord, const float thickness)
 {
-    float axis = abs(coord) / fwidth(coord);
+    const float axis = abs(coord) / fwidth(coord);
     return 1.0 - min(axis / thickness, 1.0);
 }
 
 // Calculate distance-based fade
-float calculateFade(float3 worldPos, float3 cameraPos, float fadeDistance)
+float calculateFade(const float3 worldPos, const float3 cameraPos, const float fadeDistance)
 {
-    float distance = length(worldPos - cameraPos);
+    const float distance = length(worldPos - cameraPos);
     return saturate(1.0 - distance / fadeDistance);
 }
 
 // Pixel Shader - Render infinite grid
-float4 PSMain(VertexOutput input) : SV_Target
+float4 PSMain(const VertexOutput input) : SV_Target
 {
     if (!showGrid)
     {
         discard;
     }
     
-    // Ray-plane intersection with Z=0 plane (XY grid)
-    float3 rayStart = input.worldPos;
-    float3 rayDir = normalize(input.viewDir);
+    // Ray-plane intersection - dynamic based on viewType
+    const float3 rayStart = input.worldPos;
+    const float3 rayDir = normalize(input.viewDir);
     
-    // Check if ray hits the ground plane (Z = 0)
-    if (abs(rayDir.z) < 0.0001) // Ray is parallel to plane
+    float3 worldPos;
+    
+    // Handle different view types: 0=Perspective, 1=Top, 2=Front, 3=Side
+    if (viewType == 0) // Perspective view - use ray-plane intersection
     {
-        discard;
+        float t;
+        // Default to XY plane intersection for perspective
+        if (abs(rayDir.z) < 0.0001)
+            discard; // Ray parallel to plane
+        
+        t = (0.0 - rayStart.z) / rayDir.z; // Intersect with Z=0 plane
+        
+        if (t < 0) // Ray pointing away from plane
+        {
+            discard;
+        }
+        
+        worldPos = rayStart + t * rayDir;
+    }
+    else if (viewType == 1) // Top view (orthographic) - XY plane
+    {
+        // Project world position onto XY plane at Z=0
+        worldPos = float3(rayStart.xy, 0.0);
+    }
+    else if (viewType == 2) // Front view (orthographic) - XZ plane
+    {
+        // Project world position onto XZ plane at Y=0
+        worldPos = float3(rayStart.x, 0.0, rayStart.z);
+    }
+    else if (viewType == 3) // Side view (orthographic) - YZ plane
+    {
+        // Project world position onto YZ plane at X=0
+        worldPos = float3(0.0, rayStart.yz);
     }
     
-    // Calculate intersection with Z = 0 plane
-    float t = -rayStart.z / rayDir.z;
-    if (t < 0) // Ray is pointing away from plane
+    // Extract 2D grid coordinates based on view type
+    float2 gridPos;
+    if (viewType == 0 || viewType == 1) // Perspective or Top view - XY plane
     {
-        discard;
+        gridPos = worldPos.xy;
     }
-    
-    // World position on the grid plane
-    float3 worldPos = rayStart + t * rayDir;
-    float2 gridPos = worldPos.xy;
+    else if (viewType == 2) // Front view - XZ plane
+    {
+        gridPos = worldPos.xz;
+    }
+    else if (viewType == 3) // Side view - YZ plane
+    {
+        gridPos = worldPos.yz;
+    }
     
     // Distance-based fade
-    float fade = calculateFade(worldPos, cameraPosition, fadeDistance);
+    const float fade = calculateFade(worldPos, cameraPosition, fadeDistance);
     if (fade < 0.01)
     {
         discard;
     }
     
     // Grid line calculations
-    float minorGridThickness = 1.0;
-    float majorGridThickness = 1.5;
+    const float minorGridThickness = 1.0;
+    const float majorGridThickness = 1.5;
     
     // Minor grid lines
-    float minorX = gridLine(gridPos.x, gridSpacing, minorGridThickness);
-    float minorY = gridLine(gridPos.y, gridSpacing, minorGridThickness);
-    float minorGrid = max(minorX, minorY);
+    const float minorX = gridLine(gridPos.x, gridSpacing, minorGridThickness);
+    const float minorY = gridLine(gridPos.y, gridSpacing, minorGridThickness);
+    const float minorGrid = max(minorX, minorY);
     
     // Major grid lines (every N minor lines)
-    float majorX = gridLine(gridPos.x, gridSpacing * majorGridInterval, majorGridThickness);
-    float majorY = gridLine(gridPos.y, gridSpacing * majorGridInterval, majorGridThickness);
-    float majorGrid = max(majorX, majorY);
+    const float majorX = gridLine(gridPos.x, gridSpacing * majorGridInterval, majorGridThickness);
+    const float majorY = gridLine(gridPos.y, gridSpacing * majorGridInterval, majorGridThickness);
+    const float majorGrid = max(majorX, majorY);
     
-    // Axis lines (X and Y axes)
-    float axisX = 0.0;
-    float axisY = 0.0;
+    // Axis lines - mapped to appropriate world axes based on view type
+    float axisFirst = 0.0;  // First axis of the 2D grid
+    float axisSecond = 0.0; // Second axis of the 2D grid
+    float3 firstAxisColor, secondAxisColor;
+    float firstAxisAlpha, secondAxisAlpha;
     
     if (showAxes)
     {
-        axisX = axisLine(gridPos.y, axisThickness); // X-axis is where Y = 0
-        axisY = axisLine(gridPos.x, axisThickness); // Y-axis is where X = 0
+        if (viewType == 0 || viewType == 1) // Perspective or Top view - XY plane
+        {
+            axisFirst = axisLine(gridPos.y, axisThickness);  // X-axis (red) where Y=0
+            axisSecond = axisLine(gridPos.x, axisThickness); // Y-axis (green) where X=0
+            firstAxisColor = axisXColor;
+            firstAxisAlpha = axisXAlpha;
+            secondAxisColor = axisYColor;
+            secondAxisAlpha = axisYAlpha;
+        }
+        else if (viewType == 2) // Front view - XZ plane
+        {
+            axisFirst = axisLine(gridPos.y, axisThickness);  // X-axis (red) where Z=0
+            axisSecond = axisLine(gridPos.x, axisThickness); // Z-axis (blue) where X=0
+            firstAxisColor = axisXColor;
+            firstAxisAlpha = axisXAlpha;
+            secondAxisColor = axisZColor;
+            secondAxisAlpha = axisZAlpha;
+        }
+        else if (viewType == 3) // Side view - YZ plane
+        {
+            axisFirst = axisLine(gridPos.y, axisThickness);  // Y-axis (green) where Z=0
+            axisSecond = axisLine(gridPos.x, axisThickness); // Z-axis (blue) where Y=0
+            firstAxisColor = axisYColor;
+            firstAxisAlpha = axisYAlpha;
+            secondAxisColor = axisZColor;
+            secondAxisAlpha = axisZAlpha;
+        }
     }
     
     // Combine all grid elements with priority: Axes > Major > Minor
@@ -176,16 +238,16 @@ float4 PSMain(VertexOutput input) : SV_Target
         finalColor = float4(majorGridColor, majorGridAlpha * majorGrid * fade);
     }
     
-    // X-axis (red, overrides grid lines)
-    if (axisX > 0.0)
+    // First axis (overrides grid lines)
+    if (axisFirst > 0.0)
     {
-        finalColor = float4(axisXColor, axisXAlpha * axisX * fade);
+        finalColor = float4(firstAxisColor, firstAxisAlpha * axisFirst * fade);
     }
     
-    // Y-axis (green, overrides grid lines)  
-    if (axisY > 0.0)
+    // Second axis (overrides grid lines)  
+    if (axisSecond > 0.0)
     {
-        finalColor = float4(axisYColor, axisYAlpha * axisY * fade);
+        finalColor = float4(secondAxisColor, secondAxisAlpha * axisSecond * fade);
     }
     
     // Discard if alpha is too low
