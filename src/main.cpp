@@ -71,6 +71,8 @@ int main()
 			// Submit ImGui draw data to command list
 			{
 				pix::ScopedEvent pixImGui( commandList, pix::MarkerColor::Cyan, "ImGui Render" );
+				// Restore backbuffer render target after viewport rendering
+				device.setBackbufferRenderTarget();
 				ui.renderDrawData( static_cast<void *>( commandList ) );
 			}
 

@@ -144,6 +144,9 @@ public:
 	void endFrame();
 	void present();
 
+	// Render target management - restore backbuffer for ImGui after viewport rendering
+	void setBackbufferRenderTarget();
+
 	ID3D12Device *get() const { return m_device.Get(); }
 	ID3D12Device *operator->() const { return m_device.Get(); }
 

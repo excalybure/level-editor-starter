@@ -238,6 +238,23 @@ void Device::present()
 	waitForPreviousFrame();
 }
 
+void Device::setBackbufferRenderTarget()
+{
+	if ( !m_device || !m_commandList || !m_swapChain )
+	{
+		return; // headless/uninitialized no-op
+	}
+
+	// Set backbuffer render target for ImGui rendering
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+	rtvHandle.ptr += m_frameIndex * m_rtvDescriptorSize;
+	m_commandList->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
+
+	// Set descriptor heap for ImGui (should already be set, but ensure consistency)
+	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
+	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+}
+
 void Device::enableDebugLayer()
 {
 	// Enable the D3D12 debug layer
