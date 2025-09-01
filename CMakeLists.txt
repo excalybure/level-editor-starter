@@ -258,7 +258,7 @@ target_sources(editor.viewport PUBLIC
     src/editor/viewport/viewport.cpp
 )
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
-target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12)
+target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console)
 
 # Executable
 add_executable(level_editor src/main.cpp)

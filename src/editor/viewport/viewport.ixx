@@ -8,6 +8,7 @@ import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
 import platform.dx12;
+import engine.grid;
 
 export namespace editor
 {
@@ -127,6 +128,11 @@ public:
 	void setGizmosVisible( bool visible ) noexcept { m_showGizmos = visible; }
 	bool areGizmosVisible() const noexcept { return m_showGizmos; }
 
+	// Grid settings management
+	bool initializeGrid( dx12::Device *device );
+	void setGridSettings( const grid::GridSettings &settings );
+	const grid::GridSettings &getGridSettings() const;
+
 	// View synchronization (for linked views)
 	void setViewSyncEnabled( bool enabled ) noexcept { m_viewSyncEnabled = enabled; }
 	bool isViewSyncEnabled() const noexcept { return m_viewSyncEnabled; }
@@ -149,6 +155,10 @@ private:
 	// D3D12 render target for this viewport
 	std::shared_ptr<dx12::Texture> m_renderTarget;
 	void *m_renderTargetHandle = nullptr; // For backward compatibility
+
+	// Grid rendering system
+	std::unique_ptr<grid::GridRenderer> m_gridRenderer;
+	grid::GridSettings m_gridSettings;
 
 	// Input state conversion
 	camera::InputState convertToInputState( const ViewportInputEvent &event ) const;

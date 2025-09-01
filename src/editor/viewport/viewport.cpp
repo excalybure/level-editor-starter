@@ -8,6 +8,8 @@ import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
 import platform.dx12;
+import engine.grid;
+import runtime.console;
 
 namespace editor
 {
@@ -92,13 +94,21 @@ void Viewport::update( float deltaTime )
 
 void Viewport::render()
 {
-	// Placeholder for render implementation
-	// This will integrate with the renderer system once available
-	// For now, just ensure camera matrices are up to date
-	if ( m_camera )
+	if ( !m_camera )
+		return;
+
+	// Render grid if enabled and available
+	if ( m_showGrid && m_gridRenderer && m_renderTarget )
 	{
-		// Camera matrices are automatically updated in the camera class
-		// The actual rendering will be handled by the renderer system
+		// Get camera matrices
+		const auto viewMatrix = m_camera->getViewMatrix();
+		const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
+
+		// Render the grid for this viewport
+		const float viewportWidth = static_cast<float>( m_size.x );
+		const float viewportHeight = static_cast<float>( m_size.y );
+
+		m_gridRenderer->render( *m_camera, viewMatrix, projMatrix, viewportWidth, viewportHeight );
 	}
 }
 
@@ -478,6 +488,12 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 		return nullptr; // Failed to create render target
 	}
 
+	// Initialize grid renderer for this viewport
+	if ( !ptr->initializeGrid( m_device ) )
+	{
+		console::warning( "Failed to initialize grid for viewport, grid rendering will not be available" );
+	}
+
 	m_viewports.push_back( std::move( viewport ) );
 
 	// If this is the first viewport, make it active
@@ -797,6 +813,38 @@ ViewportInputEvent ViewportUtils::createKeyEvent( int keyCode, bool pressed, boo
 	event.keyboard.ctrl = ctrl;
 	event.keyboard.alt = alt;
 	return event;
+}
+
+// Grid integration methods for Viewport
+bool Viewport::initializeGrid( dx12::Device *device )
+{
+	if ( !m_gridRenderer )
+	{
+		m_gridRenderer = std::make_unique<grid::GridRenderer>();
+	}
+
+	if ( !m_gridRenderer->initialize( device ) )
+	{
+		console::error( "Failed to initialize grid renderer for viewport" );
+		m_gridRenderer.reset();
+		return false;
+	}
+
+	return true;
+}
+
+void Viewport::setGridSettings( const grid::GridSettings &settings )
+{
+	m_gridSettings = settings;
+	if ( m_gridRenderer )
+	{
+		m_gridRenderer->setSettings( settings );
+	}
+}
+
+const grid::GridSettings &Viewport::getGridSettings() const
+{
+	return m_gridSettings;
 }
 
 ViewportInputEvent ViewportUtils::createResizeEvent( int width, int height ) noexcept
