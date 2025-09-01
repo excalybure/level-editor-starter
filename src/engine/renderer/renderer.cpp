@@ -122,13 +122,13 @@ ShaderBlob ShaderCompiler::CompileFromFile(
 {
 	if ( !std::filesystem::exists( filePath ) )
 	{
-		console::errorAndThrow( "Shader file not found: " + filePath.string() );
+		console::errorAndThrow( "Shader file not found: {}", filePath.string() );
 	}
 
 	std::ifstream file( filePath );
 	if ( !file.is_open() )
 	{
-		console::errorAndThrow( "Failed to open shader file: " + filePath.string() );
+		console::errorAndThrow( "Failed to open shader file: {}", filePath.string() );
 	}
 
 	const std::string source( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );

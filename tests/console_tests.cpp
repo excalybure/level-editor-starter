@@ -56,9 +56,9 @@ TEST_CASE( "Console module functionality", "[console]" )
 	{
 		// Test that errorAndThrow properly throws std::runtime_error
 		std::string testMessage = "Test error message";
-		
+
 		REQUIRE_THROWS_AS( console::errorAndThrow( testMessage ), std::runtime_error );
-		
+
 		// Test that the exception contains the correct message
 		try
 		{
@@ -69,10 +69,10 @@ TEST_CASE( "Console module functionality", "[console]" )
 		{
 			REQUIRE( std::string( e.what() ) == "Test exception message" );
 		}
-		
+
 		// Test C-string overload
 		REQUIRE_THROWS_AS( console::errorAndThrow( "C-string error" ), std::runtime_error );
-		
+
 		// Test template overload with formatting
 		int errorCode = 404;
 		REQUIRE_THROWS_AS( console::errorAndThrow( "Error {}: Resource not found", errorCode ), std::runtime_error );
