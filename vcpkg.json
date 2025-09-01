@@ -10,7 +10,8 @@
     },
     "directx-headers",
     "directx-dxc",
-    "glm"
+    "glm",
+    "winpixevent"
   ],
   "description": "Starter scaffold for a C++23 modular world editor with tests"
 }

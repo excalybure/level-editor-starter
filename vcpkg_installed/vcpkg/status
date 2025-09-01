@@ -79,3 +79,11 @@ Multi-Arch: same
 Description: Make available Win32 binding
 Status: install ok installed
 
+Package: winpixevent
+Version: 1.0.240308001
+Architecture: x64-windows
+Multi-Arch: same
+Abi: b43da4cbfbe6ce03bafd0248e68676c9958a109fe84a60caba677cff2a8832c3
+Description: Allows applications to be instrumented with marker events, for use with Microsoft PIX.
+Status: install ok installed
+

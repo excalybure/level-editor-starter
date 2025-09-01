@@ -9,9 +9,8 @@ module;
 #include <wrl.h>
 #include <string>
 
-// PIX for Windows header - only include if available
-// Set to 0 for now since PIX SDK is not installed
-#define PIX_AVAILABLE 0
+// PIX for Windows header - now available via winpixevent package
+#define PIX_AVAILABLE 1
 
 #if PIX_AVAILABLE
 #include <pix3.h>

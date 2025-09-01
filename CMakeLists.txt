@@ -11,6 +11,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 # Find vcpkg packages
 find_package(imgui CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
+find_package(winpixevent CONFIG REQUIRED)
 
 # Libraries (modules)
 add_library(engine.math)
@@ -225,6 +226,7 @@ target_sources(platform.pix PUBLIC
     src/platform/pix/pix.ixx
 )
 target_compile_features(platform.pix PUBLIC cxx_std_23)
+target_link_libraries(platform.pix PUBLIC Microsoft::WinPixEventRuntime)
 
 add_library(engine.renderer)
 target_sources(engine.renderer PUBLIC
