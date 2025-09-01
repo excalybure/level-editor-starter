@@ -9,6 +9,8 @@
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
     "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
     "C_Cpp.default.cppStandard": "c++23",
+    "testMate.cpp.test.executables": "${workspaceFolder}/build/vs2022-x64/Debug/unit_test_runner.exe",
+    "testMate.cpp.test.workingDirectory": "${workspaceFolder}",
     "chat.tools.autoApprove": true,
     "chat.tools.terminal.autoApprove": {
         "rm": true,
