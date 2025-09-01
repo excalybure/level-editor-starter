@@ -381,10 +381,12 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 				viewport->setRenderTargetSize( newWidth, newHeight );
 			}
 
-			// Check if this viewport has focus
+			// Viewport is active if it's open (visible), regardless of focus
+			viewport->setActive( pane.isOpen && isValid );
+
+			// Focus is separate from active state - only one viewport can have focus
 			const bool hasFocus = ImGui::IsWindowFocused();
 			viewport->setFocused( hasFocus );
-			viewport->setActive( hasFocus );
 
 			// Get render target texture for ImGui rendering
 			void *textureHandle = viewport->getImGuiTextureId();
