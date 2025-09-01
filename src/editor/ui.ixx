@@ -73,6 +73,10 @@ public:
 	Viewport *getViewport( ViewportType type );
 	const Viewport *getViewport( ViewportType type ) const;
 
+	// Grid settings management
+	void showGridSettingsWindow( bool show = true );
+	bool isGridSettingsWindowOpen() const;
+
 private:
 	ViewportLayout m_layout;
 	bool m_initialized = false;

@@ -7,6 +7,7 @@ import editor.ui;
 import editor.viewport;
 import engine.vec;
 import platform.dx12;
+import platform.win32.win32_window;
 
 using namespace editor;
 using namespace math;
@@ -309,4 +310,234 @@ TEST_CASE( "Viewport Utility Functions Integration", "[integration][viewport][ut
 			REQUIRE( viewport.getType() == types[i] );
 		}
 	}
+}
+
+TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
+{
+	SECTION( "Grid settings window management without initialization" )
+	{
+		// Test grid settings functionality that doesn't require full UI initialization
+		UI ui;
+
+		// Default state
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+		// Window can be opened
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		// Window can be closed
+		ui.showGridSettingsWindow( false );
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+		// Multiple state changes work correctly
+		ui.showGridSettingsWindow( true );
+		ui.showGridSettingsWindow( true ); // Double call should be safe
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		ui.showGridSettingsWindow( false );
+		ui.showGridSettingsWindow( false ); // Double call should be safe
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+	}
+
+#if defined( _WIN32 )
+	SECTION( "Full UI Grid Settings Integration with D3D12" )
+	{
+		// Create test window and D3D12 device
+		platform::Win32Window window;
+		if ( !window.create( "Grid Settings Integration Test", 800, 600 ) )
+		{
+			WARN( "Skipping Grid Settings integration: failed to create Win32 window" );
+			return;
+		}
+
+		dx12::Device device;
+		if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
+		{
+			WARN( "Skipping Grid Settings integration: D3D12 initialize failed" );
+			return;
+		}
+
+		UI ui;
+		REQUIRE( ui.initialize( window.getHandle(), &device ) );
+
+		// Test grid settings window functionality with fully initialized UI
+		SECTION( "Grid settings window with initialized viewports" )
+		{
+			// Verify all viewports are accessible
+			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( ViewportType::Top );
+			auto *frontViewport = ui.getViewport( ViewportType::Front );
+			auto *sideViewport = ui.getViewport( ViewportType::Side );
+
+			REQUIRE( perspectiveViewport != nullptr );
+			REQUIRE( topViewport != nullptr );
+			REQUIRE( frontViewport != nullptr );
+			REQUIRE( sideViewport != nullptr );
+
+			// All viewports should have grid functionality
+			REQUIRE( perspectiveViewport->isGridVisible() );
+			REQUIRE( topViewport->isGridVisible() );
+			REQUIRE( frontViewport->isGridVisible() );
+			REQUIRE( sideViewport->isGridVisible() );
+
+			// Grid settings should be accessible
+			REQUIRE_NOTHROW( perspectiveViewport->getGridSettings() );
+			REQUIRE_NOTHROW( topViewport->getGridSettings() );
+			REQUIRE_NOTHROW( frontViewport->getGridSettings() );
+			REQUIRE_NOTHROW( sideViewport->getGridSettings() );
+		}
+
+		SECTION( "Grid settings modification through UI integration" )
+		{
+			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( ViewportType::Top );
+			
+			REQUIRE( perspectiveViewport != nullptr );
+			REQUIRE( topViewport != nullptr );
+
+			// Get initial settings
+			auto perspectiveSettings = perspectiveViewport->getGridSettings();
+			auto topSettings = topViewport->getGridSettings();
+
+			// Modify settings in one viewport
+			perspectiveSettings.gridSpacing = 2.0f;
+			perspectiveSettings.majorGridColor = { 1.0f, 0.0f, 0.0f }; // Red
+			perspectiveSettings.majorGridAlpha = 0.9f;
+			perspectiveViewport->setGridSettings( perspectiveSettings );
+
+			// Apply same settings to all viewports (simulating UI "Apply to All" functionality)
+			topViewport->setGridSettings( perspectiveSettings );
+
+			// Verify settings were applied consistently
+			const auto &updatedPerspective = perspectiveViewport->getGridSettings();
+			const auto &updatedTop = topViewport->getGridSettings();
+
+			REQUIRE_THAT( updatedPerspective.gridSpacing, WithinAbs( 2.0f, 0.001f ) );
+			REQUIRE_THAT( updatedTop.gridSpacing, WithinAbs( 2.0f, 0.001f ) );
+
+			REQUIRE_THAT( updatedPerspective.majorGridColor.x, WithinAbs( 1.0f, 0.001f ) );
+			REQUIRE_THAT( updatedTop.majorGridColor.x, WithinAbs( 1.0f, 0.001f ) );
+
+			REQUIRE_THAT( updatedPerspective.majorGridAlpha, WithinAbs( 0.9f, 0.001f ) );
+			REQUIRE_THAT( updatedTop.majorGridAlpha, WithinAbs( 0.9f, 0.001f ) );
+		}
+
+		SECTION( "Grid visibility toggle through UI integration" )
+		{
+			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( ViewportType::Top );
+			
+			REQUIRE( perspectiveViewport != nullptr );
+			REQUIRE( topViewport != nullptr );
+
+			// Initial state - both should be visible
+			REQUIRE( perspectiveViewport->isGridVisible() );
+			REQUIRE( topViewport->isGridVisible() );
+
+			// Hide grid in one viewport
+			perspectiveViewport->setGridVisible( false );
+			REQUIRE_FALSE( perspectiveViewport->isGridVisible() );
+			REQUIRE( topViewport->isGridVisible() ); // Other viewport unaffected
+
+			// Show grid again
+			perspectiveViewport->setGridVisible( true );
+			REQUIRE( perspectiveViewport->isGridVisible() );
+		}
+
+		SECTION( "Grid settings window state with frame operations" )
+		{
+			// Test that grid settings window state persists through frame operations
+			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+			ui.showGridSettingsWindow( true );
+			REQUIRE( ui.isGridSettingsWindowOpen() );
+
+			// Frame operations should preserve window state
+			REQUIRE_NOTHROW( ui.beginFrame() );
+			REQUIRE( ui.isGridSettingsWindowOpen() ); // State preserved during frame
+			REQUIRE_NOTHROW( ui.endFrame() );
+			REQUIRE( ui.isGridSettingsWindowOpen() ); // State preserved after frame
+
+			// Multiple frames
+			REQUIRE_NOTHROW( ui.beginFrame() );
+			REQUIRE_NOTHROW( ui.endFrame() );
+			REQUIRE( ui.isGridSettingsWindowOpen() );
+
+			// Close window and verify persistence
+			ui.showGridSettingsWindow( false );
+			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+			REQUIRE_NOTHROW( ui.beginFrame() );
+			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+			REQUIRE_NOTHROW( ui.endFrame() );
+			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+		}
+
+		SECTION( "Comprehensive grid settings validation" )
+		{
+			auto *viewport = ui.getViewport( ViewportType::Perspective );
+			REQUIRE( viewport != nullptr );
+
+			// Test all major grid settings properties
+			auto settings = viewport->getGridSettings();
+
+			// Test spacing modifications
+			settings.gridSpacing = 1.5f;
+			settings.majorGridInterval = 8.0f;
+			settings.fadeDistance = 200.0f;
+			settings.axisThickness = 3.0f;
+
+			// Test color modifications
+			settings.majorGridColor = { 0.8f, 0.2f, 0.1f };
+			settings.majorGridAlpha = 0.85f;
+			settings.minorGridColor = { 0.1f, 0.7f, 0.3f };
+			settings.minorGridAlpha = 0.45f;
+
+			// Test axis color modifications
+			settings.axisXColor = { 0.9f, 0.1f, 0.1f };
+			settings.axisXAlpha = 0.95f;
+			settings.axisYColor = { 0.1f, 0.9f, 0.1f };
+			settings.axisYAlpha = 0.95f;
+			settings.axisZColor = { 0.1f, 0.1f, 0.9f };
+			settings.axisZAlpha = 0.95f;
+
+			// Test visibility flags
+			settings.showGrid = false;
+			settings.showAxes = false;
+
+			// Apply settings
+			REQUIRE_NOTHROW( viewport->setGridSettings( settings ) );
+
+			// Verify all changes were applied
+			const auto &updatedSettings = viewport->getGridSettings();
+			
+			REQUIRE_THAT( updatedSettings.gridSpacing, WithinAbs( 1.5f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.majorGridInterval, WithinAbs( 8.0f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.fadeDistance, WithinAbs( 200.0f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 3.0f, 0.001f ) );
+
+			REQUIRE_THAT( updatedSettings.majorGridColor.x, WithinAbs( 0.8f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.majorGridColor.y, WithinAbs( 0.2f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.majorGridColor.z, WithinAbs( 0.1f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.majorGridAlpha, WithinAbs( 0.85f, 0.001f ) );
+
+			REQUIRE_THAT( updatedSettings.minorGridColor.x, WithinAbs( 0.1f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.minorGridColor.y, WithinAbs( 0.7f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.minorGridColor.z, WithinAbs( 0.3f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.minorGridAlpha, WithinAbs( 0.45f, 0.001f ) );
+
+			REQUIRE_THAT( updatedSettings.axisXColor.x, WithinAbs( 0.9f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.axisYColor.y, WithinAbs( 0.9f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.axisZColor.z, WithinAbs( 0.9f, 0.001f ) );
+
+			REQUIRE( updatedSettings.showGrid == false );
+			REQUIRE( updatedSettings.showAxes == false );
+		}
+
+		ui.shutdown();
+	}
+#else
+	WARN( "Grid Settings integration test skipped: not on Win32 platform" );
+#endif
 }

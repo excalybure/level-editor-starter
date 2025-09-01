@@ -650,3 +650,130 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
 		REQUIRE_THAT( length( ray.direction ), WithinAbs( 1.0f, 0.001f ) );
 	}
 }
+
+TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
+{
+	SECTION( "Default grid settings values" )
+	{
+		Viewport viewport( ViewportType::Perspective );
+		const auto &settings = viewport.getGridSettings();
+
+		// Test default values match GridSettings defaults
+		REQUIRE_THAT( settings.gridSpacing, WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( settings.majorGridInterval, WithinAbs( 10.0f, 0.001f ) );
+		REQUIRE_THAT( settings.fadeDistance, WithinAbs( 100.0f, 0.001f ) );
+		REQUIRE_THAT( settings.axisThickness, WithinAbs( 2.0f, 0.001f ) );
+		REQUIRE( settings.showGrid == true );
+		REQUIRE( settings.showAxes == true );
+
+		// Test default colors
+		REQUIRE_THAT( settings.majorGridColor.x, WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( settings.majorGridColor.y, WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( settings.majorGridColor.z, WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( settings.majorGridAlpha, WithinAbs( 0.8f, 0.001f ) );
+
+		REQUIRE_THAT( settings.minorGridColor.x, WithinAbs( 0.3f, 0.001f ) );
+		REQUIRE_THAT( settings.minorGridColor.y, WithinAbs( 0.3f, 0.001f ) );
+		REQUIRE_THAT( settings.minorGridColor.z, WithinAbs( 0.3f, 0.001f ) );
+		REQUIRE_THAT( settings.minorGridAlpha, WithinAbs( 0.4f, 0.001f ) );
+
+		// Test default axis colors
+		REQUIRE_THAT( settings.axisXColor.x, WithinAbs( 1.0f, 0.001f ) ); // Red X
+		REQUIRE_THAT( settings.axisXColor.y, WithinAbs( 0.2f, 0.001f ) );
+		REQUIRE_THAT( settings.axisXColor.z, WithinAbs( 0.2f, 0.001f ) );
+		
+		REQUIRE_THAT( settings.axisYColor.x, WithinAbs( 0.2f, 0.001f ) ); // Green Y
+		REQUIRE_THAT( settings.axisYColor.y, WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( settings.axisYColor.z, WithinAbs( 0.2f, 0.001f ) );
+		
+		REQUIRE_THAT( settings.axisZColor.x, WithinAbs( 0.2f, 0.001f ) ); // Blue Z
+		REQUIRE_THAT( settings.axisZColor.y, WithinAbs( 0.2f, 0.001f ) );
+		REQUIRE_THAT( settings.axisZColor.z, WithinAbs( 1.0f, 0.001f ) );
+	}
+
+	SECTION( "Grid settings modification" )
+	{
+		Viewport viewport( ViewportType::Perspective );
+		
+		// Get initial settings
+		auto settings = viewport.getGridSettings();
+		
+		// Modify settings
+		settings.gridSpacing = 2.5f;
+		settings.majorGridInterval = 5.0f;
+		settings.showGrid = false;
+		settings.majorGridColor = { 1.0f, 0.0f, 0.0f }; // Red
+		settings.majorGridAlpha = 0.6f;
+		
+		// Apply changes
+		viewport.setGridSettings( settings );
+		
+		// Verify changes were applied
+		const auto &updatedSettings = viewport.getGridSettings();
+		REQUIRE_THAT( updatedSettings.gridSpacing, WithinAbs( 2.5f, 0.001f ) );
+		REQUIRE_THAT( updatedSettings.majorGridInterval, WithinAbs( 5.0f, 0.001f ) );
+		REQUIRE( updatedSettings.showGrid == false );
+		REQUIRE_THAT( updatedSettings.majorGridColor.x, WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( updatedSettings.majorGridColor.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( updatedSettings.majorGridColor.z, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( updatedSettings.majorGridAlpha, WithinAbs( 0.6f, 0.001f ) );
+		
+		// Verify other settings remain unchanged
+		REQUIRE_THAT( updatedSettings.fadeDistance, WithinAbs( 100.0f, 0.001f ) ); // Still default
+		REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 2.0f, 0.001f ) ); // Still default
+	}
+
+	SECTION( "Grid settings persistence within viewport" )
+	{
+		Viewport viewport( ViewportType::Top );
+		
+		// Set custom settings
+		auto settings = viewport.getGridSettings();
+		settings.gridSpacing = 0.5f;
+		settings.minorGridColor = { 0.8f, 0.8f, 0.2f }; // Yellow
+		settings.minorGridAlpha = 0.7f;
+		settings.showAxes = false;
+		
+		viewport.setGridSettings( settings );
+		
+		// Get settings again and verify persistence
+		const auto &retrievedSettings = viewport.getGridSettings();
+		REQUIRE_THAT( retrievedSettings.gridSpacing, WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( retrievedSettings.minorGridColor.x, WithinAbs( 0.8f, 0.001f ) );
+		REQUIRE_THAT( retrievedSettings.minorGridColor.y, WithinAbs( 0.8f, 0.001f ) );
+		REQUIRE_THAT( retrievedSettings.minorGridColor.z, WithinAbs( 0.2f, 0.001f ) );
+		REQUIRE_THAT( retrievedSettings.minorGridAlpha, WithinAbs( 0.7f, 0.001f ) );
+		REQUIRE( retrievedSettings.showAxes == false );
+	}
+
+	SECTION( "Independent grid settings per viewport type" )
+	{
+		Viewport perspectiveViewport( ViewportType::Perspective );
+		Viewport topViewport( ViewportType::Top );
+		
+		// Modify perspective viewport settings
+		auto perspectiveSettings = perspectiveViewport.getGridSettings();
+		perspectiveSettings.gridSpacing = 3.0f;
+		perspectiveSettings.majorGridColor = { 1.0f, 0.5f, 0.0f }; // Orange
+		perspectiveViewport.setGridSettings( perspectiveSettings );
+		
+		// Modify top viewport settings differently
+		auto topSettings = topViewport.getGridSettings();
+		topSettings.gridSpacing = 0.25f;
+		topSettings.majorGridColor = { 0.0f, 1.0f, 0.5f }; // Green
+		topViewport.setGridSettings( topSettings );
+		
+		// Verify independence - changes to one don't affect the other
+		const auto &updatedPerspective = perspectiveViewport.getGridSettings();
+		const auto &updatedTop = topViewport.getGridSettings();
+		
+		REQUIRE_THAT( updatedPerspective.gridSpacing, WithinAbs( 3.0f, 0.001f ) );
+		REQUIRE_THAT( updatedTop.gridSpacing, WithinAbs( 0.25f, 0.001f ) );
+		
+		REQUIRE_THAT( updatedPerspective.majorGridColor.x, WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( updatedTop.majorGridColor.x, WithinAbs( 0.0f, 0.001f ) );
+		
+		REQUIRE_THAT( updatedPerspective.majorGridColor.y, WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( updatedTop.majorGridColor.y, WithinAbs( 1.0f, 0.001f ) );
+	}
+}

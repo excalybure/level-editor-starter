@@ -10,6 +10,7 @@ module; // start global module fragment so we can include headers before the mod
 module editor.ui;
 
 import std;
+import engine.grid;
 
 namespace editor
 {
@@ -33,6 +34,9 @@ struct UI::Impl
 	// Viewport manager for coordinated viewport management
 	ViewportManager viewportManager;
 
+	// Grid settings window state
+	bool showGridSettingsWindow = false;
+
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -44,6 +48,9 @@ struct UI::Impl
 
 	// Render individual viewport pane
 	void renderViewportPane( const ViewportLayout::ViewportPane &pane );
+
+	// Render grid settings window
+	void renderGridSettingsWindow();
 
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( dx12::Device *device );
@@ -147,6 +154,9 @@ void UI::beginFrame()
 	// Setup the main dockspace and render viewports
 	m_impl->setupDockspace( m_layout, *this );
 	m_impl->renderViewportWindows( m_layout );
+
+	// Render grid settings window if open
+	m_impl->renderGridSettingsWindow();
 }
 
 void UI::endFrame()
@@ -272,7 +282,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		if ( ImGui::BeginMenu( "Tools" ) )
 		{
-			ImGui::MenuItem( "Grid Settings", nullptr, false, false );	 // Disabled for now
+			if ( ImGui::MenuItem( "Grid Settings" ) )
+			{
+				showGridSettingsWindow = true;
+			}
 			ImGui::MenuItem( "Camera Settings", nullptr, false, false ); // Disabled for now
 			ImGui::EndMenu();
 		}
@@ -420,6 +433,131 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 	ImGui::End();
 }
 
+void UI::Impl::renderGridSettingsWindow()
+{
+	if ( !showGridSettingsWindow )
+		return;
+
+	if ( ImGui::Begin( "Grid Settings", &showGridSettingsWindow ) )
+	{
+		// Get the first viewport to access grid settings (we'll apply to all)
+		Viewport *viewport = getViewport( ViewportType::Perspective );
+		if ( viewport )
+		{
+			// Get current grid settings
+			auto gridSettings = viewport->getGridSettings();
+			bool settingsChanged = false;
+
+			// Grid visibility section
+			ImGui::SeparatorText( "Visibility" );
+
+			bool gridVisible = viewport->isGridVisible();
+			if ( ImGui::Checkbox( "Show Grid", &gridVisible ) )
+			{
+				// Apply to all viewports
+				viewportManager.setGlobalGridVisible( gridVisible );
+				settingsChanged = true;
+			}
+
+			if ( ImGui::Checkbox( "Show Axes", &gridSettings.showAxes ) )
+				settingsChanged = true;
+
+			// Grid appearance section
+			ImGui::SeparatorText( "Appearance" );
+
+			// Major grid controls
+			ImGui::Text( "Major Grid:" );
+			if ( ImGui::ColorEdit3( "Major Color", &gridSettings.majorGridColor.x ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Major Alpha", &gridSettings.majorGridAlpha, 0.0f, 1.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			// Minor grid controls
+			ImGui::Text( "Minor Grid:" );
+			if ( ImGui::ColorEdit3( "Minor Color", &gridSettings.minorGridColor.x ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Minor Alpha", &gridSettings.minorGridAlpha, 0.0f, 1.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			// Axis colors section
+			ImGui::SeparatorText( "Axis Colors" );
+
+			ImGui::Text( "X-Axis (Red):" );
+			if ( ImGui::ColorEdit3( "X Color", &gridSettings.axisXColor.x ) )
+				settingsChanged = true;
+			if ( ImGui::SliderFloat( "X Alpha", &gridSettings.axisXAlpha, 0.0f, 1.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			ImGui::Text( "Y-Axis (Green):" );
+			if ( ImGui::ColorEdit3( "Y Color", &gridSettings.axisYColor.x ) )
+				settingsChanged = true;
+			if ( ImGui::SliderFloat( "Y Alpha", &gridSettings.axisYAlpha, 0.0f, 1.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			ImGui::Text( "Z-Axis (Blue):" );
+			if ( ImGui::ColorEdit3( "Z Color", &gridSettings.axisZColor.x ) )
+				settingsChanged = true;
+			if ( ImGui::SliderFloat( "Z Alpha", &gridSettings.axisZAlpha, 0.0f, 1.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			// Grid spacing section
+			ImGui::SeparatorText( "Spacing" );
+
+			if ( ImGui::SliderFloat( "Grid Spacing", &gridSettings.gridSpacing, 0.1f, 10.0f, "%.2f" ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Major Interval", &gridSettings.majorGridInterval, 2.0f, 20.0f, "%.1f" ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Axis Thickness", &gridSettings.axisThickness, 1.0f, 5.0f, "%.1f" ) )
+				settingsChanged = true;
+
+			// Advanced settings section
+			ImGui::SeparatorText( "Advanced" );
+
+			if ( ImGui::SliderFloat( "Fade Distance", &gridSettings.fadeDistance, 50.0f, 500.0f, "%.1f" ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Zoom Threshold", &gridSettings.zoomThreshold, 0.01f, 1.0f, "%.3f" ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Max Spacing", &gridSettings.maxGridSpacing, 10.0f, 1000.0f, "%.1f" ) )
+				settingsChanged = true;
+
+			if ( ImGui::SliderFloat( "Min Spacing", &gridSettings.minGridSpacing, 0.001f, 1.0f, "%.3f" ) )
+				settingsChanged = true;
+
+			// Apply changes section
+			ImGui::Separator();
+
+			if ( ImGui::Button( "Reset to Defaults" ) )
+			{
+				gridSettings = grid::GridSettings{}; // Reset to default values
+				settingsChanged = true;
+			}
+
+			ImGui::SameLine();
+
+			if ( ImGui::Button( "Apply to All Viewports" ) || settingsChanged )
+			{
+				// Apply settings to all viewports
+				const auto &viewports = viewportManager.getViewports();
+				for ( const auto &vp : viewports )
+				{
+					vp->setGridSettings( gridSettings );
+				}
+			}
+		}
+		else
+		{
+			ImGui::TextUnformatted( "No viewport available for grid settings" );
+		}
+	}
+	ImGui::End();
+}
+
 // UI::Impl viewport management methods
 bool UI::Impl::initializeViewports( dx12::Device *device )
 {
@@ -465,6 +603,17 @@ Viewport *UI::getViewport( ViewportType type )
 const Viewport *UI::getViewport( ViewportType type ) const
 {
 	return m_impl->getViewport( type );
+}
+
+// Grid settings window management
+void UI::showGridSettingsWindow( bool show )
+{
+	m_impl->showGridSettingsWindow = show;
+}
+
+bool UI::isGridSettingsWindowOpen() const
+{
+	return m_impl->showGridSettingsWindow;
 }
 
 } // namespace editor

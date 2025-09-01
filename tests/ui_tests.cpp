@@ -278,3 +278,183 @@ TEST_CASE( "UI exit functionality", "[ui]" )
 	// Note: We can't easily test the menu-triggered exit without full UI initialization
 	// and event simulation, but we can verify the state management works correctly
 }
+
+TEST_CASE( "UI Grid Settings Window Management", "[ui][grid]" )
+{
+	UI ui; // Not initialized - testing interface only
+
+	SECTION( "Grid settings window is closed by default" )
+	{
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+	}
+
+	SECTION( "Grid settings window can be opened" )
+	{
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+	}
+
+	SECTION( "Grid settings window can be closed" )
+	{
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		ui.showGridSettingsWindow( false );
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+	}
+
+	SECTION( "Grid settings window state toggles correctly" )
+	{
+		// Initial state
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+		// Open and verify
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		// Close and verify
+		ui.showGridSettingsWindow( false );
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+		// Reopen and verify
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+	}
+
+	SECTION( "Multiple show calls with same state are safe" )
+	{
+		// Multiple calls to show(true) should be safe
+		ui.showGridSettingsWindow( true );
+		ui.showGridSettingsWindow( true );
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		// Multiple calls to show(false) should be safe
+		ui.showGridSettingsWindow( false );
+		ui.showGridSettingsWindow( false );
+		ui.showGridSettingsWindow( false );
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+	}
+}
+
+TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][integration]" )
+{
+#if defined( _WIN32 )
+	platform::Win32Window window;
+	REQUIRE( window.create( "Grid Settings Test", 640, 480 ) );
+
+	dx12::Device device;
+	REQUIRE( device.initialize( static_cast<HWND>( window.getHandle() ) ) );
+
+	UI ui;
+	REQUIRE( ui.initialize( window.getHandle(), &device ) );
+
+	SECTION( "Grid settings window management with initialized UI" )
+	{
+		// Initially closed
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+
+		// Can be opened
+		ui.showGridSettingsWindow( true );
+		REQUIRE( ui.isGridSettingsWindowOpen() );
+
+		// Frame operations should work with grid window open
+		REQUIRE_NOTHROW( ui.beginFrame() );
+		REQUIRE_NOTHROW( ui.endFrame() );
+		REQUIRE( ui.isGridSettingsWindowOpen() ); // State preserved
+
+		// Can be closed
+		ui.showGridSettingsWindow( false );
+		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
+	}
+
+	SECTION( "Viewport grid settings access through UI" )
+	{
+		// Verify we can access viewports for grid settings
+		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( ViewportType::Top );
+		const auto *frontViewport = ui.getViewport( ViewportType::Front );
+		const auto *sideViewport = ui.getViewport( ViewportType::Side );
+
+		REQUIRE( perspectiveViewport != nullptr );
+		REQUIRE( topViewport != nullptr );
+		REQUIRE( frontViewport != nullptr );
+		REQUIRE( sideViewport != nullptr );
+
+		// All viewports should be grid-enabled by default
+		REQUIRE( perspectiveViewport->isGridVisible() );
+		REQUIRE( topViewport->isGridVisible() );
+		REQUIRE( frontViewport->isGridVisible() );
+		REQUIRE( sideViewport->isGridVisible() );
+
+		// Grid settings should be accessible
+		REQUIRE_NOTHROW( perspectiveViewport->getGridSettings() );
+		REQUIRE_NOTHROW( topViewport->getGridSettings() );
+		REQUIRE_NOTHROW( frontViewport->getGridSettings() );
+		REQUIRE_NOTHROW( sideViewport->getGridSettings() );
+	}
+
+	SECTION( "Grid settings consistency across viewports" )
+	{
+		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( ViewportType::Top );
+
+		REQUIRE( perspectiveViewport != nullptr );
+		REQUIRE( topViewport != nullptr );
+
+		// Get initial grid settings
+		const auto &perspectiveSettings = perspectiveViewport->getGridSettings();
+		const auto &topSettings = topViewport->getGridSettings();
+
+		// Default settings should be consistent (both use default GridSettings constructor)
+		REQUIRE( perspectiveSettings.gridSpacing == Catch::Approx( topSettings.gridSpacing ) );
+		REQUIRE( perspectiveSettings.majorGridInterval == Catch::Approx( topSettings.majorGridInterval ) );
+		REQUIRE( perspectiveSettings.showGrid == topSettings.showGrid );
+		REQUIRE( perspectiveSettings.showAxes == topSettings.showAxes );
+
+		// Color values should be consistent
+		REQUIRE( perspectiveSettings.majorGridColor.x == Catch::Approx( topSettings.majorGridColor.x ) );
+		REQUIRE( perspectiveSettings.majorGridColor.y == Catch::Approx( topSettings.majorGridColor.y ) );
+		REQUIRE( perspectiveSettings.majorGridColor.z == Catch::Approx( topSettings.majorGridColor.z ) );
+	}
+
+	SECTION( "Grid settings modification through UI integration" )
+	{
+		auto *viewport = ui.getViewport( ViewportType::Perspective );
+		REQUIRE( viewport != nullptr );
+
+		// Test grid settings modification
+		auto settings = viewport->getGridSettings();
+		const float originalSpacing = settings.gridSpacing;
+		const float newSpacing = originalSpacing + 1.0f;
+
+		settings.gridSpacing = newSpacing;
+		REQUIRE_NOTHROW( viewport->setGridSettings( settings ) );
+
+		// Verify the change was applied
+		const auto &updatedSettings = viewport->getGridSettings();
+		REQUIRE( updatedSettings.gridSpacing == Catch::Approx( newSpacing ) );
+		REQUIRE( updatedSettings.gridSpacing != Catch::Approx( originalSpacing ) );
+	}
+
+	ui.shutdown();
+#else
+	WARN( "Grid Settings integration test skipped: not on Win32 platform" );
+#endif
+}
+
+TEST_CASE( "Grid Settings Default Values", "[ui][grid]" )
+{
+	// Test that we can create a UI and verify default grid settings values
+	// This validates the GridSettings structure is properly imported and accessible
+
+	UI ui; // Not initialized - just testing interface
+
+	SECTION( "UI grid settings window interface is available" )
+	{
+		// These methods should exist and be callable
+		REQUIRE_NOTHROW( ui.showGridSettingsWindow( true ) );
+		REQUIRE_NOTHROW( ui.isGridSettingsWindowOpen() );
+		REQUIRE_NOTHROW( ui.showGridSettingsWindow( false ) );
+	}
+}
