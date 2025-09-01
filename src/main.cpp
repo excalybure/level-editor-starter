@@ -5,9 +5,58 @@ import platform.dx12;
 import platform.pix;
 import editor.ui;
 #include <iostream>
+#include <filesystem>
+
+// Helper function to fix the current working directory by searching for the shaders folder
+void fixWorkingDirectory()
+{
+	namespace fs = std::filesystem;
+	fs::path currentPath = fs::current_path();
+	fs::path originalPath = currentPath;
+	bool foundShaders = false;
+
+	// Check up to 5 parent directories for shaders folder
+	for ( int i = 0; i < 5; ++i )
+	{
+		fs::path shadersPath = currentPath / "shaders";
+		if ( fs::exists( shadersPath ) && fs::is_directory( shadersPath ) )
+		{
+			try
+			{
+				fs::current_path( currentPath );
+				foundShaders = true;
+				console::info( "Found shaders directory, set working directory to: {}", currentPath.string() );
+				break;
+			}
+			catch ( const std::exception &e )
+			{
+				console::error( "Failed to set current directory to {}: {}", currentPath.string(), e.what() );
+				break;
+			}
+		}
+
+		// Move to parent directory
+		fs::path parentPath = currentPath.parent_path();
+		if ( parentPath == currentPath )
+		{
+			// Reached root directory
+			break;
+		}
+		currentPath = parentPath;
+	}
+
+	if ( !foundShaders )
+	{
+		console::error( "Could not find shaders directory. Current working directory remains: {}", originalPath.string() );
+		console::error( "Application may not function correctly without proper asset paths." );
+	}
+}
 
 int main()
 {
+	// Fix current working directory - search for shaders folder
+	fixWorkingDirectory();
+
 	// Create the window
 	platform::Win32Window window;
 	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )
