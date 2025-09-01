@@ -18,7 +18,7 @@ void fixWorkingDirectory()
 	// Check up to 5 parent directories for shaders folder
 	for ( int i = 0; i < 5; ++i )
 	{
-		fs::path shadersPath = currentPath / "shaders";
+		const fs::path shadersPath = currentPath / "shaders";
 		if ( fs::exists( shadersPath ) && fs::is_directory( shadersPath ) )
 		{
 			try
@@ -36,7 +36,7 @@ void fixWorkingDirectory()
 		}
 
 		// Move to parent directory
-		fs::path parentPath = currentPath.parent_path();
+		const fs::path parentPath = currentPath.parent_path();
 		if ( parentPath == currentPath )
 		{
 			// Reached root directory
