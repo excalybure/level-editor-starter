@@ -175,6 +175,24 @@ bool GridRenderer::render( const camera::Camera &camera,
 		return false;
 	}
 
+	// Set D3D12 viewport to match render target dimensions
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	viewport.Width = viewportWidth;
+	viewport.Height = viewportHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	commandList->RSSetViewports( 1, &viewport );
+
+	// Set scissor rectangle to match viewport
+	D3D12_RECT scissorRect = {};
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = static_cast<LONG>( viewportWidth );
+	scissorRect.bottom = static_cast<LONG>( viewportHeight );
+	commandList->RSSetScissorRects( 1, &scissorRect );
+
 	// Set pipeline state
 	commandList->SetPipelineState( m_pipelineState.Get() );
 	commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
