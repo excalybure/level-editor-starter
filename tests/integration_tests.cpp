@@ -392,7 +392,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		{
 			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
 			auto *topViewport = ui.getViewport( ViewportType::Top );
-			
+
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
 
@@ -427,7 +427,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		{
 			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
 			auto *topViewport = ui.getViewport( ViewportType::Top );
-			
+
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
 
@@ -511,7 +511,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 
 			// Verify all changes were applied
 			const auto &updatedSettings = viewport->getGridSettings();
-			
+
 			REQUIRE_THAT( updatedSettings.gridSpacing, WithinAbs( 1.5f, 0.001f ) );
 			REQUIRE_THAT( updatedSettings.majorGridInterval, WithinAbs( 8.0f, 0.001f ) );
 			REQUIRE_THAT( updatedSettings.fadeDistance, WithinAbs( 200.0f, 0.001f ) );
