@@ -216,7 +216,15 @@ target_sources(platform.dx12 PUBLIC
 )
 target_compile_features(platform.dx12 PUBLIC cxx_std_23)
 # Link DirectX 12 libraries
-target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler runtime.console)
+target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler runtime.console platform.pix)
+
+# PIX debugging utilities
+add_library(platform.pix)
+target_sources(platform.pix PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/platform/pix/pix.ixx
+)
+target_compile_features(platform.pix PUBLIC cxx_std_23)
 
 add_library(engine.renderer)
 target_sources(engine.renderer PUBLIC
@@ -258,12 +266,12 @@ target_sources(editor.viewport PUBLIC
     src/editor/viewport/viewport.cpp
 )
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
-target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console)
+target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console platform.pix)
 
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui
+  engine.vec engine.matrix runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui platform.pix
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 

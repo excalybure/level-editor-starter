@@ -1,5 +1,7 @@
 // Viewport Management implementation for multi-viewport 3D editor
 // Implements viewport instances with cameras, render targets, and input handling
+module;
+
 module editor.viewport;
 
 import std;
@@ -8,6 +10,7 @@ import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
 import platform.dx12;
+import platform.pix;
 import engine.grid;
 import runtime.console;
 
@@ -117,14 +120,26 @@ void Viewport::render( dx12::Device *device )
 	if ( !m_camera || !m_renderTarget || !device )
 		return;
 
+	// PIX marker for the entire viewport render
+	ID3D12GraphicsCommandList *commandList = device->getCommandList();
+	pix::ScopedEvent pixViewportRender( commandList, pix::MarkerColor::Cyan, std::format( "Viewport Render {}x{}", m_size.x, m_size.y ) );
+
 	// Clear the render target with a nice dark gray color
 	const float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
-	if ( !clearRenderTarget( device, clearColor ) )
-		return;
+	{
+		pix::ScopedEvent pixClear( commandList, pix::MarkerColor::Red, "Clear Render Target" );
+		if ( !clearRenderTarget( device, clearColor ) )
+		{
+			pix::SetMarker( commandList, pix::MarkerColor::Yellow, "Clear Failed" );
+			return;
+		}
+	}
 
 	// Render grid if enabled and available
 	if ( m_showGrid && m_gridRenderer )
 	{
+		pix::ScopedEvent pixGrid( commandList, pix::MarkerColor::Green, "Grid Rendering" );
+
 		// Get camera matrices with proper aspect ratio
 		const auto viewMatrix = m_camera->getViewMatrix();
 		const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
@@ -136,7 +151,12 @@ void Viewport::render( dx12::Device *device )
 		if ( !m_gridRenderer->render( *m_camera, viewMatrix, projMatrix, viewportWidth, viewportHeight ) )
 		{
 			console::warning( "Grid rendering failed for viewport" );
+			pix::SetMarker( commandList, pix::MarkerColor::Yellow, "Grid Render Failed" );
 		}
+	}
+	else
+	{
+		pix::SetMarker( commandList, pix::MarkerColor::Orange, m_showGrid ? "Grid Renderer Missing" : "Grid Disabled" );
 	}
 }
 
@@ -610,20 +630,32 @@ void ViewportManager::render()
 	if ( !m_device )
 		return;
 
+	// PIX marker for the entire viewport manager render
+	ID3D12GraphicsCommandList *commandList = m_device->getCommandList();
+	pix::ScopedEvent pixManagerRender( commandList, pix::MarkerColor::Purple, "ViewportManager Render" );
+
 	// Apply any pending resizes before rendering to avoid resource conflicts
-	for ( auto &viewport : m_viewports )
 	{
-		viewport->applyPendingResize( m_device );
+		pix::ScopedEvent pixResize( commandList, pix::MarkerColor::Yellow, "Apply Pending Resizes" );
+		for ( auto &viewport : m_viewports )
+		{
+			viewport->applyPendingResize( m_device );
+		}
 	}
 
 	// Render all active viewports
+	int activeViewports = 0;
 	for ( auto &viewport : m_viewports )
 	{
 		if ( viewport->isActive() )
 		{
+			activeViewports++;
+			pix::ScopedEvent pixIndividualViewport( commandList, pix::MarkerColor::LightBlue, std::format( "Viewport {} Render", activeViewports ) );
 			viewport->render( m_device );
 		}
 	}
+
+	pix::SetMarker( commandList, pix::MarkerColor::White, std::format( "ViewportManager Complete - {} active viewports", activeViewports ) );
 }
 
 void ViewportManager::handleGlobalInput( const ViewportInputEvent &event )

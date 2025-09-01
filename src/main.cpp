@@ -2,6 +2,7 @@ import runtime.app;
 import runtime.console;
 import platform.win32.win32_window;
 import platform.dx12;
+import platform.pix;
 import editor.ui;
 #include <iostream>
 
@@ -39,22 +40,51 @@ int main()
 	std::cout << "Starting Level Editor with ImGui Docking...\n";
 
 	// Main loop with exception handling
+	int frameCount = 0;
 	try
 	{
 		while ( window.poll() && !ui.shouldExit() )
 		{
+			// PIX frame marker
+			frameCount++;
+			ID3D12GraphicsCommandList *commandList = device.getCommandList();
+			pix::ScopedEvent pixFrame( commandList, pix::MarkerColor::White, std::format( "Frame {}", frameCount ) );
+
 			// Begin D3D12 frame
-			device.beginFrame();
+			{
+				pix::ScopedEvent pixBeginFrame( commandList, pix::MarkerColor::Blue, "Begin D3D12 Frame" );
+				device.beginFrame();
+			}
+
 			// Begin UI frame (sets up docking)
-			ui.beginFrame();
+			{
+				pix::ScopedEvent pixUIBegin( commandList, pix::MarkerColor::Green, "UI Begin Frame" );
+				ui.beginFrame();
+			}
+
 			// End UI frame (renders ImGui)
-			ui.endFrame();
+			{
+				pix::ScopedEvent pixUIEnd( commandList, pix::MarkerColor::LightGreen, "UI End Frame" );
+				ui.endFrame();
+			}
+
 			// Submit ImGui draw data to command list
-			ui.renderDrawData( static_cast<void *>( device.getCommandList() ) );
+			{
+				pix::ScopedEvent pixImGui( commandList, pix::MarkerColor::Cyan, "ImGui Render" );
+				ui.renderDrawData( static_cast<void *>( commandList ) );
+			}
+
 			// End D3D12 frame
-			device.endFrame();
+			{
+				pix::ScopedEvent pixEndFrame( commandList, pix::MarkerColor::Purple, "End D3D12 Frame" );
+				device.endFrame();
+			}
+
 			// Present D3D12 frame
-			device.present();
+			{
+				pix::ScopedEvent pixPresent( commandList, pix::MarkerColor::Orange, "Present Frame" );
+				device.present();
+			}
 
 			// App tick
 			app.tick();

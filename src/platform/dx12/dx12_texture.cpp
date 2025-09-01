@@ -11,6 +11,7 @@ module platform.dx12;
 
 import std;
 import runtime.console;
+import platform.pix;
 
 namespace dx12
 {
@@ -151,6 +152,9 @@ void Texture::transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOUR
 	if ( !commandList || !m_resource || m_currentState == newState )
 		return;
 
+	// PIX marker for resource transition
+	pix::SetMarker( commandList, pix::MarkerColor::Magenta, std::format( "Resource Barrier: {} -> {}", static_cast<int>( m_currentState ), static_cast<int>( newState ) ) );
+
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -173,13 +177,21 @@ bool Texture::clearRenderTarget( Device *device, const float clearColor[4] )
 	if ( !commandList )
 		return false;
 
+	// PIX marker for texture clear operation
+	pix::ScopedEvent pixClear( commandList, pix::MarkerColor::Red, std::format( "Clear Texture {}x{}", m_width, m_height ) );
+
 	// Transition to render target state if needed
-	transitionTo( commandList, D3D12_RESOURCE_STATE_RENDER_TARGET );
+	{
+		pix::ScopedEvent pixTransition( commandList, pix::MarkerColor::Yellow, std::format( "Transition to RT (current={})", static_cast<int>( m_currentState ) ) );
+		transitionTo( commandList, D3D12_RESOURCE_STATE_RENDER_TARGET );
+	}
 
 	// Set render target (needed for clearing)
+	pix::SetMarker( commandList, pix::MarkerColor::Orange, "Set Render Targets" );
 	commandList->OMSetRenderTargets( 1, &m_rtvHandle, FALSE, nullptr );
 
 	// Clear the render target
+	pix::SetMarker( commandList, pix::MarkerColor::LightRed, "Clear RTV" );
 	commandList->ClearRenderTargetView( m_rtvHandle, clearColor, 0, nullptr );
 
 	return true;
@@ -240,29 +252,29 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	if ( !m_device )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: Device is null" );
-		return nullptr;
+		return std::shared_ptr<Texture>();
 	}
 
 	if ( width == 0 || height == 0 )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: Invalid dimensions {}x{}", width, height );
-		return nullptr;
+		return std::shared_ptr<Texture>();
 	}
 
 	if ( !m_srvHeap )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: SRV heap is null" );
-		return nullptr;
+		return std::shared_ptr<Texture>();
 	}
 
-	if ( m_currentRtvIndex >= kMaxTextures || m_currentSrvIndex >= kMaxTextures )
+	if ( m_currentRtvIndex >= TextureManager::kMaxTextures || m_currentSrvIndex >= TextureManager::kMaxTextures )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: Descriptor heap full (RTV: {}/{}, SRV: {}/{})",
 			m_currentRtvIndex,
-			kMaxTextures,
+			TextureManager::kMaxTextures,
 			m_currentSrvIndex,
-			kMaxTextures );
-		return nullptr;
+			TextureManager::kMaxTextures );
+		return std::shared_ptr<Texture>();
 	}
 
 	auto texture = std::make_shared<Texture>();
@@ -271,7 +283,7 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	if ( !texture->createRenderTarget( m_device, width, height ) )
 	{
 		console::error( "TextureManager::createViewportRenderTarget: Failed to create render target {}x{}", width, height );
-		return nullptr;
+		return std::shared_ptr<Texture>();
 	}
 
 	// Get RTV handle
@@ -284,10 +296,10 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 
 	// Get SRV handle and create shader resource view
 	D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
-	srvCpuHandle.ptr += ( kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
+	srvCpuHandle.ptr += ( TextureManager::kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
 
 	if ( !texture->createShaderResourceView( m_device, srvCpuHandle ) )
-		return nullptr;
+		return std::shared_ptr<Texture>();
 
 	// Store the SRV CPU handle for future updates during resize
 	texture->m_srvCpuHandle = srvCpuHandle;
@@ -310,11 +322,11 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 
 D3D12_CPU_DESCRIPTOR_HANDLE TextureManager::getNextSrvHandle()
 {
-	if ( !m_srvHeap || m_currentSrvIndex >= kMaxTextures )
+	if ( !m_srvHeap || m_currentSrvIndex >= TextureManager::kMaxTextures )
 		return {};
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += ( kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
+	handle.ptr += ( TextureManager::kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
 	return handle;
 }
 
