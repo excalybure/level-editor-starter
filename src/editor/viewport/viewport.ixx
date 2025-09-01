@@ -82,7 +82,7 @@ public:
 
 	// Viewport properties
 	ViewportType getType() const noexcept { return m_type; }
-	const math::Vec2<int> &getSize() const noexcept { return m_size; }
+	math::Vec2<int> getSize() const noexcept; // Returns pending size if resize pending
 	float getAspectRatio() const noexcept;
 
 	// Active state management
@@ -99,6 +99,7 @@ public:
 
 	// Render target management
 	void setRenderTargetSize( int width, int height );
+	void applyPendingResize( dx12::Device *device ); // Apply deferred resize
 	void *getRenderTargetHandle() const noexcept { return m_renderTargetHandle; }
 	bool createRenderTarget( dx12::Device *device, int width, int height );
 	bool clearRenderTarget( dx12::Device *device, const float clearColor[4] );
@@ -140,6 +141,10 @@ public:
 private:
 	ViewportType m_type;
 	math::Vec2<int> m_size{ 800, 600 };
+
+	// Pending resize to avoid resource deletion during command list building
+	math::Vec2<int> m_pendingSize{ 0, 0 };
+	bool m_resizePending = false;
 
 	// State flags
 	bool m_isActive = false;

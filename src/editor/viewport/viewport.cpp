@@ -30,23 +30,43 @@ Viewport::Viewport( ViewportType type )
 
 float Viewport::getAspectRatio() const noexcept
 {
-	if ( m_size.y <= 0 )
+	// Use pending size if a resize is pending, otherwise use current size
+	const auto &size = m_resizePending ? m_pendingSize : m_size;
+	if ( size.y <= 0 )
 		return 1.0f;
-	return static_cast<float>( m_size.x ) / static_cast<float>( m_size.y );
+	return static_cast<float>( size.x ) / static_cast<float>( size.y );
 }
 
 void Viewport::setRenderTargetSize( int width, int height )
 {
-	m_size = { width, height };
+	// Store the pending size instead of applying immediately
+	// This avoids deleting resources while command lists are being built
+	m_pendingSize = { width, height };
+	m_resizePending = true;
+}
+
+void Viewport::applyPendingResize( dx12::Device *device )
+{
+	if ( !m_resizePending )
+		return;
+
+	m_size = m_pendingSize;
+	m_resizePending = false;
 
 	// Resize existing render target if it exists
-	if ( m_renderTarget )
+	if ( m_renderTarget && device )
 	{
 		// Note: resize may recreate the texture
-		m_renderTarget->resize( nullptr, width, height ); // Device will be passed by ViewportManager
+		m_renderTarget->resize( device, m_pendingSize.x, m_pendingSize.y );
 	}
 
 	// Camera aspect ratio is handled in GetProjectionMatrix calls
+}
+
+math::Vec2<int> Viewport::getSize() const noexcept
+{
+	// Return pending size if a resize is pending, otherwise return current size
+	return m_resizePending ? m_pendingSize : m_size;
 }
 
 bool Viewport::createRenderTarget( dx12::Device *device, int width, int height )
@@ -590,6 +610,13 @@ void ViewportManager::render()
 	if ( !m_device )
 		return;
 
+	// Apply any pending resizes before rendering to avoid resource conflicts
+	for ( auto &viewport : m_viewports )
+	{
+		viewport->applyPendingResize( m_device );
+	}
+
+	// Render all active viewports
 	for ( auto &viewport : m_viewports )
 	{
 		if ( viewport->isActive() )

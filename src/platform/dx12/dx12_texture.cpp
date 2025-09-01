@@ -125,6 +125,13 @@ bool Texture::resize( Device *device, UINT width, UINT height )
 	if ( !createRenderTarget( device, width, height, m_format ) )
 		return false;
 
+	// Update the RTV to point to the new resource
+	if ( m_rtvHandle.ptr != 0 )
+	{
+		// Recreate the render target view for the new resource
+		device->get()->CreateRenderTargetView( m_resource.Get(), nullptr, m_rtvHandle );
+	}
+
 	// Update the SRV to point to the new resource
 	assert( m_srvCpuHandle.ptr != 0 );
 	if ( m_srvCpuHandle.ptr != 0 )
