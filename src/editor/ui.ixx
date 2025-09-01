@@ -3,6 +3,7 @@ export module editor.ui;
 import std;
 import editor.viewport;
 import platform.dx12;
+import platform.win32.win32_window;
 
 export namespace editor
 {
@@ -76,6 +77,12 @@ public:
 	// Grid settings management
 	void showGridSettingsWindow( bool show = true );
 	bool isGridSettingsWindowOpen() const;
+
+	// Get viewport manager for input handling
+	ViewportManager &getViewportManager();
+
+	void processInputEvents( platform::Win32Window &window );
+	void updateViewports( const float deltaTime );
 
 private:
 	ViewportLayout m_layout;

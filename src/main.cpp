@@ -6,6 +6,7 @@ import platform.pix;
 import editor.ui;
 #include <iostream>
 #include <filesystem>
+#include <chrono>
 
 // Helper function to fix the current working directory by searching for the shaders folder
 void fixWorkingDirectory()
@@ -92,6 +93,9 @@ int main()
 	int frameCount = 0;
 	try
 	{
+		// Calculate deltaTime (rough approximation - you might want to improve this)
+		auto lastTime = std::chrono::high_resolution_clock::now();
+		float deltaTime = 0.0f;
 		while ( window.poll() && !ui.shouldExit() )
 		{
 			// PIX frame marker
@@ -103,6 +107,18 @@ int main()
 			{
 				pix::ScopedEvent pixBeginFrame( commandList, pix::MarkerColor::Blue, "Begin D3D12 Frame" );
 				device.beginFrame();
+			}
+
+			// Process window input events and forward to viewports (before UI to allow ImGui priority)
+			{
+				pix::ScopedEvent pixInputForward( commandList, pix::MarkerColor::Yellow, "Input Processing" );
+				ui.processInputEvents( window );
+			}
+
+			// Update viewports with timing (for camera controllers)
+			{
+				pix::ScopedEvent pixViewportUpdate( commandList, pix::MarkerColor::Magenta, "Viewport Update" );
+				ui.updateViewports( deltaTime );
 			}
 
 			// Begin UI frame (sets up docking)
@@ -139,6 +155,10 @@ int main()
 
 			// App tick
 			app.tick();
+
+			const auto currentTime = std::chrono::high_resolution_clock::now();
+			deltaTime = std::chrono::duration<float>( currentTime - lastTime ).count();
+			lastTime = currentTime;
 		}
 	}
 	catch ( const std::exception &e )

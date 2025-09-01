@@ -621,4 +621,96 @@ bool UI::isGridSettingsWindowOpen() const
 	return m_impl->showGridSettingsWindow;
 }
 
+ViewportManager &UI::getViewportManager()
+{
+	return m_impl->viewportManager;
+}
+
+void UI::processInputEvents( platform::Win32Window &window )
+{
+	if ( !m_initialized )
+		return;
+
+	platform::WindowEvent windowEvent;
+	while ( window.getEvent( windowEvent ) )
+	{
+		// Forward input events to viewports
+		// Check if ImGui wants to capture input (will be set during UI frame)
+		// For now, we'll forward all input and let the viewport system handle priority
+
+		// Get viewport manager
+		auto &viewportManager = m_impl->viewportManager;
+
+		// Convert WindowEvent to ViewportInputEvent
+		ViewportInputEvent viewportEvent;
+		bool hasValidEvent = false;
+
+		switch ( windowEvent.type )
+		{
+		case platform::WindowEvent::Type::MouseMove:
+			viewportEvent.type = ViewportInputEvent::Type::MouseMove;
+			viewportEvent.mouse.x = windowEvent.mouse.x;
+			viewportEvent.mouse.y = windowEvent.mouse.y;
+			viewportEvent.mouse.deltaX = windowEvent.mouse.deltaX;
+			viewportEvent.mouse.deltaY = windowEvent.mouse.deltaY;
+			hasValidEvent = true;
+			break;
+
+		case platform::WindowEvent::Type::MouseButton:
+			viewportEvent.type = ViewportInputEvent::Type::MouseButton;
+			viewportEvent.mouse.x = windowEvent.mouse.x;
+			viewportEvent.mouse.y = windowEvent.mouse.y;
+			viewportEvent.mouse.button = windowEvent.mouse.button;
+			viewportEvent.mouse.pressed = windowEvent.mouse.pressed;
+			hasValidEvent = true;
+			break;
+
+		case platform::WindowEvent::Type::MouseWheel:
+			viewportEvent.type = ViewportInputEvent::Type::MouseWheel;
+			viewportEvent.mouse.x = windowEvent.mouse.x;
+			viewportEvent.mouse.y = windowEvent.mouse.y;
+			viewportEvent.mouse.wheelDelta = windowEvent.mouse.wheelDelta;
+			hasValidEvent = true;
+			break;
+
+		case platform::WindowEvent::Type::KeyPress:
+			viewportEvent.type = ViewportInputEvent::Type::KeyPress;
+			viewportEvent.keyboard.keyCode = windowEvent.keyboard.keycode;
+			viewportEvent.keyboard.shift = windowEvent.keyboard.shift;
+			viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
+			viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
+			hasValidEvent = true;
+			break;
+
+		case platform::WindowEvent::Type::KeyRelease:
+			viewportEvent.type = ViewportInputEvent::Type::KeyRelease;
+			viewportEvent.keyboard.keyCode = windowEvent.keyboard.keycode;
+			viewportEvent.keyboard.shift = windowEvent.keyboard.shift;
+			viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
+			viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
+			hasValidEvent = true;
+			break;
+
+		default:
+			// Ignore unsupported events
+			break;
+		}
+
+		// Forward to focused viewport if we have a valid event
+		if ( hasValidEvent )
+		{
+			auto *focusedViewport = viewportManager.getFocusedViewport();
+			if ( focusedViewport )
+			{
+				focusedViewport->handleInput( viewportEvent );
+			}
+		}
+	}
+}
+
+void UI::updateViewports( const float deltaTime )
+{
+	m_impl->viewportManager.update( deltaTime );
+}
+
 } // namespace editor

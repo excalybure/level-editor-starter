@@ -202,6 +202,7 @@ target_link_libraries(editor.ui PRIVATE
   imgui::imgui
   Microsoft::DirectX-Headers
   d3d12
+  platform.win32
 )
 target_link_libraries(editor.ui PUBLIC 
   editor.viewport
