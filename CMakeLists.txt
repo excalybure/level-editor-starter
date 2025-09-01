@@ -240,6 +240,16 @@ target_sources(engine.camera PUBLIC
 target_compile_features(engine.camera PUBLIC cxx_std_23)
 target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math)
 
+add_library(engine.grid)
+target_sources(engine.grid PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/grid/grid.ixx
+  PRIVATE
+    src/engine/grid/grid.cpp
+)
+target_compile_features(engine.grid PUBLIC cxx_std_23)
+target_link_libraries(engine.grid PUBLIC engine.vec engine.matrix engine.camera engine.renderer platform.dx12 engine.color d3d12 dxgi d3dcompiler)
+
 add_library(editor.viewport)
 target_sources(editor.viewport PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -262,7 +272,7 @@ if (MSVC)
   foreach(tgt IN ITEMS 
     engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
     engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
-    engine.math_2d engine.math_3d engine.renderer engine.camera
+    engine.math_2d engine.math_3d engine.renderer engine.camera engine.grid
     runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui editor.viewport)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
@@ -304,13 +314,14 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
-  tests/ecs_tests.cpp
-  tests/app_tests.cpp
-  tests/renderer_integration_tests.cpp
-  tests/integration_tests.cpp
-  tests/ui_tests.cpp
-  tests/win32_window_tests.cpp
-  tests/console_tests.cpp
+    tests/grid_tests.cpp
+    tests/ecs_tests.cpp
+    tests/app_tests.cpp
+    tests/renderer_integration_tests.cpp
+    tests/integration_tests.cpp
+    tests/ui_tests.cpp
+    tests/win32_window_tests.cpp
+    tests/console_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -328,12 +339,13 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     platform.dx12
     engine.renderer
     engine.camera
+    engine.grid
     editor.viewport
-  runtime.ecs
-  runtime.app
-  runtime.console
-  editor.ui
-  platform.win32
+    runtime.ecs
+    runtime.app
+    runtime.console
+    editor.ui
+    platform.win32
     Catch2::Catch2WithMain
   )
   target_compile_features(unit_test_runner PUBLIC cxx_std_23)

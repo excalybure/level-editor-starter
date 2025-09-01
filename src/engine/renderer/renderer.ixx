@@ -71,7 +71,8 @@ public:
 		const std::string &source,
 		const std::string &entryPoint,
 		const std::string &profile,
-		const std::vector<std::string> &defines = {} );
+		const std::vector<std::string> &defines = {},
+		const std::filesystem::path *shaderDirectory = nullptr );
 
 	static ShaderBlob CompileFromFile(
 		const std::filesystem::path &filePath,

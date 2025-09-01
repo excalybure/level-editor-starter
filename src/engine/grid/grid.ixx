@@ -1,0 +1,171 @@
+// Grid rendering system - infinite world-space grid with adaptive density
+// Copyright (c) 2025 Level Editor Project
+
+module;
+
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <wrl.h>
+#include <windows.h>
+#include <cstring>
+
+export module engine.grid;
+
+import std;
+import platform.dx12;
+import engine.renderer;
+import engine.vec;
+import engine.matrix;
+import engine.camera;
+import engine.color;
+
+export namespace grid
+{
+
+// Grid rendering parameters
+export struct GridSettings
+{
+	// Grid appearance
+	math::Vec3<> majorGridColor = { 0.5f, 0.5f, 0.5f };
+	float majorGridAlpha = 0.8f;
+
+	math::Vec3<> minorGridColor = { 0.3f, 0.3f, 0.3f };
+	float minorGridAlpha = 0.4f;
+
+	// Axis colors (X=Red, Y=Green, Z=Blue)
+	math::Vec3<> axisXColor = { 1.0f, 0.2f, 0.2f };
+	float axisXAlpha = 1.0f;
+
+	math::Vec3<> axisYColor = { 0.2f, 1.0f, 0.2f };
+	float axisYAlpha = 1.0f;
+
+	math::Vec3<> axisZColor = { 0.2f, 0.2f, 1.0f };
+	float axisZAlpha = 1.0f;
+
+	// Grid properties
+	float gridSpacing = 1.0f;		 // Units per grid line
+	float majorGridInterval = 10.0f; // Major grid every N minor lines
+	float fadeDistance = 100.0f;	 // Distance at which grid fades out
+	float axisThickness = 2.0f;		 // Thickness of axis lines
+
+	// Visibility flags
+	bool showGrid = true;
+	bool showAxes = true;
+
+	// Adaptive zoom settings
+	float zoomThreshold = 0.1f;	   // When to switch grid density
+	float maxGridSpacing = 100.0f; // Maximum grid spacing
+	float minGridSpacing = 0.01f;  // Minimum grid spacing
+};
+
+// Forward declarations
+class GridRenderer;
+
+// Grid rendering system
+export class GridRenderer
+{
+public:
+	GridRenderer();
+	~GridRenderer() = default;
+
+	// No copy/move for now
+	GridRenderer( const GridRenderer & ) = delete;
+	GridRenderer &operator=( const GridRenderer & ) = delete;
+
+	// Initialize the grid renderer with D3D12 device
+	bool initialize( dx12::Device *device );
+	void shutdown();
+
+	// Render the grid for a specific viewport
+	bool render( const camera::Camera &camera,
+		const math::Mat4<> &viewMatrix,
+		const math::Mat4<> &projMatrix,
+		float viewportWidth,
+		float viewportHeight );
+
+	// Settings management
+	void setSettings( const GridSettings &settings ) { m_settings = settings; }
+	const GridSettings &getSettings() const { return m_settings; }
+	GridSettings &getSettings() { return m_settings; }
+
+	// Adaptive grid density based on camera distance/zoom
+	void updateAdaptiveSpacing( const camera::Camera &camera );
+
+	// Utility functions
+	static float calculateOptimalSpacing( const float cameraDistance, const float baseSpacing = 1.0f );
+	static int calculateMajorInterval( const float spacing );
+
+private:
+	// D3D12 resources
+	dx12::Device *m_device = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+
+	// Shaders
+	renderer::ShaderBlob m_vertexShader;
+	renderer::ShaderBlob m_pixelShader;
+
+	// Constant buffer
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
+	void *m_constantBufferData = nullptr;
+
+	// Grid settings
+	GridSettings m_settings;
+
+	// Helper functions
+	bool createShaders();
+	bool createRootSignature();
+	bool createPipelineState();
+	bool createConstantBuffer();
+
+	void updateConstantBuffer( const camera::Camera &camera,
+		const math::Mat4<> &viewMatrix,
+		const math::Mat4<> &projMatrix,
+		float viewportWidth,
+		float viewportHeight );
+
+	math::Mat4<> calculateInverseViewProjMatrix( const math::Mat4<> &viewMatrix,
+		const math::Mat4<> &projMatrix ) const;
+};
+
+// Utility functions for grid calculations
+export namespace GridUtils
+{
+// Calculate appropriate grid spacing for a given camera distance
+float calculateAdaptiveSpacing( const float cameraDistance, const float baseSpacing = 1.0f );
+
+// Calculate major grid interval based on spacing
+int calculateMajorInterval( const float spacing );
+
+// Check if a point is on a grid line
+bool isOnGridLine( const math::Vec2<> &point, const float spacing, const float tolerance = 0.01f );
+
+// Snap a point to the nearest grid intersection
+math::Vec2<> snapToGrid( const math::Vec2<> &point, const float spacing );
+math::Vec3<> snapToGrid( const math::Vec3<> &point, const float spacing );
+
+// Calculate grid bounds for a given view frustum
+struct GridBounds
+{
+	math::Vec2<> min;
+	math::Vec2<> max;
+	float optimalSpacing;
+	int majorInterval;
+};
+
+GridBounds calculateGridBounds( const camera::Camera &camera,
+	const math::Mat4<> &viewMatrix,
+	const math::Mat4<> &projMatrix,
+	const float viewportWidth,
+	const float viewportHeight );
+
+// Grid color utilities
+math::Vec3<> getAxisColor( const int axis ); // 0=X(red), 1=Y(green), 2=Z(blue)
+float calculateGridFade( const math::Vec3<> &worldPos,
+	const math::Vec3<> &cameraPos,
+	const float fadeDistance );
+} // namespace GridUtils
+
+} // namespace grid

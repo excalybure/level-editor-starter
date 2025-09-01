@@ -57,12 +57,65 @@ float4 main(PSInput input) : SV_TARGET
 }
 )";
 
+// Custom include handler for shader compilation
+class ShaderIncludeHandler : public ID3DInclude
+{
+private:
+	std::filesystem::path m_shaderDirectory;
+
+public:
+	ShaderIncludeHandler( const std::filesystem::path &shaderDir ) : m_shaderDirectory( shaderDir ) {}
+
+	HRESULT __stdcall Open( D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes ) override
+	{
+		const std::filesystem::path includePath = m_shaderDirectory / pFileName;
+
+		if ( !std::filesystem::exists( includePath ) )
+		{
+			return E_FAIL;
+		}
+
+		std::ifstream file( includePath, std::ios::binary | std::ios::ate );
+		if ( !file.is_open() )
+		{
+			return E_FAIL;
+		}
+
+		file.seekg( 0, std::ios::end );
+		auto size = static_cast<size_t>( file.tellg() );
+		file.seekg( 0, std::ios::beg );
+
+		char *buffer = new char[size + 1];
+		if ( !file.read( buffer, static_cast<std::streamsize>( size ) ) )
+		{
+			delete[] buffer;
+			return E_FAIL;
+		}
+		buffer[size] = '\0';
+
+		*ppData = buffer;
+		*pBytes = static_cast<UINT>( size );
+
+		return S_OK;
+	}
+
+	HRESULT __stdcall Close( LPCVOID pData ) override
+	{
+		if ( pData )
+		{
+			delete[] static_cast<const char *>( pData );
+		}
+		return S_OK;
+	}
+};
+
 // ShaderCompiler implementation
 ShaderBlob ShaderCompiler::CompileFromSource(
 	const std::string &source,
 	const std::string &entryPoint,
 	const std::string &profile,
-	const std::vector<std::string> &defines )
+	const std::vector<std::string> &defines,
+	const std::filesystem::path *shaderDirectory )
 {
 	ShaderBlob result;
 	result.entryPoint = entryPoint;
@@ -85,12 +138,16 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 	const char *finalSource = defines.empty() ? source.c_str() : fullSource.c_str();
 	const size_t finalSourceSize = defines.empty() ? source.length() : fullSource.length();
 
+	// Create include handler for shader directory
+	const std::filesystem::path includeDir = shaderDirectory ? *shaderDirectory : ( std::filesystem::current_path() / "shaders" );
+	ShaderIncludeHandler includeHandler( includeDir );
+
 	HRESULT hr = D3DCompile(
 		finalSource,
 		finalSourceSize,
 		nullptr,
 		nullptr,
-		nullptr,
+		&includeHandler,
 		entryPoint.c_str(),
 		profile.c_str(),
 		compileFlags,
@@ -132,7 +189,10 @@ ShaderBlob ShaderCompiler::CompileFromFile(
 	}
 
 	const std::string source( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
-	return CompileFromSource( source, entryPoint, profile, defines );
+
+	// Extract directory from file path for include resolution
+	const std::filesystem::path shaderDirectory = filePath.parent_path();
+	return CompileFromSource( source, entryPoint, profile, defines, &shaderDirectory );
 }
 
 std::string ShaderCompiler::BuildDefineString( const std::vector<std::string> &defines )
@@ -543,11 +603,11 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 
 	// Create RTVs for current swap chain back buffers
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+	const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
 	for ( UINT i = 0; i < dx12::SwapChain::kBufferCount; i++ )
 	{
-		ID3D12Resource *backBuffer = swapChain.getCurrentBackBuffer();
+		ID3D12Resource *const backBuffer = swapChain.getCurrentBackBuffer();
 		m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
 		rtvHandle.ptr += rtvDescriptorSize;
 	}
@@ -604,7 +664,7 @@ void Renderer::clear( const Color &clearColor ) noexcept
 	if ( !m_currentContext )
 		return;
 
-	float color[4] = { clearColor.r, clearColor.g, clearColor.b, clearColor.a };
+	const float color[4] = { clearColor.r, clearColor.g, clearColor.b, clearColor.a };
 	( *m_currentContext )->ClearRenderTargetView( getCurrentRTV(), color, 0, nullptr );
 }
 
@@ -681,7 +741,7 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	( *m_currentContext )->IASetPrimitiveTopology( topology );
 
 	// Set vertex buffer and draw
-	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
+	const D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
 	( *m_currentContext )->IASetVertexBuffers( 0, 1, &vbv );
 	( *m_currentContext )->DrawInstanced( static_cast<UINT>( vertices.size() ), 1, 0, 0 );
 }
@@ -718,8 +778,8 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	( *m_currentContext )->IASetPrimitiveTopology( topology );
 
 	// Set buffers and draw
-	D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
-	D3D12_INDEX_BUFFER_VIEW ibv = m_dynamicIndexBuffer->getView();
+	const D3D12_VERTEX_BUFFER_VIEW vbv = m_dynamicVertexBuffer->getView();
+	const D3D12_INDEX_BUFFER_VIEW ibv = m_dynamicIndexBuffer->getView();
 	( *m_currentContext )->IASetVertexBuffers( 0, 1, &vbv );
 	( *m_currentContext )->IASetIndexBuffer( &ibv );
 	( *m_currentContext )->DrawIndexedInstanced( static_cast<UINT>( indices.size() ), 1, 0, 0, 0 );
@@ -755,7 +815,7 @@ void Renderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<>
 
 	// 12 edges of the cube
 	// clang-format off
-    std::vector<uint16_t> indices = {
+    const std::vector<uint16_t> indices = {
         // Bottom face
         0, 1,  1, 2,  2, 3,  3, 0,
         // Top face  
