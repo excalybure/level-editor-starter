@@ -343,6 +343,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/ui_tests.cpp
     tests/win32_window_tests.cpp
     tests/console_tests.cpp
+    tests/shader_manager_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -359,6 +360,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.math_3d
     platform.dx12
     engine.renderer
+    engine.shader_manager
     engine.camera
     engine.grid
     editor.viewport
