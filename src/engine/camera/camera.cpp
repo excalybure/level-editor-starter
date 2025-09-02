@@ -213,8 +213,6 @@ void OrthographicCamera::setupView( ViewType viewType ) noexcept
 
 void OrthographicCamera::frameBounds( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept
 {
-	m_target = center;
-
 	// Calculate appropriate orthographic size based on view type
 	float requiredSize = 0.0f;
 	switch ( m_viewType )
@@ -234,7 +232,30 @@ void OrthographicCamera::frameBounds( const math::Vec3<> &center, const math::Ve
 	}
 
 	setOrthographicSize( requiredSize );
+
+	// Update camera positioning first, then override target to center on bounds
 	updateCameraForViewType();
+
+	// Set target to the actual bounds center (this should override any constraints)
+	m_target = center;
+
+	// Recalculate position to maintain proper distance and orientation from the new target
+	const float distance = 50.0f; // Same distance as updateCameraForViewType
+	switch ( m_viewType )
+	{
+	case ViewType::Top: // XY plane, looking down Z-axis
+		m_position = m_target + math::Vec3<>{ 0.0f, 0.0f, distance };
+		break;
+	case ViewType::Front: // XZ plane, looking down Y-axis
+		m_position = m_target + math::Vec3<>{ 0.0f, -distance, 0.0f };
+		break;
+	case ViewType::Side: // YZ plane, looking down X-axis
+		m_position = m_target + math::Vec3<>{ distance, 0.0f, 0.0f };
+		break;
+	default:
+		std::unreachable();
+		break;
+	}
 }
 
 void OrthographicCamera::updateCameraForViewType() noexcept
@@ -265,9 +286,7 @@ void OrthographicCamera::updateCameraForViewType() noexcept
 		break;
 
 	default:
-		// Default to perspective-like positioning
-		m_position = m_target + math::Vec3<>{ 0.0f, -distance, distance * 0.5f };
-		m_up = math::Vec3<>{ 0.0f, 0.0f, 1.0f };
+		std::unreachable();
 		break;
 	}
 }
