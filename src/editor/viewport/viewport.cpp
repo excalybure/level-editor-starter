@@ -113,12 +113,6 @@ void Viewport::update( float deltaTime )
 	// Update camera through controller
 	m_controller->setCamera( m_camera.get() );
 	m_controller->update( m_currentInput );
-
-	// Update grid renderer (for shader hot reloading)
-	if ( m_gridRenderer )
-	{
-		m_gridRenderer->update();
-	}
 }
 
 void Viewport::render( dx12::Device *device )

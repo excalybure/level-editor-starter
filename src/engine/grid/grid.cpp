@@ -322,14 +322,6 @@ void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const 
 	createPipelineState();
 }
 
-void GridRenderer::update()
-{
-	if ( m_shaderManager )
-	{
-		m_shaderManager->update();
-	}
-}
-
 bool GridRenderer::createRootSignature()
 {
 	// Create root signature with one constant buffer parameter

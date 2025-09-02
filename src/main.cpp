@@ -121,6 +121,12 @@ int main()
 				ui.processInputEvents( window );
 			}
 
+			// Update shader manager (check for shader file changes and hot-reload)
+			{
+				pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
+				shaderManager.update();
+			}
+
 			// Update viewports with timing (for camera controllers)
 			{
 				pix::ScopedEvent pixViewportUpdate( commandList, pix::MarkerColor::Magenta, "Viewport Update" );

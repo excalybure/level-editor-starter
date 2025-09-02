@@ -78,9 +78,6 @@ public:
 	bool initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
 	void shutdown();
 
-	// Update shader manager and check for shader changes
-	void update();
-
 	// Render the grid for a specific viewport
 	bool render( const camera::Camera &camera,
 		const math::Mat4<> &viewMatrix,
