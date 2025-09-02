@@ -72,9 +72,20 @@ void ShaderManager::unregisterShader( ShaderHandle handle )
 	}
 }
 
-void ShaderManager::setReloadCallback( ShaderReloadCallback callback )
+CallbackHandle ShaderManager::registerReloadCallback( ShaderReloadCallback callback )
 {
-	m_reloadCallback = std::move( callback );
+	CallbackHandle handle = m_nextCallbackHandle++;
+	m_reloadCallbacks[handle] = std::move( callback );
+	return handle;
+}
+
+void ShaderManager::unregisterReloadCallback( CallbackHandle callbackHandle )
+{
+	auto it = m_reloadCallbacks.find( callbackHandle );
+	if ( it != m_reloadCallbacks.end() )
+	{
+		m_reloadCallbacks.erase( it );
+	}
 }
 
 const renderer::ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) const
@@ -135,10 +146,13 @@ void ShaderManager::update()
 					shaderTypeToString( shaderInfo.type ),
 					shaderInfo.entryPoint );
 
-				// Notify callback if set
-				if ( m_reloadCallback )
+				// Notify all registered callbacks
+				for ( const auto &[callbackHandle, callback] : m_reloadCallbacks )
 				{
-					m_reloadCallback( handle, shaderInfo.compiledBlob );
+					if ( callback )
+					{
+						callback( handle, shaderInfo.compiledBlob );
+					}
 				}
 			}
 			else
@@ -169,10 +183,13 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 				shaderTypeToString( it->second.type ),
 				it->second.entryPoint );
 
-			// Notify callback if set
-			if ( m_reloadCallback )
+			// Notify all registered callbacks
+			for ( const auto &[callbackHandle, callback] : m_reloadCallbacks )
 			{
-				m_reloadCallback( handle, it->second.compiledBlob );
+				if ( callback )
+				{
+					callback( handle, it->second.compiledBlob );
+				}
 			}
 			return true;
 		}

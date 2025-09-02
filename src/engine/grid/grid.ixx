@@ -68,7 +68,7 @@ export class GridRenderer
 {
 public:
 	GridRenderer();
-	~GridRenderer() = default;
+	~GridRenderer();
 
 	// No copy/move for now
 	GridRenderer( const GridRenderer & ) = delete;
@@ -107,6 +107,7 @@ private:
 	shader_manager::ShaderManager *m_shaderManager = nullptr;
 	shader_manager::ShaderHandle m_vertexShaderHandle;
 	shader_manager::ShaderHandle m_pixelShaderHandle;
+	shader_manager::CallbackHandle m_callbackHandle;
 
 	// Constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;

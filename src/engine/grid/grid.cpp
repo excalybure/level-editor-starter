@@ -103,6 +103,15 @@ GridRenderer::GridRenderer()
 	m_settings = GridSettings{};
 }
 
+GridRenderer::~GridRenderer()
+{
+	// Unregister the callback if we have one
+	if ( m_shaderManager && m_callbackHandle != shader_manager::INVALID_CALLBACK_HANDLE )
+	{
+		m_shaderManager->unregisterReloadCallback( m_callbackHandle );
+	}
+}
+
 bool GridRenderer::initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
 	if ( !device || !shaderManager )
@@ -142,6 +151,13 @@ bool GridRenderer::initialize( dx12::Device *device, shader_manager::ShaderManag
 
 void GridRenderer::shutdown()
 {
+	// Unregister the callback if we have one
+	if ( m_shaderManager && m_callbackHandle != shader_manager::INVALID_CALLBACK_HANDLE )
+	{
+		m_shaderManager->unregisterReloadCallback( m_callbackHandle );
+		m_callbackHandle = shader_manager::INVALID_CALLBACK_HANDLE;
+	}
+
 	if ( m_constantBufferData )
 	{
 		m_constantBuffer->Unmap( 0, nullptr );
@@ -152,6 +168,7 @@ void GridRenderer::shutdown()
 	m_pipelineState.Reset();
 	m_rootSignature.Reset();
 	m_device = nullptr;
+	m_shaderManager = nullptr;
 }
 
 bool GridRenderer::render( const camera::Camera &camera,
@@ -300,7 +317,7 @@ bool GridRenderer::registerShaders()
 	}
 
 	// Set up reload callback for shader hot reloading
-	m_shaderManager->setReloadCallback(
+	m_callbackHandle = m_shaderManager->registerReloadCallback(
 		[this]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader ) {
 			this->onShaderReloaded( handle, newShader );
 		} );

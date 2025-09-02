@@ -43,6 +43,10 @@ struct ShaderInfo
 // Called when a shader is successfully recompiled
 using ShaderReloadCallback = std::function<void( ShaderHandle handle, const renderer::ShaderBlob &newBlob )>;
 
+// Callback registration handle - used to unregister callbacks
+using CallbackHandle = size_t;
+const CallbackHandle INVALID_CALLBACK_HANDLE = 0;
+
 // Shader Manager - manages automatic shader reloading
 class ShaderManager
 {
@@ -61,8 +65,12 @@ public:
 	// Unregister a shader (stops watching for changes)
 	void unregisterShader( ShaderHandle handle );
 
-	// Set callback for when shaders are reloaded
-	void setReloadCallback( ShaderReloadCallback callback );
+	// Register a callback for when shaders are reloaded
+	// Returns a handle that can be used to unregister the callback
+	CallbackHandle registerReloadCallback( ShaderReloadCallback callback );
+
+	// Unregister a reload callback
+	void unregisterReloadCallback( CallbackHandle callbackHandle );
 
 	// Get the current compiled blob for a shader
 	const renderer::ShaderBlob *getShaderBlob( ShaderHandle handle ) const;
@@ -88,7 +96,10 @@ private:
 	std::unordered_map<ShaderHandle, ShaderInfo> m_shaders;
 	std::unordered_map<size_t, ShaderHandle> m_shaderHashMap; // Hash -> Handle mapping for fast lookup
 	ShaderHandle m_nextHandle = 1;
-	ShaderReloadCallback m_reloadCallback;
+
+	// Multiple callback support
+	std::unordered_map<CallbackHandle, ShaderReloadCallback> m_reloadCallbacks;
+	CallbackHandle m_nextCallbackHandle = 1;
 
 	// Helper functions
 	bool compileShader( ShaderInfo &shaderInfo );

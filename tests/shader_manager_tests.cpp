@@ -73,7 +73,7 @@ float4 invalid_syntax_here;
 	// Create a temporary shader file with given content
 	std::filesystem::path createShaderFile( const std::string &filename, const std::string &content )
 	{
-		auto filePath = m_testDir / filename;
+		const auto filePath = m_testDir / filename;
 		std::ofstream file( filePath );
 		file << content;
 		file.close();
@@ -108,7 +108,7 @@ TEST_CASE( "ShaderManager Basic Construction", "[shader_manager][construction]" 
 		ShaderManager manager;
 
 		// Manager should start with no registered shaders
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.empty() );
 	}
 }
@@ -120,9 +120,9 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 
 	SECTION( "Register valid vertex shader" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test_vertex.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath = fixture.createShaderFile( "test_vertex.hlsl", fixture.getValidShaderContent() );
 
-		auto handle = manager.registerShader(
+		const auto handle = manager.registerShader(
 			shaderPath,
 			"VSMain",
 			"vs_5_0",
@@ -131,12 +131,12 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// Check that shader was registered
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.size() == 1 );
 		REQUIRE( handles[0] == handle );
 
 		// Check shader info
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 		REQUIRE( shaderInfo->handle == handle );
 		REQUIRE( shaderInfo->filePath == shaderPath );
@@ -147,9 +147,9 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 
 	SECTION( "Register valid pixel shader" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test_pixel.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath = fixture.createShaderFile( "test_pixel.hlsl", fixture.getValidShaderContent() );
 
-		auto handle = manager.registerShader(
+		const auto handle = manager.registerShader(
 			shaderPath,
 			"PSMain",
 			"ps_5_0",
@@ -158,7 +158,7 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// Check shader info
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 		REQUIRE( shaderInfo->type == ShaderType::Pixel );
 		REQUIRE( shaderInfo->entryPoint == "PSMain" );
@@ -167,25 +167,25 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 
 	SECTION( "Register multiple shaders with unique handles" )
 	{
-		auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
-		auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
 
-		auto handle1 = manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle2 = manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
+		const auto handle1 = manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle2 = manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
 
 		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
 		REQUIRE( handle2 != INVALID_SHADER_HANDLE );
 		REQUIRE( handle1 != handle2 );
 
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.size() == 2 );
 	}
 
 	SECTION( "Register shader with non-existent file" )
 	{
-		auto nonExistentPath = fixture.getTestDirectory() / "non_existent.hlsl";
+		const auto nonExistentPath = fixture.getTestDirectory() / "non_existent.hlsl";
 
-		auto handle = manager.registerShader(
+		const auto handle = manager.registerShader(
 			nonExistentPath,
 			"VSMain",
 			"vs_5_0",
@@ -195,23 +195,23 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// But shader should not be valid
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 		REQUIRE_FALSE( shaderInfo->isValid );
 
 		// Shader blob should be null
-		auto blob = manager.getShaderBlob( handle );
+		const auto blob = manager.getShaderBlob( handle );
 		REQUIRE( blob == nullptr );
 	}
 
 	SECTION( "Register duplicate shader returns same handle" )
 	{
-		auto shaderPath = fixture.createShaderFile( "duplicate_test.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath = fixture.createShaderFile( "duplicate_test.hlsl", fixture.getValidShaderContent() );
 
 		// Register the same shader multiple times with identical parameters
-		auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle2 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle2 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// All handles should be the same
 		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
@@ -219,14 +219,14 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		REQUIRE( handle3 == handle1 );
 
 		// Should only have one shader registered
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.size() == 1 );
 		REQUIRE( handles[0] == handle1 );
 
 		// All handles should point to the same shader info
-		auto shaderInfo1 = manager.getShaderInfo( handle1 );
-		auto shaderInfo2 = manager.getShaderInfo( handle2 );
-		auto shaderInfo3 = manager.getShaderInfo( handle3 );
+		const auto shaderInfo1 = manager.getShaderInfo( handle1 );
+		const auto shaderInfo2 = manager.getShaderInfo( handle2 );
+		const auto shaderInfo3 = manager.getShaderInfo( handle3 );
 
 		REQUIRE( shaderInfo1 != nullptr );
 		REQUIRE( shaderInfo2 == shaderInfo1 ); // Same pointer
@@ -235,14 +235,14 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 
 	SECTION( "Register similar shaders with different parameters get different handles" )
 	{
-		auto shaderPath = fixture.createShaderFile( "similar_test.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath = fixture.createShaderFile( "similar_test.hlsl", fixture.getValidShaderContent() );
 
 		// Register shaders with same file but different entry points
-		auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle2 = manager.registerShader( shaderPath, "PSMain", "ps_5_0", ShaderType::Pixel );
+		const auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle2 = manager.registerShader( shaderPath, "PSMain", "ps_5_0", ShaderType::Pixel );
 
 		// Register shaders with same file and entry point but different targets
-		auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_4_0", ShaderType::Vertex );
+		const auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_4_0", ShaderType::Vertex );
 
 		// All handles should be different
 		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
@@ -253,7 +253,7 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		REQUIRE( handle2 != handle3 );
 
 		// Should have three different shaders registered
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.size() == 3 );
 	}
 }
@@ -265,8 +265,8 @@ TEST_CASE( "ShaderManager Shader Unregistration", "[shader_manager][unregistrati
 
 	SECTION( "Unregister valid shader" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 		REQUIRE( manager.getAllShaderHandles().size() == 1 );
@@ -291,11 +291,11 @@ TEST_CASE( "ShaderManager Shader Unregistration", "[shader_manager][unregistrati
 
 	SECTION( "Unregister one of multiple shaders" )
 	{
-		auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
-		auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
 
-		auto handle1 = manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle2 = manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
+		const auto handle1 = manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle2 = manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
 
 		REQUIRE( manager.getAllShaderHandles().size() == 2 );
 
@@ -303,7 +303,7 @@ TEST_CASE( "ShaderManager Shader Unregistration", "[shader_manager][unregistrati
 		manager.unregisterShader( handle1 );
 
 		// Should have one shader left
-		auto handles = manager.getAllShaderHandles();
+		const auto handles = manager.getAllShaderHandles();
 		REQUIRE( handles.size() == 1 );
 		REQUIRE( handles[0] == handle2 );
 
@@ -320,15 +320,15 @@ TEST_CASE( "ShaderManager Shader Compilation", "[shader_manager][compilation]" )
 
 	SECTION( "Successful shader compilation" )
 	{
-		auto shaderPath = fixture.createShaderFile( "valid.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "valid.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Should have valid shader info
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 
 		// Shader blob should be available (if compilation succeeded)
-		auto blob = manager.getShaderBlob( handle );
+		const auto blob = manager.getShaderBlob( handle );
 		if ( shaderInfo->isValid )
 		{
 			REQUIRE( blob != nullptr );
@@ -338,18 +338,18 @@ TEST_CASE( "ShaderManager Shader Compilation", "[shader_manager][compilation]" )
 
 	SECTION( "Failed shader compilation" )
 	{
-		auto shaderPath = fixture.createShaderFile( "invalid.hlsl", fixture.getInvalidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "invalid.hlsl", fixture.getInvalidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Should still have shader info
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 
 		// But shader should not be valid
 		REQUIRE_FALSE( shaderInfo->isValid );
 
 		// Shader blob should be null
-		auto blob = manager.getShaderBlob( handle );
+		const auto blob = manager.getShaderBlob( handle );
 		REQUIRE( blob == nullptr );
 	}
 }
@@ -361,14 +361,14 @@ TEST_CASE( "ShaderManager Force Recompilation", "[shader_manager][force_recompil
 
 	SECTION( "Force recompile single shader" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Force recompilation should succeed
-		bool result = manager.forceRecompile( handle );
+		const bool result = manager.forceRecompile( handle );
 
 		// Result depends on whether compilation succeeded
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 
 		if ( shaderInfo->isValid )
@@ -390,8 +390,8 @@ TEST_CASE( "ShaderManager Force Recompilation", "[shader_manager][force_recompil
 
 	SECTION( "Force recompile all shaders" )
 	{
-		auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
-		auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
 
 		manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
 		manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
@@ -411,19 +411,19 @@ TEST_CASE( "ShaderManager Callback System", "[shader_manager][callbacks]" )
 		bool callbackTriggered = false;
 		ShaderHandle callbackHandle = INVALID_SHADER_HANDLE;
 
-		// Set callback
-		manager.setReloadCallback( [&callbackTriggered, &callbackHandle]( ShaderHandle handle, const renderer::ShaderBlob &blob ) {
+		// Register callback
+		manager.registerReloadCallback( [&callbackTriggered, &callbackHandle]( ShaderHandle handle, const renderer::ShaderBlob & ) {
 			callbackTriggered = true;
 			callbackHandle = handle;
 		} );
 
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Force recompile should trigger callback if successful
 		manager.forceRecompile( handle );
 
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		if ( shaderInfo != nullptr && shaderInfo->isValid )
 		{
 			REQUIRE( callbackTriggered );
@@ -435,12 +435,12 @@ TEST_CASE( "ShaderManager Callback System", "[shader_manager][callbacks]" )
 	{
 		bool callbackTriggered = false;
 
-		manager.setReloadCallback( [&callbackTriggered]( ShaderHandle, const renderer::ShaderBlob & ) {
+		manager.registerReloadCallback( [&callbackTriggered]( ShaderHandle, const renderer::ShaderBlob & ) {
 			callbackTriggered = true;
 		} );
 
-		auto shaderPath = fixture.createShaderFile( "invalid.hlsl", fixture.getInvalidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "invalid.hlsl", fixture.getInvalidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Force recompile should not trigger callback on failure
 		manager.forceRecompile( handle );
@@ -458,17 +458,17 @@ TEST_CASE( "ShaderManager File Change Detection", "[shader_manager][file_watchin
 	{
 		bool callbackTriggered = false;
 
-		manager.setReloadCallback( [&callbackTriggered]( ShaderHandle, const renderer::ShaderBlob & ) {
+		manager.registerReloadCallback( [&callbackTriggered]( ShaderHandle, const renderer::ShaderBlob & ) {
 			callbackTriggered = true;
 		} );
 
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Get initial modification time
-		auto initialInfo = manager.getShaderInfo( handle );
+		const auto initialInfo = manager.getShaderInfo( handle );
 		REQUIRE( initialInfo != nullptr );
-		auto initialModTime = initialInfo->lastModified;
+		const auto initialModTime = initialInfo->lastModified;
 
 		// Update the file
 		fixture.updateShaderFile( shaderPath, fixture.getValidShaderContent() + "\n// Updated" );
@@ -477,12 +477,71 @@ TEST_CASE( "ShaderManager File Change Detection", "[shader_manager][file_watchin
 		manager.update();
 
 		// Check if modification time was updated
-		auto updatedInfo = manager.getShaderInfo( handle );
+		const auto updatedInfo = manager.getShaderInfo( handle );
 		REQUIRE( updatedInfo != nullptr );
 
 		// File modification time should be different (if filesystem has sufficient resolution)
 		// Note: Some filesystems have low resolution, so we'll just check that update() was called
 		REQUIRE_NOTHROW( manager.update() );
+	}
+}
+
+TEST_CASE( "ShaderManager Multiple Callbacks", "[shader_manager][callbacks]" )
+{
+	ShaderManagerTestFixture fixture;
+	ShaderManager manager;
+
+	SECTION( "Multiple callback registration and notification" )
+	{
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+
+		// Register multiple callbacks
+		bool callback1Triggered = false;
+		bool callback2Triggered = false;
+		bool callback3Triggered = false;
+
+		auto callbackHandle1 = manager.registerReloadCallback( [&callback1Triggered]( ShaderHandle, const renderer::ShaderBlob & ) {
+			callback1Triggered = true;
+		} );
+
+		auto callbackHandle2 = manager.registerReloadCallback( [&callback2Triggered]( ShaderHandle, const renderer::ShaderBlob & ) {
+			callback2Triggered = true;
+		} );
+
+		auto callbackHandle3 = manager.registerReloadCallback( [&callback3Triggered]( ShaderHandle, const renderer::ShaderBlob & ) {
+			callback3Triggered = true;
+		} );
+
+		// Verify callback handles are valid and unique
+		REQUIRE( callbackHandle1 != INVALID_CALLBACK_HANDLE );
+		REQUIRE( callbackHandle2 != INVALID_CALLBACK_HANDLE );
+		REQUIRE( callbackHandle3 != INVALID_CALLBACK_HANDLE );
+		REQUIRE( callbackHandle1 != callbackHandle2 );
+		REQUIRE( callbackHandle2 != callbackHandle3 );
+		REQUIRE( callbackHandle1 != callbackHandle3 );
+
+		// Force recompile should trigger all callbacks
+		REQUIRE( manager.forceRecompile( handle ) );
+
+		REQUIRE( callback1Triggered );
+		REQUIRE( callback2Triggered );
+		REQUIRE( callback3Triggered );
+
+		// Reset flags
+		callback1Triggered = false;
+		callback2Triggered = false;
+		callback3Triggered = false;
+
+		// Unregister one callback
+		manager.unregisterReloadCallback( callbackHandle2 );
+
+		// Force recompile should only trigger remaining callbacks
+		REQUIRE( manager.forceRecompile( handle ) );
+
+		REQUIRE( callback1Triggered );
+		REQUIRE_FALSE( callback2Triggered ); // Should not be triggered after unregistration
+		REQUIRE( callback3Triggered );
 	}
 }
 
@@ -493,7 +552,7 @@ TEST_CASE( "ShaderManager Shader Type Utilities", "[shader_manager][types]" )
 
 	SECTION( "Different shader types" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
 
 		std::vector<std::pair<ShaderType, std::string>> shaderTypes = {
 			{ ShaderType::Vertex, "vs_5_0" },
@@ -506,7 +565,7 @@ TEST_CASE( "ShaderManager Shader Type Utilities", "[shader_manager][types]" )
 
 		for ( const auto &[type, target] : shaderTypes )
 		{
-			auto handle = manager.registerShader( shaderPath, "VSMain", target, type );
+			const auto handle = manager.registerShader( shaderPath, "VSMain", target, type );
 			REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 			auto shaderInfo = manager.getShaderInfo( handle );
@@ -526,32 +585,32 @@ TEST_CASE( "ShaderManager Edge Cases", "[shader_manager][edge_cases]" )
 
 	SECTION( "Empty file path" )
 	{
-		auto handle = manager.registerShader( "", "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle = manager.registerShader( "", "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// Should not be valid due to empty path
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 		REQUIRE_FALSE( shaderInfo->isValid );
 	}
 
 	SECTION( "Empty entry point" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "", "vs_5_0", ShaderType::Vertex );
 
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
-		auto shaderInfo = manager.getShaderInfo( handle );
+		const auto shaderInfo = manager.getShaderInfo( handle );
 		REQUIRE( shaderInfo != nullptr );
 		REQUIRE( shaderInfo->entryPoint.empty() );
 	}
 
 	SECTION( "Multiple update calls" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Multiple updates should not cause issues
 		REQUIRE_NOTHROW( manager.update() );
@@ -561,8 +620,8 @@ TEST_CASE( "ShaderManager Edge Cases", "[shader_manager][edge_cases]" )
 
 	SECTION( "Query after unregistration" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		const auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Unregister shader
 		manager.unregisterShader( handle );
@@ -582,12 +641,12 @@ TEST_CASE( "ShaderManager Memory Management", "[shader_manager][memory]" )
 	{
 		{
 			ShaderManager manager;
-			auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+			const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
 
 			// Register multiple shaders
 			for ( int i = 0; i < 10; ++i )
 			{
-				auto path = fixture.createShaderFile( "test" + std::to_string( i ) + ".hlsl", fixture.getValidShaderContent() );
+				const auto path = fixture.createShaderFile( "test" + std::to_string( i ) + ".hlsl", fixture.getValidShaderContent() );
 				manager.registerShader( path, "VSMain", "vs_5_0", ShaderType::Vertex );
 			}
 
@@ -608,8 +667,8 @@ TEST_CASE( "ShaderManager Thread Safety", "[shader_manager][threading]" )
 
 	SECTION( "Multiple update calls from single thread" )
 	{
-		auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		auto handle = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
+		 manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Rapid update calls should be safe
 		for ( int i = 0; i < 100; ++i )
