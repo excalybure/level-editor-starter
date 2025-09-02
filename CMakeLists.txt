@@ -251,6 +251,16 @@ target_sources(engine.camera PUBLIC
 target_compile_features(engine.camera PUBLIC cxx_std_23)
 target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math)
 
+add_library(engine.shader_manager)
+target_sources(engine.shader_manager PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/shader_manager/shader_manager.ixx
+  PRIVATE
+    src/engine/shader_manager/shader_manager.cpp
+)
+target_compile_features(engine.shader_manager PUBLIC cxx_std_23)
+target_link_libraries(engine.shader_manager PUBLIC engine.renderer d3dcompiler)
+
 add_library(engine.grid)
 target_sources(engine.grid PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -259,7 +269,7 @@ target_sources(engine.grid PUBLIC
     src/engine/grid/grid.cpp
 )
 target_compile_features(engine.grid PUBLIC cxx_std_23)
-target_link_libraries(engine.grid PUBLIC engine.vec engine.matrix engine.camera engine.renderer platform.dx12 engine.color d3d12 dxgi d3dcompiler)
+target_link_libraries(engine.grid PUBLIC engine.vec engine.matrix engine.camera engine.renderer engine.shader_manager platform.dx12 engine.color d3d12 dxgi d3dcompiler)
 
 add_library(editor.viewport)
 target_sources(editor.viewport PUBLIC

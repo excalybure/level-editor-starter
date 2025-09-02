@@ -8,6 +8,7 @@ import editor.viewport;
 import engine.vec;
 import platform.dx12;
 import platform.win32.win32_window;
+import engine.shader_manager;
 
 using namespace editor;
 using namespace math;
@@ -66,14 +67,14 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		dx12::Device device;
 
 		// Should fail with null window handle
-		REQUIRE_FALSE( ui.initialize( nullptr, &device ) );
+		REQUIRE_FALSE( ui.initialize( nullptr, &device, nullptr ) );
 
 		// Should fail with null device
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 );
-		REQUIRE_FALSE( ui.initialize( dummyHwnd, nullptr ) );
+		REQUIRE_FALSE( ui.initialize( dummyHwnd, nullptr, nullptr ) );
 
 		// Should fail with both null
-		REQUIRE_FALSE( ui.initialize( nullptr, nullptr ) );
+		REQUIRE_FALSE( ui.initialize( nullptr, nullptr, nullptr ) );
 	}
 
 	SECTION( "UI layout structure is consistent" )
@@ -105,7 +106,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
 
 		// Test that UI-managed viewports have properly configured cameras
 		const ViewportType types[] = {
@@ -146,7 +148,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
 
 		auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
 		REQUIRE( perspectiveViewport != nullptr );
@@ -176,7 +179,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		REQUIRE( ui.initialize( dummyHwnd, &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
 
 		const auto &layout = ui.getLayout();
 
@@ -359,7 +363,8 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		}
 
 		UI ui;
-		REQUIRE( ui.initialize( window.getHandle(), &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
 
 		// Test grid settings window functionality with fully initialized UI
 		SECTION( "Grid settings window with initialized viewports" )

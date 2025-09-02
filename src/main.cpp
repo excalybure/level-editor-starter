@@ -4,6 +4,8 @@ import platform.win32.win32_window;
 import platform.dx12;
 import platform.pix;
 import editor.ui;
+import engine.shader_manager;
+
 #include <iostream>
 #include <filesystem>
 #include <chrono>
@@ -74,11 +76,15 @@ int main()
 		return 1;
 	}
 
+	// Create shader manager for automatic shader reloading
+	shader_manager::ShaderManager shaderManager;
+
 	// Initialize UI system with D3D12 device
 	editor::UI ui;
 	if ( !ui.initialize(
 			 static_cast<void *>( window.getHandle() ),
-			 &device ) )
+			 &device,
+			 &shaderManager ) )
 	{
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;

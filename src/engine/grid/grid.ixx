@@ -19,7 +19,7 @@ import engine.renderer;
 import engine.vec;
 import engine.matrix;
 import engine.camera;
-import engine.color;
+import engine.shader_manager;
 
 export namespace grid
 {
@@ -74,9 +74,12 @@ public:
 	GridRenderer( const GridRenderer & ) = delete;
 	GridRenderer &operator=( const GridRenderer & ) = delete;
 
-	// Initialize the grid renderer with D3D12 device
-	bool initialize( dx12::Device *device );
+	// Initialize the grid renderer with D3D12 device and shader manager
+	bool initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
 	void shutdown();
+
+	// Update shader manager and check for shader changes
+	void update();
 
 	// Render the grid for a specific viewport
 	bool render( const camera::Camera &camera,
@@ -103,9 +106,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
-	// Shaders
-	renderer::ShaderBlob m_vertexShader;
-	renderer::ShaderBlob m_pixelShader;
+	// Shader management
+	shader_manager::ShaderManager *m_shaderManager = nullptr;
+	shader_manager::ShaderHandle m_vertexShaderHandle;
+	shader_manager::ShaderHandle m_pixelShaderHandle;
 
 	// Constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
@@ -115,7 +119,8 @@ private:
 	GridSettings m_settings;
 
 	// Helper functions
-	bool createShaders();
+	bool registerShaders();
+	void onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader );
 	bool createRootSignature();
 	bool createPipelineState();
 	bool createConstantBuffer();

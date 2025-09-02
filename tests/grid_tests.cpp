@@ -7,6 +7,7 @@ import engine.grid;
 import engine.camera;
 import engine.vec;
 import engine.matrix;
+import engine.shader_manager;
 
 using namespace grid;
 using namespace math;
@@ -137,9 +138,10 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 			return;
 
 		GridRenderer renderer;
+		shader_manager::ShaderManager shaderManager;
 
-		// Initialize should succeed with valid device
-		REQUIRE( renderer.initialize( &device ) );
+		// Initialize should succeed with valid device and shader manager
+		REQUIRE( renderer.initialize( &device, &shaderManager ) );
 
 		// Should be able to shutdown cleanly
 		REQUIRE_NOTHROW( renderer.shutdown() );
@@ -150,7 +152,7 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 		GridRenderer renderer;
 
 		// Initialize with null device should fail
-		REQUIRE_FALSE( renderer.initialize( nullptr ) );
+		REQUIRE_FALSE( renderer.initialize( nullptr, nullptr ) );
 
 		// Shutdown without initialization should be safe
 		REQUIRE_NOTHROW( renderer.shutdown() );
@@ -219,7 +221,8 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 			return;
 
 		GridRenderer renderer;
-		REQUIRE( renderer.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( renderer.initialize( &device, &shaderManager ) );
 
 		// Create camera at different distances
 		PerspectiveCamera closeCamera;
@@ -390,7 +393,8 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 			return;
 
 		GridRenderer renderer;
-		REQUIRE( renderer.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( renderer.initialize( &device, &shaderManager ) );
 
 		// Create camera
 		PerspectiveCamera camera;
@@ -426,7 +430,8 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 			return;
 
 		GridRenderer renderer;
-		REQUIRE( renderer.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( renderer.initialize( &device, &shaderManager ) );
 
 		PerspectiveCamera camera;
 		Mat4<> viewMatrix = camera.getViewMatrix();

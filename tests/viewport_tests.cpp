@@ -8,6 +8,7 @@
 
 import editor.viewport;
 import platform.dx12;
+import engine.shader_manager;
 
 #include "test_dx12_helpers.h"
 
@@ -204,7 +205,8 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "ViewportManager Basic Operations" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		// Basic state checks should work after successful initialization
 		REQUIRE( manager.getViewports().empty() );
@@ -238,7 +240,8 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "ViewportManager null operations" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		// Should handle null operations without crashing
 		REQUIRE_NOTHROW( manager.destroyViewport( nullptr ) );
@@ -254,7 +257,8 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Active and focused viewport management" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		auto *viewport1 = manager.createViewport( ViewportType::Perspective );
 		auto *viewport2 = manager.createViewport( ViewportType::Top );
@@ -281,7 +285,8 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Update and render operations" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		[[maybe_unused]] auto *viewport1 = manager.createViewport( ViewportType::Perspective );
 		[[maybe_unused]] auto *viewport2 = manager.createViewport( ViewportType::Top );
@@ -298,7 +303,8 @@ TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 	dx12::Device device;
 
 	REQUIRE( requireHeadlessDevice( device, "ViewportFactory Standard Layout" ) );
-	REQUIRE( manager.initialize( &device ) );
+	shader_manager::ShaderManager shaderManager;
+	REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 	SECTION( "Create standard 4-viewport layout" )
 	{
@@ -444,7 +450,8 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Manager with no viewports" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		// Should handle gracefully
 		REQUIRE_NOTHROW( manager.update( 0.016f ) );
@@ -463,7 +470,8 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Destroy null viewport" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		// Should not crash
 		REQUIRE_NOTHROW( manager.destroyViewport( nullptr ) );
@@ -478,7 +486,8 @@ TEST_CASE( "Viewport Types Coverage", "[viewport][types]" )
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "All viewport types can be created" ) );
-		REQUIRE( manager.initialize( &device ) );
+		shader_manager::ShaderManager shaderManager;
+		REQUIRE( manager.initialize( &device, &shaderManager ) );
 
 		const auto *perspective = manager.createViewport( ViewportType::Perspective );
 		const auto *top = manager.createViewport( ViewportType::Top );

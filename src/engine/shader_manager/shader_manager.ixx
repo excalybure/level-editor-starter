@@ -1,0 +1,96 @@
+// Shader Manager - Automatic shader reloading and hot recompilation
+// Watches shader files for changes and automatically recompiles and reloads them
+export module engine.shader_manager;
+
+import std;
+import engine.renderer;
+import runtime.console;
+
+export namespace shader_manager
+{
+
+// Shader resource handle - identifies a specific shader
+using ShaderHandle = size_t;
+const ShaderHandle INVALID_SHADER_HANDLE = 0;
+
+// Types of shaders we can manage
+enum class ShaderType
+{
+	Vertex,
+	Pixel,
+	Compute,
+	Geometry,
+	Hull,
+	Domain
+};
+
+// Information about a managed shader
+struct ShaderInfo
+{
+	ShaderHandle handle;
+	std::filesystem::path filePath;
+	std::string entryPoint;
+	std::string target;
+	ShaderType type;
+	std::filesystem::file_time_type lastModified;
+	renderer::ShaderBlob compiledBlob;
+	bool isValid = false;
+};
+
+// Callback function type for shader reload notifications
+// Called when a shader is successfully recompiled
+using ShaderReloadCallback = std::function<void( ShaderHandle handle, const renderer::ShaderBlob &newBlob )>;
+
+// Shader Manager - manages automatic shader reloading
+class ShaderManager
+{
+public:
+	ShaderManager() = default;
+	~ShaderManager() = default;
+
+	// Register a shader for automatic reloading
+	// Returns a handle to the shader that can be used to access it
+	ShaderHandle registerShader(
+		const std::filesystem::path &filePath,
+		const std::string &entryPoint,
+		const std::string &target,
+		ShaderType type );
+
+	// Unregister a shader (stops watching for changes)
+	void unregisterShader( ShaderHandle handle );
+
+	// Set callback for when shaders are reloaded
+	void setReloadCallback( ShaderReloadCallback callback );
+
+	// Get the current compiled blob for a shader
+	const renderer::ShaderBlob *getShaderBlob( ShaderHandle handle ) const;
+
+	// Check for file changes and recompile if necessary
+	// Should be called regularly (e.g., every frame)
+	void update();
+
+	// Force recompilation of a specific shader
+	bool forceRecompile( ShaderHandle handle );
+
+	// Force recompilation of all shaders
+	void forceRecompileAll();
+
+	// Get shader info for debugging/display purposes
+	const ShaderInfo *getShaderInfo( ShaderHandle handle ) const;
+
+	// Get all registered shaders
+	std::vector<ShaderHandle> getAllShaderHandles() const;
+
+private:
+	// Internal data
+	std::unordered_map<ShaderHandle, ShaderInfo> m_shaders;
+	ShaderHandle m_nextHandle = 1;
+	ShaderReloadCallback m_reloadCallback;
+
+	// Helper functions
+	bool compileShader( ShaderInfo &shaderInfo );
+	std::filesystem::file_time_type getFileModificationTime( const std::filesystem::path &path );
+	std::string shaderTypeToString( ShaderType type ) const;
+};
+
+} // namespace shader_manager

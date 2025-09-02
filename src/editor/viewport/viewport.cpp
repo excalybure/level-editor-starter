@@ -113,6 +113,12 @@ void Viewport::update( float deltaTime )
 	// Update camera through controller
 	m_controller->setCamera( m_camera.get() );
 	m_controller->update( m_currentInput );
+
+	// Update grid renderer (for shader hot reloading)
+	if ( m_gridRenderer )
+	{
+		m_gridRenderer->update();
+	}
 }
 
 void Viewport::render( dx12::Device *device )
@@ -506,12 +512,13 @@ void Viewport::setupOrthographicView()
 // ViewportManager Implementation
 //=============================================================================
 
-bool ViewportManager::initialize( dx12::Device *device )
+bool ViewportManager::initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
-	if ( !device )
+	if ( !device || !shaderManager )
 		return false;
 
 	m_device = device;
+	m_shaderManager = shaderManager;
 	return true;
 }
 
@@ -537,7 +544,7 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 	}
 
 	// Initialize grid renderer for this viewport
-	if ( !ptr->initializeGrid( m_device ) )
+	if ( !ptr->initializeGrid( m_device, m_shaderManager ) )
 	{
 		console::warning( "Failed to initialize grid for viewport, grid rendering will not be available" );
 	}
@@ -887,14 +894,14 @@ ViewportInputEvent ViewportUtils::createKeyEvent( int keyCode, bool pressed, boo
 }
 
 // Grid integration methods for Viewport
-bool Viewport::initializeGrid( dx12::Device *device )
+bool Viewport::initializeGrid( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
 	if ( !m_gridRenderer )
 	{
 		m_gridRenderer = std::make_unique<grid::GridRenderer>();
 	}
 
-	if ( !m_gridRenderer->initialize( device ) )
+	if ( !m_gridRenderer->initialize( device, shaderManager ) )
 	{
 		console::error( "Failed to initialize grid renderer for viewport" );
 		m_gridRenderer.reset();

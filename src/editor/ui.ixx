@@ -4,6 +4,7 @@ import std;
 import editor.viewport;
 import platform.dx12;
 import platform.win32.win32_window;
+import engine.shader_manager;
 
 export namespace editor
 {
@@ -47,8 +48,8 @@ public:
 	UI( const UI & ) = delete;
 	UI &operator=( const UI & ) = delete;
 
-	// Initialize ImGui with D3D12 device
-	bool initialize( void *window_handle, dx12::Device *device );
+	// Initialize ImGui with D3D12 device and shader manager
+	bool initialize( void *window_handle, dx12::Device *device, shader_manager::ShaderManager *shaderManager );
 
 	// Cleanup ImGui resources
 	void shutdown();

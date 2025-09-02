@@ -53,7 +53,7 @@ struct UI::Impl
 	void renderGridSettingsWindow();
 
 	// Initialize viewports with D3D12 device
-	bool initializeViewports( dx12::Device *device );
+	bool initializeViewports( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
 	void shutdownViewports();
 
 	// Get viewport by type
@@ -70,7 +70,7 @@ UI::~UI()
 	shutdown();
 }
 
-bool UI::initialize( void *window_handle, dx12::Device *device )
+bool UI::initialize( void *window_handle, dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
 	HWND hwnd = static_cast<HWND>( window_handle );
 
@@ -80,8 +80,8 @@ bool UI::initialize( void *window_handle, dx12::Device *device )
 		return false;
 	}
 
-	// Initialize viewports with D3D12 device first
-	if ( !m_impl->initializeViewports( device ) )
+	// Initialize viewports with D3D12 device and shader manager first
+	if ( !m_impl->initializeViewports( device, shaderManager ) )
 	{
 		return false;
 	}
@@ -564,13 +564,13 @@ void UI::Impl::renderGridSettingsWindow()
 }
 
 // UI::Impl viewport management methods
-bool UI::Impl::initializeViewports( dx12::Device *device )
+bool UI::Impl::initializeViewports( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
 	if ( !device )
 		return false;
 
-	// Initialize viewport manager with D3D12 device
-	if ( !viewportManager.initialize( device ) )
+	// Initialize viewport manager with D3D12 device and shader manager
+	if ( !viewportManager.initialize( device, shaderManager ) )
 		return false;
 
 	// Create all four viewports

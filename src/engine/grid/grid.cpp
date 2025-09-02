@@ -103,17 +103,18 @@ GridRenderer::GridRenderer()
 	m_settings = GridSettings{};
 }
 
-bool GridRenderer::initialize( dx12::Device *device )
+bool GridRenderer::initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
 {
-	if ( !device )
+	if ( !device || !shaderManager )
 	{
 		return false;
 	}
 
 	m_device = device;
+	m_shaderManager = shaderManager;
 
-	// Create shaders
-	if ( !createShaders() )
+	// Register shaders with the shader manager
+	if ( !registerShaders() )
 	{
 		return false;
 	}
@@ -270,29 +271,63 @@ int GridRenderer::calculateMajorInterval( const float spacing )
 	}
 }
 
-bool GridRenderer::createShaders()
+bool GridRenderer::registerShaders()
 {
-	// Load and compile vertex shader from file
-	const std::filesystem::path shaderPath = "shaders/grid.hlsl";
+	// Register vertex shader
+	m_vertexShaderHandle = m_shaderManager->registerShader(
+		"shaders/grid.hlsl",
+		"VSMain",
+		"vs_5_0",
+		shader_manager::ShaderType::Vertex );
 
-	m_vertexShader = renderer::ShaderCompiler::CompileFromFile( shaderPath, "VSMain", "vs_5_0" );
-
-	if ( !m_vertexShader.isValid() )
+	if ( m_vertexShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
 	{
-		// Log error or handle failure
+		console::error( "Failed to register vertex shader for grid" );
 		return false;
 	}
 
-	// Load and compile pixel shader from file
-	m_pixelShader = renderer::ShaderCompiler::CompileFromFile( shaderPath, "PSMain", "ps_5_0" );
+	// Register pixel shader
+	m_pixelShaderHandle = m_shaderManager->registerShader(
+		"shaders/grid.hlsl",
+		"PSMain",
+		"ps_5_0",
+		shader_manager::ShaderType::Pixel );
 
-	if ( !m_pixelShader.isValid() )
+	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
 	{
-		// Log error or handle failure
+		console::error( "Failed to register pixel shader for grid" );
+		return false;
+	}
+
+	// Set up reload callback for shader hot reloading
+	m_shaderManager->setReloadCallback(
+		[this]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader ) {
+			this->onShaderReloaded( handle, newShader );
+		} );
+
+	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
+	{
+		console::error( "Failed to register pixel shader for grid" );
 		return false;
 	}
 
 	return true;
+}
+
+void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader )
+{
+	console::info( "Grid shader reloaded, recreating pipeline state..." );
+
+	// Recreate the pipeline state with new shaders
+	createPipelineState();
+}
+
+void GridRenderer::update()
+{
+	if ( m_shaderManager )
+	{
+		m_shaderManager->update();
+	}
 }
 
 bool GridRenderer::createRootSignature()
@@ -335,11 +370,21 @@ bool GridRenderer::createRootSignature()
 
 bool GridRenderer::createPipelineState()
 {
+	// Get current shader blobs from shader manager
+	const renderer::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
+	const renderer::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
+
+	if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
+	{
+		console::warning( "Grid shaders not ready for pipeline state creation" );
+		return false;
+	}
+
 	// Create pipeline state for grid rendering
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = { m_vertexShader.blob->GetBufferPointer(), m_vertexShader.blob->GetBufferSize() };
-	psoDesc.PS = { m_pixelShader.blob->GetBufferPointer(), m_pixelShader.blob->GetBufferSize() };
+	psoDesc.VS = { vertexShader->blob->GetBufferPointer(), vertexShader->blob->GetBufferSize() };
+	psoDesc.PS = { pixelShader->blob->GetBufferPointer(), pixelShader->blob->GetBufferSize() };
 
 	// Blend state for alpha blending
 	psoDesc.BlendState.AlphaToCoverageEnable = FALSE;

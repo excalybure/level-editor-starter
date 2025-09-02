@@ -9,6 +9,7 @@ import editor.ui;
 import editor.viewport; // For ViewportType enum
 import platform.win32.win32_window;
 import platform.dx12;
+import engine.shader_manager;
 
 using editor::UI;
 using editor::ViewportType;
@@ -214,7 +215,7 @@ TEST_CASE( "UI initialize rejects null pointers", "[ui]" )
 {
 	UI ui;
 	// Pass nulls to initialization, expect failure
-	bool ok = ui.initialize( nullptr, nullptr );
+	bool ok = ui.initialize( nullptr, nullptr, nullptr );
 	REQUIRE_FALSE( ok );
 	// Still treated as uninitialized; capture functions false
 	REQUIRE_FALSE( ui.wantsCaptureMouse() );
@@ -239,7 +240,8 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 
 	UI ui;
 	// Use device directly with new signature
-	REQUIRE( ui.initialize( window.getHandle(), &device ) );
+	shader_manager::ShaderManager shaderManager;
+	REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
 
 	SECTION( "Multiple frames do not crash and maintain layout" )
 	{
@@ -347,7 +349,8 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 	REQUIRE( device.initialize( static_cast<HWND>( window.getHandle() ) ) );
 
 	UI ui;
-	REQUIRE( ui.initialize( window.getHandle(), &device ) );
+	shader_manager::ShaderManager shaderManager;
+	REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
 
 	SECTION( "Grid settings window management with initialized UI" )
 	{
