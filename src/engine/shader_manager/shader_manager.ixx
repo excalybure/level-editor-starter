@@ -84,6 +84,7 @@ public:
 private:
 	// Internal data
 	std::unordered_map<ShaderHandle, ShaderInfo> m_shaders;
+	std::unordered_map<size_t, ShaderHandle> m_shaderHashMap; // Hash -> Handle mapping for fast lookup
 	ShaderHandle m_nextHandle = 1;
 	ShaderReloadCallback m_reloadCallback;
 
@@ -91,6 +92,14 @@ private:
 	bool compileShader( ShaderInfo &shaderInfo );
 	std::filesystem::file_time_type getFileModificationTime( const std::filesystem::path &path );
 	std::string shaderTypeToString( ShaderType type ) const;
+	ShaderHandle findExistingShader( const std::filesystem::path &filePath,
+		const std::string &entryPoint,
+		const std::string &target,
+		ShaderType type ) const;
+	size_t computeShaderHash( const std::filesystem::path &filePath,
+		const std::string &entryPoint,
+		const std::string &target,
+		ShaderType type ) const;
 };
 
 } // namespace shader_manager

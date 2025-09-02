@@ -20,6 +20,13 @@ ShaderHandle ShaderManager::registerShader(
 	const std::string &target,
 	ShaderType type )
 {
+	// Check if this exact shader is already registered
+	ShaderHandle existingHandle = findExistingShader( filePath, entryPoint, target, type );
+	if ( existingHandle != INVALID_SHADER_HANDLE )
+	{
+		return existingHandle;
+	}
+
 	ShaderHandle handle = m_nextHandle++;
 
 	ShaderInfo shaderInfo;
@@ -41,6 +48,10 @@ ShaderHandle ShaderManager::registerShader(
 		console::error( "Shader Manager: Failed to compile shader {} ({})", filePath.string(), shaderTypeToString( type ) );
 	}
 
+	// Add to hash map for fast lookup
+	size_t shaderHash = computeShaderHash( filePath, entryPoint, target, type );
+	m_shaderHashMap[shaderHash] = handle;
+
 	m_shaders[handle] = std::move( shaderInfo );
 	return handle;
 }
@@ -51,6 +62,12 @@ void ShaderManager::unregisterShader( ShaderHandle handle )
 	if ( it != m_shaders.end() )
 	{
 		console::info( "Shader Manager: Unregistering shader {}", it->second.filePath.string() );
+
+		// Remove from hash map
+		size_t shaderHash = computeShaderHash( it->second.filePath, it->second.entryPoint, it->second.target, it->second.type );
+		m_shaderHashMap.erase( shaderHash );
+
+		// Remove from main shader map
 		m_shaders.erase( it );
 	}
 }
@@ -219,6 +236,63 @@ std::string ShaderManager::shaderTypeToString( ShaderType type ) const
 	default:
 		return "Unknown";
 	}
+}
+
+ShaderHandle ShaderManager::findExistingShader( const std::filesystem::path &filePath,
+	const std::string &entryPoint,
+	const std::string &target,
+	ShaderType type ) const
+{
+	// Compute hash for fast lookup
+	size_t shaderHash = computeShaderHash( filePath, entryPoint, target, type );
+
+	auto it = m_shaderHashMap.find( shaderHash );
+	if ( it != m_shaderHashMap.end() )
+	{
+		// Found a shader with matching hash - verify it's actually the same shader
+		// (hash collisions are possible, so we need to double-check)
+		ShaderHandle handle = it->second;
+		auto shaderIt = m_shaders.find( handle );
+		if ( shaderIt != m_shaders.end() )
+		{
+			const ShaderInfo &shaderInfo = shaderIt->second;
+			if ( shaderInfo.filePath == filePath &&
+				shaderInfo.entryPoint == entryPoint &&
+				shaderInfo.target == target &&
+				shaderInfo.type == type )
+			{
+				return handle;
+			}
+		}
+	}
+
+	return INVALID_SHADER_HANDLE;
+}
+
+size_t ShaderManager::computeShaderHash( const std::filesystem::path &filePath,
+	const std::string &entryPoint,
+	const std::string &target,
+	ShaderType type ) const
+{
+	// Combine hashes of all shader parameters
+	std::hash<std::string> stringHasher;
+	std::hash<int> intHasher;
+
+	size_t hash = 0;
+
+	// Hash the file path (as string for consistency)
+	hash ^= stringHasher( filePath.string() ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	// Hash the entry point
+	hash ^= stringHasher( entryPoint ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	// Hash the target
+	hash ^= stringHasher( target ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	// Hash the shader type
+	hash ^= intHasher( static_cast<int>( type ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	return hash;
 }
 
 } // namespace shader_manager

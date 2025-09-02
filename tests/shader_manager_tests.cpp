@@ -203,6 +203,59 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		auto blob = manager.getShaderBlob( handle );
 		REQUIRE( blob == nullptr );
 	}
+
+	SECTION( "Register duplicate shader returns same handle" )
+	{
+		auto shaderPath = fixture.createShaderFile( "duplicate_test.hlsl", fixture.getValidShaderContent() );
+
+		// Register the same shader multiple times with identical parameters
+		auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		auto handle2 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+
+		// All handles should be the same
+		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
+		REQUIRE( handle2 == handle1 );
+		REQUIRE( handle3 == handle1 );
+
+		// Should only have one shader registered
+		auto handles = manager.getAllShaderHandles();
+		REQUIRE( handles.size() == 1 );
+		REQUIRE( handles[0] == handle1 );
+
+		// All handles should point to the same shader info
+		auto shaderInfo1 = manager.getShaderInfo( handle1 );
+		auto shaderInfo2 = manager.getShaderInfo( handle2 );
+		auto shaderInfo3 = manager.getShaderInfo( handle3 );
+
+		REQUIRE( shaderInfo1 != nullptr );
+		REQUIRE( shaderInfo2 == shaderInfo1 ); // Same pointer
+		REQUIRE( shaderInfo3 == shaderInfo1 ); // Same pointer
+	}
+
+	SECTION( "Register similar shaders with different parameters get different handles" )
+	{
+		auto shaderPath = fixture.createShaderFile( "similar_test.hlsl", fixture.getValidShaderContent() );
+
+		// Register shaders with same file but different entry points
+		auto handle1 = manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		auto handle2 = manager.registerShader( shaderPath, "PSMain", "ps_5_0", ShaderType::Pixel );
+
+		// Register shaders with same file and entry point but different targets
+		auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_4_0", ShaderType::Vertex );
+
+		// All handles should be different
+		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
+		REQUIRE( handle2 != INVALID_SHADER_HANDLE );
+		REQUIRE( handle3 != INVALID_SHADER_HANDLE );
+		REQUIRE( handle1 != handle2 );
+		REQUIRE( handle1 != handle3 );
+		REQUIRE( handle2 != handle3 );
+
+		// Should have three different shaders registered
+		auto handles = manager.getAllShaderHandles();
+		REQUIRE( handles.size() == 3 );
+	}
 }
 
 TEST_CASE( "ShaderManager Shader Unregistration", "[shader_manager][unregistration]" )
@@ -340,8 +393,8 @@ TEST_CASE( "ShaderManager Force Recompilation", "[shader_manager][force_recompil
 		auto shaderPath1 = fixture.createShaderFile( "test1.hlsl", fixture.getValidShaderContent() );
 		auto shaderPath2 = fixture.createShaderFile( "test2.hlsl", fixture.getValidShaderContent() );
 
-		auto handle1 = manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
-		auto handle2 = manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
+		manager.registerShader( shaderPath1, "VSMain", "vs_5_0", ShaderType::Vertex );
+		manager.registerShader( shaderPath2, "PSMain", "ps_5_0", ShaderType::Pixel );
 
 		// Should not throw
 		REQUIRE_NOTHROW( manager.forceRecompileAll() );
