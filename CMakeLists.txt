@@ -345,6 +345,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/console_tests.cpp
     tests/shader_manager_tests.cpp
     tests/shader_manager_performance_test.cpp
+    tests/shader_include_dependency_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math

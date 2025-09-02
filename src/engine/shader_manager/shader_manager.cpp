@@ -91,12 +91,38 @@ void ShaderManager::update()
 {
 	for ( auto &[handle, shaderInfo] : m_shaders )
 	{
-		// Check if file has been modified
-		auto currentModTime = getFileModificationTime( shaderInfo.filePath );
+		bool needsRecompile = false;
+		std::string changeReason;
 
+		// Check if main shader file has been modified
+		const auto currentModTime = getFileModificationTime( shaderInfo.filePath );
 		if ( currentModTime != shaderInfo.lastModified )
 		{
-			console::info( "Shader Manager: Detected change in {}, recompiling...", shaderInfo.filePath.string() );
+			needsRecompile = true;
+			changeReason = "main shader file modified";
+		}
+
+		// Check if any included files have been modified
+		if ( !needsRecompile )
+		{
+			for ( size_t i = 0; i < shaderInfo.includedFiles.size(); ++i )
+			{
+				const auto includedModTime = getFileModificationTime( shaderInfo.includedFiles[i] );
+				if ( i < shaderInfo.includedFilesModTimes.size() &&
+					includedModTime != shaderInfo.includedFilesModTimes[i] )
+				{
+					needsRecompile = true;
+					changeReason = "included file modified: " + shaderInfo.includedFiles[i].string();
+					break;
+				}
+			}
+		}
+
+		if ( needsRecompile )
+		{
+			console::info( "Shader Manager: Detected change in {} ({}), recompiling...",
+				shaderInfo.filePath.string(),
+				changeReason );
 
 			shaderInfo.lastModified = currentModTime;
 
@@ -189,6 +215,23 @@ bool ShaderManager::compileShader( ShaderInfo &shaderInfo )
 			shaderInfo.target );
 
 		shaderInfo.isValid = shaderInfo.compiledBlob.isValid();
+
+		if ( shaderInfo.isValid )
+		{
+			// Extract included files from the compiled blob
+			shaderInfo.includedFiles = shaderInfo.compiledBlob.includedFiles;
+
+			// Get modification times for all included files
+			shaderInfo.includedFilesModTimes.clear();
+			shaderInfo.includedFilesModTimes.reserve( shaderInfo.includedFiles.size() );
+
+			for ( const auto &includedFile : shaderInfo.includedFiles )
+			{
+				const auto modTime = getFileModificationTime( includedFile );
+				shaderInfo.includedFilesModTimes.push_back( modTime );
+			}
+		}
+
 		return shaderInfo.isValid;
 	}
 	catch ( const std::exception &e )

@@ -59,6 +59,7 @@ export struct ShaderBlob
 	Microsoft::WRL::ComPtr<ID3DBlob> blob;
 	std::string entryPoint;
 	std::string profile;
+	std::vector<std::filesystem::path> includedFiles; // Track all included files for dependency checking
 
 	bool isValid() const noexcept { return blob != nullptr; }
 };

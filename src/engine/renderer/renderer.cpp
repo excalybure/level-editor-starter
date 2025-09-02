@@ -62,9 +62,13 @@ class ShaderIncludeHandler : public ID3DInclude
 {
 private:
 	std::filesystem::path m_shaderDirectory;
+	std::vector<std::filesystem::path> m_includedFiles; // Track all included files
 
 public:
 	ShaderIncludeHandler( const std::filesystem::path &shaderDir ) : m_shaderDirectory( shaderDir ) {}
+
+	// Get the list of all included files
+	const std::vector<std::filesystem::path> &getIncludedFiles() const noexcept { return m_includedFiles; }
 
 	HRESULT __stdcall Open( D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes ) override
 	{
@@ -74,6 +78,9 @@ public:
 		{
 			return E_FAIL;
 		}
+
+		// Track this included file
+		m_includedFiles.push_back( std::filesystem::canonical( includePath ) );
 
 		std::ifstream file( includePath, std::ios::binary | std::ios::ate );
 		if ( !file.is_open() )
@@ -167,6 +174,9 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 			console::errorAndThrow( "Shader compilation failed with unknown error" );
 		}
 	}
+
+	// Copy the list of included files from the include handler
+	result.includedFiles = includeHandler.getIncludedFiles();
 
 	return result;
 }

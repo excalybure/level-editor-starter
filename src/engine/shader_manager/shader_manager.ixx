@@ -33,6 +33,8 @@ struct ShaderInfo
 	std::string target;
 	ShaderType type;
 	std::filesystem::file_time_type lastModified;
+	std::vector<std::filesystem::path> includedFiles;					// List of included files for dependency tracking
+	std::vector<std::filesystem::file_time_type> includedFilesModTimes; // Modification times of included files
 	renderer::ShaderBlob compiledBlob;
 	bool isValid = false;
 };
