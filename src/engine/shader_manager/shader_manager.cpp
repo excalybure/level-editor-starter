@@ -120,15 +120,20 @@ void ShaderManager::update()
 
 		if ( needsRecompile )
 		{
-			console::info( "Shader Manager: Detected change in {} ({}), recompiling...",
+			console::info( "Shader Manager: Detected change in {} ({} - {}) ({}), recompiling...",
 				shaderInfo.filePath.string(),
+				shaderTypeToString( shaderInfo.type ),
+				shaderInfo.entryPoint,
 				changeReason );
 
 			shaderInfo.lastModified = currentModTime;
 
 			if ( compileShader( shaderInfo ) )
 			{
-				console::info( "Shader Manager: Successfully recompiled {}", shaderInfo.filePath.string() );
+				console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
+					shaderInfo.filePath.string(),
+					shaderTypeToString( shaderInfo.type ),
+					shaderInfo.entryPoint );
 
 				// Notify callback if set
 				if ( m_reloadCallback )
@@ -138,7 +143,10 @@ void ShaderManager::update()
 			}
 			else
 			{
-				console::error( "Shader Manager: Failed to recompile {}", shaderInfo.filePath.string() );
+				console::error( "Shader Manager: Failed to recompile {} ({} - {})",
+					shaderInfo.filePath.string(),
+					shaderTypeToString( shaderInfo.type ),
+					shaderInfo.entryPoint );
 			}
 		}
 	}
@@ -149,11 +157,17 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() )
 	{
-		console::info( "Shader Manager: Force recompiling {}", it->second.filePath.string() );
+		console::info( "Shader Manager: Force recompiling {} ({} - {})",
+			it->second.filePath.string(),
+			shaderTypeToString( it->second.type ),
+			it->second.entryPoint );
 
 		if ( compileShader( it->second ) )
 		{
-			console::info( "Shader Manager: Successfully recompiled {}", it->second.filePath.string() );
+			console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
+				it->second.filePath.string(),
+				shaderTypeToString( it->second.type ),
+				it->second.entryPoint );
 
 			// Notify callback if set
 			if ( m_reloadCallback )
@@ -164,7 +178,10 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 		}
 		else
 		{
-			console::error( "Shader Manager: Failed to recompile {}", it->second.filePath.string() );
+			console::error( "Shader Manager: Failed to recompile {} ({} - {})",
+				it->second.filePath.string(),
+				shaderTypeToString( it->second.type ),
+				it->second.entryPoint );
 			return false;
 		}
 	}

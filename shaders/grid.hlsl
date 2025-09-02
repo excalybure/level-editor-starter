@@ -15,6 +15,7 @@ struct VertexOutput
     float4 position : SV_POSITION;
     float3 worldPos : WORLD_POSITION;
     float3 viewDir : VIEW_DIRECTION;
+    float2 ndc : TEXCOORD0;   // NDC xy in [-1,1]
 };
 
 // Grid rendering parameters
@@ -79,7 +80,9 @@ VertexOutput VSMain(const VertexInput input)
     // World position for ray casting
     output.worldPos = nearPlanePos.xyz;
     output.viewDir = normalize(farPlanePos.xyz - nearPlanePos.xyz);
-    
+
+    output.ndc = output.position.xy; // w=1 for all three verts, so this is valid across the triangle
+
     return output;
 }
 
@@ -122,6 +125,7 @@ float4 PSMain(const VertexOutput input) : SV_Target
     {
         float t;
         // Default to XY plane intersection for perspective
+#if 1
         if (abs(rayDir.z) < 0.0001)
             discard; // Ray parallel to plane
         
@@ -133,6 +137,18 @@ float4 PSMain(const VertexOutput input) : SV_Target
         }
         
         worldPos = rayStart + t * rayDir;
+#else
+        float4 worldFar = mul(float4(input.ndc.xy, 1, 1), invViewProjMatrix);
+        worldFar.xyz /= worldFar.w;
+        float3 rd = normalize(worldFar.xyz - cameraPosition.xyz);
+        float denom = rd.z;
+        if (abs(denom) < 1e-6) discard;        // nearly parallel to plane
+        t = -cameraPosition.z / denom;
+        if (t <= 0.0) discard;                 // behind camera
+
+        float3 P = cameraPosition + rd * t;                // world-space hit point on the grid plane
+        worldPos = P;
+#endif
     }
     else if (viewType == 1) // Top view (orthographic) - XY plane
     {
