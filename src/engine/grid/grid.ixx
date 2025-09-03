@@ -116,6 +116,9 @@ private:
 	// Grid settings
 	GridSettings m_settings;
 
+	// Pipeline state management
+	bool m_pipelineStateDirty = true; // Flag to track when pipeline state needs recreation
+
 	// Helper functions
 	bool registerShaders();
 	void onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader );

@@ -134,10 +134,16 @@ bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_mana
 		return false;
 	}
 
-	// Create pipeline state
+	// Try to create pipeline state (may fail if shaders aren't ready yet)
+	// The dirty flag will ensure it gets created later when shaders are available
 	if ( !createPipelineState() )
 	{
-		return false;
+		console::warning( "Initial pipeline state creation failed, will retry when shaders are ready" );
+		m_pipelineStateDirty = true;
+	}
+	else
+	{
+		m_pipelineStateDirty = false;
 	}
 
 	// Create constant buffer
@@ -177,8 +183,26 @@ bool GridRenderer::render( const camera::Camera &camera,
 	float viewportWidth,
 	float viewportHeight )
 {
-	if ( !m_device || !m_pipelineState || !m_constantBuffer )
+	if ( !m_device || !m_constantBuffer )
 	{
+		return false;
+	}
+
+	// Check if pipeline state needs recreation
+	if ( m_pipelineStateDirty )
+	{
+		console::info( "Grid pipeline state is dirty, recreating..." );
+		if ( !createPipelineState() )
+		{
+			console::error( "Failed to recreate grid pipeline state" );
+			return false;
+		}
+		m_pipelineStateDirty = false;
+	}
+
+	if ( !m_pipelineState )
+	{
+		console::warning( "Grid pipeline state not available for rendering" );
 		return false;
 	}
 
@@ -331,12 +355,13 @@ bool GridRenderer::registerShaders()
 	return true;
 }
 
-void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader )
+void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob & /*newShader*/ )
 {
-	console::info( "Grid shader reloaded, recreating pipeline state..." );
-
-	// Recreate the pipeline state with new shaders
-	createPipelineState();
+	// Check if the reloaded shader is one of ours
+	if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
+	{
+		m_pipelineStateDirty = true;
+	}
 }
 
 bool GridRenderer::createRootSignature()
@@ -444,7 +469,16 @@ bool GridRenderer::createPipelineState()
 	psoDesc.SampleMask = UINT_MAX; // 0xffffffff - enable all samples
 
 	HRESULT hr = m_device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) );
-	return SUCCEEDED( hr );
+
+	if ( SUCCEEDED( hr ) )
+	{
+		return true;
+	}
+	else
+	{
+		console::error( "Failed to create grid pipeline state" );
+		return false;
+	}
 }
 
 bool GridRenderer::createConstantBuffer()
