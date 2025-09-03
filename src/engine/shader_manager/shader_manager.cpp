@@ -118,74 +118,96 @@ const renderer::ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) 
 
 void ShaderManager::update()
 {
-	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
-	for ( auto &[handle, shaderInfo] : m_shaders )
+	// Collect callbacks that need to be called after releasing the mutex
+	struct CallbackInfo
 	{
-		bool needsRecompile = false;
-		std::string changeReason;
+		ShaderHandle handle;
+		renderer::ShaderBlob blob;
+	};
+	std::vector<CallbackInfo> callbacksToInvoke;
 
-		// Check if main shader file has been modified
-		const auto currentModTime = getFileModificationTime( shaderInfo.filePath );
-		if ( currentModTime != shaderInfo.lastModified )
+	// Shader compilation phase - hold mutex
+	{
+		std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
+		for ( auto &[handle, shaderInfo] : m_shaders )
 		{
-			needsRecompile = true;
-			changeReason = "main shader file modified";
-		}
+			bool needsRecompile = false;
+			std::string changeReason;
 
-		// Check if any included files have been modified
-		if ( !needsRecompile )
-		{
-			for ( size_t i = 0; i < shaderInfo.includedFiles.size(); ++i )
+			// Check if main shader file has been modified
+			const auto currentModTime = getFileModificationTime( shaderInfo.filePath );
+			if ( currentModTime != shaderInfo.lastModified )
 			{
-				const auto includedModTime = getFileModificationTime( shaderInfo.includedFiles[i] );
-				if ( i < shaderInfo.includedFilesModTimes.size() &&
-					includedModTime != shaderInfo.includedFilesModTimes[i] )
-				{
-					needsRecompile = true;
-					changeReason = "included file modified: " + shaderInfo.includedFiles[i].string();
-					break;
-				}
+				needsRecompile = true;
+				changeReason = "main shader file modified";
 			}
-		}
 
-		if ( needsRecompile )
-		{
-			console::info( "Shader Manager: Detected change in {} ({} - {}) ({}), recompiling...",
-				shaderInfo.filePath.string(),
-				shaderTypeToString( shaderInfo.type ),
-				shaderInfo.entryPoint,
-				changeReason );
-
-			shaderInfo.lastModified = currentModTime;
-
-			if ( compileShader( shaderInfo ) )
+			// Check if any included files have been modified
+			if ( !needsRecompile )
 			{
-				console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
-					shaderInfo.filePath.string(),
-					shaderTypeToString( shaderInfo.type ),
-					shaderInfo.entryPoint );
-
-				// Notify all registered callbacks (copy callbacks to avoid deadlock)
-				std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
+				for ( size_t i = 0; i < shaderInfo.includedFiles.size(); ++i )
 				{
-					std::shared_lock<std::shared_mutex> lock( m_callbackMutex );
-					callbacksCopy = m_reloadCallbacks;
-				}
-
-				for ( const auto &[callbackHandle, callback] : callbacksCopy )
-				{
-					if ( callback )
+					const auto includedModTime = getFileModificationTime( shaderInfo.includedFiles[i] );
+					if ( i < shaderInfo.includedFilesModTimes.size() &&
+						includedModTime != shaderInfo.includedFilesModTimes[i] )
 					{
-						callback( handle, shaderInfo.compiledBlob );
+						needsRecompile = true;
+						changeReason = "included file modified: " + shaderInfo.includedFiles[i].string();
+						break;
 					}
 				}
 			}
-			else
+
+			if ( needsRecompile )
 			{
-				console::error( "Shader Manager: Failed to recompile {} ({} - {})",
+				console::info( "Shader Manager: Detected change in {} ({} - {}) ({}), recompiling...",
 					shaderInfo.filePath.string(),
 					shaderTypeToString( shaderInfo.type ),
-					shaderInfo.entryPoint );
+					shaderInfo.entryPoint,
+					changeReason );
+
+				shaderInfo.lastModified = currentModTime;
+
+				if ( compileShader( shaderInfo ) )
+				{
+					console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
+						shaderInfo.filePath.string(),
+						shaderTypeToString( shaderInfo.type ),
+						shaderInfo.entryPoint );
+
+					// Store callback info for later invocation (after releasing mutex)
+					callbacksToInvoke.push_back( { handle, shaderInfo.compiledBlob } );
+				}
+				else
+				{
+					console::error( "Shader Manager: Failed to recompile {} ({} - {})",
+						shaderInfo.filePath.string(),
+						shaderTypeToString( shaderInfo.type ),
+						shaderInfo.entryPoint );
+				}
+			}
+		}
+	} // Release m_shaderMutex here
+
+	// Callback invocation phase - mutex is released, no deadlock risk
+	if ( !callbacksToInvoke.empty() )
+	{
+		// Get callback copy under separate lock
+		std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
+		{
+			std::shared_lock<std::shared_mutex> callbackLock( m_callbackMutex );
+			callbacksCopy = m_reloadCallbacks;
+		}
+
+		// Call callbacks for each recompiled shader
+		for ( const auto &callbackInfo : callbacksToInvoke )
+		{
+			for ( const auto &[callbackHandle, callback] : callbacksCopy )
+			{
+				if ( callback )
+				{
+					callback( callbackInfo.handle, callbackInfo.blob );
+				}
 			}
 		}
 	}
@@ -193,48 +215,61 @@ void ShaderManager::update()
 
 bool ShaderManager::forceRecompile( ShaderHandle handle )
 {
-	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
-	auto it = m_shaders.find( handle );
-	if ( it != m_shaders.end() )
+	// Compilation phase - collect callback info
+	renderer::ShaderBlob compiledBlob;
+	bool compilationSuccess = false;
+
 	{
-		console::info( "Shader Manager: Force recompiling {} ({} - {})",
-			it->second.filePath.string(),
-			shaderTypeToString( it->second.type ),
-			it->second.entryPoint );
-
-		if ( compileShader( it->second ) )
+		std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
+		auto it = m_shaders.find( handle );
+		if ( it != m_shaders.end() )
 		{
-			console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
+			console::info( "Shader Manager: Force recompiling {} ({} - {})",
 				it->second.filePath.string(),
 				shaderTypeToString( it->second.type ),
 				it->second.entryPoint );
 
-			// Notify all registered callbacks (copy callbacks to avoid deadlock)
-			std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
+			if ( compileShader( it->second ) )
 			{
-				std::shared_lock<std::shared_mutex> lock( m_callbackMutex );
-				callbacksCopy = m_reloadCallbacks;
-			}
+				console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
+					it->second.filePath.string(),
+					shaderTypeToString( it->second.type ),
+					it->second.entryPoint );
 
-			for ( const auto &[callbackHandle, callback] : callbacksCopy )
-			{
-				if ( callback )
-				{
-					callback( handle, it->second.compiledBlob );
-				}
+				compiledBlob = it->second.compiledBlob;
+				compilationSuccess = true;
 			}
-			return true;
+			else
+			{
+				console::error( "Shader Manager: Failed to recompile {} ({} - {})",
+					it->second.filePath.string(),
+					shaderTypeToString( it->second.type ),
+					it->second.entryPoint );
+			}
 		}
-		else
+	} // Release m_shaderMutex here
+
+	// Callback invocation phase - mutex is released, no deadlock risk
+	if ( compilationSuccess )
+	{
+		// Get callback copy under separate lock
+		std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
 		{
-			console::error( "Shader Manager: Failed to recompile {} ({} - {})",
-				it->second.filePath.string(),
-				shaderTypeToString( it->second.type ),
-				it->second.entryPoint );
-			return false;
+			std::shared_lock<std::shared_mutex> callbackLock( m_callbackMutex );
+			callbacksCopy = m_reloadCallbacks;
+		}
+
+		// Call callbacks
+		for ( const auto &[callbackHandle, callback] : callbacksCopy )
+		{
+			if ( callback )
+			{
+				callback( handle, compiledBlob );
+			}
 		}
 	}
-	return false;
+
+	return compilationSuccess;
 }
 
 void ShaderManager::forceRecompileAll()
