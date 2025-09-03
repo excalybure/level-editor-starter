@@ -8,6 +8,7 @@
 
 import editor.viewport;
 import platform.dx12;
+import platform.win32.win32_window;
 import engine.shader_manager;
 
 #include "test_dx12_helpers.h"
@@ -281,11 +282,23 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 	SECTION( "Update and render operations" )
 	{
-		ViewportManager manager;
-		dx12::Device device;
+		platform::Win32Window window;
+		if ( !window.create( "Viewport Test", 640, 480 ) )
+		{
+			WARN( "Skipping Update and render operations: failed to create Win32 window" );
+			return;
+		}
 
-		REQUIRE( requireHeadlessDevice( device, "Update and render operations" ) );
+		dx12::Device device;
+		if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
+		{
+			WARN( "Skipping Update and render operations: D3D12 initialize failed (hardware not available)" );
+			return;
+		}
+
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+
+		ViewportManager manager;
 		REQUIRE( manager.initialize( &device, shaderManager ) );
 
 		[[maybe_unused]] auto *viewport1 = manager.createViewport( ViewportType::Perspective );
@@ -293,7 +306,10 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 		// Should not crash
 		REQUIRE_NOTHROW( manager.update( 0.016f ) ); // 60 FPS
+		REQUIRE_NOTHROW( device.beginFrame() );
 		REQUIRE_NOTHROW( manager.render() );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 	}
 }
 
@@ -729,7 +745,7 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 
 		// Verify other settings remain unchanged
 		REQUIRE_THAT( updatedSettings.fadeDistanceMultiplier, WithinAbs( 5.0f, 0.001f ) ); // Still default
-		REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 2.0f, 0.001f ) );			 // Still default
+		REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 2.0f, 0.001f ) );		   // Still default
 	}
 
 	SECTION( "Grid settings persistence within viewport" )
