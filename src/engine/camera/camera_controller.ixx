@@ -102,6 +102,7 @@ public:
 	void setAutoRotate( bool enabled ) noexcept { m_autoRotate = enabled; }
 	void setAutoRotateSpeed( float speed ) noexcept { m_autoRotateSpeed = speed; }
 	bool getAutoRotate() const noexcept { return m_autoRotate; }
+	float getAutoRotateSpeed() const noexcept { return m_autoRotateSpeed; }
 
 private:
 	PerspectiveCamera *m_perspectiveCamera = nullptr;

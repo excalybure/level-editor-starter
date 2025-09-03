@@ -113,6 +113,9 @@ void Viewport::update( float deltaTime )
 	// Update camera through controller
 	m_controller->setCamera( m_camera.get() );
 	m_controller->update( m_currentInput );
+
+	// Clear one-shot input values after processing
+	m_currentInput.mouse.wheelDelta = 0.0f;
 }
 
 void Viewport::render( dx12::Device *device )
