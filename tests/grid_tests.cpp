@@ -167,33 +167,35 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 {
 	SECTION( "Optimal spacing calculation" )
 	{
-		float baseSpacing = 1.0f;
+		const float baseSpacing = 1.0f;
 
-		// Close distance - fine grid
-		float closeDistance = 0.5f;
-		float closeSpacing = GridRenderer::calculateOptimalSpacing( closeDistance, baseSpacing );
+		// Close distance (0.5) - fine grid
+		// log10(0.5) = -0.301, floor(-0.301) = -1, 10^-1 = 0.1, spacing = 0.1 * 0.1 = 0.01
+		const float closeDistance = 0.5f;
+		const float closeSpacing = GridRenderer::calculateOptimalSpacing( closeDistance, baseSpacing );
 		REQUIRE( closeSpacing < baseSpacing );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE(closeSpacing == Catch::Matchers::WithinAbs(0.1f, 0.001f));
+		REQUIRE_THAT( closeSpacing, Catch::Matchers::WithinAbs( 0.01f, 0.001f ) );
 
-		// Medium distance - normal grid
-		float mediumDistance = 5.0f;
-		float mediumSpacing = GridRenderer::calculateOptimalSpacing( mediumDistance, baseSpacing );
-		REQUIRE( mediumSpacing == baseSpacing );
+		// Medium distance (5.0) - normal grid
+		// log10(5.0) = 0.699, floor(0.699) = 0, 10^0 = 1, spacing = 1 * 0.1 = 0.1
+		const float mediumDistance = 5.0f;
+		const float mediumSpacing = GridRenderer::calculateOptimalSpacing( mediumDistance, baseSpacing );
+		REQUIRE( mediumSpacing < baseSpacing );
+		REQUIRE_THAT( mediumSpacing, Catch::Matchers::WithinAbs( 0.1f, 0.001f ) );
 
-		// Far distance - coarse grid
-		float farDistance = 50.0f;
-		float farSpacing = GridRenderer::calculateOptimalSpacing( farDistance, baseSpacing );
-		REQUIRE( farSpacing > baseSpacing );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE(farSpacing == Catch::Matchers::WithinAbs(10.0f, 0.001f));
+		// Far distance (50.0) - coarse grid
+		// log10(50.0) = 1.699, floor(1.699) = 1, 10^1 = 10, spacing = 10 * 0.1 = 1.0
+		const float farDistance = 50.0f;
+		const float farSpacing = GridRenderer::calculateOptimalSpacing( farDistance, baseSpacing );
+		REQUIRE( farSpacing == baseSpacing );
+		REQUIRE_THAT( farSpacing, Catch::Matchers::WithinAbs( 1.0f, 0.001f ) );
 
-		// Very far distance - very coarse grid
-		float veryFarDistance = 500.0f;
-		float veryFarSpacing = GridRenderer::calculateOptimalSpacing( veryFarDistance, baseSpacing );
+		// Very far distance (500.0) - very coarse grid
+		// log10(500.0) = 2.699, floor(2.699) = 2, 10^2 = 100, spacing = 100 * 0.1 = 10.0
+		const float veryFarDistance = 500.0f;
+		const float veryFarSpacing = GridRenderer::calculateOptimalSpacing( veryFarDistance, baseSpacing );
 		REQUIRE( veryFarSpacing > farSpacing );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE(veryFarSpacing == Catch::Matchers::WithinAbs(100.0f, 0.001f));
+		REQUIRE_THAT( veryFarSpacing, Catch::Matchers::WithinAbs( 10.0f, 0.001f ) );
 	}
 
 	SECTION( "Major grid interval calculation" )

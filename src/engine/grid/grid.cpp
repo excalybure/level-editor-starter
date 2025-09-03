@@ -276,23 +276,28 @@ void GridRenderer::updateAdaptiveSpacing( const camera::Camera &camera )
 
 float GridRenderer::calculateOptimalSpacing( const float cameraDistance, const float baseSpacing )
 {
-	// Adaptive spacing algorithm: adjust grid density based on camera distance
-	if ( cameraDistance < 1.0f )
+	// New adaptive spacing algorithm: spacing = (base 10 order of magnitude lower than camera distance) * 0.1
+	// For example: if cameraDistance is 2.7, the base 10 order magnitude lower is 1, so spacing = 1 * 0.1 = 0.1
+
+	// Handle edge cases
+	if ( cameraDistance <= 0.0f )
 	{
-		return baseSpacing * 0.1f; // Fine grid for close-up work
+		return baseSpacing * 0.1f; // Fallback for invalid distance
 	}
-	else if ( cameraDistance < 10.0f )
-	{
-		return baseSpacing; // Normal grid spacing
-	}
-	else if ( cameraDistance < 100.0f )
-	{
-		return baseSpacing * 10.0f; // Coarser grid for medium distance
-	}
-	else
-	{
-		return baseSpacing * 100.0f; // Very coarse grid for far distances
-	}
+
+	// Calculate the base 10 order of magnitude lower than camera distance
+	// For distance 2.7: floor(log10(2.7)) = floor(0.43) = 0, so 10^0 = 1
+	// For distance 27: floor(log10(27)) = floor(1.43) = 1, so 10^1 = 10
+	// For distance 0.27: floor(log10(0.27)) = floor(-0.57) = -1, so 10^-1 = 0.1
+
+	const float logDistance = std::log10f( cameraDistance );
+	const float magnitudeExponent = std::floorf( logDistance );
+	const float magnitude = std::powf( 10.0f, magnitudeExponent );
+
+	// Optimal spacing is 1/10th of this magnitude
+	const float optimalSpacing = magnitude * 0.1f;
+
+	return optimalSpacing;
 }
 
 int GridRenderer::calculateMajorInterval( const float spacing )
