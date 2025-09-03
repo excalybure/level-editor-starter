@@ -70,7 +70,7 @@ public:
 	// Get the list of all included files
 	const std::vector<std::filesystem::path> &getIncludedFiles() const noexcept { return m_includedFiles; }
 
-	HRESULT __stdcall Open( D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes ) override
+	HRESULT __stdcall Open( D3D_INCLUDE_TYPE /*IncludeType*/, LPCSTR pFileName, LPCVOID /*pParentData*/, LPCVOID *ppData, UINT *pBytes ) override
 	{
 		const std::filesystem::path includePath = m_shaderDirectory / pFileName;
 
