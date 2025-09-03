@@ -104,66 +104,60 @@ int main()
 		float deltaTime = 0.0f;
 		while ( window.poll() && !ui.shouldExit() )
 		{
-			// PIX frame marker
 			frameCount++;
+
+			// Begin D3D12 frame - this opens the command list
+			device.beginFrame();
 			ID3D12GraphicsCommandList *commandList = device.getCommandList();
-			pix::ScopedEvent pixFrame( commandList, pix::MarkerColor::White, std::format( "Frame {}", frameCount ) );
 
-			// Begin D3D12 frame
+			// All command list PIX events must be between beginFrame() and endFrame()
 			{
-				pix::ScopedEvent pixBeginFrame( commandList, pix::MarkerColor::Blue, "Begin D3D12 Frame" );
-				device.beginFrame();
-			}
+				pix::ScopedEvent pixFrame( commandList, pix::MarkerColor::White, std::format( "Frame {}", frameCount ) );
 
-			// Process window input events and forward to viewports (before UI to allow ImGui priority)
-			{
-				pix::ScopedEvent pixInputForward( commandList, pix::MarkerColor::Yellow, "Input Processing" );
-				ui.processInputEvents( window );
-			}
+				// Process window input events and forward to viewports (before UI to allow ImGui priority)
+				{
+					pix::ScopedEvent pixInputForward( commandList, pix::MarkerColor::Yellow, "Input Processing" );
+					ui.processInputEvents( window );
+				}
 
-			// Update shader manager (check for shader file changes and hot-reload)
-			{
-				pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
-				shaderManager->update();
-			}
+				// Update shader manager (check for shader file changes and hot-reload)
+				{
+					pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
+					shaderManager->update();
+				}
 
-			// Update viewports with timing (for camera controllers)
-			{
-				pix::ScopedEvent pixViewportUpdate( commandList, pix::MarkerColor::Magenta, "Viewport Update" );
-				ui.updateViewports( deltaTime );
-			}
+				// Update viewports with timing (for camera controllers)
+				{
+					pix::ScopedEvent pixViewportUpdate( commandList, pix::MarkerColor::Magenta, "Viewport Update" );
+					ui.updateViewports( deltaTime );
+				}
 
-			// Begin UI frame (sets up docking)
-			{
-				pix::ScopedEvent pixUIBegin( commandList, pix::MarkerColor::Green, "UI Begin Frame" );
-				ui.beginFrame();
-			}
+				// Begin UI frame (sets up docking)
+				{
+					pix::ScopedEvent pixUIBegin( commandList, pix::MarkerColor::Green, "UI Begin Frame" );
+					ui.beginFrame();
+				}
 
-			// End UI frame (renders ImGui)
-			{
-				pix::ScopedEvent pixUIEnd( commandList, pix::MarkerColor::LightGreen, "UI End Frame" );
-				ui.endFrame();
-			}
+				// End UI frame (renders ImGui)
+				{
+					pix::ScopedEvent pixUIEnd( commandList, pix::MarkerColor::LightGreen, "UI End Frame" );
+					ui.endFrame();
+				}
 
-			// Submit ImGui draw data to command list
-			{
-				pix::ScopedEvent pixImGui( commandList, pix::MarkerColor::Cyan, "ImGui Render" );
-				// Restore backbuffer render target after viewport rendering
-				device.setBackbufferRenderTarget();
-				ui.renderDrawData( static_cast<void *>( commandList ) );
-			}
+				// Submit ImGui draw data to command list
+				{
+					pix::ScopedEvent pixImGui( commandList, pix::MarkerColor::Cyan, "ImGui Render" );
+					// Restore backbuffer render target after viewport rendering
+					device.setBackbufferRenderTarget();
+					ui.renderDrawData( static_cast<void *>( commandList ) );
+				}
+			} // Frame PIX event ends here, before endFrame() closes the command list
 
-			// End D3D12 frame
-			{
-				pix::ScopedEvent pixEndFrame( commandList, pix::MarkerColor::Purple, "End D3D12 Frame" );
-				device.endFrame();
-			}
+			// End D3D12 frame - this closes the command list
+			device.endFrame();
 
-			// Present D3D12 frame
-			{
-				pix::ScopedEvent pixPresent( commandList, pix::MarkerColor::Orange, "Present Frame" );
-				device.present();
-			}
+			// Present D3D12 frame - command list is closed at this point
+			device.present();
 
 			// App tick
 			app.tick();
