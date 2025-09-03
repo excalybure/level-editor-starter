@@ -71,7 +71,7 @@ void PerspectiveCameraController::handleOrbitInput( const InputState &input )
 		}
 		else
 		{
-			const float deltaYaw = -( input.mouse.x - m_lastMousePos.x ) * m_orbitSensitivity;
+			const float deltaYaw = ( input.mouse.x - m_lastMousePos.x ) * m_orbitSensitivity;
 			const float deltaPitch = ( input.mouse.y - m_lastMousePos.y ) * m_orbitSensitivity;
 
 			m_perspectiveCamera->orbit( deltaYaw, deltaPitch );
