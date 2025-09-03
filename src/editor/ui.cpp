@@ -37,6 +37,9 @@ struct UI::Impl
 	// Grid settings window state
 	bool showGridSettingsWindow = false;
 
+	// Camera settings window state
+	bool showCameraSettingsWindow = false;
+
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -51,6 +54,9 @@ struct UI::Impl
 
 	// Render grid settings window
 	void renderGridSettingsWindow();
+
+	// Render camera settings window
+	void renderCameraSettingsWindow();
 
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
@@ -160,6 +166,9 @@ void UI::beginFrame()
 
 	// Render grid settings window if open
 	m_impl->renderGridSettingsWindow();
+
+	// Render camera settings window if open
+	m_impl->renderCameraSettingsWindow();
 }
 
 void UI::endFrame()
@@ -289,7 +298,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			{
 				showGridSettingsWindow = true;
 			}
-			ImGui::MenuItem( "Camera Settings", nullptr, false, false ); // Disabled for now
+			if ( ImGui::MenuItem( "Camera Settings" ) )
+			{
+				showCameraSettingsWindow = true;
+			}
 			ImGui::EndMenu();
 		}
 
@@ -563,6 +575,246 @@ void UI::Impl::renderGridSettingsWindow()
 	ImGui::End();
 }
 
+void UI::Impl::renderCameraSettingsWindow()
+{
+	if ( !showCameraSettingsWindow )
+		return;
+
+	if ( ImGui::Begin( "Camera Settings", &showCameraSettingsWindow ) )
+	{
+		// Get the focused viewport or default to perspective
+		Viewport *viewport = viewportManager.getFocusedViewport();
+		if ( !viewport )
+		{
+			viewport = getViewport( ViewportType::Perspective );
+		}
+
+		if ( viewport )
+		{
+			auto *controller = viewport->getController();
+			if ( controller )
+			{
+				// Determine camera type and show appropriate settings
+				auto *perspController = dynamic_cast<camera::PerspectiveCameraController *>( controller );
+				auto *orthoController = dynamic_cast<camera::OrthographicCameraController *>( controller );
+
+				if ( perspController )
+				{
+					ImGui::TextUnformatted( "Perspective Camera Settings" );
+					ImGui::Separator();
+
+					// Control sensitivity settings
+					ImGui::SeparatorText( "Control Sensitivity" );
+
+					float orbitSensitivity = perspController->getOrbitSensitivity();
+					if ( ImGui::SliderFloat( "Orbit Sensitivity", &orbitSensitivity, 0.1f, 2.0f, "%.2f" ) )
+					{
+						perspController->setOrbitSensitivity( orbitSensitivity );
+					}
+
+					float panSensitivity = perspController->getPanSensitivity();
+					if ( ImGui::SliderFloat( "Pan Sensitivity", &panSensitivity, 0.1f, 5.0f, "%.2f" ) )
+					{
+						perspController->setPanSensitivity( panSensitivity );
+					}
+
+					float zoomSensitivity = perspController->getZoomSensitivity();
+					if ( ImGui::SliderFloat( "Zoom Sensitivity", &zoomSensitivity, 0.1f, 3.0f, "%.2f" ) )
+					{
+						perspController->setZoomSensitivity( zoomSensitivity );
+					}
+
+					// Keyboard movement settings
+					ImGui::SeparatorText( "Keyboard Navigation" );
+
+					float keyboardSpeed = perspController->getKeyboardMoveSpeed();
+					if ( ImGui::SliderFloat( "Move Speed", &keyboardSpeed, 1.0f, 50.0f, "%.1f" ) )
+					{
+						perspController->setKeyboardMoveSpeed( keyboardSpeed );
+					}
+
+					// Auto-rotation settings
+					ImGui::SeparatorText( "Auto-Rotation (Demo Mode)" );
+
+					bool autoRotate = perspController->getAutoRotate();
+					if ( ImGui::Checkbox( "Enable Auto-Rotation", &autoRotate ) )
+					{
+						perspController->setAutoRotate( autoRotate );
+					}
+
+					if ( autoRotate )
+					{
+						float autoRotateSpeed = perspController->getAutoRotateSpeed();
+						if ( ImGui::SliderFloat( "Auto-Rotation Speed", &autoRotateSpeed, 1.0f, 180.0f, "%.1f °/sec" ) )
+						{
+							perspController->setAutoRotateSpeed( autoRotateSpeed );
+						}
+					}
+
+					// Focus actions
+					ImGui::SeparatorText( "Focus Actions" );
+
+					if ( ImGui::Button( "Focus on Origin" ) )
+					{
+						perspController->focusOnPoint( math::Vec3<>{ 0.0f, 0.0f, 0.0f }, 10.0f );
+					}
+
+					ImGui::SameLine();
+
+					if ( ImGui::Button( "Focus on Scene" ) )
+					{
+						// Focus on a typical scene bounds
+						math::Vec3<> center{ 0.0f, 0.0f, 0.0f };
+						math::Vec3<> size{ 20.0f, 20.0f, 20.0f };
+						perspController->focusOnBounds( center, size );
+					}
+				}
+				else if ( orthoController )
+				{
+					ImGui::TextUnformatted( "Orthographic Camera Settings" );
+					ImGui::Separator();
+
+					// Control sensitivity settings
+					ImGui::SeparatorText( "Control Sensitivity" );
+
+					float panSensitivity = orthoController->getPanSensitivity();
+					if ( ImGui::SliderFloat( "Pan Sensitivity", &panSensitivity, 0.1f, 5.0f, "%.2f" ) )
+					{
+						orthoController->setPanSensitivity( panSensitivity );
+					}
+
+					float zoomSensitivity = orthoController->getZoomSensitivity();
+					if ( ImGui::SliderFloat( "Zoom Sensitivity", &zoomSensitivity, 0.1f, 3.0f, "%.2f" ) )
+					{
+						orthoController->setZoomSensitivity( zoomSensitivity );
+					}
+
+					// Zoom limits
+					ImGui::SeparatorText( "Zoom Limits" );
+
+					float minZoom = orthoController->getMinZoom();
+					float maxZoom = orthoController->getMaxZoom();
+
+					ImGui::TextDisabled( "Min Zoom: %.3f", minZoom );
+					ImGui::TextDisabled( "Max Zoom: %.3f", maxZoom );
+
+					if ( ImGui::Button( "Reset Zoom Limits" ) )
+					{
+						orthoController->setZoomLimits( 0.1f, 1000.0f );
+					}
+
+					// Frame actions
+					ImGui::SeparatorText( "Frame Actions" );
+
+					if ( ImGui::Button( "Frame Origin" ) )
+					{
+						math::Vec3<> center{ 0.0f, 0.0f, 0.0f };
+						math::Vec3<> size{ 10.0f, 10.0f, 10.0f };
+						orthoController->frameBounds( center, size );
+					}
+
+					ImGui::SameLine();
+
+					if ( ImGui::Button( "Frame Scene" ) )
+					{
+						math::Vec3<> center{ 0.0f, 0.0f, 0.0f };
+						math::Vec3<> size{ 50.0f, 50.0f, 50.0f };
+						orthoController->frameBounds( center, size );
+					}
+				}
+				else
+				{
+					ImGui::TextUnformatted( "Unknown camera controller type" );
+				}
+
+				// Common settings
+				ImGui::SeparatorText( "General" );
+
+				bool enabled = controller->isEnabled();
+				if ( ImGui::Checkbox( "Camera Controller Enabled", &enabled ) )
+				{
+					controller->setEnabled( enabled );
+				}
+
+				// Reset button
+				ImGui::Separator();
+				if ( ImGui::Button( "Reset to Defaults" ) )
+				{
+					if ( perspController )
+					{
+						perspController->setOrbitSensitivity( 0.5f );
+						perspController->setPanSensitivity( 1.0f );
+						perspController->setZoomSensitivity( 1.0f );
+						perspController->setKeyboardMoveSpeed( 10.0f );
+						perspController->setAutoRotate( false );
+						perspController->setAutoRotateSpeed( 30.0f );
+					}
+					else if ( orthoController )
+					{
+						orthoController->setPanSensitivity( 1.0f );
+						orthoController->setZoomSensitivity( 1.0f );
+						orthoController->setZoomLimits( 0.1f, 1000.0f );
+					}
+				}
+
+				// Apply to similar viewports
+				ImGui::SameLine();
+				if ( ImGui::Button( "Apply to Similar Cameras" ) )
+				{
+					if ( perspController )
+					{
+						// Apply to all perspective cameras
+						const auto &viewports = viewportManager.getViewports();
+						for ( const auto &vp : viewports )
+						{
+							if ( vp->getType() == ViewportType::Perspective )
+							{
+								auto *otherController = dynamic_cast<camera::PerspectiveCameraController *>( vp->getController() );
+								if ( otherController && otherController != perspController )
+								{
+									otherController->setOrbitSensitivity( perspController->getOrbitSensitivity() );
+									otherController->setPanSensitivity( perspController->getPanSensitivity() );
+									otherController->setZoomSensitivity( perspController->getZoomSensitivity() );
+									otherController->setKeyboardMoveSpeed( perspController->getKeyboardMoveSpeed() );
+									otherController->setAutoRotate( perspController->getAutoRotate() );
+									otherController->setAutoRotateSpeed( perspController->getAutoRotateSpeed() );
+								}
+							}
+						}
+					}
+					else if ( orthoController )
+					{
+						// Apply to all orthographic cameras
+						const auto &viewports = viewportManager.getViewports();
+						for ( const auto &vp : viewports )
+						{
+							if ( vp->getType() != ViewportType::Perspective )
+							{
+								auto *otherController = dynamic_cast<camera::OrthographicCameraController *>( vp->getController() );
+								if ( otherController && otherController != orthoController )
+								{
+									otherController->setPanSensitivity( orthoController->getPanSensitivity() );
+									otherController->setZoomSensitivity( orthoController->getZoomSensitivity() );
+									otherController->setZoomLimits( orthoController->getMinZoom(), orthoController->getMaxZoom() );
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				ImGui::TextUnformatted( "No camera controller available" );
+			}
+		}
+		else
+		{
+			ImGui::TextUnformatted( "No viewport available for camera settings" );
+		}
+	}
+	ImGui::End();
+}
+
 // UI::Impl viewport management methods
 bool UI::Impl::initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
@@ -619,6 +871,17 @@ void UI::showGridSettingsWindow( bool show )
 bool UI::isGridSettingsWindowOpen() const
 {
 	return m_impl->showGridSettingsWindow;
+}
+
+// Camera settings window management
+void UI::showCameraSettingsWindow( bool show )
+{
+	m_impl->showCameraSettingsWindow = show;
+}
+
+bool UI::isCameraSettingsWindowOpen() const
+{
+	return m_impl->showCameraSettingsWindow;
 }
 
 ViewportManager &UI::getViewportManager()

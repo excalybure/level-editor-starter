@@ -79,6 +79,10 @@ public:
 	void showGridSettingsWindow( bool show = true );
 	bool isGridSettingsWindowOpen() const;
 
+	// Camera settings management
+	void showCameraSettingsWindow( bool show = true );
+	bool isCameraSettingsWindowOpen() const;
+
 	// Get viewport manager for input handling
 	ViewportManager &getViewportManager();
 
