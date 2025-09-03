@@ -45,10 +45,10 @@ export struct GridSettings
 	float axisZAlpha = 1.0f;
 
 	// Grid properties
-	float gridSpacing = 1.0f;		 // Units per grid line
-	float majorGridInterval = 10.0f; // Major grid every N minor lines
-	float fadeDistance = 100.0f;	 // Distance at which grid fades out
-	float axisThickness = 2.0f;		 // Thickness of axis lines
+	float gridSpacing = 1.0f;			   // Units per grid line
+	float majorGridInterval = 10.0f;	   // Major grid every N minor lines
+	float fadeDistanceMultiplier = 5.0f; // Multiplier for camera distance to determine fade distance (fadeDistance = cameraDistance * multiplier)
+	float axisThickness = 2.0f;			   // Thickness of axis lines
 
 	// Visibility flags
 	bool showGrid = true;
@@ -56,8 +56,6 @@ export struct GridSettings
 
 	// Adaptive zoom settings
 	float zoomThreshold = 0.1f;	   // When to switch grid density
-	float maxGridSpacing = 100.0f; // Maximum grid spacing
-	float minGridSpacing = 0.01f;  // Minimum grid spacing
 };
 
 // Forward declarations

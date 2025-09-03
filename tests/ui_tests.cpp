@@ -245,12 +245,18 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 
 	SECTION( "Multiple frames do not crash and maintain layout" )
 	{
+		REQUIRE_NOTHROW( device.beginFrame() );
 		REQUIRE_NOTHROW( ui.beginFrame() );
 		REQUIRE_NOTHROW( ui.endFrame() );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 		auto &layout = ui.getLayout();
 		layout.panes[0].isOpen = false; // mutate between frames
+		REQUIRE_NOTHROW( device.beginFrame() );
 		REQUIRE_NOTHROW( ui.beginFrame() );
 		REQUIRE_NOTHROW( ui.endFrame() );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 		REQUIRE( layout.panes[0].isOpen == false );
 	}
 
@@ -260,9 +266,13 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 		REQUIRE_FALSE( ui.wantsCaptureMouse() );
 		REQUIRE_FALSE( ui.wantsCaptureKeyboard() );
 		// Subsequent begin/end are no-ops
+		REQUIRE_NOTHROW( device.beginFrame() );
 		REQUIRE_NOTHROW( ui.beginFrame() );
 		REQUIRE_NOTHROW( ui.endFrame() );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 	}
+
 #else
 	WARN( "UI integration test skipped: not on Win32 platform" );
 #endif
@@ -352,6 +362,8 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
+	REQUIRE_NOTHROW( device.beginFrame() );
+
 	SECTION( "Grid settings window management with initialized UI" )
 	{
 		// Initially closed
@@ -440,7 +452,12 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 		REQUIRE( updatedSettings.gridSpacing != Catch::Approx( originalSpacing ) );
 	}
 
+	REQUIRE_NOTHROW( device.endFrame() );
+	REQUIRE_NOTHROW( device.present() );
+
 	ui.shutdown();
+	device.shutdown();
+
 #else
 	WARN( "Grid Settings integration test skipped: not on Win32 platform" );
 #endif

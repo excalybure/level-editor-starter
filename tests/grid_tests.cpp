@@ -46,7 +46,7 @@ TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 		// Check default properties
 		REQUIRE( settings.gridSpacing == 1.0f );
 		REQUIRE( settings.majorGridInterval == 10.0f );
-		REQUIRE( settings.fadeDistance == 100.0f );
+		REQUIRE( settings.fadeDistanceMultiplier == 5.0f );
 		REQUIRE( settings.axisThickness == 2.0f );
 
 		REQUIRE( settings.showGrid == true );
@@ -69,11 +69,11 @@ TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 		// Modify properties
 		settings.gridSpacing = 2.0f;
 		settings.majorGridInterval = 5.0f;
-		settings.fadeDistance = 50.0f;
+		settings.fadeDistanceMultiplier = 2.0f;
 
 		REQUIRE( settings.gridSpacing == 2.0f );
 		REQUIRE( settings.majorGridInterval == 5.0f );
-		REQUIRE( settings.fadeDistance == 50.0f );
+		REQUIRE( settings.fadeDistanceMultiplier == 2.0f );
 
 		// Modify visibility
 		settings.showGrid = false;
@@ -81,22 +81,6 @@ TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 
 		REQUIRE_FALSE( settings.showGrid );
 		REQUIRE_FALSE( settings.showAxes );
-	}
-
-	SECTION( "Grid settings bounds validation" )
-	{
-		GridSettings settings;
-
-		// Test spacing bounds
-		settings.minGridSpacing = 0.001f;
-		settings.maxGridSpacing = 1000.0f;
-
-		REQUIRE( settings.minGridSpacing > 0.0f );
-		REQUIRE( settings.maxGridSpacing > settings.minGridSpacing );
-
-		// Test valid spacing range
-		REQUIRE( settings.gridSpacing >= settings.minGridSpacing );
-		REQUIRE( settings.gridSpacing <= settings.maxGridSpacing );
 	}
 }
 

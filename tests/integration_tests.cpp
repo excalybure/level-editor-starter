@@ -486,7 +486,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			// Test spacing modifications
 			settings.gridSpacing = 1.5f;
 			settings.majorGridInterval = 8.0f;
-			settings.fadeDistance = 200.0f;
+			settings.fadeDistanceMultiplier = 20.0f;
 			settings.axisThickness = 3.0f;
 
 			// Test color modifications
@@ -515,7 +515,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 
 			REQUIRE_THAT( updatedSettings.gridSpacing, WithinAbs( 1.5f, 0.001f ) );
 			REQUIRE_THAT( updatedSettings.majorGridInterval, WithinAbs( 8.0f, 0.001f ) );
-			REQUIRE_THAT( updatedSettings.fadeDistance, WithinAbs( 200.0f, 0.001f ) );
+			REQUIRE_THAT( updatedSettings.fadeDistanceMultiplier, WithinAbs( 20.0f, 0.001f ) );
 			REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 3.0f, 0.001f ) );
 
 			REQUIRE_THAT( updatedSettings.majorGridColor.x, WithinAbs( 0.8f, 0.001f ) );

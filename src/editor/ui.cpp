@@ -534,16 +534,10 @@ void UI::Impl::renderGridSettingsWindow()
 			// Advanced settings section
 			ImGui::SeparatorText( "Advanced" );
 
-			if ( ImGui::SliderFloat( "Fade Distance", &gridSettings.fadeDistance, 50.0f, 500.0f, "%.1f" ) )
+			if ( ImGui::SliderFloat( "Fade Distance Multiplier", &gridSettings.fadeDistanceMultiplier, 1.0f, 100.0f, "%.1f" ) )
 				settingsChanged = true;
 
 			if ( ImGui::SliderFloat( "Zoom Threshold", &gridSettings.zoomThreshold, 0.01f, 1.0f, "%.3f" ) )
-				settingsChanged = true;
-
-			if ( ImGui::SliderFloat( "Max Spacing", &gridSettings.maxGridSpacing, 10.0f, 1000.0f, "%.1f" ) )
-				settingsChanged = true;
-
-			if ( ImGui::SliderFloat( "Min Spacing", &gridSettings.minGridSpacing, 0.001f, 1.0f, "%.3f" ) )
 				settingsChanged = true;
 
 			// Apply changes section

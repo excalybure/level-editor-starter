@@ -670,7 +670,7 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 		// Test default values match GridSettings defaults
 		REQUIRE_THAT( settings.gridSpacing, WithinAbs( 1.0f, 0.001f ) );
 		REQUIRE_THAT( settings.majorGridInterval, WithinAbs( 10.0f, 0.001f ) );
-		REQUIRE_THAT( settings.fadeDistance, WithinAbs( 100.0f, 0.001f ) );
+		REQUIRE_THAT( settings.fadeDistanceMultiplier, WithinAbs( 5.0f, 0.001f ) );
 		REQUIRE_THAT( settings.axisThickness, WithinAbs( 2.0f, 0.001f ) );
 		REQUIRE( settings.showGrid == true );
 		REQUIRE( settings.showAxes == true );
@@ -728,8 +728,8 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 		REQUIRE_THAT( updatedSettings.majorGridAlpha, WithinAbs( 0.6f, 0.001f ) );
 
 		// Verify other settings remain unchanged
-		REQUIRE_THAT( updatedSettings.fadeDistance, WithinAbs( 100.0f, 0.001f ) ); // Still default
-		REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 2.0f, 0.001f ) );  // Still default
+		REQUIRE_THAT( updatedSettings.fadeDistanceMultiplier, WithinAbs( 5.0f, 0.001f ) ); // Still default
+		REQUIRE_THAT( updatedSettings.axisThickness, WithinAbs( 2.0f, 0.001f ) );			 // Still default
 	}
 
 	SECTION( "Grid settings persistence within viewport" )

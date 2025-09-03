@@ -3,6 +3,7 @@ module engine.camera;
 
 import std;
 import engine.math;
+import runtime.console;
 
 namespace camera
 {
@@ -142,6 +143,7 @@ void PerspectiveCamera::zoom( float deltaDistance ) noexcept
 
 	const math::Vec3<> direction = math::normalize( m_position - m_target );
 	m_position = m_target + direction * newDistance;
+	console::info( "Camera zoomed to distance: {} and position is now ({}, {}, {})", newDistance, m_position.x, m_position.y, m_position.z );
 }
 
 void PerspectiveCamera::focusOnPoint( const math::Vec3<> &point, float distance ) noexcept

@@ -263,9 +263,6 @@ void GridRenderer::updateAdaptiveSpacing( const camera::Camera &camera )
 	const float baseSpacing = m_settings.gridSpacing;
 	float optimalSpacing = calculateOptimalSpacing( distanceToOrigin, baseSpacing );
 
-	// Clamp to reasonable bounds
-	optimalSpacing = std::clamp( optimalSpacing, m_settings.minGridSpacing, m_settings.maxGridSpacing );
-
 	// Update settings if spacing has changed significantly
 	if ( std::abs( m_settings.gridSpacing - optimalSpacing ) > m_settings.gridSpacing * 0.1f )
 	{
@@ -276,25 +273,15 @@ void GridRenderer::updateAdaptiveSpacing( const camera::Camera &camera )
 
 float GridRenderer::calculateOptimalSpacing( const float cameraDistance, const float baseSpacing )
 {
-	// New adaptive spacing algorithm: spacing = (base 10 order of magnitude lower than camera distance) * 0.1
-	// For example: if cameraDistance is 2.7, the base 10 order magnitude lower is 1, so spacing = 1 * 0.1 = 0.1
-
 	// Handle edge cases
 	if ( cameraDistance <= 0.0f )
 	{
 		return baseSpacing * 0.1f; // Fallback for invalid distance
 	}
 
-	// Calculate the base 10 order of magnitude lower than camera distance
-	// For distance 2.7: floor(log10(2.7)) = floor(0.43) = 0, so 10^0 = 1
-	// For distance 27: floor(log10(27)) = floor(1.43) = 1, so 10^1 = 10
-	// For distance 0.27: floor(log10(0.27)) = floor(-0.57) = -1, so 10^-1 = 0.1
-
 	const float logDistance = std::log10f( cameraDistance );
 	const float magnitudeExponent = std::floorf( logDistance );
 	const float magnitude = std::powf( 10.0f, magnitudeExponent );
-
-	// Optimal spacing is 1/10th of this magnitude
 	const float optimalSpacing = magnitude * 0.1f;
 
 	return optimalSpacing;
@@ -565,8 +552,9 @@ void GridRenderer::updateConstantBuffer( const camera::Camera &camera,
 	constants.axisZColor = toXMFloat3( m_settings.axisZColor );
 	constants.axisZAlpha = m_settings.axisZAlpha;
 
-	// Grid properties
-	constants.fadeDistance = m_settings.fadeDistance;
+	// Grid properties - calculate fade distance dynamically based on camera distance
+	const float cameraDistance = math::length( camera.getPosition() );
+	constants.fadeDistance = cameraDistance * m_settings.fadeDistanceMultiplier;
 	constants.gridSpacing = m_settings.gridSpacing;
 	constants.majorGridInterval = m_settings.majorGridInterval;
 	constants.axisThickness = m_settings.axisThickness;
