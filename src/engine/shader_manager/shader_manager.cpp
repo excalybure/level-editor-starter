@@ -4,6 +4,7 @@
 module; // global module fragment
 
 #include <windows.h>
+#include <shared_mutex>
 
 module engine.shader_manager;
 
@@ -20,7 +21,20 @@ ShaderHandle ShaderManager::registerShader(
 	const std::string &target,
 	ShaderType type )
 {
-	// Check if this exact shader is already registered
+	// Check if this exact shader is already registered (uses read lock)
+	{
+		std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
+		ShaderHandle existingHandle = findExistingShader( filePath, entryPoint, target, type );
+		if ( existingHandle != INVALID_SHADER_HANDLE )
+		{
+			return existingHandle;
+		}
+	}
+
+	// Acquire write lock for registration
+	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
+
+	// Double-check after acquiring write lock (another thread might have registered it)
 	ShaderHandle existingHandle = findExistingShader( filePath, entryPoint, target, type );
 	if ( existingHandle != INVALID_SHADER_HANDLE )
 	{
@@ -58,6 +72,7 @@ ShaderHandle ShaderManager::registerShader(
 
 void ShaderManager::unregisterShader( ShaderHandle handle )
 {
+	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() )
 	{
@@ -74,6 +89,7 @@ void ShaderManager::unregisterShader( ShaderHandle handle )
 
 CallbackHandle ShaderManager::registerReloadCallback( ShaderReloadCallback callback )
 {
+	std::unique_lock<std::shared_mutex> lock( m_callbackMutex );
 	CallbackHandle handle = m_nextCallbackHandle++;
 	m_reloadCallbacks[handle] = std::move( callback );
 	return handle;
@@ -81,6 +97,7 @@ CallbackHandle ShaderManager::registerReloadCallback( ShaderReloadCallback callb
 
 void ShaderManager::unregisterReloadCallback( CallbackHandle callbackHandle )
 {
+	std::unique_lock<std::shared_mutex> lock( m_callbackMutex );
 	auto it = m_reloadCallbacks.find( callbackHandle );
 	if ( it != m_reloadCallbacks.end() )
 	{
@@ -90,6 +107,7 @@ void ShaderManager::unregisterReloadCallback( CallbackHandle callbackHandle )
 
 const renderer::ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) const
 {
+	std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() && it->second.isValid )
 	{
@@ -100,6 +118,7 @@ const renderer::ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) 
 
 void ShaderManager::update()
 {
+	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
 	for ( auto &[handle, shaderInfo] : m_shaders )
 	{
 		bool needsRecompile = false;
@@ -146,8 +165,14 @@ void ShaderManager::update()
 					shaderTypeToString( shaderInfo.type ),
 					shaderInfo.entryPoint );
 
-				// Notify all registered callbacks
-				for ( const auto &[callbackHandle, callback] : m_reloadCallbacks )
+				// Notify all registered callbacks (copy callbacks to avoid deadlock)
+				std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
+				{
+					std::shared_lock<std::shared_mutex> lock( m_callbackMutex );
+					callbacksCopy = m_reloadCallbacks;
+				}
+
+				for ( const auto &[callbackHandle, callback] : callbacksCopy )
 				{
 					if ( callback )
 					{
@@ -168,6 +193,7 @@ void ShaderManager::update()
 
 bool ShaderManager::forceRecompile( ShaderHandle handle )
 {
+	std::unique_lock<std::shared_mutex> lock( m_shaderMutex );
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() )
 	{
@@ -183,8 +209,14 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 				shaderTypeToString( it->second.type ),
 				it->second.entryPoint );
 
-			// Notify all registered callbacks
-			for ( const auto &[callbackHandle, callback] : m_reloadCallbacks )
+			// Notify all registered callbacks (copy callbacks to avoid deadlock)
+			std::unordered_map<CallbackHandle, ShaderReloadCallback> callbacksCopy;
+			{
+				std::shared_lock<std::shared_mutex> lock( m_callbackMutex );
+				callbacksCopy = m_reloadCallbacks;
+			}
+
+			for ( const auto &[callbackHandle, callback] : callbacksCopy )
 			{
 				if ( callback )
 				{
@@ -207,9 +239,20 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 
 void ShaderManager::forceRecompileAll()
 {
-	console::info( "Shader Manager: Force recompiling all {} shaders", m_shaders.size() );
+	// Get shader count and handles under read lock
+	std::vector<ShaderHandle> handles;
+	{
+		std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
+		console::info( "Shader Manager: Force recompiling all {} shaders", m_shaders.size() );
+		handles.reserve( m_shaders.size() );
+		for ( const auto &[handle, shaderInfo] : m_shaders )
+		{
+			handles.push_back( handle );
+		}
+	}
 
-	for ( auto &[handle, shaderInfo] : m_shaders )
+	// Recompile each shader (forceRecompile will acquire its own lock)
+	for ( ShaderHandle handle : handles )
 	{
 		forceRecompile( handle );
 	}
@@ -217,6 +260,7 @@ void ShaderManager::forceRecompileAll()
 
 const ShaderInfo *ShaderManager::getShaderInfo( ShaderHandle handle ) const
 {
+	std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() )
 	{
@@ -227,6 +271,7 @@ const ShaderInfo *ShaderManager::getShaderInfo( ShaderHandle handle ) const
 
 std::vector<ShaderHandle> ShaderManager::getAllShaderHandles() const
 {
+	std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
 	std::vector<ShaderHandle> handles;
 	handles.reserve( m_shaders.size() );
 

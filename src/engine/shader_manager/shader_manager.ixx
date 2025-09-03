@@ -96,10 +96,12 @@ private:
 	std::unordered_map<ShaderHandle, ShaderInfo> m_shaders;
 	std::unordered_map<size_t, ShaderHandle> m_shaderHashMap; // Hash -> Handle mapping for fast lookup
 	ShaderHandle m_nextHandle = 1;
+	mutable std::shared_mutex m_shaderMutex; // Protects shader-related data structures
 
 	// Multiple callback support
 	std::unordered_map<CallbackHandle, ShaderReloadCallback> m_reloadCallbacks;
 	CallbackHandle m_nextCallbackHandle = 1;
+	mutable std::shared_mutex m_callbackMutex; // Protects callback-related data structures
 
 	// Helper functions
 	bool compileShader( ShaderInfo &shaderInfo );

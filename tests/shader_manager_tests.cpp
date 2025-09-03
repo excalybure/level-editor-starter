@@ -668,7 +668,7 @@ TEST_CASE( "ShaderManager Thread Safety", "[shader_manager][threading]" )
 	SECTION( "Multiple update calls from single thread" )
 	{
 		const auto shaderPath = fixture.createShaderFile( "test.hlsl", fixture.getValidShaderContent() );
-		 manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
+		manager.registerShader( shaderPath, "VSMain", "vs_5_0", ShaderType::Vertex );
 
 		// Rapid update calls should be safe
 		for ( int i = 0; i < 100; ++i )
