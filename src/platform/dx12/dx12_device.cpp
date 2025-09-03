@@ -8,6 +8,9 @@ module;
 #include <wrl.h>
 #include <windows.h>
 #include <comdef.h>
+#ifdef _DEBUG
+#include <d3d12sdklayers.h> // For ID3D12InfoQueue
+#endif
 // ImGui headers (render integration moved here so we can issue draw calls on the active command list)
 
 module platform.dx12;
@@ -309,6 +312,29 @@ void Device::createDevice()
 		m_adapter.Get(),
 		D3D_FEATURE_LEVEL_11_0,
 		IID_PPV_ARGS( &m_device ) ) );
+
+#ifdef _DEBUG
+	// Configure debug layer to break on errors and warnings
+	configureDebugBreaks();
+#endif
+}
+
+void Device::configureDebugBreaks()
+{
+#ifdef _DEBUG
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+	if ( SUCCEEDED( m_device->QueryInterface( IID_PPV_ARGS( infoQueue.GetAddressOf() ) ) ) )
+	{
+		// Break on D3D12 errors
+		infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_ERROR, TRUE );
+
+		// Break on D3D12 warnings (optional - comment out if too noisy)
+		infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_WARNING, TRUE );
+
+		// Optionally break on info messages (usually too noisy)
+		// infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, TRUE);
+	}
+#endif
 }
 
 void Device::createCommandObjects()

@@ -201,6 +201,7 @@ private:
 	void createFactory();
 	void findAdapter();
 	void createDevice();
+	void configureDebugBreaks();
 	void createCommandObjects();
 	void createSwapChain( HWND window_handle );
 	void createDescriptorHeaps();
