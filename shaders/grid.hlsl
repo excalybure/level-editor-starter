@@ -13,9 +13,7 @@ struct VertexInput
 struct VertexOutput
 {
     float4 position : SV_POSITION;
-    float3 worldPos : WORLD_POSITION;
-    float3 viewDir : VIEW_DIRECTION;
-    float2 ndc : TEXCOORD0;   // NDC xy in [-1,1]
+    float2 clipPos : CLIP_POSITION;
 };
 
 // Grid rendering parameters
@@ -56,36 +54,6 @@ cbuffer GridConstants : register(b0)
     float3 padding; // Ensure 16-byte alignment
 };
 
-// Vertex Shader - Generate fullscreen quad
-VertexOutput VSMain(const VertexInput input)
-{
-    VertexOutput output;
-    
-    // Generate fullscreen triangle
-    // vertexID 0: (-1, -1), vertexID 1: (3, -1), vertexID 2: (-1, 3)
-    // This covers the entire screen with just 3 vertices
-    const float2 uv = float2((input.vertexID << 1) & 2, input.vertexID & 2);
-    const float2 clipPos = uv * 2.0f - 1.0f;
-    
-    output.position = float4(clipPos, 0.0f, 1.0f);
-    
-    // Calculate world position on the near plane
-    float4 nearPlanePos = mul(invViewProjMatrix, float4(clipPos, 0.0f, 1.0f));
-    nearPlanePos.xyz /= nearPlanePos.w;
-    
-    // Calculate world position on the far plane  
-    float4 farPlanePos = mul(invViewProjMatrix, float4(clipPos, 1.0f, 1.0f));
-    farPlanePos.xyz /= farPlanePos.w;
-    
-    // World position for ray casting
-    output.worldPos = nearPlanePos.xyz;
-    output.viewDir = normalize(farPlanePos.xyz - nearPlanePos.xyz);
-
-    output.ndc = output.position.xy; // w=1 for all three verts, so this is valid across the triangle
-
-    return output;
-}
-
 // Grid line computation functions
 float gridLine(const float coord, const float spacing, const float thickness)
 {
@@ -106,6 +74,23 @@ float calculateFade(const float3 worldPos, const float3 cameraPos, const float f
     return saturate(1.0 - distance / fadeDistance);
 }
 
+// Vertex Shader - Generate fullscreen quad
+VertexOutput VSMain(const VertexInput input)
+{
+    VertexOutput output;
+    
+    // Generate fullscreen triangle
+    // vertexID 0: (-1, -1), vertexID 1: (3, -1), vertexID 2: (-1, 3)
+    // This covers the entire screen with just 3 vertices
+    const float2 uv = float2((input.vertexID << 1) & 2, input.vertexID & 2);
+    const float2 clipPos = uv * 2.0f - 1.0f;
+    
+    output.position = float4(clipPos, 0.0f, 1.0f);
+    output.clipPos = clipPos;
+
+    return output;
+}
+
 // Pixel Shader - Render infinite grid
 float4 PSMain(const VertexOutput input) : SV_Target
 {
@@ -114,9 +99,20 @@ float4 PSMain(const VertexOutput input) : SV_Target
         discard;
     }
     
-    // Ray-plane intersection - dynamic based on viewType
-    const float3 rayStart = input.worldPos;
-    const float3 rayDir = normalize(input.viewDir);
+    // Calculate world position and view direction per-pixel for correct perspective
+    const float2 clipPos = input.clipPos;
+    
+    // Calculate world position on the near plane
+    float4 nearPlanePos = mul(invViewProjMatrix, float4(clipPos, 0.0f, 1.0f));
+    nearPlanePos.xyz /= nearPlanePos.w;
+    
+    // Calculate world position on the far plane  
+    float4 farPlanePos = mul(invViewProjMatrix, float4(clipPos, 1.0f, 1.0f));
+    farPlanePos.xyz /= farPlanePos.w;
+    
+    // Ray parameters
+    const float3 rayStart = nearPlanePos.xyz;
+    const float3 rayDir = normalize(farPlanePos.xyz - nearPlanePos.xyz);
     
     float3 worldPos;
     
@@ -125,7 +121,7 @@ float4 PSMain(const VertexOutput input) : SV_Target
     {
         float t;
         // Default to XY plane intersection for perspective
-#if 1
+
         if (abs(rayDir.z) < 0.0001)
             discard; // Ray parallel to plane
         
@@ -137,18 +133,6 @@ float4 PSMain(const VertexOutput input) : SV_Target
         }
         
         worldPos = rayStart + t * rayDir;
-#else
-        float4 worldFar = mul(float4(input.ndc.xy, 1, 1), invViewProjMatrix);
-        worldFar.xyz /= worldFar.w;
-        float3 rd = normalize(worldFar.xyz - cameraPosition.xyz);
-        float denom = rd.z;
-        if (abs(denom) < 1e-6) discard;        // nearly parallel to plane
-        t = -cameraPosition.z / denom;
-        if (t <= 0.0) discard;                 // behind camera
-
-        float3 P = cameraPosition + rd * t;                // world-space hit point on the grid plane
-        worldPos = P;
-#endif
     }
     else if (viewType == 1) // Top view (orthographic) - XY plane
     {
