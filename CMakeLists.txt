@@ -249,7 +249,7 @@ target_sources(engine.camera PUBLIC
     src/engine/camera/camera_controller.cpp
 )
 target_compile_features(engine.camera PUBLIC cxx_std_23)
-target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math)
+target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math runtime.console)
 
 add_library(engine.shader_manager)
 target_sources(engine.shader_manager PUBLIC
