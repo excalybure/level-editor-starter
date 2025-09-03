@@ -49,7 +49,7 @@ public:
 	UI &operator=( const UI & ) = delete;
 
 	// Initialize ImGui with D3D12 device and shader manager
-	bool initialize( void *window_handle, dx12::Device *device, shader_manager::ShaderManager *shaderManager );
+	bool initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 
 	// Cleanup ImGui resources
 	void shutdown();

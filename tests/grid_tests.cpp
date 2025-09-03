@@ -138,10 +138,10 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 			return;
 
 		GridRenderer renderer;
-		shader_manager::ShaderManager shaderManager;
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
 		// Initialize should succeed with valid device and shader manager
-		REQUIRE( renderer.initialize( &device, &shaderManager ) );
+		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		// Should be able to shutdown cleanly
 		REQUIRE_NOTHROW( renderer.shutdown() );
@@ -221,8 +221,8 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 			return;
 
 		GridRenderer renderer;
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( renderer.initialize( &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		// Create camera at different distances
 		PerspectiveCamera closeCamera;
@@ -393,8 +393,8 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 			return;
 
 		GridRenderer renderer;
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( renderer.initialize( &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		// Create camera
 		PerspectiveCamera camera;
@@ -430,8 +430,8 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 			return;
 
 		GridRenderer renderer;
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( renderer.initialize( &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		PerspectiveCamera camera;
 		Mat4<> viewMatrix = camera.getViewMatrix();

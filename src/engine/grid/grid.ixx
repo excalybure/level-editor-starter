@@ -75,7 +75,7 @@ public:
 	GridRenderer &operator=( const GridRenderer & ) = delete;
 
 	// Initialize the grid renderer with D3D12 device and shader manager
-	bool initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
+	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdown();
 
 	// Render the grid for a specific viewport
@@ -104,7 +104,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
 	// Shader management
-	shader_manager::ShaderManager *m_shaderManager = nullptr;
+	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 	shader_manager::ShaderHandle m_vertexShaderHandle;
 	shader_manager::ShaderHandle m_pixelShaderHandle;
 	shader_manager::CallbackHandle m_callbackHandle;

@@ -506,7 +506,7 @@ void Viewport::setupOrthographicView()
 // ViewportManager Implementation
 //=============================================================================
 
-bool ViewportManager::initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
+bool ViewportManager::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	if ( !device || !shaderManager )
 		return false;
@@ -518,9 +518,10 @@ bool ViewportManager::initialize( dx12::Device *device, shader_manager::ShaderMa
 
 void ViewportManager::shutdown()
 {
-	// Destroy all viewports first
+	// Destroy all viewports first (this will trigger proper cleanup)
 	destroyAllViewports();
 	m_device = nullptr;
+	m_shaderManager.reset(); // Properly release the shared_ptr
 }
 
 Viewport *ViewportManager::createViewport( ViewportType type )
@@ -585,7 +586,7 @@ void ViewportManager::destroyAllViewports()
 {
 	m_activeViewport = nullptr;
 	m_focusedViewport = nullptr;
-	m_viewports.clear();
+	m_viewports.clear(); // shared_ptr will ensure proper cleanup order
 }
 
 void ViewportManager::setActiveViewport( Viewport *viewport ) noexcept
@@ -888,7 +889,7 @@ ViewportInputEvent ViewportUtils::createKeyEvent( int keyCode, bool pressed, boo
 }
 
 // Grid integration methods for Viewport
-bool Viewport::initializeGrid( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
+bool Viewport::initializeGrid( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	if ( !m_gridRenderer )
 	{

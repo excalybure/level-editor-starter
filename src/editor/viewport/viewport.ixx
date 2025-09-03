@@ -131,7 +131,7 @@ public:
 	bool areGizmosVisible() const noexcept { return m_showGizmos; }
 
 	// Grid settings management
-	bool initializeGrid( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
+	bool initializeGrid( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void setGridSettings( const grid::GridSettings &settings );
 	const grid::GridSettings &getGridSettings() const;
 
@@ -194,7 +194,7 @@ public:
 	ViewportManager &operator=( const ViewportManager & ) = delete;
 
 	// Initialize with D3D12 device for render target creation
-	bool initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
+	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdown();
 
 	// Viewport management
@@ -238,7 +238,7 @@ private:
 	dx12::Device *m_device = nullptr;
 
 	// Shader manager for hot reloading
-	shader_manager::ShaderManager *m_shaderManager = nullptr;
+	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 
 	// Find viewport by pointer
 	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );

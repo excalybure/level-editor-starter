@@ -77,14 +77,14 @@ int main()
 	}
 
 	// Create shader manager for automatic shader reloading
-	shader_manager::ShaderManager shaderManager;
+	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
 	// Initialize UI system with D3D12 device
 	editor::UI ui;
 	if ( !ui.initialize(
 			 static_cast<void *>( window.getHandle() ),
 			 &device,
-			 &shaderManager ) )
+			 shaderManager ) )
 	{
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;
@@ -124,7 +124,7 @@ int main()
 			// Update shader manager (check for shader file changes and hot-reload)
 			{
 				pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
-				shaderManager.update();
+				shaderManager->update();
 			}
 
 			// Update viewports with timing (for camera controllers)

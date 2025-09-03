@@ -106,8 +106,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
 
 		// Test that UI-managed viewports have properly configured cameras
 		const ViewportType types[] = {
@@ -148,8 +148,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
 
 		auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
 		REQUIRE( perspectiveViewport != nullptr );
@@ -179,8 +179,8 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 		UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( ui.initialize( dummyHwnd, &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
 
 		const auto &layout = ui.getLayout();
 
@@ -363,8 +363,8 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		}
 
 		UI ui;
-		shader_manager::ShaderManager shaderManager;
-		REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
 		// Test grid settings window functionality with fully initialized UI
 		SECTION( "Grid settings window with initialized viewports" )

@@ -53,7 +53,7 @@ struct UI::Impl
 	void renderGridSettingsWindow();
 
 	// Initialize viewports with D3D12 device
-	bool initializeViewports( dx12::Device *device, shader_manager::ShaderManager *shaderManager );
+	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdownViewports();
 
 	// Get viewport by type
@@ -70,7 +70,7 @@ UI::~UI()
 	shutdown();
 }
 
-bool UI::initialize( void *window_handle, dx12::Device *device, shader_manager::ShaderManager *shaderManager )
+bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	HWND hwnd = static_cast<HWND>( window_handle );
 
@@ -564,7 +564,7 @@ void UI::Impl::renderGridSettingsWindow()
 }
 
 // UI::Impl viewport management methods
-bool UI::Impl::initializeViewports( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
+bool UI::Impl::initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	if ( !device )
 		return false;

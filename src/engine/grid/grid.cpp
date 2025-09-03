@@ -112,7 +112,7 @@ GridRenderer::~GridRenderer()
 	}
 }
 
-bool GridRenderer::initialize( dx12::Device *device, shader_manager::ShaderManager *shaderManager )
+bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	if ( !device || !shaderManager )
 	{
@@ -168,7 +168,7 @@ void GridRenderer::shutdown()
 	m_pipelineState.Reset();
 	m_rootSignature.Reset();
 	m_device = nullptr;
-	m_shaderManager = nullptr;
+	m_shaderManager.reset(); // Properly release the shared_ptr
 }
 
 bool GridRenderer::render( const camera::Camera &camera,

@@ -240,8 +240,8 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 
 	UI ui;
 	// Use device directly with new signature
-	shader_manager::ShaderManager shaderManager;
-	REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
+	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
 	SECTION( "Multiple frames do not crash and maintain layout" )
 	{
@@ -349,8 +349,8 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 	REQUIRE( device.initialize( static_cast<HWND>( window.getHandle() ) ) );
 
 	UI ui;
-	shader_manager::ShaderManager shaderManager;
-	REQUIRE( ui.initialize( window.getHandle(), &device, &shaderManager ) );
+	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
 	SECTION( "Grid settings window management with initialized UI" )
 	{
