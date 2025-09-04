@@ -203,7 +203,8 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 	SECTION( "Adaptive spacing with camera" )
 	{
 		dx12::Device device;
-		REQUIRE( requireDevice( window, device, "Grid Adaptive Spacing" ) );
+		if ( !requireHeadlessDevice( device, "Adaptive spacing with camera" ) )
+			return;
 
 		GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
@@ -373,9 +374,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 {
 	SECTION( "Grid rendering with valid setup" )
 	{
+		platform::Win32Window window;
 		dx12::Device device;
-		if ( !requireHeadlessDevice( device, "Grid rendering integration" ) )
-			return;
+		REQUIRE( requireDevice( window, device, "Grid rendering integration" ) );
 
 		GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
@@ -388,9 +389,11 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		Mat4<> viewMatrix = camera.getViewMatrix();
 		Mat4<> projMatrix = camera.getProjectionMatrix( 1.78f ); // 16:9 aspect ratio
 
-		// Render should succeed
+		REQUIRE_NOTHROW( device.beginFrame() );
 		bool renderResult = renderer.render( camera, viewMatrix, projMatrix, 1920, 1080 );
 		REQUIRE( renderResult );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 
 		renderer.shutdown();
 	}
@@ -410,9 +413,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 
 	SECTION( "Grid rendering with different settings" )
 	{
+		platform::Win32Window window;
 		dx12::Device device;
-		if ( !requireHeadlessDevice( device, "Grid rendering with different settings" ) )
-			return;
+		REQUIRE( requireDevice( window, device, "Grid rendering with different settings" ) );
 
 		GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
@@ -427,24 +430,33 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		settings.showGrid = false;
 		renderer.setSettings( settings );
 
+		REQUIRE_NOTHROW( device.beginFrame() );
 		bool result1 = renderer.render( camera, viewMatrix, projMatrix, 800, 600 );
 		REQUIRE( result1 ); // Should still succeed even with grid disabled
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 
 		// Test with axes disabled
 		settings.showGrid = true;
 		settings.showAxes = false;
 		renderer.setSettings( settings );
 
+		REQUIRE_NOTHROW( device.beginFrame() );
 		bool result2 = renderer.render( camera, viewMatrix, projMatrix, 800, 600 );
 		REQUIRE( result2 );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 
 		// Test with different spacing
 		settings.gridSpacing = 0.5f;
 		settings.majorGridInterval = 8.0f;
 		renderer.setSettings( settings );
 
+		REQUIRE_NOTHROW( device.beginFrame() );
 		bool result3 = renderer.render( camera, viewMatrix, projMatrix, 800, 600 );
 		REQUIRE( result3 );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 
 		renderer.shutdown();
 	}

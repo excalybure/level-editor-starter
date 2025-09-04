@@ -463,15 +463,19 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 	SECTION( "Manager with no viewports" )
 	{
 		ViewportManager manager;
+		platform::Win32Window window;
 		dx12::Device device;
+		REQUIRE( requireDevice( window, device ) );
 
-		REQUIRE( requireHeadlessDevice( device, "Manager with no viewports" ) );
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( manager.initialize( &device, shaderManager ) );
 
 		// Should handle gracefully
 		REQUIRE_NOTHROW( manager.update( 0.016f ) );
+		REQUIRE_NOTHROW( device.beginFrame() );
 		REQUIRE_NOTHROW( manager.render() );
+		REQUIRE_NOTHROW( device.endFrame() );
+		REQUIRE_NOTHROW( device.present() );
 
 		// Should handle null operations
 		manager.setActiveViewport( nullptr );

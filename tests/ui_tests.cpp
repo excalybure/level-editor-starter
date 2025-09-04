@@ -5,9 +5,10 @@
 #include <windows.h>
 #endif
 
+#include "test_dx12_helpers.h"
+
 import editor.ui;
 import editor.viewport; // For ViewportType enum
-import platform.win32.win32_window;
 import platform.dx12;
 import engine.shader_manager;
 
@@ -223,23 +224,13 @@ TEST_CASE( "UI initialize rejects null pointers", "[ui]" )
 
 TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 {
+
 #if defined( _WIN32 )
 	platform::Win32Window window;
-	if ( !window.create( "UI Test", 640, 480 ) )
-	{
-		WARN( "Skipping UI integration: failed to create Win32 window" );
-		return;
-	}
-
 	dx12::Device device;
-	if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
-	{
-		WARN( "Skipping UI integration: D3D12 initialize failed (hardware not available)" );
-		return;
-	}
+	REQUIRE( requireDevice( window, device ) );
 
 	UI ui;
-	// Use device directly with new signature
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
@@ -351,12 +342,11 @@ TEST_CASE( "UI Grid Settings Window Management", "[ui][grid]" )
 
 TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][integration]" )
 {
+
 #if defined( _WIN32 )
 	platform::Win32Window window;
-	REQUIRE( window.create( "Grid Settings Test", 640, 480 ) );
-
 	dx12::Device device;
-	REQUIRE( device.initialize( static_cast<HWND>( window.getHandle() ) ) );
+	REQUIRE( requireDevice( window, device ) );
 
 	UI ui;
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
