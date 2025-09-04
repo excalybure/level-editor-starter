@@ -203,8 +203,7 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 	SECTION( "Adaptive spacing with camera" )
 	{
 		dx12::Device device;
-		if ( !requireHeadlessDevice( device, "Adaptive spacing with camera" ) )
-			return;
+		REQUIRE( requireDevice( window, device, "Grid Adaptive Spacing" ) );
 
 		GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
