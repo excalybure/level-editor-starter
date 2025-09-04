@@ -68,9 +68,9 @@ float axisLine(const float coord, const float thickness)
 }
 
 // Calculate distance-based fade
-float calculateFade(const float3 worldPos, const float3 cameraPos, const float fadeDistance)
+float calculateFade(const float3 worldPosRel, const float fadeDistance)
 {
-    const float distance = length(worldPos - cameraPos);
+    const float distance = length(worldPosRel);
     return saturate(1.0 - distance / fadeDistance);
 }
 
@@ -114,7 +114,7 @@ float4 PSMain(const VertexOutput input) : SV_Target
     const float3 rayStart = nearPlanePos.xyz;
     const float3 rayDir = normalize(farPlanePos.xyz - nearPlanePos.xyz);
     
-    float3 worldPos;
+    float3 worldPosRel;
     
     // Handle different view types: 0=Perspective, 1=Top, 2=Front, 3=Side
     if (viewType == 0) // Perspective view - use ray-plane intersection
@@ -125,30 +125,32 @@ float4 PSMain(const VertexOutput input) : SV_Target
         if (abs(rayDir.z) < 0.0001)
             discard; // Ray parallel to plane
         
-        t = (0.0 - rayStart.z) / rayDir.z; // Intersect with Z=0 plane
+        t = (-cameraPosition.z - rayStart.z) / rayDir.z; // Intersect with Z=0 plane
         
         if (t < 0) // Ray pointing away from plane
         {
             discard;
         }
         
-        worldPos = rayStart + t * rayDir;
+        worldPosRel = rayStart + t * rayDir;
     }
     else if (viewType == 1) // Top view (orthographic) - XY plane
     {
         // Project world position onto XY plane at Z=0
-        worldPos = float3(rayStart.xy, 0.0);
+        worldPosRel = float3(rayStart.xy, 0.0);
     }
     else if (viewType == 2) // Front view (orthographic) - XZ plane
     {
         // Project world position onto XZ plane at Y=0
-        worldPos = float3(rayStart.x, 0.0, rayStart.z);
+        worldPosRel = float3(rayStart.x, 0.0, rayStart.z);
     }
     else if (viewType == 3) // Side view (orthographic) - YZ plane
     {
         // Project world position onto YZ plane at X=0
-        worldPos = float3(0.0, rayStart.yz);
+        worldPosRel = float3(0.0, rayStart.yz);
     }
+
+    const float3 worldPos = cameraPosition + worldPosRel;
     
     // Extract 2D grid coordinates based on view type
     float2 gridPos;
@@ -166,7 +168,7 @@ float4 PSMain(const VertexOutput input) : SV_Target
     }
     
     // Distance-based fade
-    const float fade = calculateFade(worldPos, cameraPosition, fadeDistance);
+    const float fade = calculateFade(worldPosRel, fadeDistance);
     if (fade < 0.01)
     {
         discard;

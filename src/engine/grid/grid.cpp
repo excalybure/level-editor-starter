@@ -527,10 +527,18 @@ void GridRenderer::updateConstantBuffer( const camera::Camera &camera,
 
 	GridConstants constants = {};
 
+	// Create a camera-relative view matrix by removing the translation component
+	math::Mat4<> cameraRelativeViewMatrix{
+		math::Vec4<>{ viewMatrix.m00(), viewMatrix.m01(), viewMatrix.m02(), 0.0f },
+		math::Vec4<>{ viewMatrix.m10(), viewMatrix.m11(), viewMatrix.m12(), 0.0f },
+		math::Vec4<>{ viewMatrix.m20(), viewMatrix.m21(), viewMatrix.m22(), 0.0f },
+		math::Vec4<>{ viewMatrix.m30(), viewMatrix.m31(), viewMatrix.m32(), viewMatrix.m33() } // Clear translation, keep homogeneous scaling
+	};
+
 	// Transform matrices
-	constants.viewMatrix = toXMFloat4x4( viewMatrix );
+	constants.viewMatrix = toXMFloat4x4( cameraRelativeViewMatrix );
 	constants.projMatrix = toXMFloat4x4( projMatrix );
-	constants.invViewProjMatrix = toXMFloat4x4( calculateInverseViewProjMatrix( viewMatrix, projMatrix ) );
+	constants.invViewProjMatrix = toXMFloat4x4( calculateInverseViewProjMatrix( cameraRelativeViewMatrix, projMatrix ) );
 
 	// Camera data
 	constants.cameraPosition = toXMFloat3( camera.getPosition() );
