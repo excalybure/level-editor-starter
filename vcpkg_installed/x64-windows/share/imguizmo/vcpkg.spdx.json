@@ -1,0 +1,137 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/imguizmo-x64-windows-2024-05-29#1-03bebc17-8682-455d-86c1-035163e9464e",
+  "name": "imguizmo:x64-windows@2024-05-29#1 64b264a719dd057613976848035c121fc6674603cc7a89f44a385dd178b118a7",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-2025-07-21-d4b65a2b83ae6c3526acd1c6f3b51aff2a884533"
+    ],
+    "created": "2025-09-05T02:18:09Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-2"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "DEPENDENCY_MANIFEST_OF",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "imguizmo",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "2024-05-29#1",
+      "downloadLocation": "git+https://github.com/Microsoft/vcpkg@febc8a87c4fbc76155d002254572154b44b3d850",
+      "homepage": "https://github.com/CedricGuillemet/ImGuizmo",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "Immediate mode 3D gizmo for scene editing and other controls based on Dear ImGui",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "imguizmo:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "64b264a719dd057613976848035c121fc6674603cc7a89f44a385dd178b118a7",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-0",
+      "name": "CedricGuillemet/ImGuizmo",
+      "downloadLocation": "git+https://github.com/CedricGuillemet/ImGuizmo@ba662b119d64f9ab700bb2cd7b2781f9044f5565",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "682d785b582379914d525985de3a0bc04932b4ed715607127b1803ffba4d9b85165255dca1c18d2fd0934bab43de5d6c9c2d9909ac84d0ddaea12dad1871bcf8"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./CMakeLists.txt",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a7b82be5a5cb67415b942ba6a5cc3b26ea16f61c834b596967dc0f55684ae920"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./portfile.cmake",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b030f0be8aa3e1ab1c386f50e04414a83441d7af503373d337c3174610574920"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./vcpkg.json",
+      "SPDXID": "SPDXRef-file-2",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "91a9f975cd7e27061067ac71bb42c3520839a8fe8bb146918553dcaf2c8e01fd"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}

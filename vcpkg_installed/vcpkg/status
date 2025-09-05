@@ -87,3 +87,21 @@ Abi: b43da4cbfbe6ce03bafd0248e68676c9958a109fe84a60caba677cff2a8832c3
 Description: Allows applications to be instrumented with marker events, for use with Microsoft PIX.
 Status: install ok installed
 
+Package: cgltf
+Version: 1.14
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 38773373a0906f901c9f3007b6e8d2a70abcbc57ccff6c334e262e93ee36316c
+Description: Single-file glTF 2.0 loader and writer written in C99
+Status: install ok installed
+
+Package: imguizmo
+Version: 2024-05-29
+Port-Version: 1
+Depends: imgui, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 64b264a719dd057613976848035c121fc6674603cc7a89f44a385dd178b118a7
+Description: Immediate mode 3D gizmo for scene editing and other controls based on Dear ImGui
+Status: install ok installed
+
