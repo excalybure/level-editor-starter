@@ -16,7 +16,7 @@ struct BoundingBox3D
 	Vec3<T> min;
 	Vec3<T> max;
 
-	constexpr BoundingBox3D() noexcept : min( T( 0 ) ), max( T( 0 ) ) {}
+	constexpr BoundingBox3D() noexcept : min( T( 0 ), T( 0 ), T( 0 ) ), max( T( 0 ), T( 0 ), T( 0 ) ) {}
 
 	constexpr BoundingBox3D( const Vec3<T> &min, const Vec3<T> &max ) noexcept
 		: min( min ), max( max ) {}

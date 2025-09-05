@@ -162,6 +162,22 @@ target_sources(runtime.ecs PUBLIC
 )
 target_compile_features(runtime.ecs PUBLIC cxx_std_23)
 
+add_library(runtime.components)
+target_sources(runtime.components PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/components.ixx
+)
+target_compile_features(runtime.components PUBLIC cxx_std_23)
+target_link_libraries(runtime.components PUBLIC runtime.ecs engine.math engine.matrix engine.vec engine.bounding_box_3d)
+
+add_library(runtime.systems)
+target_sources(runtime.systems PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/systems.ixx
+)
+target_compile_features(runtime.systems PUBLIC cxx_std_23)
+target_link_libraries(runtime.systems PUBLIC runtime.ecs runtime.components engine.matrix)
+
 add_library(runtime.app)
 target_sources(runtime.app PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -337,6 +353,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/viewport_tests.cpp
     tests/grid_tests.cpp
     tests/ecs_tests.cpp
+    tests/systems_tests.cpp
+    tests/components_tests.cpp
     tests/app_tests.cpp
     tests/renderer_integration_tests.cpp
     tests/integration_tests.cpp
@@ -367,6 +385,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.grid
     editor.viewport
     runtime.ecs
+  runtime.components
+  runtime.systems
     runtime.app
     runtime.console
     editor.ui

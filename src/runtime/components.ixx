@@ -1,0 +1,119 @@
+export module runtime.components;
+
+import engine.math;
+import engine.matrix;
+import engine.vec;
+import engine.bounding_box_3d;
+import runtime.ecs;
+import <string>;
+import <vector>;
+
+export namespace components
+{
+
+// Core transform component
+struct Transform
+{
+	math::Vec3<> position{ 0.0f, 0.0f, 0.0f };
+	math::Vec3<> rotation{ 0.0f, 0.0f, 0.0f }; // Euler angles (radians)
+	math::Vec3<> scale{ 1.0f, 1.0f, 1.0f };
+
+	// Cached matrices (marked mutable for lazy evaluation)
+	mutable math::Mat4<> localMatrix;
+	mutable math::Mat4<> worldMatrix;
+	mutable bool localMatrixDirty = true;
+	mutable bool worldMatrixDirty = true;
+
+	// Get local transformation matrix
+	const math::Mat4<> &getLocalMatrix() const
+	{
+		if ( localMatrixDirty )
+		{
+			// Create translation matrix
+			const math::Mat4<> translationMatrix = math::Mat4<>::translation( position.x, position.y, position.z );
+
+			// Create rotation matrices for each axis
+			const math::Mat4<> rotationX = math::Mat4<>::rotationX( rotation.x );
+			const math::Mat4<> rotationY = math::Mat4<>::rotationY( rotation.y );
+			const math::Mat4<> rotationZ = math::Mat4<>::rotationZ( rotation.z );
+
+			// Combine rotations (order: Z * Y * X)
+			const math::Mat4<> rotationMatrix = rotationZ * rotationY * rotationX;
+
+			// Create scale matrix
+			const math::Mat4<> scaleMatrix = math::Mat4<>::scale( scale.x, scale.y, scale.z );
+
+			// Combine: Translation * Rotation * Scale
+			localMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+			localMatrixDirty = false;
+		}
+		return localMatrix;
+	}
+
+	// Get world transformation matrix
+	const math::Mat4<> &getWorldMatrix() const
+	{
+		return worldMatrix;
+	}
+
+	// Mark matrices as dirty
+	void markDirty() const
+	{
+		localMatrixDirty = true;
+		worldMatrixDirty = true;
+	}
+};
+
+// Name component for editor display
+struct Name
+{
+	std::string name = "Unnamed";
+
+	Name() = default;
+	Name( const std::string &n ) : name( n ) {}
+};
+
+// Visibility control
+struct Visible
+{
+	bool visible = true;
+	bool castShadows = true;
+	bool receiveShadows = true;
+};
+
+// Renderable mesh component
+struct MeshRenderer
+{
+	std::string meshPath;
+	std::vector<std::string> materialPaths;
+	math::BoundingBox3D<float> bounds; // Local space bounding box
+	bool enabled = true;
+
+	MeshRenderer() = default;
+	MeshRenderer( const std::string &mesh ) : meshPath( mesh ) {}
+};
+
+// Selection state for editor
+struct Selected
+{
+	bool selected = false;
+	math::Vec3<> highlightColor{ 1.0f, 0.8f, 0.2f };
+};
+
+// Hierarchy metadata
+struct Hierarchy
+{
+	ecs::Entity parent{};
+	std::vector<ecs::Entity> children;
+	bool expanded = true; // For tree view UI
+};
+
+} // namespace components
+
+// Ensure all components satisfy the Component concept
+static_assert( ecs::Component<components::Transform> );
+static_assert( ecs::Component<components::Name> );
+static_assert( ecs::Component<components::Visible> );
+static_assert( ecs::Component<components::MeshRenderer> );
+static_assert( ecs::Component<components::Selected> );
+static_assert( ecs::Component<components::Hierarchy> );

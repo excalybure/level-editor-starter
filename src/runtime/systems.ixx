@@ -1,0 +1,195 @@
+export module runtime.systems;
+
+import runtime.ecs;
+import runtime.components;
+import engine.matrix;
+import engine.vec;
+import <memory>;
+import <vector>;
+import <unordered_map>;
+import <unordered_set>;
+import <typeinfo>;
+
+export namespace systems
+{
+
+// Base system interface
+class System
+{
+public:
+	virtual ~System() = default;
+	virtual void update( ecs::Scene &scene, float deltaTime ) = 0;
+	virtual void initialize( ecs::Scene &scene ) {}
+	virtual void shutdown( ecs::Scene &scene ) {}
+};
+
+// Transform hierarchy system
+class TransformSystem : public System
+{
+public:
+	void initialize( ecs::Scene &scene ) override
+	{
+		// Clear any existing cached data
+		m_dirtyTransforms.clear();
+		m_worldMatrices.clear();
+
+		// Mark all entities with a Transform component as dirty
+		for ( auto entity : scene.getAllEntities() )
+		{
+			if ( scene.hasComponent<components::Transform>( entity ) )
+			{
+				markDirty( entity );
+			}
+		}
+	}
+
+	void update( ecs::Scene &scene, float deltaTime ) override
+	{
+		// Update world matrices for all dirty transforms
+		while ( !m_dirtyTransforms.empty() )
+		{
+			auto it = m_dirtyTransforms.begin();
+			ecs::Entity entity = *it;
+			m_dirtyTransforms.erase( it );
+
+			updateWorldMatrix( scene, entity );
+		}
+	}
+
+	// Get world transform for entity
+	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity )
+	{
+		auto it = m_worldMatrices.find( entity );
+		if ( it != m_worldMatrices.end() )
+		{
+			return it->second;
+		}
+
+		// Calculate and cache if not found
+		updateWorldMatrix( scene, entity );
+		return m_worldMatrices[entity];
+	}
+
+	// Mark transforms as dirty when changed
+	void markDirty( ecs::Entity entity )
+	{
+		m_dirtyTransforms.insert( entity );
+
+		// Also mark all children as dirty (recursive)
+		markChildrenDirty( entity );
+	}
+
+private:
+	std::unordered_set<ecs::Entity> m_dirtyTransforms;
+	std::unordered_map<ecs::Entity, math::Mat4<>> m_worldMatrices;
+
+	void updateWorldMatrix( ecs::Scene &scene, ecs::Entity entity )
+	{
+		auto *transform = scene.getComponent<components::Transform>( entity );
+		if ( !transform )
+		{
+			return;
+		}
+
+		// Get parent's world matrix
+		ecs::Entity parent = scene.getParent( entity );
+		math::Mat4<> parentMatrix = math::Mat4<>::identity();
+
+		if ( parent.id != 0 )
+		{
+			// Recursively ensure parent matrix is up to date
+			if ( m_dirtyTransforms.find( parent ) != m_dirtyTransforms.end() )
+			{
+				updateWorldMatrix( scene, parent );
+			}
+
+			auto parentIt = m_worldMatrices.find( parent );
+			if ( parentIt != m_worldMatrices.end() )
+			{
+				parentMatrix = parentIt->second;
+			}
+		}
+
+		// Calculate world matrix
+		math::Mat4<> localMatrix = transform->getLocalMatrix();
+		math::Mat4<> worldMatrix = parentMatrix * localMatrix;
+
+		m_worldMatrices[entity] = worldMatrix;
+
+		// Update the transform's cached world matrix
+		transform->worldMatrix = worldMatrix;
+		transform->worldMatrixDirty = false;
+	}
+
+	void markChildrenDirty( ecs::Entity entity )
+	{
+		// Note: In a full implementation, we'd need access to the scene
+		// to iterate through children. For now, we'll implement a simple version
+		// that just marks the entity itself as dirty
+	}
+};
+
+// System manager
+class SystemManager
+{
+public:
+	template <typename T, typename... Args>
+	T *addSystem( Args &&...args )
+	{
+		static_assert( std::is_base_of_v<System, T>, "T must derive from System" );
+
+		auto system = std::make_unique<T>( std::forward<Args>( args )... );
+		T *ptr = system.get();
+		m_systems.push_back( std::move( system ) );
+		return ptr;
+	}
+
+	template <typename T>
+	T *getSystem()
+	{
+		static_assert( std::is_base_of_v<System, T>, "T must derive from System" );
+
+		for ( auto &system : m_systems )
+		{
+			if ( auto *ptr = dynamic_cast<T *>( system.get() ) )
+			{
+				return ptr;
+			}
+		}
+		return nullptr;
+	}
+
+	void initialize( ecs::Scene &scene )
+	{
+		for ( auto &system : m_systems )
+		{
+			system->initialize( scene );
+		}
+	}
+
+	void update( ecs::Scene &scene, float deltaTime )
+	{
+		for ( auto &system : m_systems )
+		{
+			system->update( scene, deltaTime );
+		}
+	}
+
+	void shutdown( ecs::Scene &scene )
+	{
+		for ( auto &system : m_systems )
+		{
+			system->shutdown( scene );
+		}
+	}
+
+	void clear()
+	{
+		m_systems.clear();
+	}
+
+private:
+	std::vector<std::unique_ptr<System>> m_systems;
+};
+
+} // namespace systems

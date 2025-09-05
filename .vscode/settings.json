@@ -23,6 +23,7 @@
         "eval": false,
         "chmod": false,
         "chown": false,
+        "mkdir": true,
         "git": true,
         "cmake": true,
         "/^ctest\\b/": true,
