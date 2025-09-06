@@ -6,7 +6,9 @@
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-windows/include"
             ],
-            "compileCommands": "${workspaceFolder}/build/vs2022-x64/compile_commands.json",
+            "compileCommands": [
+                "${workspaceFolder}/build/vs2022-x64/compile_commands.json"
+            ],
             "compilerArgs": [
                 "/experimental:module"
             ],
@@ -22,7 +24,7 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.26100.0",
-            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "cl.exe",
             "cStandard": "c17",
             "cppStandard": "c++23",
             "intelliSenseMode": "windows-msvc-x64",
