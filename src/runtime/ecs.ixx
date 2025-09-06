@@ -372,6 +372,18 @@ public:
 			return;
 		}
 
+		// Prevent self-parenting
+		if ( child == parent )
+		{
+			return;
+		}
+
+		// Prevent parenting to a descendant (would create cycle)
+		if ( isAncestor( child, parent ) )
+		{
+			return;
+		}
+
 		// Remove from old parent first
 		removeParent( child );
 
@@ -380,6 +392,28 @@ public:
 		m_childrenMap[parent].push_back( child );
 	}
 
+private:
+	// Helper to check if 'ancestor' is an ancestor of 'descendant'
+	bool isAncestor( Entity ancestor, Entity descendant ) const
+	{
+		Entity current = descendant;
+		while ( current.isValid() )
+		{
+			Entity currentParent = getParent( current );
+			if ( !currentParent.isValid() )
+			{
+				break;
+			}
+			if ( currentParent == ancestor )
+			{
+				return true;
+			}
+			current = currentParent;
+		}
+		return false;
+	}
+
+public:
 	void removeParent( Entity child )
 	{
 		const auto parentIt = m_parentMap.find( child );
@@ -441,13 +475,13 @@ public:
 		}
 
 		functor( *component );
-		
+
 		// Optionally call markDirty if the component has this method
 		if constexpr ( requires { component->markDirty(); } )
 		{
 			component->markDirty();
 		}
-		
+
 		return true;
 	}
 

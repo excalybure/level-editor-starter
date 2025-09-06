@@ -118,6 +118,7 @@ Missing tests:
 ## 🛠 Technical Debt / Deviations
 - ~~TransformSystem lacks full child dirty propagation (potential stale world matrices if parent changes after initial update without manual markDirty on children).~~ ✅ **FIXED**: Recursive dirty propagation implemented and tested.
 - ~~No automatic dirty marking for component modifications.~~ ✅ **FIXED**: Generic `Scene::modifyComponent<T>` method implemented with automatic dirty marking.
+- ~~No cycle prevention in hierarchy operations.~~ ✅ **FIXED**: Hierarchy safety implemented with cycle prevention in `Scene::setParent`.
 - glTF loader currently blends responsibilities (string parse path vs file path path). Needs separation & robust error handling.
 - No math type usage in assets.Material PBR fields (raw arrays); future alignment with engine math types recommended.
 - Mesh/Material placeholders impede later picking (no bounds generation yet).
@@ -125,6 +126,7 @@ Missing tests:
 ## 📌 Quick Wins Available
 - ~~Implement child dirty propagation using Scene children list.~~ ✅ **COMPLETED**
 - ~~Add automatic dirty marking mechanism for component modifications.~~ ✅ **COMPLETED**
+- ~~Implement hierarchy safety with cycle prevention.~~ ✅ **COMPLETED**
 - Add bounding box computation during glTF mesh parse (when meshes implemented).
 - Introduce simple AssetManager (unordered_map<string, shared_ptr<Asset>>).
 - Add minimal Command + CommandHistory to support transform undo before full UI.

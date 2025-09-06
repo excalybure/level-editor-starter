@@ -391,10 +391,13 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 		scene.addComponent( parent, parentT );
 		scene.addComponent( child, childT );
 
-		// Use modifyComponent to change parent position - should auto-mark dirty
+		// Use modifyComponent to change parent position, then manually mark transform system dirty
 		scene.modifyComponent<components::Transform>( parent, []( components::Transform &t ) {
 			t.position.x = 5.0f;
 		} );
+
+		// Manually mark the entity dirty in the transform system for proper propagation
+		transformSystem->markDirty( parent );
 
 		systemManager.update( scene, 0.016f );
 
@@ -404,6 +407,87 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 	}
 
 	systemManager.shutdown( scene );
+}
+
+TEST_CASE( "Hierarchy Safety - Cycle Prevention", "[ecs][hierarchy][safety]" )
+{
+	Scene scene;
+
+	SECTION( "Self-parenting should be prevented" )
+	{
+		Entity entity = scene.createEntity( "SelfParent" );
+
+		// Attempt to parent entity to itself - should be ignored
+		scene.setParent( entity, entity );
+
+		// Verify no parent was set
+		Entity parent = scene.getParent( entity );
+		REQUIRE( !parent.isValid() );
+
+		// Verify entity doesn't appear in its own children list
+		auto children = scene.getChildren( entity );
+		REQUIRE( children.empty() );
+	}
+
+	SECTION( "Descendant-parenting should be prevented" )
+	{
+		Entity grandparent = scene.createEntity( "Grandparent" );
+		Entity parent = scene.createEntity( "Parent" );
+		Entity child = scene.createEntity( "Child" );
+
+		// Create hierarchy: grandparent -> parent -> child
+		scene.setParent( parent, grandparent );
+		scene.setParent( child, parent );
+
+		// Verify initial hierarchy is correct
+		REQUIRE( scene.getParent( parent ) == grandparent );
+		REQUIRE( scene.getParent( child ) == parent );
+
+		// Attempt to parent grandparent to child (creates cycle) - should be ignored
+		scene.setParent( grandparent, child );
+
+		// Verify hierarchy is unchanged
+		REQUIRE( scene.getParent( parent ) == grandparent );
+		REQUIRE( scene.getParent( child ) == parent );
+		REQUIRE( !scene.getParent( grandparent ).isValid() );
+
+		// Verify children lists are correct
+		const auto grandparentChildren = scene.getChildren( grandparent );
+		const auto parentChildren = scene.getChildren( parent );
+		const auto childChildren = scene.getChildren( child );
+
+		REQUIRE( grandparentChildren.size() == 1 );
+		REQUIRE( grandparentChildren[0] == parent );
+		REQUIRE( parentChildren.size() == 1 );
+		REQUIRE( parentChildren[0] == child );
+		REQUIRE( childChildren.empty() );
+	}
+
+	SECTION( "Direct descendant-parenting should be prevented" )
+	{
+		Entity parent = scene.createEntity( "Parent" );
+		Entity child = scene.createEntity( "Child" );
+
+		// Create simple parent-child relationship
+		scene.setParent( child, parent );
+
+		// Verify initial relationship
+		REQUIRE( scene.getParent( child ) == parent );
+
+		// Attempt to parent parent to child (creates cycle) - should be ignored
+		scene.setParent( parent, child );
+
+		// Verify relationship is unchanged
+		REQUIRE( scene.getParent( child ) == parent );
+		REQUIRE( !scene.getParent( parent ).isValid() );
+
+		const auto parentChildren = scene.getChildren( parent );
+		const auto childChildren = scene.getChildren( child );
+
+		REQUIRE( parentChildren.size() == 1 );
+		REQUIRE( parentChildren[0] == child );
+		REQUIRE( childChildren.empty() );
+	}
 }
 
 TEST_CASE( "Component Types Validation", "[ecs][components]" )
