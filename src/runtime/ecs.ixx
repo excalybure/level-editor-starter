@@ -430,6 +430,27 @@ public:
 		return nullptr;
 	}
 
+	// Component modification helper with automatic dirty marking
+	template <Component C, typename Functor>
+	bool modifyComponent( Entity entity, Functor functor )
+	{
+		C *component = getComponent<C>( entity );
+		if ( !component )
+		{
+			return false;
+		}
+
+		functor( *component );
+		
+		// Optionally call markDirty if the component has this method
+		if constexpr ( requires { component->markDirty(); } )
+		{
+			component->markDirty();
+		}
+		
+		return true;
+	}
+
 private:
 	EntityManager m_entityManager;
 	std::unordered_map<std::type_index, std::unique_ptr<ComponentStorageBase>> m_componentStorages;

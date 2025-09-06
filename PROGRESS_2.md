@@ -116,13 +116,15 @@ Missing tests:
 7. Additional tests at each layer (picking accuracy, undo/redo sequences, gizmo deltas, import fidelity).
 
 ## 🛠 Technical Debt / Deviations
-- TransformSystem lacks full child dirty propagation (potential stale world matrices if parent changes after initial update without manual markDirty on children).
+- ~~TransformSystem lacks full child dirty propagation (potential stale world matrices if parent changes after initial update without manual markDirty on children).~~ ✅ **FIXED**: Recursive dirty propagation implemented and tested.
+- ~~No automatic dirty marking for component modifications.~~ ✅ **FIXED**: Generic `Scene::modifyComponent<T>` method implemented with automatic dirty marking.
 - glTF loader currently blends responsibilities (string parse path vs file path path). Needs separation & robust error handling.
 - No math type usage in assets.Material PBR fields (raw arrays); future alignment with engine math types recommended.
 - Mesh/Material placeholders impede later picking (no bounds generation yet).
 
 ## 📌 Quick Wins Available
-- Implement child dirty propagation using Scene children list.
+- ~~Implement child dirty propagation using Scene children list.~~ ✅ **COMPLETED**
+- ~~Add automatic dirty marking mechanism for component modifications.~~ ✅ **COMPLETED**
 - Add bounding box computation during glTF mesh parse (when meshes implemented).
 - Introduce simple AssetManager (unordered_map<string, shared_ptr<Asset>>).
 - Add minimal Command + CommandHistory to support transform undo before full UI.

@@ -378,6 +378,31 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 		REQUIRE( childWorld.m23() == Catch::Approx( 4.0f + 0.0f ) );
 	}
 
+	SECTION( "Automatic dirty marking via modifyComponent" )
+	{
+		Entity parent = scene.createEntity( "Parent" );
+		Entity child = scene.createEntity( "Child" );
+		scene.setParent( child, parent );
+
+		components::Transform parentT;
+		parentT.position = { 1.0f, 1.0f, 1.0f };
+		components::Transform childT;
+		childT.position = { 0.5f, 0.0f, 0.0f };
+		scene.addComponent( parent, parentT );
+		scene.addComponent( child, childT );
+
+		// Use modifyComponent to change parent position - should auto-mark dirty
+		scene.modifyComponent<components::Transform>( parent, []( components::Transform &t ) {
+			t.position.x = 5.0f;
+		} );
+
+		systemManager.update( scene, 0.016f );
+
+		// Child should reflect the new parent position
+		const auto childWorld = transformSystem->getWorldTransform( scene, child );
+		REQUIRE( childWorld.m03() == Catch::Approx( 5.0f + 0.5f ) );
+	}
+
 	systemManager.shutdown( scene );
 }
 
