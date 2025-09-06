@@ -447,6 +447,38 @@ public:
 		return nullptr;
 	}
 
+	// Query / Iteration Utility: forEach for single component type
+	// Iterates over all entities that have the specified component type
+	// Usage: scene.forEach<Transform>([](Entity e, Transform& t) { ... });
+	//
+	// This method provides a clean and efficient way to iterate over all components
+	// of a specific type without manual storage access. Only valid entities are
+	// processed during iteration.
+	//
+	// Future Extensions:
+	// - Multi-component query support: forEach<Transform, Visible>(...)
+	// - Filtering predicates: forEachWhere<Transform>([](Entity e) { return ...; }, ...)
+	// - Parallel iteration for performance-critical systems
+	template <components::Component C, typename Functor>
+	void forEach( Functor functor )
+	{
+		ComponentStorage<C> *storage = getComponentStorage<C>();
+		if ( !storage )
+		{
+			return; // No storage means no components of this type
+		}
+
+		// Iterate over all entity-component pairs in the storage
+		for ( auto &[entity, component] : *storage )
+		{
+			// Only process valid entities
+			if ( m_entityManager.isValid( entity ) )
+			{
+				functor( entity, component );
+			}
+		}
+	}
+
 	// Component modification helper with automatic dirty marking
 	template <components::Component C, typename Functor>
 	bool modifyComponent( Entity entity, Functor functor )

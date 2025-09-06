@@ -208,20 +208,85 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 		Entity entity = scene.createEntity();
 
 		// Add component
-		components::Transform t;
-		t.position = { 10.0f, 20.0f, 30.0f };
-		REQUIRE( scene.addComponent( entity, t ) );
-		REQUIRE( scene.hasComponent<components::Transform>( entity ) );
-		// ...existing code...
-		// Get component
-		auto *storedT = scene.getComponent<components::Transform>( entity );
-		REQUIRE( storedT != nullptr );
-		REQUIRE( storedT->position.x == Catch::Approx( 10.0f ) );
+		Transform transform;
+		transform.position = { 1.0f, 2.0f, 3.0f };
+		REQUIRE( scene.addComponent( entity, transform ) );
 
-		// ...existing code...
-		REQUIRE( scene.removeComponent<components::Transform>( entity ) );
-		REQUIRE_FALSE( scene.hasComponent<components::Transform>( entity ) );
-		REQUIRE( scene.getComponent<components::Transform>( entity ) == nullptr );
+		// Check component exists
+		REQUIRE( scene.hasComponent<Transform>( entity ) );
+
+		// Get component
+		auto *transformPtr = scene.getComponent<Transform>( entity );
+		REQUIRE( transformPtr != nullptr );
+		REQUIRE( transformPtr->position.x == Catch::Approx( 1.0f ) );
+		REQUIRE( transformPtr->position.y == Catch::Approx( 2.0f ) );
+		REQUIRE( transformPtr->position.z == Catch::Approx( 3.0f ) );
+
+		// Remove component
+		REQUIRE( scene.removeComponent<Transform>( entity ) );
+		REQUIRE_FALSE( scene.hasComponent<Transform>( entity ) );
+	}
+
+	SECTION( "forEach iteration utility" )
+	{
+		// Create entities with Transform components
+		Entity entity1 = scene.createEntity( "Entity1" );
+		Entity entity2 = scene.createEntity( "Entity2" );
+
+		Transform t1;
+		t1.position = { 1.0f, 0.0f, 0.0f };
+		scene.addComponent( entity1, t1 );
+
+		Transform t2;
+		t2.position = { 2.0f, 0.0f, 0.0f };
+		scene.addComponent( entity2, t2 );
+
+		// Use forEach to count Transform components
+		int count = 0;
+		float sumX = 0.0f;
+		scene.forEach<Transform>( [&count, &sumX]( Entity, Transform &transform ) {
+			count++;
+			sumX += transform.position.x;
+		} );
+
+		REQUIRE( count == 2 );
+		REQUIRE( sumX == Catch::Approx( 3.0f ) );
+	}
+
+	SECTION( "forEach with empty storage" )
+	{
+		// Test forEach with no components of the requested type
+		int nameCount = 0;
+		scene.forEach<Name>( [&nameCount]( Entity, const Name & ) {
+			nameCount++;
+		} );
+
+		REQUIRE( nameCount == 0 );
+	}
+
+	SECTION( "forEach with different component types" )
+	{
+		Entity entity = scene.createEntity( "TestEntity" );
+
+		// Add Name component (automatically added by createEntity)
+		// Add Visible component
+		Visible visible;
+		visible.visible = true;
+		scene.addComponent( entity, visible );
+
+		// Test forEach with Name components
+		int nameCount = 0;
+		scene.forEach<Name>( [&nameCount]( Entity, const Name & ) {
+			nameCount++;
+		} );
+		REQUIRE( nameCount == 1 );
+
+		// Test forEach with Visible components
+		int visibleCount = 0;
+		scene.forEach<Visible>( [&visibleCount]( Entity, Visible & ) {
+			visibleCount++;
+		} );
+		REQUIRE( visibleCount == 1 );
 	}
 }
 

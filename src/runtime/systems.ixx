@@ -65,7 +65,7 @@ public:
 	}
 
 	// Get world transform for entity
-	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity ) const
+	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity )
 	{
 		auto it = m_worldMatrices.find( entity );
 		if ( it != m_worldMatrices.end() )

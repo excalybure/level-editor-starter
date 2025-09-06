@@ -2,6 +2,20 @@
 
 Date: 2025-09-06
 
+## 2025-09-06 — ECS Query/Iteration Utilities Implementation
+**Summary:** Implemented the forEach<T> utility method for Scene class to enable clean iteration over components of a specific type, completing the remaining gap in M2-P1 (Task 7).
+
+**Atomic functionalities completed:**
+- AF1: Added Scene::forEach<Component>(lambda) template method that iterates ComponentStorage<Component>
+- AF2: Added comprehensive documentation with usage examples and future extension notes
+- AF3: Implemented entity validity checking during iteration to ensure only valid entities are processed
+- AF4: Added test cases for basic forEach functionality, empty storage, and different component types
+
+**Tests:** Test sections added to "Enhanced ECS Scene" test case covering forEach utility with Transform, Name, and Visible components. Verified iteration count and data access.
+**Notes:** Implementation is generic and works with any component type satisfying the Component concept. Method internally uses existing getComponentStorage<T>() and ComponentStorage iterator support. Future extensions documented for multi-component queries and filtering predicates.
+
+---
+
 ## 🧭 Scope Recap
 Milestone 2 targets a full scene editing foundation: Enhanced ECS + Components + Systems, glTF asset pipeline, picking/selection, gizmo manipulation, undo/redo command stack, and scene editing UI panels (hierarchy, inspector, asset browser) integrated into an overall scene editor workflow.
 
