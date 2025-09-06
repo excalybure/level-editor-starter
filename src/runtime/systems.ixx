@@ -29,6 +29,7 @@ class TransformSystem : public System
 public:
 	void initialize( ecs::Scene &scene ) override
 	{
+		m_scene = &scene; // store scene pointer for hierarchy traversal
 		// Clear any existing cached data
 		m_dirtyTransforms.clear();
 		m_worldMatrices.clear();
@@ -123,10 +124,34 @@ private:
 
 	void markChildrenDirty( ecs::Entity entity )
 	{
-		// Note: In a full implementation, we'd need access to the scene
-		// to iterate through children. For now, we'll implement a simple version
-		// that just marks the entity itself as dirty
+		if ( m_scene == nullptr )
+		{
+			return;
+		}
+
+		// Depth-first traversal using an explicit stack
+		std::vector<ecs::Entity> stack;
+		const auto rootChildren = m_scene->getChildren( entity );
+		stack.insert( stack.end(), rootChildren.begin(), rootChildren.end() );
+
+		std::unordered_set<ecs::Entity> visited;
+		while ( !stack.empty() )
+		{
+			auto current = stack.back();
+			stack.pop_back();
+			if ( visited.contains( current ) )
+			{
+				continue;
+			}
+			visited.insert( current );
+			m_dirtyTransforms.insert( current );
+			const auto children = m_scene->getChildren( current );
+			stack.insert( stack.end(), children.begin(), children.end() );
+		}
 	}
+
+private:
+	ecs::Scene *m_scene = nullptr;
 };
 
 // System manager

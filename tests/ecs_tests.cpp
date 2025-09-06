@@ -353,6 +353,31 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 		REQUIRE( worldMatrix.m23() == Catch::Approx( 15.0f ) );
 	}
 
+	SECTION( "Parent dirty propagation updates child" )
+	{
+		Entity parent = scene.createEntity( "Parent" );
+		Entity child = scene.createEntity( "Child" );
+		// Establish hierarchy
+		scene.setParent( child, parent );
+
+		components::Transform parentT;
+		parentT.position = { 2.0f, 3.0f, 4.0f };
+		components::Transform childT;
+		childT.position = { 1.0f, 0.0f, 0.0f };
+		scene.addComponent( parent, parentT );
+		scene.addComponent( child, childT );
+
+		// Mark only parent dirty
+		transformSystem->markDirty( parent );
+		systemManager.update( scene, 0.016f );
+
+		// Child world matrix should reflect parent's translation + its own local
+		const auto childWorld = transformSystem->getWorldTransform( scene, child );
+		REQUIRE( childWorld.m03() == Catch::Approx( 2.0f + 1.0f ) );
+		REQUIRE( childWorld.m13() == Catch::Approx( 3.0f + 0.0f ) );
+		REQUIRE( childWorld.m23() == Catch::Approx( 4.0f + 0.0f ) );
+	}
+
 	systemManager.shutdown( scene );
 }
 
