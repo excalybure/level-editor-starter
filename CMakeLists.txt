@@ -12,6 +12,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 find_package(imgui CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
+find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
 # Libraries (modules)
 add_library(engine.math)
@@ -154,6 +155,26 @@ target_sources(engine.math_3d PUBLIC
 )
 target_compile_features(engine.math_3d PUBLIC cxx_std_23)
 target_link_libraries(engine.math_3d PUBLIC engine.math engine.vec engine.bounding_volumes)
+
+add_library(engine.assets)
+target_sources(engine.assets PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/assets/assets.ixx
+  PRIVATE
+    src/engine/assets/assets.cpp
+)
+target_compile_features(engine.assets PUBLIC cxx_std_23)
+
+add_library(engine.gltf_loader)
+target_sources(engine.gltf_loader PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/gltf_loader/gltf_loader.ixx
+  PRIVATE
+    src/engine/gltf_loader/gltf_loader.cpp
+)
+target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
+target_link_libraries(engine.gltf_loader PUBLIC engine.assets)
+target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -364,6 +385,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/shader_manager_tests.cpp
     tests/shader_manager_performance_test.cpp
     tests/shader_include_dependency_tests.cpp
+    tests/assets_tests.cpp
+    tests/gltf_loader_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -391,6 +414,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     runtime.console
     editor.ui
     platform.win32
+    engine.assets
+    engine.gltf_loader
     Catch2::Catch2WithMain
   )
   target_compile_features(unit_test_runner PUBLIC cxx_std_23)
