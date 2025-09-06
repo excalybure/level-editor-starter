@@ -176,12 +176,12 @@ target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
 target_link_libraries(engine.gltf_loader PUBLIC engine.assets)
 target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
 
-add_library(runtime.ecs)
-target_sources(runtime.ecs PUBLIC
+add_library(runtime.entity)
+target_sources(runtime.entity PUBLIC
   FILE_SET CXX_MODULES FILES
-    src/runtime/ecs.ixx
+    src/runtime/entity.ixx
 )
-target_compile_features(runtime.ecs PUBLIC cxx_std_23)
+target_compile_features(runtime.entity PUBLIC cxx_std_23)
 
 add_library(runtime.components)
 target_sources(runtime.components PUBLIC
@@ -189,7 +189,15 @@ target_sources(runtime.components PUBLIC
     src/runtime/components.ixx
 )
 target_compile_features(runtime.components PUBLIC cxx_std_23)
-target_link_libraries(runtime.components PUBLIC runtime.ecs engine.math engine.matrix engine.vec engine.bounding_box_3d)
+target_link_libraries(runtime.components PUBLIC runtime.entity engine.math engine.matrix engine.vec engine.bounding_box_3d)
+
+add_library(runtime.ecs)
+target_sources(runtime.ecs PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/ecs.ixx
+)
+target_compile_features(runtime.ecs PUBLIC cxx_std_23)
+target_link_libraries(runtime.ecs PUBLIC runtime.entity runtime.components engine.math engine.matrix engine.vec engine.bounding_box_3d)
 
 add_library(runtime.systems)
 target_sources(runtime.systems PUBLIC
@@ -197,7 +205,7 @@ target_sources(runtime.systems PUBLIC
     src/runtime/systems.ixx
 )
 target_compile_features(runtime.systems PUBLIC cxx_std_23)
-target_link_libraries(runtime.systems PUBLIC runtime.ecs runtime.components engine.matrix)
+target_link_libraries(runtime.systems PUBLIC runtime.entity runtime.ecs runtime.components engine.matrix)
 
 add_library(runtime.app)
 target_sources(runtime.app PUBLIC
@@ -407,9 +415,10 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.camera
     engine.grid
     editor.viewport
+    runtime.entity
     runtime.ecs
-  runtime.components
-  runtime.systems
+    runtime.components
+    runtime.systems
     runtime.app
     runtime.console
     editor.ui

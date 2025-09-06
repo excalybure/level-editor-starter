@@ -119,7 +119,7 @@ Missing tests:
 - ~~TransformSystem lacks full child dirty propagation (potential stale world matrices if parent changes after initial update without manual markDirty on children).~~ ✅ **FIXED**: Recursive dirty propagation implemented and tested.
 - ~~No automatic dirty marking for component modifications.~~ ✅ **FIXED**: Generic `Scene::modifyComponent<T>` method implemented with automatic dirty marking.
 - ~~No cycle prevention in hierarchy operations.~~ ✅ **FIXED**: Hierarchy safety implemented with cycle prevention in `Scene::setParent`.
-- ~~No Name component auto-add on entity creation with custom names.~~ ✅ **FIXED**: Template method `createEntityWithName<NameComponentType>()` implemented to auto-add Name component while avoiding circular dependency.
+- ~~No Name component auto-add on entity creation with custom names.~~ ✅ **FIXED**
 - glTF loader currently blends responsibilities (string parse path vs file path path). Needs separation & robust error handling.
 - No math type usage in assets.Material PBR fields (raw arrays); future alignment with engine math types recommended.
 - Mesh/Material placeholders impede later picking (no bounds generation yet).
