@@ -9,6 +9,7 @@ import <queue>;
 import <span>;
 import <typeindex>;
 import <string>;
+import <functional>;
 import runtime.components;
 import runtime.entity;
 
@@ -269,7 +270,19 @@ public:
 		if ( it != m_componentStorages.end() )
 		{
 			auto *typedStorage = static_cast<TypedComponentStorage<C> *>( it->second.get() );
-			return typedStorage->storage.remove( entity );
+			const bool result = typedStorage->storage.remove( entity );
+
+			// Special handling for Transform component removal
+			if ( result && std::is_same_v<C, components::Transform> )
+			{
+				// Notify any registered cache invalidation callbacks
+				for ( auto &callback : m_transformRemovalCallbacks )
+				{
+					callback( entity );
+				}
+			}
+
+			return result;
 		}
 
 		return false;
@@ -455,6 +468,12 @@ public:
 		return true;
 	}
 
+	// Register callback for Transform component removal (for cache invalidation)
+	void registerTransformRemovalCallback( std::function<void( Entity )> callback )
+	{
+		m_transformRemovalCallbacks.push_back( std::move( callback ) );
+	}
+
 private:
 	EntityManager m_entityManager;
 	std::unordered_map<std::type_index, std::unique_ptr<ComponentStorageBase>> m_componentStorages;
@@ -462,6 +481,9 @@ private:
 	// Hierarchy maps
 	std::unordered_map<Entity, Entity> m_parentMap;
 	std::unordered_map<Entity, std::vector<Entity>> m_childrenMap;
+
+	// Transform removal callbacks for cache invalidation
+	std::vector<std::function<void( Entity )>> m_transformRemovalCallbacks;
 };
 
 // Legacy Storage template for backward compatibility with existing tests

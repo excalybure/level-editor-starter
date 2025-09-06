@@ -35,8 +35,14 @@ public:
 		m_dirtyTransforms.clear();
 		m_worldMatrices.clear();
 
+		// Register for Transform component removal notifications
+		scene.registerTransformRemovalCallback(
+			[this]( ecs::Entity entity ) {
+				this->onTransformRemoved( entity );
+			} );
+
 		// Mark all entities with a Transform component as dirty
-		for ( auto entity : scene.getAllEntities() )
+		for ( const auto entity : scene.getAllEntities() )
 		{
 			if ( scene.hasComponent<components::Transform>( entity ) )
 			{
@@ -59,7 +65,7 @@ public:
 	}
 
 	// Get world transform for entity
-	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity )
+	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity ) const
 	{
 		auto it = m_worldMatrices.find( entity );
 		if ( it != m_worldMatrices.end() )
@@ -84,6 +90,15 @@ public:
 private:
 	std::unordered_set<ecs::Entity> m_dirtyTransforms;
 	std::unordered_map<ecs::Entity, math::Mat4<>> m_worldMatrices;
+
+	void onTransformRemoved( ecs::Entity entity )
+	{
+		// Remove from dirty set if present
+		m_dirtyTransforms.erase( entity );
+
+		// Remove cached world matrix
+		m_worldMatrices.erase( entity );
+	}
 
 	void updateWorldMatrix( ecs::Scene &scene, ecs::Entity entity )
 	{
