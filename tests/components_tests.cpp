@@ -209,12 +209,12 @@ TEST_CASE( "Hierarchy component functionality", "[components][hierarchy]" )
 TEST_CASE( "Component concept validation", "[components][concepts]" )
 {
 	// These should all compile and pass with our relaxed Component concept
-	REQUIRE( ecs::Component<Transform> );
-	REQUIRE( ecs::Component<Name> );
-	REQUIRE( ecs::Component<Visible> );
-	REQUIRE( ecs::Component<MeshRenderer> );
-	REQUIRE( ecs::Component<Selected> );
-	REQUIRE( ecs::Component<Hierarchy> );
+	REQUIRE( components::Component<Transform> );
+	REQUIRE( components::Component<Name> );
+	REQUIRE( components::Component<Visible> );
+	REQUIRE( components::Component<MeshRenderer> );
+	REQUIRE( components::Component<Selected> );
+	REQUIRE( components::Component<Hierarchy> );
 }
 
 TEST_CASE( "Transform component with Scene integration", "[components][transform][integration]" )

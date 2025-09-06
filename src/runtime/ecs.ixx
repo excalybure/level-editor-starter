@@ -8,38 +8,9 @@ import <vector>;
 import <queue>;
 import <span>;
 import <typeindex>;
-
-export namespace ecs
-{
-
-// Enhanced Entity with generation for safe handles
-export struct Entity
-{
-	std::uint32_t id{};
-	std::uint32_t generation{};
-
-	auto operator<=>( const Entity & ) const = default;
-	bool operator==( const Entity &other ) const = default;
-
-	bool isValid() const noexcept
-	{
-		return id != 0; // ID 0 is reserved for invalid entities
-	}
-};
-
-} // namespace ecs
-
-// Hash function for Entity to enable use in std::unordered_map
-template <>
-struct std::hash<ecs::Entity>
-{
-	std::size_t operator()( const ecs::Entity &entity ) const noexcept
-	{
-		// Combine id and generation for hash
-		const std::uint64_t key = ( static_cast<std::uint64_t>( entity.generation ) << 32 ) | static_cast<std::uint64_t>( entity.id );
-		return std::hash<std::uint64_t>{}( key );
-	}
-};
+import <string>;
+import runtime.components;
+import runtime.entity;
 
 export namespace ecs
 {
@@ -114,12 +85,8 @@ private:
 	std::queue<std::uint32_t> m_freeIds;
 };
 
-// Component concept - relaxed to allow more practical component types
-export template <class T>
-concept Component = std::is_copy_constructible_v<T> && std::is_move_constructible_v<T> && std::is_destructible_v<T>;
-
 // Enhanced ComponentStorage with better performance
-export template <Component C>
+export template <components::Component C>
 class ComponentStorage
 {
 public:
@@ -190,7 +157,7 @@ public:
 };
 
 // Type-erased wrapper for ComponentStorage
-template <Component C>
+template <components::Component C>
 class TypedComponentStorage : public ComponentStorageBase
 {
 public:
@@ -222,8 +189,11 @@ public:
 	{
 		const Entity entity = m_entityManager.create();
 
-		// All entities have a name by default (we'll need to create the Name component later)
-		// For now, just track entity creation
+		// Auto-add Name component if a custom name is provided
+		if ( !name.empty() && name != "Entity" )
+		{
+			addComponent( entity, components::Name{ name } );
+		}
 
 		return entity;
 	}
@@ -265,7 +235,7 @@ public:
 		return m_entityManager.isValid( entity );
 	}
 
-	template <Component C>
+	template <components::Component C>
 	bool addComponent( Entity entity, C component )
 	{
 		if ( !m_entityManager.isValid( entity ) )
@@ -285,7 +255,7 @@ public:
 		return typedStorage->storage.add( entity, component );
 	}
 
-	template <Component C>
+	template <components::Component C>
 	bool removeComponent( Entity entity )
 	{
 		if ( !m_entityManager.isValid( entity ) )
@@ -305,7 +275,7 @@ public:
 		return false;
 	}
 
-	template <Component C>
+	template <components::Component C>
 	C *getComponent( Entity entity )
 	{
 		if ( !m_entityManager.isValid( entity ) )
@@ -325,7 +295,7 @@ public:
 		return nullptr;
 	}
 
-	template <Component C>
+	template <components::Component C>
 	const C *getComponent( Entity entity ) const
 	{
 		if ( !m_entityManager.isValid( entity ) )
@@ -345,7 +315,7 @@ public:
 		return nullptr;
 	}
 
-	template <Component C>
+	template <components::Component C>
 	bool hasComponent( Entity entity ) const
 	{
 		if ( !m_entityManager.isValid( entity ) )
@@ -449,7 +419,7 @@ public:
 	}
 
 	// Component iteration support
-	template <Component C>
+	template <components::Component C>
 	ComponentStorage<C> *getComponentStorage()
 	{
 		const auto typeIndex = std::type_index( typeid( C ) );
@@ -465,7 +435,7 @@ public:
 	}
 
 	// Component modification helper with automatic dirty marking
-	template <Component C, typename Functor>
+	template <components::Component C, typename Functor>
 	bool modifyComponent( Entity entity, Functor functor )
 	{
 		C *component = getComponent<C>( entity );
@@ -495,7 +465,7 @@ private:
 };
 
 // Legacy Storage template for backward compatibility with existing tests
-export template <Component C>
+export template <components::Component C>
 struct Storage
 {
 	ComponentStorage<C> storage;

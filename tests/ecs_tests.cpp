@@ -167,6 +167,18 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 	{
 		Entity entity = scene.createEntity();
 		REQUIRE( scene.isValid( entity ) );
+
+		// Verify Name component is NOT added when using default name
+		REQUIRE_FALSE( scene.hasComponent<components::Name>( entity ) );
+	}
+
+	SECTION( "Entity creation with default name parameter" )
+	{
+		Entity entity = scene.createEntity( "Entity" );
+		REQUIRE( scene.isValid( entity ) );
+
+		// Verify Name component is NOT added when using "Entity" as name
+		REQUIRE_FALSE( scene.hasComponent<components::Name>( entity ) );
 	}
 
 	SECTION( "Entity creation with name" )
@@ -174,6 +186,12 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 		Entity entity = scene.createEntity( "TestEntity" );
 		REQUIRE( entity.id != 0 );
 		REQUIRE( scene.isValid( entity ) );
+
+		// Verify Name component is automatically added when a custom name is provided
+		REQUIRE( scene.hasComponent<components::Name>( entity ) );
+		auto *namePtr = scene.getComponent<components::Name>( entity );
+		REQUIRE( namePtr != nullptr );
+		REQUIRE( namePtr->name == "TestEntity" );
 	}
 
 	SECTION( "Entity destruction" )
@@ -210,8 +228,8 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 // Component concept validation tests
 TEST_CASE( "Component concept validation", "[ecs][concepts]" )
 {
-	REQUIRE( ecs::Component<components::Transform> );
-	REQUIRE( ecs::Component<Velocity> );
+	REQUIRE( components::Component<components::Transform> );
+	REQUIRE( components::Component<Velocity> );
 }
 
 TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
@@ -490,13 +508,73 @@ TEST_CASE( "Hierarchy Safety - Cycle Prevention", "[ecs][hierarchy][safety]" )
 	}
 }
 
+TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
+{
+	Scene scene;
+
+	SECTION( "Default name creates entity without Name component" )
+	{
+		Entity entity = scene.createEntity(); // Using default name "Entity"
+		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
+	}
+
+	SECTION( "Empty string creates entity without Name component" )
+	{
+		Entity entity = scene.createEntity( "" );
+		REQUIRE( !scene.hasComponent<Name>( entity ) );
+	}
+
+	SECTION( "Empty string creates entity without Name component" )
+	{
+		Entity entity = scene.createEntity( "" );
+		REQUIRE( !scene.hasComponent<Name>( entity ) );
+	}
+
+	SECTION( "Custom name auto-adds Name component" )
+	{
+		Entity entity = scene.createEntity( "TestEntity" );
+		REQUIRE( scene.hasComponent<components::Name>( entity ) );
+
+		const components::Name *nameComp = scene.getComponent<components::Name>( entity );
+		REQUIRE( nameComp != nullptr );
+		REQUIRE( nameComp->name == "TestEntity" );
+	}
+
+	SECTION( "Different custom names create correct Name components" )
+	{
+		Entity player = scene.createEntity( "Player" );
+		Entity enemy = scene.createEntity( "Enemy" );
+		Entity world = scene.createEntity( "World" );
+
+		REQUIRE( scene.hasComponent<components::Name>( player ) );
+		REQUIRE( scene.hasComponent<components::Name>( enemy ) );
+		REQUIRE( scene.hasComponent<components::Name>( world ) );
+
+		REQUIRE( scene.getComponent<components::Name>( player )->name == "Player" );
+		REQUIRE( scene.getComponent<components::Name>( enemy )->name == "Enemy" );
+		REQUIRE( scene.getComponent<components::Name>( world )->name == "World" );
+	}
+
+	SECTION( "Name component not added when name matches default" )
+	{
+		Entity entity = scene.createEntity( "Entity" ); // Explicit default name
+		REQUIRE( !scene.hasComponent<Name>( entity ) );
+	}
+
+	SECTION( "Explicit default name creates entity without Name component" )
+	{
+		Entity entity = scene.createEntity( "Entity" );
+		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
+	}
+}
+
 TEST_CASE( "Component Types Validation", "[ecs][components]" )
 {
 	// Verify all components satisfy the Component concept
-	REQUIRE( ecs::Component<components::Transform> );
-	REQUIRE( ecs::Component<components::Name> );
-	REQUIRE( ecs::Component<components::Visible> );
-	REQUIRE( ecs::Component<components::MeshRenderer> );
-	REQUIRE( ecs::Component<components::Selected> );
-	REQUIRE( ecs::Component<components::Hierarchy> );
+	REQUIRE( components::Component<components::Transform> );
+	REQUIRE( components::Component<components::Name> );
+	REQUIRE( components::Component<components::Visible> );
+	REQUIRE( components::Component<components::MeshRenderer> );
+	REQUIRE( components::Component<components::Selected> );
+	REQUIRE( components::Component<components::Hierarchy> );
 }

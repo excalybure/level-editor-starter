@@ -2,6 +2,7 @@ export module runtime.systems;
 
 import runtime.ecs;
 import runtime.components;
+import runtime.entity;
 import engine.matrix;
 import engine.vec;
 import <memory>;

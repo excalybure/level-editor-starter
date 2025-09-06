@@ -4,7 +4,7 @@ import engine.math;
 import engine.matrix;
 import engine.vec;
 import engine.bounding_box_3d;
-import runtime.ecs;
+import runtime.entity;
 import <string>;
 import <vector>;
 
@@ -108,12 +108,16 @@ struct Hierarchy
 	bool expanded = true; // For tree view UI
 };
 
+// Component concept - relaxed to allow more practical component types
+export template <class T>
+concept Component = std::is_copy_constructible_v<T> && std::is_move_constructible_v<T> && std::is_destructible_v<T>;
+
 } // namespace components
 
 // Ensure all components satisfy the Component concept
-static_assert( ecs::Component<components::Transform> );
-static_assert( ecs::Component<components::Name> );
-static_assert( ecs::Component<components::Visible> );
-static_assert( ecs::Component<components::MeshRenderer> );
-static_assert( ecs::Component<components::Selected> );
-static_assert( ecs::Component<components::Hierarchy> );
+static_assert( components::Component<components::Transform> );
+static_assert( components::Component<components::Name> );
+static_assert( components::Component<components::Visible> );
+static_assert( components::Component<components::MeshRenderer> );
+static_assert( components::Component<components::Selected> );
+static_assert( components::Component<components::Hierarchy> );
