@@ -576,7 +576,6 @@ TEST_CASE( "Component Types Validation", "[ecs][components]" )
 	REQUIRE( components::Component<components::Visible> );
 	REQUIRE( components::Component<components::MeshRenderer> );
 	REQUIRE( components::Component<components::Selected> );
-	REQUIRE( components::Component<components::Hierarchy> );
 }
 
 TEST_CASE( "Transform Cache Invalidation on Component Removal", "[ecs][systems][cache]" )

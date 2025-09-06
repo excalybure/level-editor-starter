@@ -100,14 +100,6 @@ struct Selected
 	math::Vec3<> highlightColor{ 1.0f, 0.8f, 0.2f };
 };
 
-// Hierarchy metadata
-struct Hierarchy
-{
-	ecs::Entity parent{};
-	std::vector<ecs::Entity> children;
-	bool expanded = true; // For tree view UI
-};
-
 // Component concept - relaxed to allow more practical component types
 export template <class T>
 concept Component = std::is_copy_constructible_v<T> && std::is_move_constructible_v<T> && std::is_destructible_v<T>;
@@ -120,4 +112,3 @@ static_assert( components::Component<components::Name> );
 static_assert( components::Component<components::Visible> );
 static_assert( components::Component<components::MeshRenderer> );
 static_assert( components::Component<components::Selected> );
-static_assert( components::Component<components::Hierarchy> );

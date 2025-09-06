@@ -26,10 +26,6 @@ int main()
 	static_assert( Component<components::MeshRenderer>, "MeshRenderer component should satisfy Component concept" );
 	std::cout << "✓ MeshRenderer component (contains std::vector) satisfies Component concept\n";
 
-	// Test components with std::vector<Entity> (these were failing before)
-	static_assert( Component<components::Hierarchy>, "Hierarchy component should satisfy Component concept" );
-	std::cout << "✓ Hierarchy component (contains std::vector<Entity>) satisfies Component concept\n";
-
 	// Test other components
 	static_assert( Component<components::Transform>, "Transform component should satisfy Component concept" );
 	std::cout << "✓ Transform component satisfies Component concept\n";

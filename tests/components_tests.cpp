@@ -180,32 +180,6 @@ TEST_CASE( "Selected component functionality", "[components][selected]" )
 	REQUIRE( selected.highlightColor.z == Catch::Approx( 0.5f ) );
 }
 
-TEST_CASE( "Hierarchy component functionality", "[components][hierarchy]" )
-{
-	Hierarchy hierarchy;
-
-	// Test default values
-	REQUIRE_FALSE( hierarchy.parent.isValid() );
-	REQUIRE( hierarchy.children.empty() );
-	REQUIRE( hierarchy.expanded );
-
-	// Test adding children
-	Entity child1{ 1, 0 };
-	Entity child2{ 2, 0 };
-	hierarchy.children.push_back( child1 );
-	hierarchy.children.push_back( child2 );
-
-	REQUIRE( hierarchy.children.size() == 2 );
-	REQUIRE( hierarchy.children[0] == child1 );
-	REQUIRE( hierarchy.children[1] == child2 );
-
-	// Test parent assignment
-	Entity parent{ 10, 0 };
-	hierarchy.parent = parent;
-	REQUIRE( hierarchy.parent == parent );
-	REQUIRE( hierarchy.parent.isValid() );
-}
-
 TEST_CASE( "Component concept validation", "[components][concepts]" )
 {
 	// These should all compile and pass with our relaxed Component concept
@@ -214,7 +188,6 @@ TEST_CASE( "Component concept validation", "[components][concepts]" )
 	REQUIRE( components::Component<Visible> );
 	REQUIRE( components::Component<MeshRenderer> );
 	REQUIRE( components::Component<Selected> );
-	REQUIRE( components::Component<Hierarchy> );
 }
 
 TEST_CASE( "Transform component with Scene integration", "[components][transform][integration]" )
