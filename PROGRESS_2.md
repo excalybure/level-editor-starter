@@ -161,3 +161,13 @@ Milestone 2 foundational ECS, component set, transform system, and initial (simp
 
 ---
 *Prepared automatically. Let me know if you want a condensed executive summary or a checklist version for planning Milestone 3.*
+
+## 2025-09-06 — ECS Developer Documentation Added
+**Summary:** Added a short developer note in `src/runtime/ecs.ixx` clarifying the single-threaded assumption and listing TODOs for multi-component queries and parallel iteration.
+
+**Atomic functionalities completed:**
+- AF1: Developer note added to `src/runtime/ecs.ixx` near the `ecs` namespace.
+- AF2: TODO markers added for multi-component queries, predicate filtering, and parallel iteration.
+
+**Tests:** No code behavior changes; existing tests unaffected.
+

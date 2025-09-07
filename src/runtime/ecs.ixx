@@ -16,6 +16,19 @@ import runtime.entity;
 export namespace ecs
 {
 
+// Developer note:
+// - This ECS implementation is intentionally single-threaded. All public
+//   APIs (create/destroy/add/remove/get/forEach/modifyComponent) assume
+//   callers execute from a single thread. No internal synchronization is
+//   performed. To extend for multi-threaded use, introduce atomic state or
+//   external locking around `Scene` and `ComponentStorage` operations, and
+//   consider read-write locks for concurrent read-heavy workloads.
+// - Future work (TODOs):
+//   * multi-component queries (forEach with multiple component types)
+//   * predicate filtering helpers (forEachWhere)
+//   * parallel iteration support for performance-critical systems
+
+
 // Entity manager with recycling and generation tracking
 export class EntityManager
 {
