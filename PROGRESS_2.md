@@ -2,6 +2,50 @@
 
 Date: 2025-09-06
 
+## 2025-09-06 — Vertex Struct Vec Classes Integration
+**Summary:** Updated the Vertex struct in the assets module to use Vec2, Vec3, and Vec4 classes instead of raw float arrays for position, normal, texCoord, and tangent members. This provides better type safety, cleaner syntax, and consistency with the math library.
+
+**Atomic functionalities completed:**
+- AF1: Added engine.vec module import to assets.ixx to make Vec2, Vec3, Vec4 classes available
+- AF2: Updated Vertex struct to use Vec3<float> for position and normal, Vec2<float> for texCoord, and Vec4<float> for tangent
+- AF3: Updated updateBounds method to accept Vec3<float> parameter and use .x, .y, .z member access
+- AF4: Fixed GLTF loader to use Vec member access (.x, .y, .z, .w) instead of array indexing for the new Vec-based Vertex structure
+- AF5: Added engine.vec to engine.assets target_link_libraries in CMakeLists.txt for proper module dependency
+
+**Tests:** All asset system tests pass (25 assertions), mesh tests pass (12 assertions), and GLTF loader tests pass (5 assertions). Full project builds successfully.
+**Notes:** This change improves type safety and provides a more consistent API. The Vec classes offer better debugging information and prevent common array bounds errors. GLTF loader was also updated to maintain compatibility.
+
+## 2025-09-06 — BoundingBox Invalid Default Initialization
+**Summary:** Updated BoundingBox2D and BoundingBox3D default constructors to initialize with invalid bounds (min > max) using max/lowest float values. Added robust isValid() semantics.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed current default constructors - Found they initialized to (0,0) and (0,0,0) bounds which are valid but undesired for empty bounding boxes
+- AF2: Implemented failing test for BoundingBox2D default constructor creating invalid bounds
+- AF3: Updated BoundingBox2D default constructor to use max float for min and lowest float for max components
+- AF4: Implemented failing test for BoundingBox3D default constructor creating invalid bounds  
+- AF5: Updated BoundingBox3D default constructor to use max float for min and lowest float for max components
+- AF6: Verified isValid() returns true only when min <= max for all components
+
+**Tests:** 2 new test cases added for default constructor invalid bounds (1 for 2D, 1 for 3D). All existing bounding box tests continue to pass (33 assertions), plus all unit tests pass (62 assertions total).
+**Notes:** This change makes bounding box expansion logic cleaner - starting with invalid bounds and expanding to include actual geometry. The isValid() method now provides a clear semantic check for whether the bounding box contains meaningful bounds.
+
+## 2025-09-06 — BoundingBox Vec2f/Vec3f Integration
+**Summary:** Updated BoundingBox2D and BoundingBox3D classes to leverage Vec2f and Vec3f functionality for cleaner, more efficient vector operations.
+
+**Atomic functionalities completed:**
+- AF1: BoundingBox2D expand operations - Used math::min() and math::max() for component-wise operations
+- AF2: BoundingBox2D center/size calculations - Leveraged vector arithmetic operators (+ and *)
+- AF3: BoundingBox2D circle intersection - Simplified using Vec2f lengthSquared and vector operations
+- AF4: BoundingBox3D expand operations - Used math::min() and math::max() for component-wise operations
+- AF5: BoundingBox3D center/size calculations - Leveraged vector arithmetic operators (+ and *)
+- AF6: BoundingBox3D sphere intersection - Simplified using Vec3f lengthSquared and vector operations
+- AF7: Added type aliases - Added BoundingBox3Df and BoundingBox3Dd for consistency
+
+**Tests:** All existing tests passed - 30 assertions for BoundingBox2D functionality and 38 assertions for 3D Bounding Volumes. Full math test suite (5102 assertions in 62 test cases) continues to pass.
+**Notes:** Changes maintain API compatibility while leveraging existing Vec2f/Vec3f operations for cleaner, more maintainable code. No behavioral changes, only implementation optimizations.
+
+---
+
 ## 2025-09-06 — Accessor & Buffer View Handling Implementation
 **Summary:** Implemented comprehensive buffer view and accessor handling utilities for the glTF loader, completing the "Accessor & Buffer View Handling" task from M2-P2 via TDD.
 

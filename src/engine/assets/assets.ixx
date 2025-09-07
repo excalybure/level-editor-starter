@@ -1,6 +1,7 @@
 export module engine.assets;
 
 import std;
+import engine.vec;
 
 export namespace assets
 {
@@ -32,10 +33,10 @@ protected:
 // Simple vertex structure for now
 export struct Vertex
 {
-	float position[3] = { 0.0f, 0.0f, 0.0f };
-	float normal[3] = { 0.0f, 1.0f, 0.0f };
-	float texCoord[2] = { 0.0f, 0.0f };
-	float tangent[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	math::Vec3<float> position = { 0.0f, 0.0f, 0.0f };
+	math::Vec3<float> normal = { 0.0f, 1.0f, 0.0f };
+	math::Vec2<float> texCoord = { 0.0f, 0.0f };
+	math::Vec4<float> tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
 };
 
 export class Mesh : public Asset
@@ -109,27 +110,27 @@ private:
 	float m_boundsMax[3] = { 0.0f, 0.0f, 0.0f };
 	bool m_hasBounds = false;
 
-	void updateBounds( const float position[3] )
+	void updateBounds( const math::Vec3<float> &position )
 	{
 		if ( !m_hasBounds )
 		{
-			m_boundsMin[0] = position[0];
-			m_boundsMin[1] = position[1];
-			m_boundsMin[2] = position[2];
-			m_boundsMax[0] = position[0];
-			m_boundsMax[1] = position[1];
-			m_boundsMax[2] = position[2];
+			m_boundsMin[0] = position.x;
+			m_boundsMin[1] = position.y;
+			m_boundsMin[2] = position.z;
+			m_boundsMax[0] = position.x;
+			m_boundsMax[1] = position.y;
+			m_boundsMax[2] = position.z;
 			m_hasBounds = true;
 		}
 		else
 		{
-			m_boundsMin[0] = std::min( m_boundsMin[0], position[0] );
-			m_boundsMin[1] = std::min( m_boundsMin[1], position[1] );
-			m_boundsMin[2] = std::min( m_boundsMin[2], position[2] );
+			m_boundsMin[0] = std::min( m_boundsMin[0], position.x );
+			m_boundsMin[1] = std::min( m_boundsMin[1], position.y );
+			m_boundsMin[2] = std::min( m_boundsMin[2], position.z );
 
-			m_boundsMax[0] = std::max( m_boundsMax[0], position[0] );
-			m_boundsMax[1] = std::max( m_boundsMax[1], position[1] );
-			m_boundsMax[2] = std::max( m_boundsMax[2], position[2] );
+			m_boundsMax[0] = std::max( m_boundsMax[0], position.x );
+			m_boundsMax[1] = std::max( m_boundsMax[1], position.y );
+			m_boundsMax[2] = std::max( m_boundsMax[2], position.z );
 		}
 	}
 

@@ -302,7 +302,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 
 					// Extract positions using the utility function
 					const float *bufferData = reinterpret_cast<const float *>( buffer->data );
-					auto positions = extractFloat3Positions(
+					const auto positions = extractFloat3Positions(
 						bufferData,
 						positionAccessor->count,
 						bufferView->offset + positionAccessor->offset,
@@ -314,19 +314,17 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 					for ( const auto &pos : positions )
 					{
 						assets::Vertex vertex;
-						vertex.position[0] = pos.x;
-						vertex.position[1] = pos.y;
-						vertex.position[2] = pos.z;
+						vertex.position = pos;
 						// Default normals and other attributes
-						vertex.normal[0] = 0.0f;
-						vertex.normal[1] = 1.0f;
-						vertex.normal[2] = 0.0f;
-						vertex.texCoord[0] = 0.0f;
-						vertex.texCoord[1] = 0.0f;
-						vertex.tangent[0] = 1.0f;
-						vertex.tangent[1] = 0.0f;
-						vertex.tangent[2] = 0.0f;
-						vertex.tangent[3] = 1.0f;
+						vertex.normal.x = 0.0f;
+						vertex.normal.y = 1.0f;
+						vertex.normal.z = 0.0f;
+						vertex.texCoord.x = 0.0f;
+						vertex.texCoord.y = 0.0f;
+						vertex.tangent.x = 1.0f;
+						vertex.tangent.y = 0.0f;
+						vertex.tangent.z = 0.0f;
+						vertex.tangent.w = 1.0f;
 
 						mesh->addVertex( vertex );
 					}
