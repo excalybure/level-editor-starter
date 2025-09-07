@@ -197,11 +197,8 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 	return scene;
 }
 
-std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( void *gltfNodePtr, void *dataPtr ) const
+std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode, cgltf_data *data ) const
 {
-	cgltf_node *gltfNode = static_cast<cgltf_node *>( gltfNodePtr );
-	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
-
 	if ( !gltfNode )
 		return nullptr;
 
@@ -250,11 +247,8 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( void *gltfNodePtr, v
 	return sceneNode;
 }
 
-std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *dataPtr, bool verbose ) const
+std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose ) const
 {
-	cgltf_mesh *gltfMesh = static_cast<cgltf_mesh *>( gltfMeshPtr );
-	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
-
 	if ( !gltfMesh || gltfMesh->primitives_count == 0 )
 	{
 		console::error( "extractMesh: Invalid mesh or no primitives" );
