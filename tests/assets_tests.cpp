@@ -378,7 +378,7 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 	SECTION( "Single vertex creates valid bounds" )
 	{
 		assets::Vertex vertex{};
-		vertex.position = math::Vec3<float>{ 1.0f, 2.0f, 3.0f };
+		vertex.position = math::Vec3f{ 1.0f, 2.0f, 3.0f };
 
 		mesh->addVertex( vertex );
 
@@ -396,9 +396,9 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 	SECTION( "Multiple vertices expand bounds correctly" )
 	{
 		assets::Vertex v1{}, v2{}, v3{};
-		v1.position = math::Vec3<float>{ -1.0f, -2.0f, -3.0f };
-		v2.position = math::Vec3<float>{ 5.0f, 1.0f, 2.0f };
-		v3.position = math::Vec3<float>{ 0.0f, 4.0f, -1.0f };
+		v1.position = math::Vec3f{ -1.0f, -2.0f, -3.0f };
+		v2.position = math::Vec3f{ 5.0f, 1.0f, 2.0f };
+		v3.position = math::Vec3f{ 0.0f, 4.0f, -1.0f };
 
 		mesh->addVertex( v1 );
 		mesh->addVertex( v2 );
@@ -422,7 +422,7 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 	SECTION( "Clear vertices resets bounds to invalid" )
 	{
 		assets::Vertex vertex{};
-		vertex.position = math::Vec3<float>{ 1.0f, 1.0f, 1.0f };
+		vertex.position = math::Vec3f{ 1.0f, 1.0f, 1.0f };
 		mesh->addVertex( vertex );
 
 		REQUIRE( mesh->hasBounds() );

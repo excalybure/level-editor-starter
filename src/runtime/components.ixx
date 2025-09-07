@@ -86,7 +86,7 @@ struct MeshRenderer
 {
 	std::string meshPath;
 	std::vector<std::string> materialPaths;
-	math::BoundingBox3D<float> bounds; // Local space bounding box
+	math::BoundingBox3Df bounds; // Local space bounding box
 	bool enabled = true;
 
 	MeshRenderer() = default;

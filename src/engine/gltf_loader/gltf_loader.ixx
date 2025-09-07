@@ -14,9 +14,9 @@ export namespace gltf_loader
 {
 
 // Type aliases for convenience
-using Vec2f = math::Vec2<float>;
-using Vec3f = math::Vec3<float>;
-using Vec4f = math::Vec4<float>;
+using Vec2f = math::Vec2f;
+using Vec3f = math::Vec3f;
+using Vec4f = math::Vec4f;
 
 // Component types from glTF specification
 export enum class ComponentType : std::uint32_t {

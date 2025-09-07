@@ -34,10 +34,10 @@ protected:
 // Simple vertex structure for now
 export struct Vertex
 {
-	math::Vec3<float> position = { 0.0f, 0.0f, 0.0f };
-	math::Vec3<float> normal = { 0.0f, 1.0f, 0.0f };
-	math::Vec2<float> texCoord = { 0.0f, 0.0f };
-	math::Vec4<float> tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
+	math::Vec3f position = { 0.0f, 0.0f, 0.0f };
+	math::Vec3f normal = { 0.0f, 1.0f, 0.0f };
+	math::Vec2f texCoord = { 0.0f, 0.0f };
+	math::Vec4f tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
 };
 
 export class Mesh : public Asset
@@ -110,15 +110,14 @@ private:
 	// Bounding box data
 	math::BoundingBox3Df m_bounds;
 
-	void updateBounds( const math::Vec3<float> &position )
+	void updateBounds( const math::Vec3f &position )
 	{
 		m_bounds.expand( position );
 	}
 
 	void resetBounds()
 	{
-		// Reset to invalid bounds (default constructor behavior)
-		m_bounds = math::BoundingBox3D<float>{};
+		m_bounds = math::BoundingBox3Df{};
 	}
 };
 

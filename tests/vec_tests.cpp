@@ -234,31 +234,31 @@ TEST_CASE( "Vec swizzle type consistency", "[math][vec][swizzle][types]" )
 {
 	SECTION( "Vec3 swizzles return correct types" )
 	{
-		const math::Vec3<float> vf{ 1.0f, 2.0f, 3.0f };
-		const math::Vec3<double> vd{ 1.0, 2.0, 3.0 };
-		const math::Vec3<int> vi{ 1, 2, 3 };
+		const math::Vec3f vf{ 1.0f, 2.0f, 3.0f };
+		const math::Vec3d vd{ 1.0, 2.0, 3.0 };
+		const math::Vec3i vi{ 1, 2, 3 };
 
 		// Test that swizzles preserve the template type
-		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2<float>> );
-		static_assert( std::is_same_v<decltype( vd.xz() ), math::Vec2<double>> );
-		static_assert( std::is_same_v<decltype( vi.yz() ), math::Vec2<int>> );
+		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2f> );
+		static_assert( std::is_same_v<decltype( vd.xz() ), math::Vec2d> );
+		static_assert( std::is_same_v<decltype( vi.yz() ), math::Vec2i> );
 	}
 
 	SECTION( "Vec4 swizzles return correct types" )
 	{
-		const math::Vec4<float> vf{ 1.0f, 2.0f, 3.0f, 4.0f };
-		const math::Vec4<double> vd{ 1.0, 2.0, 3.0, 4.0 };
-		const math::Vec4<int> vi{ 1, 2, 3, 4 };
+		const math::Vec4f vf{ 1.0f, 2.0f, 3.0f, 4.0f };
+		const math::Vec4d vd{ 1.0, 2.0, 3.0, 4.0 };
+		const math::Vec4i vi{ 1, 2, 3, 4 };
 
 		// Test 2D swizzles
-		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2<float>> );
-		static_assert( std::is_same_v<decltype( vd.zw() ), math::Vec2<double>> );
-		static_assert( std::is_same_v<decltype( vi.yw() ), math::Vec2<int>> );
+		static_assert( std::is_same_v<decltype( vf.xy() ), math::Vec2f> );
+		static_assert( std::is_same_v<decltype( vd.zw() ), math::Vec2d> );
+		static_assert( std::is_same_v<decltype( vi.yw() ), math::Vec2i> );
 
 		// Test 3D swizzles
-		static_assert( std::is_same_v<decltype( vf.xyz() ), math::Vec3<float>> );
-		static_assert( std::is_same_v<decltype( vd.xzw() ), math::Vec3<double>> );
-		static_assert( std::is_same_v<decltype( vi.yzw() ), math::Vec3<int>> );
+		static_assert( std::is_same_v<decltype( vf.xyz() ), math::Vec3f> );
+		static_assert( std::is_same_v<decltype( vd.xzw() ), math::Vec3d> );
+		static_assert( std::is_same_v<decltype( vi.yzw() ), math::Vec3i> );
 	}
 }
 
@@ -266,8 +266,8 @@ TEST_CASE( "Vec swizzles with different numeric types", "[math][vec][swizzle][nu
 {
 	SECTION( "Integer vectors" )
 	{
-		const math::Vec3<int> v3i{ 10, 20, 30 };
-		const math::Vec4<int> v4i{ 10, 20, 30, 40 };
+		const math::Vec3i v3i{ 10, 20, 30 };
+		const math::Vec4i v4i{ 10, 20, 30, 40 };
 
 		auto xy = v3i.xy();
 		REQUIRE( xy.x == 10 );
@@ -281,8 +281,8 @@ TEST_CASE( "Vec swizzles with different numeric types", "[math][vec][swizzle][nu
 
 	SECTION( "Double vectors" )
 	{
-		const math::Vec3<double> v3d{ 1.1, 2.2, 3.3 };
-		const math::Vec4<double> v4d{ 1.1, 2.2, 3.3, 4.4 };
+		const math::Vec3d v3d{ 1.1, 2.2, 3.3 };
+		const math::Vec4d v4d{ 1.1, 2.2, 3.3, 4.4 };
 
 		auto xz = v3d.xz();
 		REQUIRE( xz.x == 1.1 );

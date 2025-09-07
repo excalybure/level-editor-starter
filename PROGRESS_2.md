@@ -7,9 +7,9 @@ Date: 2025-09-06
 
 **Atomic functionalities completed:**
 - AF1: Created failing test for getBounds() API expecting BoundingBox3D return type for empty mesh, single vertex, multiple vertices, and clear operations
-- AF2: Replaced m_boundsMin/m_boundsMax float arrays with math::BoundingBox3D<float> m_bounds member variable
+ - AF2: Replaced m_boundsMin/m_boundsMax float arrays with math::BoundingBox3Df m_bounds member variable
 - AF3: Updated updateBounds() method to use BoundingBox3D::expand() and initialization semantics with isValid() checking
-- AF4: Replaced getBoundsMin/getBoundsMax with getBounds() returning const BoundingBox3D<float>& reference
+ - AF4: Replaced getBoundsMin/getBoundsMax with getBounds() returning const BoundingBox3Df& reference
 - AF5: Updated getBoundsCenter/getBoundsSize methods to use BoundingBox3D::center() and size() methods internally
 - AF6: Fixed gltf_loader_tests.cpp to use new getBounds().min/.max API instead of deprecated getBoundsMin/getBoundsMax methods
 - AF7: Added engine.bounding_box_3d to engine.assets target_link_libraries in CMakeLists.txt for proper module dependency

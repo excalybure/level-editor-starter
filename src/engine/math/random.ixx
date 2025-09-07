@@ -21,7 +21,7 @@ private:
 	std::uniform_real_distribution<float> m_uniformFloat{ 0.0f, 1.0f };
 
 	// Helper function to project disc coordinates onto sphere with given radius
-	Vec3<float> projectOntoSphereSurface( const DiscPoint &disc, const float radius )
+	Vec3f projectOntoSphereSurface( const DiscPoint &disc, const float radius )
 	{
 		const float scale = radius * 2.0f * math::sqrt( 1.0f - disc.lengthSquared );
 		return {
@@ -79,7 +79,7 @@ public:
 	}
 
 	// Random point on unit circle
-	Vec2<float> unitCircle()
+	Vec2f unitCircle()
 	{
 		float angle = range( 0.0f, 2.0f * math::pi<float> );
 		return { math::cos( angle ), math::sin( angle ) };
@@ -103,14 +103,14 @@ public:
 	}
 
 	// Random point on unit sphere surface
-	Vec3<float> unitSphere()
+	Vec3f unitSphere()
 	{
 		const auto disc = insideDisc();
 		return projectOntoSphereSurface( disc, 1.0f );
 	}
 
 	// Random point inside unit sphere
-	Vec3<float> insideSphere()
+	Vec3f insideSphere()
 	{
 		const auto disc = insideDisc();
 
@@ -121,7 +121,7 @@ public:
 	}
 
 	// Random point inside unit cube
-	Vec3<float> insideCube()
+	Vec3f insideCube()
 	{
 		return { range( -1.0f, 1.0f ), range( -1.0f, 1.0f ), range( -1.0f, 1.0f ) };
 	}
@@ -176,15 +176,15 @@ inline bool randomBool( const float probability = 0.5f )
 {
 	return globalRandom.chance( probability );
 }
-inline Vec2<float> randomUnitCircle()
+inline Vec2f randomUnitCircle()
 {
 	return globalRandom.unitCircle();
 }
-inline Vec3<float> randomUnitSphere()
+inline Vec3f randomUnitSphere()
 {
 	return globalRandom.unitSphere();
 }
-inline Vec3<float> randomInsideSphere()
+inline Vec3f randomInsideSphere()
 {
 	return globalRandom.insideSphere();
 }

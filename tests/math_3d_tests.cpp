@@ -239,7 +239,7 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 {
 	SECTION( "BoundingBox3D Operations" )
 	{
-		BoundingBox3D<float> box( Vec3f( -1.0f, -2.0f, -3.0f ), Vec3f( 1.0f, 2.0f, 3.0f ) );
+		BoundingBox3Df box( Vec3f( -1.0f, -2.0f, -3.0f ), Vec3f( 1.0f, 2.0f, 3.0f ) );
 
 		// Contains test
 		REQUIRE( box.contains( Vec3f( 0.0f, 0.0f, 0.0f ) ) );
@@ -247,10 +247,10 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE_FALSE( box.contains( Vec3f( 2.0f, 0.0f, 0.0f ) ) );
 
 		// Intersection test
-		BoundingBox3D<float> other( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 2.0f, 3.0f, 4.0f ) );
+		BoundingBox3Df other( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 2.0f, 3.0f, 4.0f ) );
 		REQUIRE( box.intersects( other ) );
 
-		BoundingBox3D<float> separate( Vec3f( 3.0f, 3.0f, 3.0f ), Vec3f( 5.0f, 5.0f, 5.0f ) );
+		BoundingBox3Df separate( Vec3f( 3.0f, 3.0f, 3.0f ), Vec3f( 5.0f, 5.0f, 5.0f ) );
 		REQUIRE_FALSE( box.intersects( separate ) );
 
 		// Sphere intersection
@@ -282,7 +282,7 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE( corner7.z == Catch::Approx( 3.0f ) );
 
 		// Default constructor should create invalid bounds
-		const BoundingBox3D<float> defaultBox;
+		const BoundingBox3Df defaultBox;
 		REQUIRE_FALSE( defaultBox.isValid() );
 		// Default initialization should create min > max for easy expansion
 		REQUIRE( defaultBox.min.x > defaultBox.max.x );
@@ -346,10 +346,10 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE_FALSE( frustum.contains( Vec3f( 2.0f, 0.0f, 0.0f ) ) );
 
 		// Bounding box intersection
-		BoundingBox3D<float> insideBox( Vec3f( -0.5f, -0.5f, -0.5f ), Vec3f( 0.5f, 0.5f, 0.5f ) );
+		BoundingBox3Df insideBox( Vec3f( -0.5f, -0.5f, -0.5f ), Vec3f( 0.5f, 0.5f, 0.5f ) );
 		REQUIRE( frustum.intersects( insideBox ) );
 
-		BoundingBox3D<float> outsideBox( Vec3f( 2.0f, 2.0f, 2.0f ), Vec3f( 3.0f, 3.0f, 3.0f ) );
+		BoundingBox3Df outsideBox( Vec3f( 2.0f, 2.0f, 2.0f ), Vec3f( 3.0f, 3.0f, 3.0f ) );
 		REQUIRE_FALSE( frustum.intersects( outsideBox ) );
 	}
 }
