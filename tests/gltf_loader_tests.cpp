@@ -168,19 +168,19 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( vertices.size() == 3 );
 
 		// Check first vertex position (0,0,0)
-		REQUIRE( vertices[0].position[0] == 0.0f );
-		REQUIRE( vertices[0].position[1] == 0.0f );
-		REQUIRE( vertices[0].position[2] == 0.0f );
+		REQUIRE( vertices[0].position.x == 0.0f );
+		REQUIRE( vertices[0].position.y == 0.0f );
+		REQUIRE( vertices[0].position.z == 0.0f );
 
 		// Check second vertex position (1,0,0)
-		REQUIRE( vertices[1].position[0] == 1.0f );
-		REQUIRE( vertices[1].position[1] == 0.0f );
-		REQUIRE( vertices[1].position[2] == 0.0f );
+		REQUIRE( vertices[1].position.x == 1.0f );
+		REQUIRE( vertices[1].position.y == 0.0f );
+		REQUIRE( vertices[1].position.z == 0.0f );
 
 		// Check third vertex position (0.5,1,0)
-		REQUIRE( vertices[2].position[0] == 0.5f );
-		REQUIRE( vertices[2].position[1] == 1.0f );
-		REQUIRE( vertices[2].position[2] == 0.0f );
+		REQUIRE( vertices[2].position.x == 0.5f );
+		REQUIRE( vertices[2].position.y == 1.0f );
+		REQUIRE( vertices[2].position.z == 0.0f );
 
 		// Verify indices are correct (0, 1, 2)
 		const auto &indices = meshPtr->getIndices();
@@ -194,16 +194,15 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		// Expected bounds for triangle vertices (0,0,0), (1,0,0), (0.5,1,0):
 		// Min: (0, 0, 0), Max: (1, 1, 0)
-		const float *boundsMin = meshPtr->getBoundsMin();
-		const float *boundsMax = meshPtr->getBoundsMax();
+		const auto &bounds = meshPtr->getBounds();
 
-		REQUIRE( boundsMin[0] == 0.0f );
-		REQUIRE( boundsMin[1] == 0.0f );
-		REQUIRE( boundsMin[2] == 0.0f );
+		REQUIRE( bounds.min.x == 0.0f );
+		REQUIRE( bounds.min.y == 0.0f );
+		REQUIRE( bounds.min.z == 0.0f );
 
-		REQUIRE( boundsMax[0] == 1.0f );
-		REQUIRE( boundsMax[1] == 1.0f );
-		REQUIRE( boundsMax[2] == 0.0f );
+		REQUIRE( bounds.max.x == 1.0f );
+		REQUIRE( bounds.max.y == 1.0f );
+		REQUIRE( bounds.max.z == 0.0f );
 
 		// Verify computed center and size
 		float center[3], size[3];
@@ -276,9 +275,9 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		// All vertices should have default normal (0, 1, 0)
 		for ( const auto &vertex : vertices )
 		{
-			REQUIRE( vertex.normal[0] == 0.0f );
-			REQUIRE( vertex.normal[1] == 1.0f );
-			REQUIRE( vertex.normal[2] == 0.0f );
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 1.0f );
+			REQUIRE( vertex.normal.z == 0.0f );
 		}
 	}
 

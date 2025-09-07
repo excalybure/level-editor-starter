@@ -3,6 +3,7 @@
 #include <string>
 
 import engine.assets;
+import engine.bounding_box_3d;
 
 TEST_CASE( "Asset System Tests", "[assets]" )
 {
@@ -21,50 +22,50 @@ TEST_CASE( "Asset System Tests", "[assets]" )
 		const assets::Vertex vertex{};
 
 		// Check position default (0, 0, 0)
-		REQUIRE( vertex.position[0] == 0.0f );
-		REQUIRE( vertex.position[1] == 0.0f );
-		REQUIRE( vertex.position[2] == 0.0f );
+		REQUIRE( vertex.position.x == 0.0f );
+		REQUIRE( vertex.position.y == 0.0f );
+		REQUIRE( vertex.position.z == 0.0f );
 
 		// Check normal default (0, 1, 0)
-		REQUIRE( vertex.normal[0] == 0.0f );
-		REQUIRE( vertex.normal[1] == 1.0f );
-		REQUIRE( vertex.normal[2] == 0.0f );
+		REQUIRE( vertex.normal.x == 0.0f );
+		REQUIRE( vertex.normal.y == 1.0f );
+		REQUIRE( vertex.normal.z == 0.0f );
 
 		// Check texture coordinate default (0, 0)
-		REQUIRE( vertex.texCoord[0] == 0.0f );
-		REQUIRE( vertex.texCoord[1] == 0.0f );
+		REQUIRE( vertex.texCoord.x == 0.0f );
+		REQUIRE( vertex.texCoord.y == 0.0f );
 
 		// Check tangent default (1, 0, 0, 1)
-		REQUIRE( vertex.tangent[0] == 1.0f );
-		REQUIRE( vertex.tangent[1] == 0.0f );
-		REQUIRE( vertex.tangent[2] == 0.0f );
-		REQUIRE( vertex.tangent[3] == 1.0f );
+		REQUIRE( vertex.tangent.x == 1.0f );
+		REQUIRE( vertex.tangent.y == 0.0f );
+		REQUIRE( vertex.tangent.z == 0.0f );
+		REQUIRE( vertex.tangent.w == 1.0f );
 	}
 
 	SECTION( "Vertex custom values" )
 	{
 		assets::Vertex vertex{};
-		vertex.position[0] = 1.0f;
-		vertex.position[1] = 2.0f;
-		vertex.position[2] = 3.0f;
+		vertex.position.x = 1.0f;
+		vertex.position.y = 2.0f;
+		vertex.position.z = 3.0f;
 
-		vertex.normal[0] = 0.5f;
-		vertex.normal[1] = 0.5f;
-		vertex.normal[2] = 0.707f;
+		vertex.normal.x = 0.5f;
+		vertex.normal.y = 0.5f;
+		vertex.normal.z = 0.707f;
 
-		vertex.texCoord[0] = 0.25f;
-		vertex.texCoord[1] = 0.75f;
+		vertex.texCoord.x = 0.25f;
+		vertex.texCoord.y = 0.75f;
 
-		REQUIRE( vertex.position[0] == 1.0f );
-		REQUIRE( vertex.position[1] == 2.0f );
-		REQUIRE( vertex.position[2] == 3.0f );
+		REQUIRE( vertex.position.x == 1.0f );
+		REQUIRE( vertex.position.y == 2.0f );
+		REQUIRE( vertex.position.z == 3.0f );
 
-		REQUIRE( vertex.normal[0] == 0.5f );
-		REQUIRE( vertex.normal[1] == 0.5f );
-		REQUIRE( vertex.normal[2] == 0.707f );
+		REQUIRE( vertex.normal.x == 0.5f );
+		REQUIRE( vertex.normal.y == 0.5f );
+		REQUIRE( vertex.normal.z == 0.707f );
 
-		REQUIRE( vertex.texCoord[0] == 0.25f );
-		REQUIRE( vertex.texCoord[1] == 0.75f );
+		REQUIRE( vertex.texCoord.x == 0.25f );
+		REQUIRE( vertex.texCoord.y == 0.75f );
 	}
 }
 
@@ -360,5 +361,76 @@ TEST_CASE( "Asset Base Class Tests", "[assets][base]" )
 			REQUIRE_FALSE( asset->isLoaded() );
 			REQUIRE( asset->getPath().empty() );
 		}
+	}
+}
+
+TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
+{
+	auto mesh = std::make_unique<assets::Mesh>();
+
+	SECTION( "Empty mesh has invalid bounds" )
+	{
+		const auto &bounds = mesh->getBounds();
+		REQUIRE_FALSE( bounds.isValid() );
+		REQUIRE_FALSE( mesh->hasBounds() );
+	}
+
+	SECTION( "Single vertex creates valid bounds" )
+	{
+		assets::Vertex vertex{};
+		vertex.position = math::Vec3<float>{ 1.0f, 2.0f, 3.0f };
+
+		mesh->addVertex( vertex );
+
+		const auto &bounds = mesh->getBounds();
+		REQUIRE( bounds.isValid() );
+		REQUIRE( mesh->hasBounds() );
+		REQUIRE( bounds.min.x == 1.0f );
+		REQUIRE( bounds.min.y == 2.0f );
+		REQUIRE( bounds.min.z == 3.0f );
+		REQUIRE( bounds.max.x == 1.0f );
+		REQUIRE( bounds.max.y == 2.0f );
+		REQUIRE( bounds.max.z == 3.0f );
+	}
+
+	SECTION( "Multiple vertices expand bounds correctly" )
+	{
+		assets::Vertex v1{}, v2{}, v3{};
+		v1.position = math::Vec3<float>{ -1.0f, -2.0f, -3.0f };
+		v2.position = math::Vec3<float>{ 5.0f, 1.0f, 2.0f };
+		v3.position = math::Vec3<float>{ 0.0f, 4.0f, -1.0f };
+
+		mesh->addVertex( v1 );
+		mesh->addVertex( v2 );
+		mesh->addVertex( v3 );
+
+		const auto &bounds = mesh->getBounds();
+		REQUIRE( bounds.isValid() );
+		REQUIRE( mesh->hasBounds() );
+
+		// Min should be component-wise minimum
+		REQUIRE( bounds.min.x == -1.0f );
+		REQUIRE( bounds.min.y == -2.0f );
+		REQUIRE( bounds.min.z == -3.0f );
+
+		// Max should be component-wise maximum
+		REQUIRE( bounds.max.x == 5.0f );
+		REQUIRE( bounds.max.y == 4.0f );
+		REQUIRE( bounds.max.z == 2.0f );
+	}
+
+	SECTION( "Clear vertices resets bounds to invalid" )
+	{
+		assets::Vertex vertex{};
+		vertex.position = math::Vec3<float>{ 1.0f, 1.0f, 1.0f };
+		mesh->addVertex( vertex );
+
+		REQUIRE( mesh->hasBounds() );
+
+		mesh->clearVertices();
+
+		const auto &bounds = mesh->getBounds();
+		REQUIRE_FALSE( bounds.isValid() );
+		REQUIRE_FALSE( mesh->hasBounds() );
 	}
 }

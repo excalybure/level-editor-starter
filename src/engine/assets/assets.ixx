@@ -2,6 +2,7 @@ export module engine.assets;
 
 import std;
 import engine.vec;
+import engine.bounding_box_3d;
 
 export namespace assets
 {
@@ -72,33 +73,34 @@ public:
 	void reserveIndices( std::size_t count ) { m_indices.reserve( count ); }
 
 	// Bounding box accessors
-	const float *getBoundsMin() const { return m_boundsMin; }
-	const float *getBoundsMax() const { return m_boundsMax; }
-	bool hasBounds() const { return m_hasBounds; }
+	const math::BoundingBox3Df &getBounds() const { return m_bounds; }
+	bool hasBounds() const { return m_bounds.isValid(); }
 
 	// Compute bounds center and size
 	void getBoundsCenter( float center[3] ) const
 	{
-		if ( !m_hasBounds )
+		if ( !m_bounds.isValid() )
 		{
 			center[0] = center[1] = center[2] = 0.0f;
 			return;
 		}
-		center[0] = ( m_boundsMin[0] + m_boundsMax[0] ) * 0.5f;
-		center[1] = ( m_boundsMin[1] + m_boundsMax[1] ) * 0.5f;
-		center[2] = ( m_boundsMin[2] + m_boundsMax[2] ) * 0.5f;
+		const auto centerVec = m_bounds.center();
+		center[0] = centerVec.x;
+		center[1] = centerVec.y;
+		center[2] = centerVec.z;
 	}
 
 	void getBoundsSize( float size[3] ) const
 	{
-		if ( !m_hasBounds )
+		if ( !m_bounds.isValid() )
 		{
 			size[0] = size[1] = size[2] = 0.0f;
 			return;
 		}
-		size[0] = m_boundsMax[0] - m_boundsMin[0];
-		size[1] = m_boundsMax[1] - m_boundsMin[1];
-		size[2] = m_boundsMax[2] - m_boundsMin[2];
+		const auto sizeVec = m_bounds.size();
+		size[0] = sizeVec.x;
+		size[1] = sizeVec.y;
+		size[2] = sizeVec.z;
 	}
 
 private:
@@ -106,39 +108,17 @@ private:
 	std::vector<std::uint32_t> m_indices;
 
 	// Bounding box data
-	float m_boundsMin[3] = { 0.0f, 0.0f, 0.0f };
-	float m_boundsMax[3] = { 0.0f, 0.0f, 0.0f };
-	bool m_hasBounds = false;
+	math::BoundingBox3Df m_bounds;
 
 	void updateBounds( const math::Vec3<float> &position )
 	{
-		if ( !m_hasBounds )
-		{
-			m_boundsMin[0] = position.x;
-			m_boundsMin[1] = position.y;
-			m_boundsMin[2] = position.z;
-			m_boundsMax[0] = position.x;
-			m_boundsMax[1] = position.y;
-			m_boundsMax[2] = position.z;
-			m_hasBounds = true;
-		}
-		else
-		{
-			m_boundsMin[0] = std::min( m_boundsMin[0], position.x );
-			m_boundsMin[1] = std::min( m_boundsMin[1], position.y );
-			m_boundsMin[2] = std::min( m_boundsMin[2], position.z );
-
-			m_boundsMax[0] = std::max( m_boundsMax[0], position.x );
-			m_boundsMax[1] = std::max( m_boundsMax[1], position.y );
-			m_boundsMax[2] = std::max( m_boundsMax[2], position.z );
-		}
+		m_bounds.expand( position );
 	}
 
 	void resetBounds()
 	{
-		m_hasBounds = false;
-		m_boundsMin[0] = m_boundsMin[1] = m_boundsMin[2] = 0.0f;
-		m_boundsMax[0] = m_boundsMax[1] = m_boundsMax[2] = 0.0f;
+		// Reset to invalid bounds (default constructor behavior)
+		m_bounds = math::BoundingBox3D<float>{};
 	}
 };
 

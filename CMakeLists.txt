@@ -173,7 +173,7 @@ target_sources(engine.assets PUBLIC
     src/engine/assets/assets.cpp
 )
 target_compile_features(engine.assets PUBLIC cxx_std_23)
-target_link_libraries(engine.assets PUBLIC engine.vec)
+target_link_libraries(engine.assets PUBLIC engine.vec engine.bounding_box_3d)
 
 add_library(engine.gltf_loader)
 target_sources(engine.gltf_loader PUBLIC

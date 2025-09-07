@@ -2,6 +2,21 @@
 
 Date: 2025-09-06
 
+## 2025-09-06 — Assets Mesh BoundingBox3D Integration
+**Summary:** Updated the Mesh class in the assets module to use BoundingBox3D instead of separate m_boundsMin/m_boundsMax float arrays for bounding box management. This provides better encapsulation, type safety, and leverages the full BoundingBox3D API including automatic bounds validation.
+
+**Atomic functionalities completed:**
+- AF1: Created failing test for getBounds() API expecting BoundingBox3D return type for empty mesh, single vertex, multiple vertices, and clear operations
+- AF2: Replaced m_boundsMin/m_boundsMax float arrays with math::BoundingBox3D<float> m_bounds member variable
+- AF3: Updated updateBounds() method to use BoundingBox3D::expand() and initialization semantics with isValid() checking
+- AF4: Replaced getBoundsMin/getBoundsMax with getBounds() returning const BoundingBox3D<float>& reference
+- AF5: Updated getBoundsCenter/getBoundsSize methods to use BoundingBox3D::center() and size() methods internally
+- AF6: Fixed gltf_loader_tests.cpp to use new getBounds().min/.max API instead of deprecated getBoundsMin/getBoundsMax methods
+- AF7: Added engine.bounding_box_3d to engine.assets target_link_libraries in CMakeLists.txt for proper module dependency
+
+**Tests:** 4 new BoundingBox3D integration tests added covering empty mesh bounds validation, single vertex bounds creation, multiple vertex bounds expansion, and bounds reset on clear. Assets module builds successfully and gltf_loader_tests.cpp updated for new API.
+**Notes:** This change improves type safety by leveraging BoundingBox3D's automatic invalid bounds initialization and validation. The new API is more intuitive and consistent with other math types. Bounds calculations now benefit from BoundingBox3D's optimized expand operations and automatic validity checking.
+
 ## 2025-09-06 — Vertex Struct Vec Classes Integration
 **Summary:** Updated the Vertex struct in the assets module to use Vec2, Vec3, and Vec4 classes instead of raw float arrays for position, normal, texCoord, and tangent members. This provides better type safety, cleaner syntax, and consistency with the math library.
 
