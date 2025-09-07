@@ -2,12 +2,12 @@
     "editor.defaultFormatter": "xaver.clang-format",
     "editor.formatOnSave": true,
     "[cpp]": {
-        "editor.defaultFormatter": "xaver.clang-format"
+        "editor.defaultFormatter": "ms-vscode.cpptools"
     },
     "clang-format.language.cpp.enable": true,
     "clang-format.language.cpp.style": "file",
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
-    "clang-format.executable": "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
+    "clang-format.executable": "${workspaceFolder}\\clang-format-custom.exe",
     "C_Cpp.default.cppStandard": "c++23",
     "testMate.cpp.test.executables": "${workspaceFolder}/build/vs2022-x64/Debug/unit_test_runner.exe",
     "testMate.cpp.test.workingDirectory": "${workspaceFolder}",

@@ -1,4 +1,7 @@
 ---
+applyTo: '**'
+---
+---
 mode: agent
 ---
 # How LLMs should perform coding tasks
@@ -40,6 +43,9 @@ mode: agent
    - Prefer **value/`string_view`/`span`** over raw pointers for ownership clarity.
 5. **C++23 features** are encouraged when they simplify or clarify code (concepts, ranges, modules). Use them pragmatically; don’t over‑engineer.
 6. **Logging noise**: test output may include `[INFO]`, `[WARNING]`, `[ERROR]/[ERRPR]` messages that are expected; **judge success solely by Catch2’s test results**.
+7. **Circular dependencies**: when facing circular dependencies due to inline function, when possible (i.e non templated), move inline function in cpp and import or include correct module or header
+8. **Linter errors**: They are to be ignored as they are due to not properly supporting c++23 modules
+9. **Undefined symbols**: When using functionality from another module/library, make sure CMakelists.txt properly reference that module/library in target_link_libraries
 
 ---
 
@@ -233,8 +239,8 @@ Append a dated entry at the top of the current milestone’s progress file (`PRO
 
 ---
 
-## 8) Commit message (for `git commit -m`)
-Generate a concise message that explains **what changed and why** without verbosity. Aim for ~72‑char subject; short bullet body. Reference milestone/phase/task IDs if available.
+## 8) Commit message
+Generate a concise message that explains **what changed and why** without verbosity. Aim for ~72‑char subject; short bullet body. Reference milestone/phase/task IDs if available. Do not commit the change as it will have to be reviewed and approved beforehand, buit write the commit message in the chat window
 
 **Template**:
 ```
@@ -296,4 +302,3 @@ The runner supports flags such as `--list-tests`, `--list-tags`, `--reporter`, `
 
 ### End
 Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `PROGRESS_<N>.md`** and **emit a commit message** using the template above.
-
