@@ -14,14 +14,14 @@ TEST_CASE( "ECS Storage basic create/has/get", "[ecs]" )
 	Storage<components::Transform> storage;
 
 	// Create default entity
-	Entity e0 = storage.create();
+	const Entity e0 = storage.create();
 	REQUIRE( e0.id == 1u ); // New system starts IDs from 1
 	REQUIRE( storage.has( e0 ) );
 
 	// Create with value
 	components::Transform t;
 	t.position = { 3.5f, -2.0f, 1.0f };
-	Entity e1 = storage.create( t );
+	const Entity e1 = storage.create( t );
 	REQUIRE( e1.id == 2u ); // Second entity gets ID 2
 	REQUIRE( storage.has( e1 ) );
 	REQUIRE( storage.get( e1 ).position.x == Catch::Approx( 3.5f ) );
@@ -38,7 +38,7 @@ TEST_CASE( "ECS Storage basic create/has/get", "[ecs]" )
 	REQUIRE( storage.get( e0 ).position.z == Catch::Approx( 2.f ) );
 
 	// has() should be false for non-existent entity id
-	Entity invalid{ 100, 0 };
+	const Entity invalid{ 100, 0 };
 	REQUIRE_FALSE( storage.has( invalid ) );
 }
 
@@ -56,7 +56,7 @@ TEST_CASE( "Entity creation and management", "[ecs]" )
 
 	SECTION( "Create entity" )
 	{
-		Entity entity = entityManager.create();
+		const Entity entity = entityManager.create();
 		REQUIRE( entity.id != 0 );
 		REQUIRE( entity.generation == 0 );
 		REQUIRE( entityManager.isValid( entity ) );
@@ -64,9 +64,9 @@ TEST_CASE( "Entity creation and management", "[ecs]" )
 
 	SECTION( "Create multiple entities" )
 	{
-		Entity entity1 = entityManager.create();
-		Entity entity2 = entityManager.create();
-		Entity entity3 = entityManager.create();
+		const Entity entity1 = entityManager.create();
+		const Entity entity2 = entityManager.create();
+		const Entity entity3 = entityManager.create();
 
 		REQUIRE( entity1.id != entity2.id );
 		REQUIRE( entity2.id != entity3.id );
@@ -79,7 +79,7 @@ TEST_CASE( "Entity creation and management", "[ecs]" )
 
 	SECTION( "Destroy entity" )
 	{
-		Entity entity = entityManager.create();
+		const Entity entity = entityManager.create();
 		REQUIRE( entityManager.isValid( entity ) );
 
 		entityManager.destroy( entity );
@@ -88,13 +88,13 @@ TEST_CASE( "Entity creation and management", "[ecs]" )
 
 	SECTION( "Entity recycling and generation" )
 	{
-		Entity entity1 = entityManager.create();
-		uint32_t firstId = entity1.id;
+		const Entity entity1 = entityManager.create();
+		const uint32_t firstId = entity1.id;
 
 		entityManager.destroy( entity1 );
 		REQUIRE_FALSE( entityManager.isValid( entity1 ) );
 
-		Entity entity2 = entityManager.create();
+		const Entity entity2 = entityManager.create();
 		REQUIRE( entity2.id == firstId );	// ID should be recycled
 		REQUIRE( entity2.generation == 2 ); // Generation should increment by 2 (1 for destroy, 1 for reuse)
 		REQUIRE( entityManager.isValid( entity2 ) );
@@ -108,7 +108,7 @@ TEST_CASE( "Component Storage", "[ecs]" )
 {
 	ComponentStorage<components::Transform> transformStorage;
 	ComponentStorage<Velocity> velocityStorage;
-	Entity entity{ 1, 0 };
+	const Entity entity{ 1, 0 };
 
 	SECTION( "Add and get component" )
 	{
@@ -138,8 +138,8 @@ TEST_CASE( "Component Storage", "[ecs]" )
 
 	SECTION( "Multiple components" )
 	{
-		Entity entity2{ 2, 0 };
-		Entity entity3{ 3, 0 };
+		const Entity entity2{ 2, 0 };
+		const Entity entity3{ 3, 0 };
 
 		transformStorage.add( entity, components::Transform{ { 1.0f, 2.0f, 3.0f } } );
 		transformStorage.add( entity2, components::Transform{ { 4.0f, 5.0f, 6.0f } } );
@@ -149,9 +149,9 @@ TEST_CASE( "Component Storage", "[ecs]" )
 		REQUIRE( transformStorage.has( entity2 ) );
 		REQUIRE( transformStorage.has( entity3 ) );
 
-		auto *t1 = transformStorage.get( entity );
-		auto *t2 = transformStorage.get( entity2 );
-		auto *t3 = transformStorage.get( entity3 );
+		const auto *t1 = transformStorage.get( entity );
+		const auto *t2 = transformStorage.get( entity2 );
+		const auto *t3 = transformStorage.get( entity3 );
 
 		REQUIRE( t1->position.x == Catch::Approx( 1.0f ) );
 		REQUIRE( t2->position.x == Catch::Approx( 4.0f ) );
@@ -165,7 +165,7 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 
 	SECTION( "Entity creation" )
 	{
-		Entity entity = scene.createEntity();
+		const Entity entity = scene.createEntity();
 		REQUIRE( scene.isValid( entity ) );
 
 		// Verify Name component is NOT added when using default name
@@ -174,7 +174,7 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 
 	SECTION( "Entity creation with default name parameter" )
 	{
-		Entity entity = scene.createEntity( "Entity" );
+		const Entity entity = scene.createEntity( "Entity" );
 		REQUIRE( scene.isValid( entity ) );
 
 		// Verify Name component is NOT added when using "Entity" as name
@@ -183,13 +183,13 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 
 	SECTION( "Entity creation with name" )
 	{
-		Entity entity = scene.createEntity( "TestEntity" );
+		const Entity entity = scene.createEntity( "TestEntity" );
 		REQUIRE( entity.id != 0 );
 		REQUIRE( scene.isValid( entity ) );
 
 		// Verify Name component is automatically added when a custom name is provided
 		REQUIRE( scene.hasComponent<components::Name>( entity ) );
-		auto *namePtr = scene.getComponent<components::Name>( entity );
+		const auto *namePtr = scene.getComponent<components::Name>( entity );
 		REQUIRE( namePtr != nullptr );
 		REQUIRE( namePtr->name == "TestEntity" );
 	}
@@ -205,7 +205,7 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 
 	SECTION( "Basic component management" )
 	{
-		Entity entity = scene.createEntity();
+		const Entity entity = scene.createEntity();
 
 		// Add component
 		Transform transform;
@@ -230,8 +230,8 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 	SECTION( "forEach iteration utility" )
 	{
 		// Create entities with Transform components
-		Entity entity1 = scene.createEntity( "Entity1" );
-		Entity entity2 = scene.createEntity( "Entity2" );
+		const Entity entity1 = scene.createEntity( "Entity1" );
+		const Entity entity2 = scene.createEntity( "Entity2" );
 
 		Transform t1;
 		t1.position = { 1.0f, 0.0f, 0.0f };
@@ -266,7 +266,7 @@ TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 
 	SECTION( "forEach with different component types" )
 	{
-		Entity entity = scene.createEntity( "TestEntity" );
+		const Entity entity = scene.createEntity( "TestEntity" );
 
 		// Add Name component (automatically added by createEntity)
 		// Add Visible component
@@ -303,11 +303,11 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 
 	SECTION( "Entity creation and destruction" )
 	{
-		Entity e1 = scene.createEntity( "TestEntity" );
+		const Entity e1 = scene.createEntity( "TestEntity" );
 		REQUIRE( e1.isValid() );
 		REQUIRE( scene.isValid( e1 ) );
 
-		Entity e2 = scene.createEntity( "AnotherEntity" );
+		const Entity e2 = scene.createEntity( "AnotherEntity" );
 		REQUIRE( e2.isValid() );
 		REQUIRE( e2.id != e1.id );
 
@@ -319,7 +319,7 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 
 	SECTION( "Component management" )
 	{
-		Entity entity = scene.createEntity( "ComponentTest" );
+		const Entity entity = scene.createEntity( "ComponentTest" );
 
 		// Add components
 		components::Transform transform;
@@ -332,13 +332,13 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 		REQUIRE( scene.hasComponent<components::Name>( entity ) );
 
 		// Get components
-		auto *transformPtr = scene.getComponent<components::Transform>( entity );
+		const auto *transformPtr = scene.getComponent<components::Transform>( entity );
 		REQUIRE( transformPtr != nullptr );
 		REQUIRE( transformPtr->position.x == Catch::Approx( 1.0f ) );
 		REQUIRE( transformPtr->position.y == Catch::Approx( 2.0f ) );
 		REQUIRE( transformPtr->position.z == Catch::Approx( 3.0f ) );
 
-		auto *namePtr = scene.getComponent<components::Name>( entity );
+		const auto *namePtr = scene.getComponent<components::Name>( entity );
 		REQUIRE( namePtr != nullptr );
 		REQUIRE( namePtr->name == "TestName" );
 
@@ -350,10 +350,10 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 
 	SECTION( "Hierarchy management" )
 	{
-		Entity parent = scene.createEntity( "Parent" );
-		Entity child1 = scene.createEntity( "Child1" );
-		Entity child2 = scene.createEntity( "Child2" );
-		Entity grandchild = scene.createEntity( "Grandchild" );
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child1 = scene.createEntity( "Child1" );
+		const Entity child2 = scene.createEntity( "Child2" );
+		const Entity grandchild = scene.createEntity( "Grandchild" );
 
 		// Set up hierarchy
 		scene.setParent( child1, parent );
@@ -367,12 +367,12 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 		REQUIRE_FALSE( scene.getParent( parent ).isValid() ); // Root has no parent
 
 		// Verify children relationships
-		auto parentChildren = scene.getChildren( parent );
+		const auto parentChildren = scene.getChildren( parent );
 		REQUIRE( parentChildren.size() == 2 );
 		REQUIRE( std::find( parentChildren.begin(), parentChildren.end(), child1 ) != parentChildren.end() );
 		REQUIRE( std::find( parentChildren.begin(), parentChildren.end(), child2 ) != parentChildren.end() );
 
-		auto child1Children = scene.getChildren( child1 );
+		const auto child1Children = scene.getChildren( child1 );
 		REQUIRE( child1Children.size() == 1 );
 		REQUIRE( child1Children[0] == grandchild );
 
@@ -381,7 +381,7 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 		REQUIRE_FALSE( scene.getParent( child1 ).isValid() );
 
 		// Verify grandchild is also orphaned (should be handled by destroy)
-		auto newParentChildren = scene.getChildren( parent );
+		const auto newParentChildren = scene.getChildren( parent );
 		REQUIRE( newParentChildren.size() == 1 );
 		REQUIRE( newParentChildren[0] == child2 );
 	}
@@ -389,14 +389,14 @@ TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 	SECTION( "Entity recycling" )
 	{
 		// Create and destroy entities to test ID recycling
-		Entity e1 = scene.createEntity();
-		Entity e2 = scene.createEntity();
+		const Entity e1 = scene.createEntity();
+		const Entity e2 = scene.createEntity();
 		std::uint32_t originalId1 = e1.id;
 
 		scene.destroyEntity( e1 );
 
 		// Create new entity - should reuse the destroyed entity's ID
-		Entity e3 = scene.createEntity();
+		const Entity e3 = scene.createEntity();
 		REQUIRE( e3.id == originalId1 );
 		REQUIRE( e3.generation > e1.generation ); // But with higher generation
 
@@ -411,12 +411,12 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 	Scene scene;
 	systems::SystemManager systemManager;
 
-	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	auto *const transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	SECTION( "Basic transform matrix calculation" )
 	{
-		Entity entity = scene.createEntity( "TransformTest" );
+		const Entity entity = scene.createEntity( "TransformTest" );
 
 		components::Transform transform;
 		transform.position = { 5.0f, 10.0f, 15.0f };
@@ -428,7 +428,7 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 		systemManager.update( scene, 0.016f );
 
 		// Get world transform
-		auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
+		const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
 
 		// Verify the translation part of the matrix
 		REQUIRE( worldMatrix.m03() == Catch::Approx( 5.0f ) );
@@ -438,8 +438,8 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 
 	SECTION( "Parent dirty propagation updates child" )
 	{
-		Entity parent = scene.createEntity( "Parent" );
-		Entity child = scene.createEntity( "Child" );
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
 		// Establish hierarchy
 		scene.setParent( child, parent );
 
@@ -463,8 +463,8 @@ TEST_CASE( "Transform System", "[ecs][systems]" )
 
 	SECTION( "Automatic dirty marking via modifyComponent" )
 	{
-		Entity parent = scene.createEntity( "Parent" );
-		Entity child = scene.createEntity( "Child" );
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
 		scene.setParent( child, parent );
 
 		components::Transform parentT;
@@ -498,25 +498,25 @@ TEST_CASE( "Hierarchy Safety - Cycle Prevention", "[ecs][hierarchy][safety]" )
 
 	SECTION( "Self-parenting should be prevented" )
 	{
-		Entity entity = scene.createEntity( "SelfParent" );
+		const Entity entity = scene.createEntity( "SelfParent" );
 
 		// Attempt to parent entity to itself - should be ignored
 		scene.setParent( entity, entity );
 
 		// Verify no parent was set
-		Entity parent = scene.getParent( entity );
+		const Entity parent = scene.getParent( entity );
 		REQUIRE( !parent.isValid() );
 
 		// Verify entity doesn't appear in its own children list
-		auto children = scene.getChildren( entity );
+		const auto children = scene.getChildren( entity );
 		REQUIRE( children.empty() );
 	}
 
 	SECTION( "Descendant-parenting should be prevented" )
 	{
-		Entity grandparent = scene.createEntity( "Grandparent" );
-		Entity parent = scene.createEntity( "Parent" );
-		Entity child = scene.createEntity( "Child" );
+		const Entity grandparent = scene.createEntity( "Grandparent" );
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
 
 		// Create hierarchy: grandparent -> parent -> child
 		scene.setParent( parent, grandparent );
@@ -548,7 +548,7 @@ TEST_CASE( "Hierarchy Safety - Cycle Prevention", "[ecs][hierarchy][safety]" )
 
 	SECTION( "Direct descendant-parenting should be prevented" )
 	{
-		Entity parent = scene.createEntity( "Parent" );
+		const Entity parent = scene.createEntity( "Parent" );
 		Entity child = scene.createEntity( "Child" );
 
 		// Create simple parent-child relationship
@@ -579,13 +579,13 @@ TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 
 	SECTION( "Default name creates entity without Name component" )
 	{
-		Entity entity = scene.createEntity(); // Using default name "Entity"
+		const Entity entity = scene.createEntity(); // Using default name "Entity"
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 
 	SECTION( "Empty string creates entity without Name component" )
 	{
-		Entity entity = scene.createEntity( "" );
+		const Entity entity = scene.createEntity( "" );
 		REQUIRE( !scene.hasComponent<Name>( entity ) );
 	}
 
@@ -597,7 +597,7 @@ TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 
 	SECTION( "Custom name auto-adds Name component" )
 	{
-		Entity entity = scene.createEntity( "TestEntity" );
+		const Entity entity = scene.createEntity( "TestEntity" );
 		REQUIRE( scene.hasComponent<components::Name>( entity ) );
 
 		const components::Name *nameComp = scene.getComponent<components::Name>( entity );
@@ -607,9 +607,9 @@ TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 
 	SECTION( "Different custom names create correct Name components" )
 	{
-		Entity player = scene.createEntity( "Player" );
-		Entity enemy = scene.createEntity( "Enemy" );
-		Entity world = scene.createEntity( "World" );
+		const Entity player = scene.createEntity( "Player" );
+		const Entity enemy = scene.createEntity( "Enemy" );
+		const Entity world = scene.createEntity( "World" );
 
 		REQUIRE( scene.hasComponent<components::Name>( player ) );
 		REQUIRE( scene.hasComponent<components::Name>( enemy ) );
@@ -622,13 +622,13 @@ TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 
 	SECTION( "Name component not added when name matches default" )
 	{
-		Entity entity = scene.createEntity( "Entity" ); // Explicit default name
+		const Entity entity = scene.createEntity( "Entity" ); // Explicit default name
 		REQUIRE( !scene.hasComponent<Name>( entity ) );
 	}
 
 	SECTION( "Explicit default name creates entity without Name component" )
 	{
-		Entity entity = scene.createEntity( "Entity" );
+		const Entity entity = scene.createEntity( "Entity" );
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 }
@@ -648,12 +648,12 @@ TEST_CASE( "Transform Cache Invalidation on Component Removal", "[ecs][systems][
 	Scene scene;
 	systems::SystemManager systemManager;
 
-	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	auto *const transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	SECTION( "Removing Transform component clears cached world matrix and dirty state" )
 	{
-		Entity entity = scene.createEntity( "CacheTest" );
+		const Entity entity = scene.createEntity( "CacheTest" );
 
 		// Add Transform component and position it
 		components::Transform transform;
@@ -695,7 +695,7 @@ TEST_CASE( "Transform Cache Invalidation on Component Removal", "[ecs][systems][
 
 	SECTION( "Removing Transform component on parent with children" )
 	{
-		Entity parent = scene.createEntity( "Parent" );
+		const Entity parent = scene.createEntity( "Parent" );
 		Entity child = scene.createEntity( "Child" );
 		scene.setParent( child, parent );
 
@@ -728,4 +728,876 @@ TEST_CASE( "Transform Cache Invalidation on Component Removal", "[ecs][systems][
 	}
 
 	systemManager.shutdown( scene );
+}
+
+TEST_CASE( "Deep Hierarchy Destruction", "[ecs][hierarchy][destruction]" )
+{
+	Scene scene;
+
+	SECTION( "destroyEntity(grandparent) cascades to all descendants" )
+	{
+		// Create a 4-level hierarchy:
+		// great-grandparent -> grandparent -> parent -> child
+		const Entity greatGrandparent = scene.createEntity( "GreatGrandparent" );
+		const Entity grandparent = scene.createEntity( "Grandparent" );
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
+
+		// Set up hierarchy
+		scene.setParent( grandparent, greatGrandparent );
+		scene.setParent( parent, grandparent );
+		scene.setParent( child, parent );
+
+		// Verify hierarchy is established
+		REQUIRE( scene.getParent( grandparent ) == greatGrandparent );
+		REQUIRE( scene.getParent( parent ) == grandparent );
+		REQUIRE( scene.getParent( child ) == parent );
+
+		// Verify all entities are valid
+		REQUIRE( scene.isValid( greatGrandparent ) );
+		REQUIRE( scene.isValid( grandparent ) );
+		REQUIRE( scene.isValid( parent ) );
+		REQUIRE( scene.isValid( child ) );
+
+		// Destroy the grandparent - should cascade to parent and child
+		scene.destroyEntity( grandparent );
+
+		// Verify grandparent and all descendants are destroyed
+		REQUIRE_FALSE( scene.isValid( grandparent ) );
+		REQUIRE_FALSE( scene.isValid( parent ) );
+		REQUIRE_FALSE( scene.isValid( child ) );
+
+		// Great-grandparent should still be valid
+		REQUIRE( scene.isValid( greatGrandparent ) );
+
+		// Great-grandparent should have no children
+		const auto remainingChildren = scene.getChildren( greatGrandparent );
+		REQUIRE( remainingChildren.empty() );
+	}
+
+	SECTION( "destroyEntity with multiple child branches" )
+	{
+		// Create a tree structure:
+		//        root
+		//       /    \
+		//   child1   child2
+		//   /        /    \
+		// gc1      gc2   gc3
+		const Entity root = scene.createEntity( "Root" );
+		const Entity child1 = scene.createEntity( "Child1" );
+		const Entity child2 = scene.createEntity( "Child2" );
+		const Entity grandchild1 = scene.createEntity( "Grandchild1" );
+		const Entity grandchild2 = scene.createEntity( "Grandchild2" );
+		const Entity grandchild3 = scene.createEntity( "Grandchild3" );
+
+		// Set up hierarchy
+		scene.setParent( child1, root );
+		scene.setParent( child2, root );
+		scene.setParent( grandchild1, child1 );
+		scene.setParent( grandchild2, child2 );
+		scene.setParent( grandchild3, child2 );
+
+		// Verify all entities are valid
+		REQUIRE( scene.isValid( root ) );
+		REQUIRE( scene.isValid( child1 ) );
+		REQUIRE( scene.isValid( child2 ) );
+		REQUIRE( scene.isValid( grandchild1 ) );
+		REQUIRE( scene.isValid( grandchild2 ) );
+		REQUIRE( scene.isValid( grandchild3 ) );
+
+		// Destroy the root - should cascade to all descendants
+		scene.destroyEntity( root );
+
+		// Verify all entities are destroyed
+		REQUIRE_FALSE( scene.isValid( root ) );
+		REQUIRE_FALSE( scene.isValid( child1 ) );
+		REQUIRE_FALSE( scene.isValid( child2 ) );
+		REQUIRE_FALSE( scene.isValid( grandchild1 ) );
+		REQUIRE_FALSE( scene.isValid( grandchild2 ) );
+		REQUIRE_FALSE( scene.isValid( grandchild3 ) );
+	}
+
+	SECTION( "destroyEntity with great-great-grandchildren" )
+	{
+		// Create a 5-level hierarchy to test deep recursion
+		const Entity level1 = scene.createEntity( "Level1" );
+		const Entity level2 = scene.createEntity( "Level2" );
+		const Entity level3 = scene.createEntity( "Level3" );
+		const Entity level4 = scene.createEntity( "Level4" );
+		const Entity level5 = scene.createEntity( "Level5" );
+
+		// Set up deep hierarchy
+		scene.setParent( level2, level1 );
+		scene.setParent( level3, level2 );
+		scene.setParent( level4, level3 );
+		scene.setParent( level5, level4 );
+
+		// Verify all entities are valid
+		REQUIRE( scene.isValid( level1 ) );
+		REQUIRE( scene.isValid( level2 ) );
+		REQUIRE( scene.isValid( level3 ) );
+		REQUIRE( scene.isValid( level4 ) );
+		REQUIRE( scene.isValid( level5 ) );
+
+		// Destroy level 2 - should cascade to levels 3, 4, and 5
+		scene.destroyEntity( level2 );
+
+		// Verify level 2 and all descendants are destroyed
+		REQUIRE_FALSE( scene.isValid( level2 ) );
+		REQUIRE_FALSE( scene.isValid( level3 ) );
+		REQUIRE_FALSE( scene.isValid( level4 ) );
+		REQUIRE_FALSE( scene.isValid( level5 ) );
+
+		// Level 1 should still be valid with no children
+		REQUIRE( scene.isValid( level1 ) );
+		const auto remainingChildren = scene.getChildren( level1 );
+		REQUIRE( remainingChildren.empty() );
+	}
+}
+
+TEST_CASE( "Reparenting Preserves Sub-hierarchy", "[ecs][hierarchy][reparenting]" )
+{
+	Scene scene;
+
+	SECTION( "Moving parent with children maintains sub-tree structure" )
+	{
+		// Create initial structure:
+		//     root1       root2
+		//     /   \
+		//  child1  child2
+		//  /       /   \
+		// gc1     gc2  gc3
+		const Entity root1 = scene.createEntity( "Root1" );
+		const Entity root2 = scene.createEntity( "Root2" );
+		const Entity child1 = scene.createEntity( "Child1" );
+		const Entity child2 = scene.createEntity( "Child2" );
+		const Entity grandchild1 = scene.createEntity( "Grandchild1" );
+		const Entity grandchild2 = scene.createEntity( "Grandchild2" );
+		const Entity grandchild3 = scene.createEntity( "Grandchild3" );
+
+		// Set up initial hierarchy
+		scene.setParent( child1, root1 );
+		scene.setParent( child2, root1 );
+		scene.setParent( grandchild1, child1 );
+		scene.setParent( grandchild2, child2 );
+		scene.setParent( grandchild3, child2 );
+
+		// Verify initial hierarchy
+		REQUIRE( scene.getParent( child1 ) == root1 );
+		REQUIRE( scene.getParent( child2 ) == root1 );
+		REQUIRE( scene.getParent( grandchild1 ) == child1 );
+		REQUIRE( scene.getParent( grandchild2 ) == child2 );
+		REQUIRE( scene.getParent( grandchild3 ) == child2 );
+
+		const auto root1Children = scene.getChildren( root1 );
+		REQUIRE( root1Children.size() == 2 );
+		const auto child2Children = scene.getChildren( child2 );
+		REQUIRE( child2Children.size() == 2 );
+
+		// Move child2 (with its sub-tree) from root1 to root2
+		scene.setParent( child2, root2 );
+
+		// Verify new structure:
+		//     root1    root2
+		//     /         |
+		//  child1     child2
+		//  /          /   \
+		// gc1        gc2  gc3
+
+		// Child2 should now be under root2
+		REQUIRE( scene.getParent( child2 ) == root2 );
+
+		// Child2's subtree should be preserved
+		REQUIRE( scene.getParent( grandchild2 ) == child2 );
+		REQUIRE( scene.getParent( grandchild3 ) == child2 );
+		const auto child2NewChildren = scene.getChildren( child2 );
+		REQUIRE( child2NewChildren.size() == 2 );
+		REQUIRE( std::find( child2NewChildren.begin(), child2NewChildren.end(), grandchild2 ) != child2NewChildren.end() );
+		REQUIRE( std::find( child2NewChildren.begin(), child2NewChildren.end(), grandchild3 ) != child2NewChildren.end() );
+
+		// Root1 should only have child1 now
+		const auto root1NewChildren = scene.getChildren( root1 );
+		REQUIRE( root1NewChildren.size() == 1 );
+		REQUIRE( root1NewChildren[0] == child1 );
+
+		// Root2 should have child2
+		const auto root2Children = scene.getChildren( root2 );
+		REQUIRE( root2Children.size() == 1 );
+		REQUIRE( root2Children[0] == child2 );
+
+		// Child1's subtree should be unchanged
+		REQUIRE( scene.getParent( child1 ) == root1 );
+		REQUIRE( scene.getParent( grandchild1 ) == child1 );
+		const auto child1Children = scene.getChildren( child1 );
+		REQUIRE( child1Children.size() == 1 );
+		REQUIRE( child1Children[0] == grandchild1 );
+	}
+
+	SECTION( "Moving deep sub-tree preserves all descendant relationships" )
+	{
+		// Create structure:
+		//  oldParent       newParent
+		//     |
+		//   branch
+		//     |
+		//   level1
+		//   /    \
+		// level2a level2b
+		//    |
+		//  level3
+		const Entity oldParent = scene.createEntity( "OldParent" );
+		const Entity newParent = scene.createEntity( "NewParent" );
+		const Entity branch = scene.createEntity( "Branch" );
+		const Entity level1 = scene.createEntity( "Level1" );
+		const Entity level2a = scene.createEntity( "Level2a" );
+		const Entity level2b = scene.createEntity( "Level2b" );
+		const Entity level3 = scene.createEntity( "Level3" );
+
+		// Set up hierarchy
+		scene.setParent( branch, oldParent );
+		scene.setParent( level1, branch );
+		scene.setParent( level2a, level1 );
+		scene.setParent( level2b, level1 );
+		scene.setParent( level3, level2a );
+
+		// Verify initial structure
+		REQUIRE( scene.getParent( branch ) == oldParent );
+		REQUIRE( scene.getParent( level1 ) == branch );
+		REQUIRE( scene.getParent( level2a ) == level1 );
+		REQUIRE( scene.getParent( level2b ) == level1 );
+		REQUIRE( scene.getParent( level3 ) == level2a );
+
+		// Move the entire branch to newParent
+		scene.setParent( branch, newParent );
+
+		// Verify top-level move worked
+		REQUIRE( scene.getParent( branch ) == newParent );
+		const auto newParentChildren = scene.getChildren( newParent );
+		REQUIRE( newParentChildren.size() == 1 );
+		REQUIRE( newParentChildren[0] == branch );
+
+		// Old parent should have no children
+		const auto oldParentChildren = scene.getChildren( oldParent );
+		REQUIRE( oldParentChildren.empty() );
+
+		// Verify entire sub-tree structure is preserved
+		REQUIRE( scene.getParent( level1 ) == branch );
+		REQUIRE( scene.getParent( level2a ) == level1 );
+		REQUIRE( scene.getParent( level2b ) == level1 );
+		REQUIRE( scene.getParent( level3 ) == level2a );
+
+		// Verify children lists are preserved
+		const auto branchChildren = scene.getChildren( branch );
+		REQUIRE( branchChildren.size() == 1 );
+		REQUIRE( branchChildren[0] == level1 );
+
+		const auto level1Children = scene.getChildren( level1 );
+		REQUIRE( level1Children.size() == 2 );
+		REQUIRE( std::find( level1Children.begin(), level1Children.end(), level2a ) != level1Children.end() );
+		REQUIRE( std::find( level1Children.begin(), level1Children.end(), level2b ) != level1Children.end() );
+
+		const auto level2aChildren = scene.getChildren( level2a );
+		REQUIRE( level2aChildren.size() == 1 );
+		REQUIRE( level2aChildren[0] == level3 );
+
+		const auto level2bChildren = scene.getChildren( level2b );
+		REQUIRE( level2bChildren.empty() );
+	}
+
+	SECTION( "Reparenting root entity removes it from old parent's children" )
+	{
+		const Entity parent1 = scene.createEntity( "Parent1" );
+		const Entity parent2 = scene.createEntity( "Parent2" );
+		const Entity child = scene.createEntity( "Child" );
+		const Entity grandchild = scene.createEntity( "Grandchild" );
+
+		// Set up: parent1 -> child -> grandchild
+		scene.setParent( child, parent1 );
+		scene.setParent( grandchild, child );
+
+		// Verify initial setup
+		const auto parent1InitialChildren = scene.getChildren( parent1 );
+		REQUIRE( parent1InitialChildren.size() == 1 );
+		REQUIRE( parent1InitialChildren[0] == child );
+
+		// Move child from parent1 to parent2
+		scene.setParent( child, parent2 );
+
+		// Verify child moved correctly with its subtree
+		REQUIRE( scene.getParent( child ) == parent2 );
+		REQUIRE( scene.getParent( grandchild ) == child );
+
+		// Parent1 should have no children
+		const auto parent1FinalChildren = scene.getChildren( parent1 );
+		REQUIRE( parent1FinalChildren.empty() );
+
+		// Parent2 should have the child
+		const auto parent2Children = scene.getChildren( parent2 );
+		REQUIRE( parent2Children.size() == 1 );
+		REQUIRE( parent2Children[0] == child );
+
+		// Child should still have its grandchild
+		const auto childChildren = scene.getChildren( child );
+		REQUIRE( childChildren.size() == 1 );
+		REQUIRE( childChildren[0] == grandchild );
+	}
+}
+
+TEST_CASE( "Transform System Edge Cases", "[ecs][systems][transform][edge-cases]" )
+{
+	Scene scene;
+	systems::SystemManager systemManager;
+
+	auto *const transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
+
+	SECTION( "Getting world matrix after Transform component removal" )
+	{
+		const Entity entity = scene.createEntity( "TransformEdgeTest" );
+
+		// Add Transform component
+		components::Transform transform;
+		transform.position = { 5.0f, 10.0f, 15.0f };
+		scene.addComponent( entity, transform );
+
+		// Mark dirty and update to build cache
+		transformSystem->markDirty( entity );
+		systemManager.update( scene, 0.016f );
+
+		// Verify world matrix exists
+		const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
+		REQUIRE( worldMatrix.m03() == Catch::Approx( 5.0f ) );
+
+		// Remove Transform component
+		REQUIRE( scene.removeComponent<components::Transform>( entity ) );
+
+		// Getting world matrix after removal should return identity matrix
+		const auto identityMatrix = transformSystem->getWorldTransform( scene, entity );
+		REQUIRE( identityMatrix.m00() == Catch::Approx( 1.0f ) );
+		REQUIRE( identityMatrix.m11() == Catch::Approx( 1.0f ) );
+		REQUIRE( identityMatrix.m22() == Catch::Approx( 1.0f ) );
+		REQUIRE( identityMatrix.m33() == Catch::Approx( 1.0f ) );
+		REQUIRE( identityMatrix.m03() == Catch::Approx( 0.0f ) );
+		REQUIRE( identityMatrix.m13() == Catch::Approx( 0.0f ) );
+		REQUIRE( identityMatrix.m23() == Catch::Approx( 0.0f ) );
+	}
+
+	SECTION( "Multiple dirty cycles in one update" )
+	{
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
+		scene.setParent( child, parent );
+
+		components::Transform parentTransform;
+		parentTransform.position = { 1.0f, 2.0f, 3.0f };
+		components::Transform childTransform;
+		childTransform.position = { 0.5f, 0.0f, 0.0f };
+
+		scene.addComponent( parent, parentTransform );
+		scene.addComponent( child, childTransform );
+
+		// Mark both as dirty multiple times
+		transformSystem->markDirty( parent );
+		transformSystem->markDirty( child );
+		transformSystem->markDirty( parent ); // Redundant marking
+		transformSystem->markDirty( child );  // Redundant marking
+
+		// Update should handle redundant dirty flags gracefully
+		systemManager.update( scene, 0.016f );
+
+		// Verify correct world matrices despite multiple dirty markings
+		const auto parentWorld = transformSystem->getWorldTransform( scene, parent );
+		const auto childWorld = transformSystem->getWorldTransform( scene, child );
+
+		REQUIRE( parentWorld.m03() == Catch::Approx( 1.0f ) );
+		REQUIRE( parentWorld.m13() == Catch::Approx( 2.0f ) );
+		REQUIRE( parentWorld.m23() == Catch::Approx( 3.0f ) );
+
+		REQUIRE( childWorld.m03() == Catch::Approx( 1.5f ) ); // parent.x + child.x
+		REQUIRE( childWorld.m13() == Catch::Approx( 2.0f ) ); // parent.y + child.y
+		REQUIRE( childWorld.m23() == Catch::Approx( 3.0f ) ); // parent.z + child.z
+	}
+
+	SECTION( "Transform system behavior with orphaned entities" )
+	{
+		const Entity parent = scene.createEntity( "Parent" );
+		const Entity child = scene.createEntity( "Child" );
+
+		components::Transform parentTransform;
+		parentTransform.position = { 10.0f, 20.0f, 30.0f };
+		components::Transform childTransform;
+		childTransform.position = { 1.0f, 2.0f, 3.0f };
+
+		scene.addComponent( parent, parentTransform );
+		scene.addComponent( child, childTransform );
+
+		// First set up hierarchy
+		scene.setParent( child, parent );
+		transformSystem->markDirty( parent );
+		systemManager.update( scene, 0.016f );
+
+		// Verify child world position includes parent
+		const auto childWorldWithParent = transformSystem->getWorldTransform( scene, child );
+		REQUIRE( childWorldWithParent.m03() == Catch::Approx( 11.0f ) );
+
+		// Now orphan the child (remove from hierarchy)
+		scene.removeParent( child );
+
+		// Mark child dirty and update
+		transformSystem->markDirty( child );
+		systemManager.update( scene, 0.016f );
+
+		// Child should now have only its local transform as world transform
+		const auto childWorldOrphaned = transformSystem->getWorldTransform( scene, child );
+		REQUIRE( childWorldOrphaned.m03() == Catch::Approx( 1.0f ) );
+		REQUIRE( childWorldOrphaned.m13() == Catch::Approx( 2.0f ) );
+		REQUIRE( childWorldOrphaned.m23() == Catch::Approx( 3.0f ) );
+
+		// Parent world transform should be unchanged
+		const auto parentWorldFinal = transformSystem->getWorldTransform( scene, parent );
+		REQUIRE( parentWorldFinal.m03() == Catch::Approx( 10.0f ) );
+		REQUIRE( parentWorldFinal.m13() == Catch::Approx( 20.0f ) );
+		REQUIRE( parentWorldFinal.m23() == Catch::Approx( 30.0f ) );
+	}
+
+	SECTION( "Entity destruction clears transform cache properly" )
+	{
+		const Entity entity1 = scene.createEntity( "Entity1" );
+		const Entity entity2 = scene.createEntity( "Entity2" );
+
+		components::Transform t1, t2;
+		t1.position = { 5.0f, 0.0f, 0.0f };
+		t2.position = { 10.0f, 0.0f, 0.0f };
+
+		scene.addComponent( entity1, t1 );
+		scene.addComponent( entity2, t2 );
+
+		// Build cache
+		transformSystem->markDirty( entity1 );
+		transformSystem->markDirty( entity2 );
+		systemManager.update( scene, 0.016f );
+
+		// Verify both have world transforms
+		const auto world1 = transformSystem->getWorldTransform( scene, entity1 );
+		const auto world2 = transformSystem->getWorldTransform( scene, entity2 );
+		REQUIRE( world1.m03() == Catch::Approx( 5.0f ) );
+		REQUIRE( world2.m03() == Catch::Approx( 10.0f ) );
+
+		// Destroy entity1 - this removes its Transform component and clears cache
+		scene.destroyEntity( entity1 );
+
+		// Entity2 should still work normally
+		const auto world2After = transformSystem->getWorldTransform( scene, entity2 );
+		REQUIRE( world2After.m03() == Catch::Approx( 10.0f ) );
+
+		// Getting transform for destroyed entity should return identity matrix
+		const auto destroyedWorld = transformSystem->getWorldTransform( scene, entity1 );
+		REQUIRE( destroyedWorld.m00() == Catch::Approx( 1.0f ) );
+		REQUIRE( destroyedWorld.m03() == Catch::Approx( 0.0f ) );
+	}
+
+	systemManager.shutdown( scene );
+}
+
+TEST_CASE( "forEach Utility Comprehensive Coverage", "[ecs][iteration][forEach]" )
+{
+	Scene scene;
+
+	SECTION( "forEach covers all entities with specified component type" )
+	{
+		// Create entities with different component combinations
+		const Entity entityTransformOnly = scene.createEntity( "TransformOnly" );
+		const Entity entityNameOnly = scene.createEntity( "NameOnly" );
+		const Entity entityBoth = scene.createEntity( "BothComponents" );
+		const Entity entityVisibleOnly = scene.createEntity( "VisibleOnly" );
+		const Entity entityTransformVisible = scene.createEntity( "TransformVisible" );
+
+		// Add Transform components to some entities
+		components::Transform t1, t2, t3;
+		t1.position = { 1.0f, 0.0f, 0.0f };
+		t2.position = { 2.0f, 0.0f, 0.0f };
+		t3.position = { 3.0f, 0.0f, 0.0f };
+
+		scene.addComponent( entityTransformOnly, t1 );
+		scene.addComponent( entityBoth, t2 );
+		scene.addComponent( entityTransformVisible, t3 );
+
+		// Add Name components to some entities (automatically added for some)
+		// entityNameOnly already has Name from createEntity
+		// entityBoth already has Name from createEntity
+
+		// Add Visible components to some entities
+		components::Visible v1, v2;
+		v1.visible = true;
+		v2.visible = false;
+		scene.addComponent( entityVisibleOnly, v1 );
+		scene.addComponent( entityTransformVisible, v2 );
+
+		// Test forEach with Transform - should find exactly 3 entities
+		std::vector<ecs::Entity> transformEntities;
+		std::vector<math::Vec3<float>> transformPositions;
+		scene.forEach<components::Transform>( [&transformEntities, &transformPositions]( ecs::Entity entity, components::Transform &transform ) {
+			transformEntities.push_back( entity );
+			transformPositions.push_back( transform.position );
+		} );
+
+		REQUIRE( transformEntities.size() == 3 );
+		REQUIRE( transformPositions.size() == 3 );
+
+		// Verify the entities found are the expected ones
+		const bool foundTransformOnly = std::find( transformEntities.begin(), transformEntities.end(), entityTransformOnly ) != transformEntities.end();
+		const bool foundBoth = std::find( transformEntities.begin(), transformEntities.end(), entityBoth ) != transformEntities.end();
+		const bool foundTransformVisible = std::find( transformEntities.begin(), transformEntities.end(), entityTransformVisible ) != transformEntities.end();
+
+		REQUIRE( foundTransformOnly );
+		REQUIRE( foundBoth );
+		REQUIRE( foundTransformVisible );
+
+		// Verify positions are correct (sum should be 1 + 2 + 3 = 6)
+		float totalX = 0.0f;
+		for ( const auto &pos : transformPositions )
+		{
+			totalX += pos.x;
+		}
+		REQUIRE( totalX == Catch::Approx( 6.0f ) );
+	}
+
+	SECTION( "forEach with Name components" )
+	{
+		// Create entities, some with custom names (auto-add Name), some without
+		const Entity withName1 = scene.createEntity( "CustomName1" );
+		const Entity withName2 = scene.createEntity( "CustomName2" );
+		const Entity withoutName = scene.createEntity();			   // No Name component added
+		const Entity explicitDefault = scene.createEntity( "Entity" ); // No Name component added
+
+		// Test forEach with Name - should find exactly 2 entities
+		std::vector<ecs::Entity> nameEntities;
+		std::vector<std::string> names;
+		scene.forEach<components::Name>( [&nameEntities, &names]( ecs::Entity entity, const components::Name &name ) {
+			nameEntities.push_back( entity );
+			names.push_back( name.name );
+		} );
+
+		REQUIRE( nameEntities.size() == 2 );
+		REQUIRE( names.size() == 2 );
+
+		// Verify correct names were found
+		const bool foundName1 = std::find( names.begin(), names.end(), "CustomName1" ) != names.end();
+		const bool foundName2 = std::find( names.begin(), names.end(), "CustomName2" ) != names.end();
+		REQUIRE( foundName1 );
+		REQUIRE( foundName2 );
+	}
+
+	SECTION( "forEach with Visible components" )
+	{
+		const Entity visible1 = scene.createEntity( "Visible1" );
+		const Entity visible2 = scene.createEntity( "Visible2" );
+		const Entity noVisible = scene.createEntity( "NoVisible" );
+
+		components::Visible v1, v2;
+		v1.visible = true;
+		v2.visible = false;
+		scene.addComponent( visible1, v1 );
+		scene.addComponent( visible2, v2 );
+
+		// Test forEach with Visible
+		int visibleCount = 0;
+		int trueCount = 0;
+		int falseCount = 0;
+		scene.forEach<components::Visible>( [&visibleCount, &trueCount, &falseCount]( ecs::Entity, const components::Visible &visible ) {
+			visibleCount++;
+			if ( visible.visible )
+				trueCount++;
+			else
+				falseCount++;
+		} );
+
+		REQUIRE( visibleCount == 2 );
+		REQUIRE( trueCount == 1 );
+		REQUIRE( falseCount == 1 );
+	}
+
+	SECTION( "forEach on empty component type" )
+	{
+		// Test forEach when no entities have the requested component type
+		scene.createEntity( "OnlyName" ); // Has Name but not MeshRenderer
+		scene.createEntity();			  // Has no components
+
+		int meshRendererCount = 0;
+		scene.forEach<components::MeshRenderer>( [&meshRendererCount]( ecs::Entity, const components::MeshRenderer & ) {
+			meshRendererCount++;
+		} );
+
+		REQUIRE( meshRendererCount == 0 );
+	}
+
+	SECTION( "forEach after component removal" )
+	{
+		const Entity entity1 = scene.createEntity( "Entity1" );
+		const Entity entity2 = scene.createEntity( "Entity2" );
+
+		components::Transform t1, t2;
+		t1.position = { 10.0f, 0.0f, 0.0f };
+		t2.position = { 20.0f, 0.0f, 0.0f };
+		scene.addComponent( entity1, t1 );
+		scene.addComponent( entity2, t2 );
+
+		// Initially should find 2 transforms
+		int initialCount = 0;
+		scene.forEach<components::Transform>( [&initialCount]( ecs::Entity, const components::Transform & ) {
+			initialCount++;
+		} );
+		REQUIRE( initialCount == 2 );
+
+		// Remove one transform
+		scene.removeComponent<components::Transform>( entity1 );
+
+		// Should now find only 1 transform
+		int afterRemovalCount = 0;
+		float remainingX = 0.0f;
+		scene.forEach<components::Transform>( [&afterRemovalCount, &remainingX]( ecs::Entity, const components::Transform &transform ) {
+			afterRemovalCount++;
+			remainingX = transform.position.x;
+		} );
+		REQUIRE( afterRemovalCount == 1 );
+		REQUIRE( remainingX == Catch::Approx( 20.0f ) );
+	}
+
+	SECTION( "forEach after entity destruction" )
+	{
+		const Entity entity1 = scene.createEntity( "Entity1" );
+		const Entity entity2 = scene.createEntity( "Entity2" );
+		const Entity entity3 = scene.createEntity( "Entity3" );
+
+		components::Transform t1, t2, t3;
+		t1.position = { 1.0f, 0.0f, 0.0f };
+		t2.position = { 2.0f, 0.0f, 0.0f };
+		t3.position = { 3.0f, 0.0f, 0.0f };
+		scene.addComponent( entity1, t1 );
+		scene.addComponent( entity2, t2 );
+		scene.addComponent( entity3, t3 );
+
+		// Initially should find 3 transforms
+		int initialCount = 0;
+		scene.forEach<components::Transform>( [&initialCount]( ecs::Entity, const components::Transform & ) {
+			initialCount++;
+		} );
+		REQUIRE( initialCount == 3 );
+
+		// Destroy entity2
+		scene.destroyEntity( entity2 );
+
+		// Should now find only 2 transforms
+		int afterDestructionCount = 0;
+		float totalX = 0.0f;
+		scene.forEach<components::Transform>( [&afterDestructionCount, &totalX]( ecs::Entity, const components::Transform &transform ) {
+			afterDestructionCount++;
+			totalX += transform.position.x;
+		} );
+		REQUIRE( afterDestructionCount == 2 );
+		REQUIRE( totalX == Catch::Approx( 4.0f ) ); // 1.0 + 3.0 = 4.0 (entity2's 2.0 removed)
+	}
+}
+
+TEST_CASE( "Large Hierarchy Performance and Correctness", "[ecs][hierarchy][performance]" )
+{
+	Scene scene;
+
+	SECTION( "Large hierarchy creation and manipulation" )
+	{
+		// Create a large hierarchy for performance testing
+		// Structure: 1 root -> 10 children -> 10 grandchildren each (100 total grandchildren)
+		// Total: 1 + 10 + 100 = 111 entities
+
+		const Entity root = scene.createEntity( "Root" );
+		std::vector<Entity> children;
+		std::vector<Entity> grandchildren;
+
+		// Create children
+		for ( int i = 0; i < 10; ++i )
+		{
+			const Entity child = scene.createEntity( "Child" + std::to_string( i ) );
+			scene.setParent( child, root );
+			children.push_back( child );
+
+			// Create grandchildren for each child
+			for ( int j = 0; j < 10; ++j )
+			{
+				const Entity grandchild = scene.createEntity( "Grandchild" + std::to_string( i ) + "_" + std::to_string( j ) );
+				scene.setParent( grandchild, child );
+				grandchildren.push_back( grandchild );
+			}
+		}
+
+		// Verify hierarchy structure
+		REQUIRE( children.size() == 10 );
+		REQUIRE( grandchildren.size() == 100 );
+
+		// Test root children count
+		const auto rootChildren = scene.getChildren( root );
+		REQUIRE( rootChildren.size() == 10 );
+
+		// Test each child has correct number of grandchildren
+		for ( const auto &child : children )
+		{
+			const auto childGrandchildren = scene.getChildren( child );
+			REQUIRE( childGrandchildren.size() == 10 );
+			REQUIRE( scene.getParent( child ) == root );
+		}
+
+		// Test all grandchildren have correct parents
+		for ( size_t i = 0; i < grandchildren.size(); ++i )
+		{
+			const Entity grandchild = grandchildren[i];
+			const Entity expectedParent = children[i / 10]; // Each group of 10 grandchildren belongs to one child
+			REQUIRE( scene.getParent( grandchild ) == expectedParent );
+		}
+	}
+
+	SECTION( "Large hierarchy reparenting performance" )
+	{
+		// Create two separate hierarchies and then merge them
+		const Entity root1 = scene.createEntity( "Root1" );
+		const Entity root2 = scene.createEntity( "Root2" );
+
+		std::vector<Entity> subtree1, subtree2;
+
+		// Create first subtree (3 levels deep, 20 entities)
+		for ( int i = 0; i < 4; ++i )
+		{
+			const Entity level1 = scene.createEntity( "Root1_Level1_" + std::to_string( i ) );
+			scene.setParent( level1, root1 );
+			subtree1.push_back( level1 );
+
+			for ( int j = 0; j < 4; ++j )
+			{
+				const Entity level2 = scene.createEntity( "Root1_Level2_" + std::to_string( i ) + "_" + std::to_string( j ) );
+				scene.setParent( level2, level1 );
+				subtree1.push_back( level2 );
+			}
+		}
+
+		// Create second subtree (similar structure)
+		for ( int i = 0; i < 3; ++i )
+		{
+			const Entity level1 = scene.createEntity( "Root2_Level1_" + std::to_string( i ) );
+			scene.setParent( level1, root2 );
+			subtree2.push_back( level1 );
+
+			for ( int j = 0; j < 3; ++j )
+			{
+				const Entity level2 = scene.createEntity( "Root2_Level2_" + std::to_string( i ) + "_" + std::to_string( j ) );
+				scene.setParent( level2, level1 );
+				subtree2.push_back( level2 );
+			}
+		}
+
+		// Verify initial structure
+		REQUIRE( scene.getChildren( root1 ).size() == 4 );
+		REQUIRE( scene.getChildren( root2 ).size() == 3 );
+
+		// Reparent entire subtree2 under root1 (should preserve internal structure)
+		const auto root2Children = scene.getChildren( root2 );
+		for ( const auto &child : root2Children )
+		{
+			scene.setParent( child, root1 );
+		}
+
+		// Verify merged structure
+		REQUIRE( scene.getChildren( root1 ).size() == 7 ); // 4 original + 3 from root2
+		REQUIRE( scene.getChildren( root2 ).empty() );
+
+		// Verify internal structure of moved subtrees is preserved
+		for ( const auto &entity : subtree2 )
+		{
+			if ( scene.getParent( entity ) != root1 ) // If not a direct child of root1
+			{
+				// Should still have a parent from the original subtree2
+				const Entity parent = scene.getParent( entity );
+				const bool parentInSubtree2 = std::find( subtree2.begin(), subtree2.end(), parent ) != subtree2.end();
+				REQUIRE( parentInSubtree2 );
+			}
+		}
+	}
+
+	SECTION( "Large hierarchy destruction performance" )
+	{
+		// Create a large hierarchy for destruction testing
+		const Entity superRoot = scene.createEntity( "SuperRoot" );
+		std::vector<Entity> allEntities;
+		allEntities.push_back( superRoot );
+
+		// Create a 4-level hierarchy: superRoot -> 5 -> 25 -> 125 entities
+		auto level1Children = std::vector<Entity>();
+		for ( int i = 0; i < 5; ++i )
+		{
+			const Entity level1 = scene.createEntity( "Level1_" + std::to_string( i ) );
+			scene.setParent( level1, superRoot );
+			level1Children.push_back( level1 );
+			allEntities.push_back( level1 );
+
+			for ( int j = 0; j < 5; ++j )
+			{
+				const Entity level2 = scene.createEntity( "Level2_" + std::to_string( i ) + "_" + std::to_string( j ) );
+				scene.setParent( level2, level1 );
+				allEntities.push_back( level2 );
+
+				for ( int k = 0; k < 5; ++k )
+				{
+					const Entity level3 = scene.createEntity( "Level3_" + std::to_string( i ) + "_" + std::to_string( j ) + "_" + std::to_string( k ) );
+					scene.setParent( level3, level2 );
+					allEntities.push_back( level3 );
+				}
+			}
+		}
+
+		// Total entities: 1 + 5 + 25 + 125 = 156
+		REQUIRE( allEntities.size() == 156 );
+
+		// Verify all entities are valid before destruction
+		for ( const auto &entity : allEntities )
+		{
+			REQUIRE( scene.isValid( entity ) );
+		}
+
+		// Destroy the super root - should cascade to all descendants
+		scene.destroyEntity( superRoot );
+
+		// Verify all entities are destroyed
+		for ( const auto &entity : allEntities )
+		{
+			REQUIRE_FALSE( scene.isValid( entity ) );
+		}
+	}
+
+	SECTION( "forEach performance with large entity count" )
+	{
+		// Create many entities with Transform components
+		std::vector<Entity> entities;
+		for ( int i = 0; i < 200; ++i )
+		{
+			const Entity entity = scene.createEntity( "Entity" + std::to_string( i ) );
+			entities.push_back( entity );
+
+			// Add Transform to every other entity
+			if ( i % 2 == 0 )
+			{
+				components::Transform transform;
+				transform.position = { static_cast<float>( i ), 0.0f, 0.0f };
+				scene.addComponent( entity, transform );
+			}
+		}
+
+		// Should have 100 entities with Transform components
+		int transformCount = 0;
+		float totalX = 0.0f;
+		scene.forEach<components::Transform>( [&transformCount, &totalX]( ecs::Entity, const components::Transform &transform ) {
+			transformCount++;
+			totalX += transform.position.x;
+		} );
+
+		REQUIRE( transformCount == 100 );
+		// Sum of 0 + 2 + 4 + ... + 198 = 2 * (0 + 1 + 2 + ... + 99) = 2 * (99 * 100 / 2) = 9900
+		REQUIRE( totalX == Catch::Approx( 9900.0f ) );
+	}
 }

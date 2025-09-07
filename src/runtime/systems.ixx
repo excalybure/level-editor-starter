@@ -67,6 +67,12 @@ public:
 	// Get world transform for entity
 	math::Mat4<> getWorldTransform( ecs::Scene &scene, ecs::Entity entity )
 	{
+		// Check if entity has a Transform component first
+		if ( !scene.hasComponent<components::Transform>( entity ) )
+		{
+			return math::Mat4<>::identity();
+		}
+
 		auto it = m_worldMatrices.find( entity );
 		if ( it != m_worldMatrices.end() )
 		{
@@ -75,7 +81,16 @@ public:
 
 		// Calculate and cache if not found
 		updateWorldMatrix( scene, entity );
-		return m_worldMatrices[entity];
+		
+		// Check again if matrix was successfully created
+		auto it2 = m_worldMatrices.find( entity );
+		if ( it2 != m_worldMatrices.end() )
+		{
+			return it2->second;
+		}
+		
+		// Fallback to identity if something went wrong
+		return math::Mat4<>::identity();
 	}
 
 	// Mark transforms as dirty when changed
