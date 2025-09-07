@@ -7,6 +7,7 @@ module engine.gltf_loader;
 
 import std;
 import engine.assets;
+import runtime.console;
 
 namespace gltf_loader
 {
@@ -18,15 +19,77 @@ GLTFLoader::GLTFLoader()
 
 std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePath ) const
 {
-	// Simplified placeholder implementation - creates an empty scene
+	// Parse the glTF file using cgltf library
+	cgltf_data *data = nullptr;
+	cgltf_options options = {};
+
+	cgltf_result result = cgltf_parse_file( &options, filePath.c_str(), &data );
+
+	if ( result != cgltf_result_success || !data )
+	{
+		console::error( "glTF Loader Error: Failed to parse glTF file: {}", filePath );
+		if ( data )
+		{
+			cgltf_free( data );
+		}
+		return nullptr;
+	}
+
+	// cgltf_parse_file automatically handles embedded base64 data URIs
+	// Only call cgltf_load_buffers for external binary files
+	bool hasExternalBuffers = false;
+	for ( cgltf_size i = 0; i < data->buffers_count; ++i )
+	{
+		if ( data->buffers[i].uri && strncmp( data->buffers[i].uri, "data:", 5 ) != 0 )
+		{
+			hasExternalBuffers = true;
+			break;
+		}
+	}
+
+	if ( hasExternalBuffers )
+	{
+		result = cgltf_load_buffers( &options, data, filePath.c_str() );
+		if ( result != cgltf_result_success )
+		{
+			console::error( "glTF Loader Error: Failed to load external buffers for glTF file: {}", filePath );
+			cgltf_free( data );
+			return nullptr;
+		}
+	}
+
+	// Create scene using the same logic as loadFromString
 	auto scene = std::make_unique<assets::Scene>();
 
-	// TODO: In a real implementation, this would:
-	// 1. Parse the glTF file using cgltf library: cgltf::parse_file(filePath)
-	// 2. Convert cgltf data structures to our asset system
-	// 3. Create proper mesh, material, and scene node hierarchies
-	// 4. Handle materials, textures, animations, etc.
+	// Process default scene or first scene
+	cgltf_scene *gltfScene = nullptr;
+	if ( data->scene )
+	{
+		gltfScene = data->scene;
+	}
+	else if ( data->scenes_count > 0 )
+	{
+		gltfScene = &data->scenes[0];
+	}
 
+	if ( gltfScene )
+	{
+		// Process root nodes
+		for ( cgltf_size i = 0; i < gltfScene->nodes_count; ++i )
+		{
+			cgltf_node *gltfNode = gltfScene->nodes[i];
+			if ( gltfNode )
+			{
+				auto sceneNode = processNode( gltfNode, data );
+				if ( sceneNode )
+				{
+					scene->addRootNode( std::move( sceneNode ) );
+				}
+			}
+		}
+	}
+
+	cgltf_free( data );
 	return scene;
 }
 

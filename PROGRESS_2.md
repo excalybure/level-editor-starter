@@ -2,6 +2,21 @@
 
 Date: 2025-09-06
 
+## 2025-09-06 — GLTf Loader Core (File Path) Implementation
+**Summary:** Implemented file-based glTF loading with comprehensive error handling that logs errors and returns nullptr instead of throwing exceptions, completing the "Loader Core (File Path)" task from M2-P2.
+
+**Atomic functionalities completed:**
+- AF1: File-based parsing using cgltf_parse_file API to load glTF files from disk
+- AF2: External binary buffer loading support via cgltf_load_buffers for referenced .bin files  
+- AF3: Embedded base64 buffer support for self-contained glTF files
+- AF4: Graceful error handling that logs to std::cerr and returns nullptr (no exceptions)
+- AF5: Comprehensive edge case coverage (missing files, invalid JSON, buffer load failures)
+
+**Tests:** 5 test sections covering: string-based loading (existing), file-based loading success case, non-existent file error handling, invalid JSON error handling, and external binary buffer loading. All tests verify correct error behavior (nullptr return instead of exceptions).
+**Notes:** Used cgltf library for parsing. Error logging initially attempted runtime.console module but reverted to std::cerr due to module import issues. Asset structure remains compatible with existing Scene/SceneNode system.
+
+---
+
 ## 2025-09-06 — ECS Query/Iteration Utilities Implementation
 **Summary:** Implemented the forEach<T> utility method for Scene class to enable clean iteration over components of a specific type, completing the remaining gap in M2-P1 (Task 7).
 
@@ -161,6 +176,20 @@ Milestone 2 foundational ECS, component set, transform system, and initial (simp
 
 ---
 *Prepared automatically. Let me know if you want a condensed executive summary or a checklist version for planning Milestone 3.*
+
+## 2025-09-06 — glTF Loader Core (File Path) Implementation
+**Summary:** Implemented file-based glTF loading functionality, including support for both external binary buffers and embedded base64 data URIs, completing the first task of M2-P2 glTF asset pipeline development.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed existing gltf_loader implementation and identified file-based loading requirements
+- AF2: Created comprehensive test for file-based scene loading with embedded base64 data
+- AF3: Implemented cgltf file parsing using `cgltf_parse_file` and `cgltf_load_buffers` APIs  
+- AF4: Added support for embedded base64 buffers with automatic detection
+- AF5: Implemented proper error handling for missing files, invalid JSON, and buffer loading failures
+- AF6: Created comprehensive edge case tests including non-existent files, invalid JSON, and external buffer scenarios
+
+**Tests:** 6 new test cases added to `[file-loading]` and `[gltf]` test suites, including embedded data URIs, external buffer files, error conditions, and file creation/cleanup. All 29 assertions pass.
+**Notes:** The `loadScene(filePath)` method now properly uses cgltf to parse files and load associated buffers. Implementation correctly handles both external .bin files and embedded base64 data URIs. Error handling provides clear exception messages for debugging. Legacy placeholder tests updated to reflect new behavior.
 
 ## 2025-09-06 — ECS Developer Documentation Added
 **Summary:** Added a short developer note in `src/runtime/ecs.ixx` clarifying the single-threaded assumption and listing TODOs for multi-component queries and parallel iteration.

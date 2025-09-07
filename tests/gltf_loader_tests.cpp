@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <string>
+#include <fstream>
+#include <cstdio>
 
 import engine.gltf_loader;
 import engine.assets;
@@ -16,45 +18,31 @@ TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 		REQUIRE( true ); // Basic construction test
 	}
 
-	SECTION( "GLTFLoader loadScene returns valid scene" )
+	SECTION( "GLTFLoader loadScene with non-existent file should throw" )
 	{
 		const gltf_loader::GLTFLoader loader;
 		const std::string testPath = "test_scene.gltf";
 
-		auto scene = loader.loadScene( testPath );
-
-		REQUIRE( scene != nullptr );
-		REQUIRE( scene->getType() == assets::AssetType::Scene );
-
-		// For now, the placeholder should return an empty scene
-		REQUIRE( scene->getRootNodes().empty() );
-		REQUIRE( scene->getTotalNodeCount() == 0 );
+		// Should now throw exception for non-existent files
+		REQUIRE_THROWS_AS( loader.loadScene( testPath ), std::runtime_error );
 	}
 
-	SECTION( "GLTFLoader loadScene with empty path" )
+	SECTION( "GLTFLoader loadScene with empty path should throw" )
 	{
 		const gltf_loader::GLTFLoader loader;
 		const std::string emptyPath = "";
 
-		auto scene = loader.loadScene( emptyPath );
-
-		REQUIRE( scene != nullptr );
-		REQUIRE( scene->getType() == assets::AssetType::Scene );
+		// Should throw exception for empty path
+		REQUIRE_THROWS_AS( loader.loadScene( emptyPath ), std::runtime_error );
 	}
 
-	SECTION( "GLTFLoader multiple scene loads" )
+	SECTION( "GLTFLoader multiple scene loads with non-existent files should throw" )
 	{
 		const gltf_loader::GLTFLoader loader;
 
-		auto scene1 = loader.loadScene( "scene1.gltf" );
-		auto scene2 = loader.loadScene( "scene2.gltf" );
-
-		REQUIRE( scene1 != nullptr );
-		REQUIRE( scene2 != nullptr );
-		REQUIRE( scene1.get() != scene2.get() ); // Different instances
-
-		REQUIRE( scene1->getType() == assets::AssetType::Scene );
-		REQUIRE( scene2->getType() == assets::AssetType::Scene );
+		// Both should throw since files don't exist
+		REQUIRE_THROWS_AS( loader.loadScene( "scene1.gltf" ), std::runtime_error );
+		REQUIRE_THROWS_AS( loader.loadScene( "scene2.gltf" ), std::runtime_error );
 	}
 }
 
@@ -168,5 +156,126 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		const auto &rootNodes = scene->getRootNodes();
 		REQUIRE( !rootNodes.empty() );
 		REQUIRE( rootNodes[0]->hasMaterial() );
+	}
+}
+
+// RED Phase: Tests for file-based loading (should fail initially)
+TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
+{
+	SECTION( "Load glTF file with external binary buffer" )
+	{
+		const gltf_loader::GLTFLoader loader;
+		const std::string testPath = "tests/test_assets/simple_triangle.gltf";
+
+		auto scene = loader.loadScene( testPath );
+
+		REQUIRE( scene != nullptr );
+		REQUIRE( scene->getType() == assets::AssetType::Scene );
+		REQUIRE( scene->getTotalNodeCount() > 0 );
+
+		// Should have at least one root node
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+
+		// First node should have a mesh and be named
+		REQUIRE( rootNodes[0]->hasMesh() );
+		REQUIRE( !rootNodes[0]->meshes.empty() );
+		REQUIRE( rootNodes[0]->name == "TriangleNode" );
+	}
+
+	SECTION( "Load non-existent glTF file should return nullptr" )
+	{
+		const gltf_loader::GLTFLoader loader;
+		const std::string nonExistentPath = "tests/test_assets/nonexistent.gltf";
+
+		auto scene = loader.loadScene( nonExistentPath );
+		REQUIRE( scene == nullptr );
+	}
+
+	SECTION( "Load invalid glTF file should return nullptr" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Create a temporary invalid file
+		const std::string invalidPath = "tests/test_assets/invalid.gltf";
+		std::ofstream invalidFile( invalidPath );
+		invalidFile << "{ invalid json content }";
+		invalidFile.close();
+
+		auto scene = loader.loadScene( invalidPath );
+		REQUIRE( scene == nullptr );
+
+		// Clean up
+		std::remove( invalidPath.c_str() );
+	}
+
+	SECTION( "Load glTF with external binary buffer" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Create a test glTF file with external buffer
+		const std::string gltfPath = "tests/test_assets/external_test.gltf";
+		const std::string binPath = "tests/test_assets/external_test.bin";
+
+		// Create the glTF file
+		std::ofstream gltfFile( gltfPath );
+		gltfFile << R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0, "name": "ExternalNode" }],
+			"meshes": [{
+				"name": "ExternalTriangle",
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"indices": 1
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5123,
+					"count": 3,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 6 }
+			],
+			"buffers": [{
+				"byteLength": 42,
+				"uri": "external_test.bin"
+			}]
+		})";
+		gltfFile.close();
+
+		// Create the binary file
+		std::ofstream binFile( binPath, std::ios::binary );
+		const float positions[] = { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 1.0f, 0.0f };
+		const uint16_t indices[] = { 0, 1, 2 };
+		binFile.write( reinterpret_cast<const char *>( positions ), sizeof( positions ) );
+		binFile.write( reinterpret_cast<const char *>( indices ), sizeof( indices ) );
+		binFile.close();
+
+		// Test loading
+		auto scene = loader.loadScene( gltfPath );
+
+		REQUIRE( scene != nullptr );
+		REQUIRE( scene->getTotalNodeCount() > 0 );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+		REQUIRE( rootNodes[0]->name == "ExternalNode" );
+
+		// Clean up
+		std::remove( gltfPath.c_str() );
+		std::remove( binPath.c_str() );
 	}
 }

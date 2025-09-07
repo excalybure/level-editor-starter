@@ -15,6 +15,15 @@ find_package(winpixevent CONFIG REQUIRED)
 find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
 # Libraries (modules)
+add_library(runtime.console)
+target_sources(runtime.console PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/console.ixx
+  PRIVATE
+    src/runtime/console.cpp
+)
+target_compile_features(runtime.console PUBLIC cxx_std_23)
+
 add_library(engine.math)
 target_sources(engine.math PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -173,7 +182,7 @@ target_sources(engine.gltf_loader PUBLIC
     src/engine/gltf_loader/gltf_loader.cpp
 )
 target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
-target_link_libraries(engine.gltf_loader PUBLIC engine.assets)
+target_link_libraries(engine.gltf_loader PUBLIC engine.assets runtime.console)
 target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
 
 add_library(runtime.entity)
@@ -213,15 +222,6 @@ target_sources(runtime.app PUBLIC
     src/runtime/app.ixx
 )
 target_compile_features(runtime.app PUBLIC cxx_std_23)
-
-add_library(runtime.console)
-target_sources(runtime.console PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/console.ixx
-  PRIVATE
-    src/runtime/console.cpp
-)
-target_compile_features(runtime.console PUBLIC cxx_std_23)
 
 add_library(platform.win32)
 target_sources(platform.win32 PUBLIC
