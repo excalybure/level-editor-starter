@@ -46,6 +46,8 @@ mode: agent
 7. **Circular dependencies**: when facing circular dependencies due to inline function, when possible (i.e non templated), move inline function in cpp and import or include correct module or header
 8. **Linter errors**: They are to be ignored as they are due to not properly supporting c++23 modules
 9. **Undefined symbols**: When using functionality from another module/library, make sure CMakelists.txt properly reference that module/library in target_link_libraries
+10. **do not use throw**: Instead, prefer console::error to log an error and return an empty object, if applicable. When the error is non recoverable, use console::fatal. Note that runtime.console module may have to be specified to target_link_libraries
+11. **const**: local read-only variables must be const
 
 ---
 
@@ -222,6 +224,7 @@ dx12_device.cpp
 After the task (all AFs) is complete:
 
 Append a dated entry at the top of the current milestone’s progress file (`PROGRESS_<N>.md`). Use the milestone number (e.g., `2` → `PROGRESS_2.md`).
+Update the file name `M<X>_P<Y>.md` where <X> refers to the milestone number and <Y> refers to the phase with the completed tasks
 
 **Template**:
 ```markdown
@@ -301,4 +304,4 @@ The runner supports flags such as `--list-tests`, `--list-tags`, `--reporter`, `
 ---
 
 ### End
-Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `PROGRESS_<N>.md`** and **emit a commit message** using the template above.
+Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `PROGRESS_<N>.md`** and **update `M<X>_P<Y>.md`** and **emit a commit message** using the template above.

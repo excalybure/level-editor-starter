@@ -5,6 +5,7 @@
 #include <cstdint>
 
 import engine.gltf_loader;
+import engine.vec;
 
 // RED Phase: Tests for accessor & buffer view handling (should fail initially)
 TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )
@@ -26,15 +27,15 @@ TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )
 		const auto positions = gltf_loader::extractFloat3Positions( buffer.data(), 3, 0, 12 );
 
 		REQUIRE( positions.size() == 3 );
-		REQUIRE( positions[0][0] == 0.0f );
-		REQUIRE( positions[0][1] == 0.0f );
-		REQUIRE( positions[0][2] == 0.0f );
-		REQUIRE( positions[1][0] == 1.0f );
-		REQUIRE( positions[1][1] == 0.0f );
-		REQUIRE( positions[1][2] == 0.0f );
-		REQUIRE( positions[2][0] == 0.5f );
-		REQUIRE( positions[2][1] == 1.0f );
-		REQUIRE( positions[2][2] == 0.0f );
+		REQUIRE( positions[0].x == 0.0f );
+		REQUIRE( positions[0].y == 0.0f );
+		REQUIRE( positions[0].z == 0.0f );
+		REQUIRE( positions[1].x == 1.0f );
+		REQUIRE( positions[1].y == 0.0f );
+		REQUIRE( positions[1].z == 0.0f );
+		REQUIRE( positions[2].x == 0.5f );
+		REQUIRE( positions[2].y == 1.0f );
+		REQUIRE( positions[2].z == 0.0f );
 	}
 
 	SECTION( "Extract uint32 indices from UNSIGNED_SHORT" )
@@ -90,12 +91,12 @@ TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )
 		const auto uvs = gltf_loader::extractFloat2UVs( buffer.data(), 3, 0, 8 );
 
 		REQUIRE( uvs.size() == 3 );
-		REQUIRE( uvs[0][0] == 0.0f );
-		REQUIRE( uvs[0][1] == 0.0f );
-		REQUIRE( uvs[1][0] == 1.0f );
-		REQUIRE( uvs[1][1] == 0.0f );
-		REQUIRE( uvs[2][0] == 0.5f );
-		REQUIRE( uvs[2][1] == 1.0f );
+		REQUIRE( uvs[0].x == 0.0f );
+		REQUIRE( uvs[0].y == 0.0f );
+		REQUIRE( uvs[1].x == 1.0f );
+		REQUIRE( uvs[1].y == 0.0f );
+		REQUIRE( uvs[2].x == 0.5f );
+		REQUIRE( uvs[2].y == 1.0f );
 	}
 
 	SECTION( "Extract float3 normals" )
@@ -116,9 +117,9 @@ TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )
 		REQUIRE( normals.size() == 3 );
 		for ( const auto &normal : normals )
 		{
-			REQUIRE( normal[0] == 0.0f );
-			REQUIRE( normal[1] == 0.0f );
-			REQUIRE( normal[2] == 1.0f );
+			REQUIRE( normal.x == 0.0f );
+			REQUIRE( normal.y == 0.0f );
+			REQUIRE( normal.z == 1.0f );
 		}
 	}
 
@@ -142,10 +143,10 @@ TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )
 		REQUIRE( tangents.size() == 3 );
 		for ( const auto &tangent : tangents )
 		{
-			REQUIRE( tangent[0] == 1.0f );
-			REQUIRE( tangent[1] == 0.0f );
-			REQUIRE( tangent[2] == 0.0f );
-			REQUIRE( tangent[3] == 1.0f );
+			REQUIRE( tangent.x == 1.0f );
+			REQUIRE( tangent.y == 0.0f );
+			REQUIRE( tangent.z == 0.0f );
+			REQUIRE( tangent.w == 1.0f );
 		}
 	}
 }
@@ -185,9 +186,9 @@ TEST_CASE( "GLTF Buffer View Resolution", "[gltf][buffer-view][unit]" )
 		);
 
 		REQUIRE( positions.size() == 3 );
-		REQUIRE( positions[0][0] == 0.0f );
-		REQUIRE( positions[1][0] == 1.0f );
-		REQUIRE( positions[2][0] == 0.5f );
+		REQUIRE( positions[0].x == 0.0f );
+		REQUIRE( positions[1].x == 1.0f );
+		REQUIRE( positions[2].x == 0.5f );
 
 		// Extract normals with stride and offset
 		const auto normals = gltf_loader::extractFloat3Normals(
@@ -197,7 +198,7 @@ TEST_CASE( "GLTF Buffer View Resolution", "[gltf][buffer-view][unit]" )
 		REQUIRE( normals.size() == 3 );
 		for ( const auto &normal : normals )
 		{
-			REQUIRE( normal[2] == 1.0f );
+			REQUIRE( normal.z == 1.0f );
 		}
 	}
 

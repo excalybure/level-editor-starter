@@ -23,8 +23,8 @@ TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 		const gltf_loader::GLTFLoader loader;
 		const std::string testPath = "test_scene.gltf";
 
-		// Should now throw exception for non-existent files
-		REQUIRE_THROWS_AS( loader.loadScene( testPath ), std::runtime_error );
+		// Should now return null/empty scene for non-existent files
+		REQUIRE( !loader.loadScene( testPath ) );
 	}
 
 	SECTION( "GLTFLoader loadScene with empty path should throw" )
@@ -32,17 +32,17 @@ TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 		const gltf_loader::GLTFLoader loader;
 		const std::string emptyPath = "";
 
-		// Should throw exception for empty path
-		REQUIRE_THROWS_AS( loader.loadScene( emptyPath ), std::runtime_error );
+		// Should return null/empty scene
+		REQUIRE( !loader.loadScene( emptyPath ) );
 	}
 
 	SECTION( "GLTFLoader multiple scene loads with non-existent files should throw" )
 	{
 		const gltf_loader::GLTFLoader loader;
 
-		// Both should throw since files don't exist
-		REQUIRE_THROWS_AS( loader.loadScene( "scene1.gltf" ), std::runtime_error );
-		REQUIRE_THROWS_AS( loader.loadScene( "scene2.gltf" ), std::runtime_error );
+		// Both should return null/empty scene
+		REQUIRE( !loader.loadScene( "scene1.gltf" ) );
+		REQUIRE( !loader.loadScene( "scene2.gltf" ) );
 	}
 }
 
@@ -110,8 +110,8 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		const gltf_loader::GLTFLoader loader;
 		const std::string invalidGltf = "{ invalid json }";
 
-		// Should either throw exception or return null/empty scene
-		REQUIRE_THROWS_AS( loader.loadFromString( invalidGltf ), std::runtime_error );
+		// Should return null/empty scene
+		REQUIRE( !loader.loadFromString( invalidGltf ) );
 	}
 
 	SECTION( "Load glTF with materials" )

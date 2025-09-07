@@ -7,9 +7,15 @@ export module engine.gltf_loader;
 
 import std;
 import engine.assets;
+import engine.vec;
 
 export namespace gltf_loader
 {
+
+// Type aliases for convenience
+using Vec2f = math::Vec2<float>;
+using Vec3f = math::Vec3<float>;
+using Vec4f = math::Vec4<float>;
 
 // Component types from glTF specification
 export enum class ComponentType : std::uint32_t {
@@ -32,13 +38,13 @@ export enum class AttributeType {
 
 // Utility function implementations for accessor data extraction
 
-export std::vector<std::array<float, 3>> extractFloat3Positions( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+export std::vector<Vec3f> extractFloat3Positions( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
 	// Calculate effective stride (minimum of 12 bytes for float3 or specified stride)
 	const std::size_t floatOffset = byteOffset / sizeof( float );
 	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 3;
 
-	std::vector<std::array<float, 3>> positions;
+	std::vector<Vec3f> positions;
 	positions.reserve( count );
 
 	for ( std::size_t i = 0; i < count; ++i )
@@ -50,18 +56,18 @@ export std::vector<std::array<float, 3>> extractFloat3Positions( const float *bu
 	return positions;
 }
 
-export std::vector<std::array<float, 3>> extractFloat3Normals( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+export std::vector<Vec3f> extractFloat3Normals( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
 	// Reuse the same logic as positions since they're both float3
 	return extractFloat3Positions( buffer, count, byteOffset, byteStride );
 }
 
-export std::vector<std::array<float, 2>> extractFloat2UVs( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+export std::vector<Vec2f> extractFloat2UVs( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
 	const std::size_t floatOffset = byteOffset / sizeof( float );
 	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 2;
 
-	std::vector<std::array<float, 2>> uvs;
+	std::vector<Vec2f> uvs;
 	uvs.reserve( count );
 
 	for ( std::size_t i = 0; i < count; ++i )
@@ -73,12 +79,12 @@ export std::vector<std::array<float, 2>> extractFloat2UVs( const float *buffer, 
 	return uvs;
 }
 
-export std::vector<std::array<float, 4>> extractFloat4Tangents( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+export std::vector<Vec4f> extractFloat4Tangents( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
 	const std::size_t floatOffset = byteOffset / sizeof( float );
 	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 4;
 
-	std::vector<std::array<float, 4>> tangents;
+	std::vector<Vec4f> tangents;
 	tangents.reserve( count );
 
 	for ( std::size_t i = 0; i < count; ++i )

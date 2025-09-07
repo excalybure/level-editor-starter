@@ -182,7 +182,7 @@ target_sources(engine.gltf_loader PUBLIC
     src/engine/gltf_loader/gltf_loader.cpp
 )
 target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
-target_link_libraries(engine.gltf_loader PUBLIC engine.assets runtime.console)
+target_link_libraries(engine.gltf_loader PUBLIC engine.assets engine.vec runtime.console)
 target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
 
 add_library(runtime.entity)

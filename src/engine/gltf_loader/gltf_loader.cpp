@@ -122,7 +122,8 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 		{
 			cgltf_free( data );
 		}
-		throw std::runtime_error( "Failed to parse glTF content" );
+		console::error( "Failed to parse glTF content" );
+		return {};
 	}
 
 	// Create scene
