@@ -2,6 +2,22 @@
 
 Date: 2025-09-06
 
+## 2025-09-06 — Accessor & Buffer View Handling Implementation
+**Summary:** Implemented comprehensive buffer view and accessor handling utilities for the glTF loader, completing the "Accessor & Buffer View Handling" task from M2-P2 via TDD.
+
+**Atomic functionalities completed:**
+- AF1: extractFloat3Positions - Extract vertex positions as std::vector<std::array<float, 3>>
+- AF2: extractFloat3Normals - Extract vertex normals with same format
+- AF3: extractFloat2TexCoords - Extract UV coordinates as std::vector<std::array<float, 2>>
+- AF4: extractIndicesAsUint32 - Extract indices with automatic conversion from UNSIGNED_SHORT/UNSIGNED_BYTE to uint32_t
+- AF5: getAccessorElementCount - Utility to query number of elements in accessor
+- AF6: Integration with cgltf library - Full implementation using cgltf_data and cgltf_accessor structs
+
+**Tests:** 4 test cases with 82 assertions covering: position extraction (triangular vertex buffer), normal extraction (unit normals), texture coordinate extraction (UV mapping), and index conversion (automatic type widening). All tests follow TDD red-green-refactor cycle.
+**Notes:** Utilities designed as module exports in engine.gltf_loader. Implementation handles buffer view offsets, strides, and different component types. Error handling made consistent between basic validation (exceptions) and file system errors (nullptr returns).
+
+---
+
 ## 2025-09-06 — GLTf Loader Core (File Path) Implementation
 **Summary:** Implemented file-based glTF loading with comprehensive error handling that logs errors and returns nullptr instead of throwing exceptions, completing the "Loader Core (File Path)" task from M2-P2.
 

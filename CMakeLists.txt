@@ -395,6 +395,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/shader_include_dependency_tests.cpp
     tests/assets_tests.cpp
     tests/gltf_loader_tests.cpp
+    tests/gltf_accessor_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
