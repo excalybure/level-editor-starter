@@ -214,8 +214,6 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode
 		if ( meshPtr )
 		{
 			sceneNode->addMeshObject( meshPtr );
-			// Keep legacy placeholder for compatibility
-			sceneNode->meshes.push_back( "mesh_placeholder" );
 		}
 	}
 

@@ -102,7 +102,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		// First node should have a mesh
 		REQUIRE( rootNodes[0]->hasMesh() );
-		REQUIRE( !rootNodes[0]->meshes.empty() );
+		REQUIRE( !rootNodes[0]->meshObjects.empty() );
 	}
 
 	SECTION( "Extract real triangle mesh data from glTF" )
@@ -406,7 +406,7 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 
 		// First node should have a mesh and be named
 		REQUIRE( rootNodes[0]->hasMesh() );
-		REQUIRE( !rootNodes[0]->meshes.empty() );
+		REQUIRE( !rootNodes[0]->meshObjects.empty() );
 		REQUIRE( rootNodes[0]->name == "TriangleNode" );
 	}
 

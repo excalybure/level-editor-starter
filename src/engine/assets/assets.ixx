@@ -151,7 +151,6 @@ private:
 export struct SceneNode
 {
 	std::string name;
-	std::vector<std::string> meshes;	// Mesh asset paths (legacy)
 	std::vector<std::string> materials; // Material asset paths
 	std::vector<std::unique_ptr<SceneNode>> children;
 
@@ -162,7 +161,7 @@ export struct SceneNode
 	SceneNode( const std::string &nodeName ) : name( nodeName ) {}
 
 	// Utility methods
-	bool hasMesh() const { return !meshes.empty() || !meshObjects.empty(); }
+	bool hasMesh() const { return !meshObjects.empty(); }
 	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
 
