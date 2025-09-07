@@ -16,7 +16,7 @@ struct BoundingBox2D
 	Vec2<T> min;
 	Vec2<T> max;
 
-	constexpr BoundingBox2D() noexcept 
+	constexpr BoundingBox2D() noexcept
 		: min( std::numeric_limits<T>::max(), std::numeric_limits<T>::max() ),
 		  max( std::numeric_limits<T>::lowest(), std::numeric_limits<T>::lowest() ) {}
 
