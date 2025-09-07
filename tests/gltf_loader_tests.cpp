@@ -105,6 +105,120 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( !rootNodes[0]->meshes.empty() );
 	}
 
+	SECTION( "Extract real triangle mesh data from glTF" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: simple triangle with known vertex data
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"indices": 1
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5123,
+					"count": 3,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 6 }
+			],
+			"buffers": [{
+				"byteLength": 42,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAABAAIA"
+			}]
+		})";
+
+		auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		// NEW: Test that we extract actual mesh data rather than placeholder strings
+		// Access the actual mesh object (this will fail until we implement extractMesh)
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+
+		// Verify vertex count matches the glTF data (3 vertices)
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify index count matches the glTF data (3 indices)
+		REQUIRE( meshPtr->getIndexCount() == 3 );
+
+		// Verify actual vertex positions (triangle vertices: (0,0,0), (1,0,0), (0.5,1,0))
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// Check first vertex position (0,0,0)
+		REQUIRE( vertices[0].position[0] == 0.0f );
+		REQUIRE( vertices[0].position[1] == 0.0f );
+		REQUIRE( vertices[0].position[2] == 0.0f );
+
+		// Check second vertex position (1,0,0)
+		REQUIRE( vertices[1].position[0] == 1.0f );
+		REQUIRE( vertices[1].position[1] == 0.0f );
+		REQUIRE( vertices[1].position[2] == 0.0f );
+
+		// Check third vertex position (0.5,1,0)
+		REQUIRE( vertices[2].position[0] == 0.5f );
+		REQUIRE( vertices[2].position[1] == 1.0f );
+		REQUIRE( vertices[2].position[2] == 0.0f );
+
+		// Verify indices are correct (0, 1, 2)
+		const auto &indices = meshPtr->getIndices();
+		REQUIRE( indices.size() == 3 );
+		REQUIRE( indices[0] == 0 );
+		REQUIRE( indices[1] == 1 );
+		REQUIRE( indices[2] == 2 );
+
+		// NEW: Verify bounding box computation
+		REQUIRE( meshPtr->hasBounds() );
+
+		// Expected bounds for triangle vertices (0,0,0), (1,0,0), (0.5,1,0):
+		// Min: (0, 0, 0), Max: (1, 1, 0)
+		const float *boundsMin = meshPtr->getBoundsMin();
+		const float *boundsMax = meshPtr->getBoundsMax();
+
+		REQUIRE( boundsMin[0] == 0.0f );
+		REQUIRE( boundsMin[1] == 0.0f );
+		REQUIRE( boundsMin[2] == 0.0f );
+
+		REQUIRE( boundsMax[0] == 1.0f );
+		REQUIRE( boundsMax[1] == 1.0f );
+		REQUIRE( boundsMax[2] == 0.0f );
+
+		// Verify computed center and size
+		float center[3], size[3];
+		meshPtr->getBoundsCenter( center );
+		meshPtr->getBoundsSize( size );
+
+		REQUIRE( center[0] == 0.5f );
+		REQUIRE( center[1] == 0.5f );
+		REQUIRE( center[2] == 0.0f );
+
+		REQUIRE( size[0] == 1.0f );
+		REQUIRE( size[1] == 1.0f );
+		REQUIRE( size[2] == 0.0f );
+	}
+
 	SECTION( "Load invalid glTF should throw or return null" )
 	{
 		const gltf_loader::GLTFLoader loader;
@@ -112,6 +226,120 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		// Should return null/empty scene
 		REQUIRE( !loader.loadFromString( invalidGltf ) );
+	}
+
+	SECTION( "Extract mesh with only positions (no normals, texcoords)" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with only POSITION attribute
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }
+			],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAAA"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify default normal values are used when normals are missing
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// All vertices should have default normal (0, 1, 0)
+		for ( const auto &vertex : vertices )
+		{
+			REQUIRE( vertex.normal[0] == 0.0f );
+			REQUIRE( vertex.normal[1] == 1.0f );
+			REQUIRE( vertex.normal[2] == 0.0f );
+		}
+	}
+
+	SECTION( "Extract mesh with different index component types" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with uint8 indices
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"indices": 1
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5121,
+					"count": 3,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 3 }
+			],
+			"buffers": [{
+				"byteLength": 39,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAEC"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getIndexCount() == 3 );
+
+		// Verify indices are correctly converted from uint8 to uint32
+		const auto &indices = meshPtr->getIndices();
+		REQUIRE( indices.size() == 3 );
+		REQUIRE( indices[0] == 0 );
+		REQUIRE( indices[1] == 1 );
+		REQUIRE( indices[2] == 2 );
 	}
 
 	SECTION( "Load glTF with materials" )

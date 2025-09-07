@@ -8,6 +8,7 @@ export module engine.gltf_loader;
 import std;
 import engine.assets;
 import engine.vec;
+import runtime.console;
 
 export namespace gltf_loader
 {
@@ -110,7 +111,8 @@ export std::vector<std::uint32_t> extractIndicesAsUint32( const std::uint8_t *bu
 		for ( std::size_t i = 0; i < count; ++i )
 		{
 			const std::uint8_t *indexPtr = data + ( i * effectiveStride );
-			indices.push_back( static_cast<std::uint32_t>( *indexPtr ) );
+			std::uint8_t indexValue = *indexPtr;
+			indices.push_back( static_cast<std::uint32_t>( indexValue ) );
 		}
 		break;
 	}
@@ -194,14 +196,12 @@ public:
 private:
 	// Helper methods for glTF processing (use void* to avoid forward declaration issues)
 	std::unique_ptr<assets::SceneNode> processNode( void *gltfNode, void *data ) const;
-	// TODO: Add private helper methods for actual cgltf processing when needed
-	// These would be implemented when we add full glTF support:
-	// std::unique_ptr<assets::Mesh> loadMesh(const cgltf::mesh& gltfMesh, const cgltf::model& model);
-	// std::unique_ptr<assets::Material> loadMaterial(const cgltf::material& gltfMaterial);
-	// assets::Vertex extractVertex(const cgltf::model& model, const cgltf::primitive& primitive, size_t index);
-	// void extractTransform(const cgltf::node& node, assets::SceneNode& sceneNode);
-	// std::unique_ptr<assets::SceneNode> processNode(const cgltf::node& node, const cgltf::model& model);
-	// void calculateBounds(assets::Mesh* mesh);
+
+	// NEW: Mesh extraction helper
+	std::shared_ptr<assets::Mesh> extractMesh( void *gltfMesh, void *data ) const;
+
+	// Helper to get accessor data as typed spans
+	std::span<const std::uint8_t> getAccessorData( void *accessor, void *data ) const;
 };
 
 } // namespace gltf_loader
