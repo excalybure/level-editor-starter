@@ -41,40 +41,34 @@ struct BoundingBox2D
 	// Circle intersection test
 	constexpr bool intersects( const Vec2<T> &circleCenter, T radius ) const noexcept
 	{
-		T dx = std::max( T( 0 ), std::max( min.x - circleCenter.x, circleCenter.x - max.x ) );
-		T dy = std::max( T( 0 ), std::max( min.y - circleCenter.y, circleCenter.y - max.y ) );
-		return ( dx * dx + dy * dy ) <= ( radius * radius );
+		const Vec2<T> closest = math::max( min, math::min( circleCenter, max ) );
+		return math::lengthSquared( circleCenter - closest ) <= ( radius * radius );
 	}
 
 	// Expand to include point
 	constexpr void expand( const Vec2<T> &point ) noexcept
 	{
-		min.x = std::min( min.x, point.x );
-		min.y = std::min( min.y, point.y );
-		max.x = std::max( max.x, point.x );
-		max.y = std::max( max.y, point.y );
+		min = math::min( min, point );
+		max = math::max( max, point );
 	}
 
 	// Expand to include another bounding box
 	constexpr void expand( const BoundingBox2D &other ) noexcept
 	{
-		min.x = std::min( min.x, other.min.x );
-		min.y = std::min( min.y, other.min.y );
-		max.x = std::max( max.x, other.max.x );
-		max.y = std::max( max.y, other.max.y );
+		min = math::min( min, other.min );
+		max = math::max( max, other.max );
 	}
 
 	// Get center point
 	constexpr Vec2<T> center() const noexcept
 	{
-		return Vec2<T>( ( min.x + max.x ) * static_cast<T>( 0.5 ),
-			( min.y + max.y ) * static_cast<T>( 0.5 ) );
+		return ( min + max ) * static_cast<T>( 0.5 );
 	}
 
 	// Get size (width, height)
 	constexpr Vec2<T> size() const noexcept
 	{
-		return Vec2<T>( max.x - min.x, max.y - min.y );
+		return max - min;
 	}
 
 	// Get area

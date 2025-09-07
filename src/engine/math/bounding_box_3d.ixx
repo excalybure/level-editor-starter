@@ -43,44 +43,34 @@ struct BoundingBox3D
 	// Sphere intersection test
 	constexpr bool intersects( const Vec3<T> &sphereCenter, T radius ) const noexcept
 	{
-		const T dx = std::max( T( 0 ), std::max( min.x - sphereCenter.x, sphereCenter.x - max.x ) );
-		const T dy = std::max( T( 0 ), std::max( min.y - sphereCenter.y, sphereCenter.y - max.y ) );
-		const T dz = std::max( T( 0 ), std::max( min.z - sphereCenter.z, sphereCenter.z - max.z ) );
-		return ( dx * dx + dy * dy + dz * dz ) <= ( radius * radius );
+		const Vec3<T> closest = math::max( min, math::min( sphereCenter, max ) );
+		return math::lengthSquared( sphereCenter - closest ) <= ( radius * radius );
 	}
 
 	// Expand to include point
 	constexpr void expand( const Vec3<T> &point ) noexcept
 	{
-		min.x = std::min( min.x, point.x );
-		min.y = std::min( min.y, point.y );
-		min.z = std::min( min.z, point.z );
-		max.x = std::max( max.x, point.x );
-		max.y = std::max( max.y, point.y );
-		max.z = std::max( max.z, point.z );
+		min = math::min( min, point );
+		max = math::max( max, point );
 	}
 
 	// Expand to include another bounding box
 	constexpr void expand( const BoundingBox3D &other ) noexcept
 	{
-		min.x = std::min( min.x, other.min.x );
-		min.y = std::min( min.y, other.min.y );
-		min.z = std::min( min.z, other.min.z );
-		max.x = std::max( max.x, other.max.x );
-		max.y = std::max( max.y, other.max.y );
-		max.z = std::max( max.z, other.max.z );
+		min = math::min( min, other.min );
+		max = math::max( max, other.max );
 	}
 
 	// Get center point
 	constexpr Vec3<T> center() const noexcept
 	{
-		return Vec3<T>( ( min.x + max.x ) * static_cast<T>( 0.5 ), ( min.y + max.y ) * static_cast<T>( 0.5 ), ( min.z + max.z ) * static_cast<T>( 0.5 ) );
+		return ( min + max ) * static_cast<T>( 0.5 );
 	}
 
 	// Get size (width, height, depth)
 	constexpr Vec3<T> size() const noexcept
 	{
-		return Vec3<T>( max.x - min.x, max.y - min.y, max.z - min.z );
+		return max - min;
 	}
 
 	// Get volume
@@ -105,5 +95,9 @@ struct BoundingBox3D
 		return min.x <= max.x && min.y <= max.y && min.z <= max.z;
 	}
 };
+
+// Type aliases for common usage
+using BoundingBox3Df = BoundingBox3D<float>;
+using BoundingBox3Dd = BoundingBox3D<double>;
 
 } // namespace math
