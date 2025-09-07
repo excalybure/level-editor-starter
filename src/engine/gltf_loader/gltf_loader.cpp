@@ -250,7 +250,7 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( void *gltfNodePtr, v
 	return sceneNode;
 }
 
-std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *dataPtr ) const
+std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *dataPtr, bool verbose ) const
 {
 	cgltf_mesh *gltfMesh = static_cast<cgltf_mesh *>( gltfMeshPtr );
 	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
@@ -261,22 +261,26 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 		return nullptr;
 	}
 
-	console::info( "extractMesh: Processing mesh with {} primitives", gltfMesh->primitives_count );
+	if ( verbose )
+		console::info( "extractMesh: Processing mesh with {} primitives", gltfMesh->primitives_count );
 	auto mesh = std::make_shared<assets::Mesh>();
 
 	// Process first primitive for now (MVP)
 	cgltf_primitive *primitive = &gltfMesh->primitives[0];
-	console::info( "extractMesh: Primitive has {} attributes", primitive->attributes_count );
+	if ( verbose )
+		console::info( "extractMesh: Primitive has {} attributes", primitive->attributes_count );
 
 	// Find POSITION attribute
 	cgltf_accessor *positionAccessor = nullptr;
 	for ( cgltf_size i = 0; i < primitive->attributes_count; ++i )
 	{
-		console::info( "extractMesh: Attribute {} has type {}", i, static_cast<int>( primitive->attributes[i].type ) );
+		if ( verbose )
+			console::info( "extractMesh: Attribute {} has type {}", i, static_cast<int>( primitive->attributes[i].type ) );
 		if ( primitive->attributes[i].type == cgltf_attribute_type_position )
 		{
 			positionAccessor = primitive->attributes[i].data;
-			console::info( "extractMesh: Found POSITION attribute" );
+			if ( verbose )
+				console::info( "extractMesh: Found POSITION attribute" );
 			break;
 		}
 	}
@@ -284,7 +288,8 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 	// Extract vertex positions (required attribute)
 	if ( positionAccessor )
 	{
-		console::info( "extractMesh: Position accessor has {} vertices", positionAccessor->count );
+		if ( verbose )
+			console::info( "extractMesh: Position accessor has {} vertices", positionAccessor->count );
 
 		if ( positionAccessor->count > 0 && positionAccessor->component_type == cgltf_component_type_r_32f && positionAccessor->type == cgltf_type_vec3 )
 		{
@@ -296,9 +301,11 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 				cgltf_buffer_view *bufferView = positionAccessor->buffer_view;
 				cgltf_buffer *buffer = bufferView->buffer;
 
+
 				if ( buffer && buffer->data )
 				{
-					console::info( "extractMesh: Buffer data available, extracting positions" );
+					if ( verbose )
+						console::info( "extractMesh: Buffer data available, extracting positions" );
 
 					// Extract positions using the utility function
 					const float *bufferData = reinterpret_cast<const float *>( buffer->data );
@@ -308,7 +315,8 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 						bufferView->offset + positionAccessor->offset,
 						bufferView->stride );
 
-					console::info( "extractMesh: Extracted {} positions", positions.size() );
+					if ( verbose )
+						console::info( "extractMesh: Extracted {} positions", positions.size() );
 
 					// Create vertices with extracted positions
 					for ( const auto &pos : positions )
@@ -329,7 +337,8 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 						mesh->addVertex( vertex );
 					}
 
-					console::info( "extractMesh: Added {} vertices to mesh", mesh->getVertexCount() );
+					if ( verbose )
+						console::info( "extractMesh: Added {} vertices to mesh", mesh->getVertexCount() );
 				}
 				else
 				{
@@ -385,8 +394,11 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( void *gltfMeshPtr, void *
 
 				// Extract indices using the utility function
 				const std::uint8_t *bufferData = reinterpret_cast<const std::uint8_t *>( buffer->data );
-				console::info( "extractMesh: Index buffer size: {}, byteOffset: {}, accessor offset: {}", buffer->size, bufferView->offset, indexAccessor->offset );
-				console::info( "extractMesh: Index component type: {}, count: {}", static_cast<int>( indexAccessor->component_type ), indexAccessor->count );
+				if ( verbose )
+				{
+					console::info( "extractMesh: Index buffer size: {}, byteOffset: {}, accessor offset: {}", buffer->size, bufferView->offset, indexAccessor->offset );
+					console::info( "extractMesh: Index component type: {}, count: {}", static_cast<int>( indexAccessor->component_type ), indexAccessor->count );
+				}
 				auto indices = extractIndicesAsUint32(
 					bufferData,
 					indexAccessor->count,

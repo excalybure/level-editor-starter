@@ -198,7 +198,7 @@ private:
 	std::unique_ptr<assets::SceneNode> processNode( void *gltfNode, void *data ) const;
 
 	// NEW: Mesh extraction helper
-	std::shared_ptr<assets::Mesh> extractMesh( void *gltfMesh, void *data ) const;
+	std::shared_ptr<assets::Mesh> extractMesh( void *gltfMesh, void *data, bool verbose = false ) const;
 
 	// Helper to get accessor data as typed spans
 	std::span<const std::uint8_t> getAccessorData( void *accessor, void *data ) const;
