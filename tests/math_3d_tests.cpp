@@ -280,6 +280,14 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE( corner7.x == Catch::Approx( 1.0f ) );
 		REQUIRE( corner7.y == Catch::Approx( 2.0f ) );
 		REQUIRE( corner7.z == Catch::Approx( 3.0f ) );
+
+		// Default constructor should create invalid bounds
+		const BoundingBox3D<float> defaultBox;
+		REQUIRE_FALSE( defaultBox.isValid() );
+		// Default initialization should create min > max for easy expansion
+		REQUIRE( defaultBox.min.x > defaultBox.max.x );
+		REQUIRE( defaultBox.min.y > defaultBox.max.y );
+		REQUIRE( defaultBox.min.z > defaultBox.max.z );
 	}
 
 	SECTION( "BoundingSphere Operations" )

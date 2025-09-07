@@ -96,6 +96,15 @@ TEST_CASE( "BoundingBox2D functionality", "[math][2d][bounding_box]" )
 		REQUIRE( validBox.isValid() );
 		REQUIRE_FALSE( invalidBox.isValid() );
 	}
+
+	SECTION( "default constructor creates invalid bounds" )
+	{
+		const math::BoundingBox2D<float> defaultBox;
+		REQUIRE_FALSE( defaultBox.isValid() );
+		// Default initialization should create min > max for easy expansion
+		REQUIRE( defaultBox.min.x > defaultBox.max.x );
+		REQUIRE( defaultBox.min.y > defaultBox.max.y );
+	}
 }
 
 TEST_CASE( "Point-in-shape tests", "[math][2d][point_tests]" )
