@@ -37,5 +37,8 @@ imgui.ini
 *.dll
 *.exp
 
+# Allow this project's bundled clang-format binary
+!clang-format-custom.exe
+
 # Test temp
 Testing/Temporary/
