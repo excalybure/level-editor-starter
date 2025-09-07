@@ -126,40 +126,12 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 		return {};
 	}
 
-	// NEW: Manual buffer loading for embedded base64 data
-	for ( cgltf_size i = 0; i < data->buffers_count; ++i )
+	// Load buffers using cgltf_load_buffers which handles data URIs automatically
+	result = cgltf_load_buffers( &options, data, "" );
+	if ( result != cgltf_result_success )
 	{
-		cgltf_buffer *buffer = &data->buffers[i];
-
-		if ( buffer->data )
-		{
-			continue; // Already loaded
-		}
-
-		if ( buffer->uri && strncmp( buffer->uri, "data:", 5 ) == 0 )
-		{
-			// This is a data URI, try to decode it
-			const char *comma = strchr( buffer->uri, ',' );
-
-			if ( comma && comma - buffer->uri >= 7 && strncmp( comma - 7, ";base64", 7 ) == 0 )
-			{
-				// This is base64 encoded data
-				result = cgltf_load_buffer_base64( &options, buffer->size, comma + 1, &buffer->data );
-
-				if ( result == cgltf_result_success )
-				{
-					buffer->data_free_method = cgltf_data_free_method_memory_free;
-				}
-				else
-				{
-					console::error( "Failed to decode base64 buffer {}, result: {}", i, static_cast<int>( result ) );
-				}
-			}
-			else
-			{
-				console::error( "Data URI format not supported for buffer {}", i );
-			}
-		}
+		console::error( "Failed to load buffers for glTF content, result: {}", static_cast<int>( result ) );
+		// Continue anyway - some buffers might have loaded successfully
 	}
 
 	// Create scene
@@ -262,17 +234,42 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 	if ( verbose )
 		console::info( "extractMesh: Primitive has {} attributes", primitive->attributes_count );
 
-	// Find POSITION attribute
+	// Find required and optional attributes
 	cgltf_accessor *positionAccessor = nullptr;
+	cgltf_accessor *normalAccessor = nullptr;
+	cgltf_accessor *texCoordAccessor = nullptr;
+	cgltf_accessor *tangentAccessor = nullptr;
+
 	for ( cgltf_size i = 0; i < primitive->attributes_count; ++i )
 	{
 		if ( verbose )
 			console::info( "extractMesh: Attribute {} has type {}", i, static_cast<int>( primitive->attributes[i].type ) );
-		if ( primitive->attributes[i].type == cgltf_attribute_type_position )
+
+		switch ( primitive->attributes[i].type )
 		{
+		case cgltf_attribute_type_position:
 			positionAccessor = primitive->attributes[i].data;
 			if ( verbose )
 				console::info( "extractMesh: Found POSITION attribute" );
+			break;
+		case cgltf_attribute_type_normal:
+			normalAccessor = primitive->attributes[i].data;
+			if ( verbose )
+				console::info( "extractMesh: Found NORMAL attribute" );
+			break;
+		case cgltf_attribute_type_texcoord:
+			texCoordAccessor = primitive->attributes[i].data;
+			if ( verbose )
+				console::info( "extractMesh: Found TEXCOORD attribute" );
+			break;
+		case cgltf_attribute_type_tangent:
+			tangentAccessor = primitive->attributes[i].data;
+			if ( verbose )
+				console::info( "extractMesh: Found TANGENT attribute" );
+			break;
+		default:
+			if ( verbose )
+				console::info( "extractMesh: Ignoring unsupported attribute type {}", static_cast<int>( primitive->attributes[i].type ) );
 			break;
 		}
 	}
@@ -293,13 +290,12 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 				cgltf_buffer_view *bufferView = positionAccessor->buffer_view;
 				cgltf_buffer *buffer = bufferView->buffer;
 
-
 				if ( buffer && buffer->data )
 				{
 					if ( verbose )
 						console::info( "extractMesh: Buffer data available, extracting positions" );
 
-					// Extract positions using the utility function
+					// Extract positions using corrected buffer offset logic
 					const float *bufferData = reinterpret_cast<const float *>( buffer->data );
 					const auto positions = extractFloat3Positions(
 						bufferData,
@@ -307,24 +303,103 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 						bufferView->offset + positionAccessor->offset,
 						bufferView->stride );
 
-					if ( verbose )
-						console::info( "extractMesh: Extracted {} positions", positions.size() );
+					std::vector<Vec3f> normals;
+					if ( normalAccessor && normalAccessor->component_type == cgltf_component_type_r_32f && normalAccessor->type == cgltf_type_vec3 )
+					{
+						cgltf_buffer_view *normalBufferView = normalAccessor->buffer_view;
+						cgltf_buffer *normalBuffer = normalBufferView->buffer;
 
-					// Create vertices with extracted positions
-					for ( const auto &pos : positions )
+						if ( normalBuffer && normalBuffer->data )
+						{
+							const float *normalBufferData = reinterpret_cast<const float *>( normalBuffer->data );
+							normals = extractFloat3Normals(
+								normalBufferData,
+								normalAccessor->count,
+								normalBufferView->offset + normalAccessor->offset,
+								normalBufferView->stride );
+
+							if ( verbose )
+								console::info( "extractMesh: Extracted {} normals", normals.size() );
+						}
+					}
+
+					// Extract UVs if available
+					std::vector<Vec2f> uvs;
+					if ( texCoordAccessor && texCoordAccessor->component_type == cgltf_component_type_r_32f && texCoordAccessor->type == cgltf_type_vec2 )
+					{
+						cgltf_buffer_view *uvBufferView = texCoordAccessor->buffer_view;
+						cgltf_buffer *uvBuffer = uvBufferView->buffer;
+
+						if ( uvBuffer && uvBuffer->data )
+						{
+							const float *uvBufferData = reinterpret_cast<const float *>( uvBuffer->data );
+							uvs = extractFloat2UVs(
+								uvBufferData,
+								texCoordAccessor->count,
+								uvBufferView->offset + texCoordAccessor->offset,
+								uvBufferView->stride );
+
+							if ( verbose )
+								console::info( "extractMesh: Extracted {} UVs", uvs.size() );
+						}
+					}
+
+					// Extract tangents if available
+					std::vector<Vec4f> tangents;
+					if ( tangentAccessor && tangentAccessor->component_type == cgltf_component_type_r_32f && tangentAccessor->type == cgltf_type_vec4 )
+					{
+						cgltf_buffer_view *tangentBufferView = tangentAccessor->buffer_view;
+						cgltf_buffer *tangentBuffer = tangentBufferView->buffer;
+
+						if ( tangentBuffer && tangentBuffer->data )
+						{
+							const float *tangentBufferData = reinterpret_cast<const float *>( tangentBuffer->data );
+							tangents = extractFloat4Tangents(
+								tangentBufferData,
+								tangentAccessor->count,
+								tangentBufferView->offset + tangentAccessor->offset,
+								tangentBufferView->stride );
+
+							if ( verbose )
+								console::info( "extractMesh: Extracted {} tangents", tangents.size() );
+						}
+					}
+
+					// Create vertices with extracted data
+					for ( std::size_t i = 0; i < positions.size(); ++i )
 					{
 						assets::Vertex vertex;
-						vertex.position = pos;
-						// Default normals and other attributes
-						vertex.normal.x = 0.0f;
-						vertex.normal.y = 1.0f;
-						vertex.normal.z = 0.0f;
-						vertex.texCoord.x = 0.0f;
-						vertex.texCoord.y = 0.0f;
-						vertex.tangent.x = 1.0f;
-						vertex.tangent.y = 0.0f;
-						vertex.tangent.z = 0.0f;
-						vertex.tangent.w = 1.0f;
+						vertex.position = positions[i];
+
+						// Use extracted normals or default
+						if ( i < normals.size() )
+						{
+							vertex.normal = normals[i];
+						}
+						else
+						{
+							vertex.normal = Vec3f{ 0.0f, 0.0f, 1.0f };
+						}
+
+						// Use extracted UVs or default
+						if ( i < uvs.size() )
+						{
+							vertex.texCoord = uvs[i];
+						}
+						else
+						{
+							vertex.texCoord = Vec2f{ 0.0f, 0.0f };
+						}
+
+						// Use extracted tangents or default
+						if ( i < tangents.size() )
+						{
+							vertex.tangent = tangents[i];
+						}
+						else
+						{
+							vertex.tangent = Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f };
+						}
 
 						mesh->addVertex( vertex );
 					}

@@ -141,7 +141,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 			],
 			"buffers": [{
 				"byteLength": 42,
-				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAABAAIA"
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAgD8AAIA/AAABAAIAAA=="
 			}]
 		})";
 
