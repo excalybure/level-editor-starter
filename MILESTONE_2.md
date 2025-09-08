@@ -144,9 +144,14 @@ export struct Visible {
 // Renderable mesh component
 export struct MeshRenderer {
     std::string meshPath;
-    std::vector<std::string> materialPaths;
+    std::vector<std::string> materialOverrides; // Optional per-primitive material overrides
     engine::BoundingBox<> bounds; // Local space bounding box
     bool enabled = true;
+    
+    // Rendering options
+    bool castShadows = true;
+    bool receiveShadows = true;
+    float lodBias = 1.0f; // Level of detail bias for distance culling
 };
 
 // Selection state for editor
@@ -244,6 +249,19 @@ private:
 ### 2.2 Asset System Foundation
 **Target Module**: `engine.assets`
 
+**Design Rationale: Primitive-Based Mesh Architecture**
+
+The asset system is designed around a **primitive-based mesh architecture** that aligns with modern graphics pipelines and the glTF 2.0 specification:
+
+- **glTF Alignment**: Each glTF primitive maps directly to a `Primitive` object, preserving the original structure
+- **Material Per Primitive**: Each primitive can have its own material, enabling multi-material objects
+- **GPU Efficiency**: Each primitive manages its own vertex/index buffers, allowing for optimized rendering
+- **Flexibility**: Meshes can combine primitives with different vertex layouts (e.g., some with/without tangents)
+- **Memory Management**: Individual primitives can be loaded/unloaded independently
+- **Rendering Pipeline**: Modern renderers can process each primitive with its specific material and shaders
+
+This approach contrasts with the legacy "single vertex buffer per mesh" design, providing better performance and flexibility for complex 3D assets.
+
 ```cpp
 export module engine.assets;
 
@@ -310,38 +328,94 @@ export struct Vertex {
     math::Vec4<> tangent; // w component is bitangent handedness
 };
 
-export class Mesh : public Asset {
+// Primitive represents a single drawable unit with its own geometry and material
+export class Primitive {
 public:
-    AssetType getType() const override { return AssetType::Mesh; }
+    Primitive() = default;
+    Primitive(std::vector<Vertex> vertices, std::vector<std::uint32_t> indices, 
+             const std::string& materialPath = "");
     
+    // Geometry access
     const std::vector<Vertex>& getVertices() const { return m_vertices; }
     const std::vector<std::uint32_t>& getIndices() const { return m_indices; }
     const engine::BoundingBox<>& getBounds() const { return m_bounds; }
     
+    // Material reference
+    const std::string& getMaterialPath() const { return m_materialPath; }
+    void setMaterialPath(const std::string& path) { m_materialPath = path; }
+    
     // D3D12 GPU resources
     ID3D12Resource* getVertexBuffer() const { return m_vertexBuffer.Get(); }
     ID3D12Resource* getIndexBuffer() const { return m_indexBuffer.Get(); }
+    const D3D12_VERTEX_BUFFER_VIEW& getVertexBufferView() const { return m_vertexBufferView; }
+    const D3D12_INDEX_BUFFER_VIEW& getIndexBufferView() const { return m_indexBufferView; }
+    
+    // GPU resource management
+    bool createGPUResources(dx12::Device* device);
+    void releaseGPUResources();
     
 private:
     friend class AssetManager;
     std::vector<Vertex> m_vertices;
     std::vector<std::uint32_t> m_indices;
     engine::BoundingBox<> m_bounds;
+    std::string m_materialPath;
     
     // GPU resources
     Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_indexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView{};
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView{};
+    
+    void calculateBounds();
+};
+
+// Mesh contains a collection of primitives, each with its own geometry and material
+export class Mesh : public Asset {
+public:
+    AssetType getType() const override { return AssetType::Mesh; }
+    
+    // Primitive management
+    void addPrimitive(Primitive primitive);
+    void addPrimitive(std::vector<Vertex> vertices, std::vector<std::uint32_t> indices, 
+                     const std::string& materialPath = "");
+    
+    size_t getPrimitiveCount() const { return m_primitives.size(); }
+    const Primitive& getPrimitive(size_t index) const;
+    Primitive& getPrimitive(size_t index);
+    const std::vector<Primitive>& getPrimitives() const { return m_primitives; }
+    
+    // Overall mesh properties
+    const engine::BoundingBox<>& getBounds() const { return m_bounds; }
+    size_t getTotalVertexCount() const;
+    size_t getTotalIndexCount() const;
+    
+    // Material references (all unique materials used by primitives)
+    std::vector<std::string> getUniqueMaterialPaths() const;
+    
+    // GPU resource management
+    bool createGPUResources(dx12::Device* device);
+    void releaseGPUResources();
+    
+private:
+    friend class AssetManager;
+    std::vector<Primitive> m_primitives;
+    engine::BoundingBox<> m_bounds;
+    
+    void recalculateBounds();
 };
 
 // Scene hierarchy from glTF
 export struct SceneNode {
     std::string name;
     components::Transform transform;
-    std::vector<std::string> meshes;    // Mesh asset paths
-    std::vector<std::string> materials; // Material asset paths
+    std::vector<std::string> meshes;           // Mesh asset paths
+    std::vector<std::string> materialOverrides; // Optional material overrides per mesh
     std::vector<std::unique_ptr<SceneNode>> children;
+    
+    // Node metadata
+    bool isVisible = true;
+    std::unordered_map<std::string, std::string> userData; // Custom properties from glTF extras
 };
 
 export class Scene : public Asset {
@@ -384,6 +458,10 @@ public:
                                           const cgltf::model& model);
     std::unique_ptr<assets::Material> loadMaterial(const cgltf::material& gltfMaterial);
     
+    // Primitive extraction (core functionality)
+    assets::Primitive extractPrimitive(const cgltf::primitive& gltfPrimitive,
+                                      const cgltf::model& model);
+    
 private:
     dx12::Device* m_device;
     
@@ -391,13 +469,22 @@ private:
     assets::Vertex extractVertex(const cgltf::model& model, 
                                 const cgltf::primitive& primitive, 
                                 size_t index);
+    std::vector<std::uint32_t> extractIndices(const cgltf::primitive& primitive,
+                                             const cgltf::model& model);
+    std::string getMaterialPath(const cgltf::primitive& primitive);
+    
     components::Transform extractTransform(const cgltf::node& node);
     std::unique_ptr<assets::SceneNode> processNode(const cgltf::node& node, 
                                                   const cgltf::model& model);
     
+    // Buffer/accessor utilities
+    template<typename T>
+    std::vector<T> extractAttributeData(const cgltf::accessor& accessor,
+                                       const cgltf::model& model);
+    
     // GPU resource creation
-    void createVertexBuffer(assets::Mesh* mesh);
-    void createIndexBuffer(assets::Mesh* mesh);
+    bool createGPUResourcesForPrimitive(assets::Primitive& primitive);
+};
 };
 
 } // namespace gltf_loader
@@ -435,6 +522,16 @@ public:
     std::vector<ecs::Entity> importScene(const std::string& gltfPath, 
                                         ecs::Scene& scene);
     
+    // Primitive-specific operations
+    std::shared_ptr<assets::Mesh> createMeshFromPrimitives(
+        const std::vector<assets::Primitive>& primitives,
+        const std::string& meshName = "");
+    
+    // Material management for primitives
+    void preloadMaterialsForMesh(const assets::Mesh& mesh);
+    std::shared_ptr<assets::Material> getMaterialForPrimitive(
+        const assets::Mesh& mesh, size_t primitiveIndex);
+    
 private:
     dx12::Device* m_device;
     gltf_loader::GLTFLoader m_gltfLoader;
@@ -445,6 +542,11 @@ private:
     ecs::Entity createEntityFromNode(const assets::SceneNode& node, 
                                     ecs::Scene& scene, 
                                     ecs::Entity parent = {});
+    
+    // Primitive processing
+    void setupMeshRendererForNode(ecs::Entity entity, 
+                                 const assets::SceneNode& node,
+                                 ecs::Scene& scene);
 };
 
 } // namespace asset_manager
@@ -452,12 +554,22 @@ private:
 
 **Deliverables**:
 - ✅ cgltf integration for glTF 2.0 parsing
-- ✅ Asset system with Mesh, Material, Scene classes
-- ✅ glTF loader with vertex/index buffer creation
-- ✅ Asset manager with caching and import functionality
-- ✅ ECS integration for imported scenes
-- ✅ Unit tests for asset loading pipeline
+- ✅ Primitive-based asset system with Mesh containing multiple Primitives
+- ✅ Each Primitive has its own vertex/index buffers and material reference
+- ✅ Asset system with enhanced Material class supporting PBR workflow
+- ✅ glTF loader with per-primitive extraction and GPU resource creation
+- ✅ Asset manager with primitive-aware caching and import functionality
+- ✅ ECS integration for imported scenes with proper primitive handling
+- ✅ MeshRenderer component supporting material overrides per primitive
+- ✅ Unit tests for primitive-based asset loading pipeline
 - ✅ Sample glTF files for testing (cube, suzanne, multi-material scene)
+
+**Key Design Benefits**:
+- **True glTF Fidelity**: Preserves original glTF primitive structure
+- **Multi-Material Support**: Each primitive can have different materials
+- **Rendering Efficiency**: GPU resources organized per-primitive for optimal draw calls
+- **Memory Flexibility**: Individual primitive loading/unloading capability
+- **Pipeline Compatibility**: Works seamlessly with modern rendering architectures
 
 ---
 
@@ -1265,6 +1377,14 @@ private:
     static bool renderFloatControl(const std::string& label, 
                                   float& value,
                                   float min = 0.0f, float max = 0.0f);
+    
+    // Primitive-specific UI helpers
+    static void renderMeshPrimitiveList(const assets::Mesh& mesh,
+                                       std::vector<std::string>& materialOverrides,
+                                       asset_manager::AssetManager& assetManager);
+    static bool renderMaterialOverrideSlot(const std::string& originalMaterial,
+                                          std::string& overrideMaterial,
+                                          asset_manager::AssetManager& assetManager);
 };
 
 } // namespace editor
