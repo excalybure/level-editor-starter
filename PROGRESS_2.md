@@ -280,6 +280,22 @@ Milestone 2 foundational ECS, component set, transform system, and initial (simp
 **Tests:** 6 new test cases added to `[file-loading]` and `[gltf]` test suites, including embedded data URIs, external buffer files, error conditions, and file creation/cleanup. All 29 assertions pass.
 **Notes:** The `loadScene(filePath)` method now properly uses cgltf to parse files and load associated buffers. Implementation correctly handles both external .bin files and embedded base64 data URIs. Error handling provides clear exception messages for debugging. Legacy placeholder tests updated to reflect new behavior.
 
+## 2025-09-07 — Primitive Class Implementation and Mesh Refactoring
+**Summary:** Implemented a primitive-based mesh architecture by creating a Primitive class and refactoring the Mesh class to contain multiple primitives. Also updated the glTF loader to extract all primitives from glTF files rather than aggregating them into a single mesh.
+
+**Atomic functionalities completed:**
+- AF1: Designed and implemented Primitive class with vertex/index buffers, material reference, and bounds
+- AF2: Refactored Mesh class to contain a vector of Primitive objects instead of single vertex/index buffers  
+- AF3: Updated Mesh bounds calculation to aggregate all primitive bounds
+- AF4: Created comprehensive primitive_tests.cpp with isolated tests for Primitive and Mesh functionality
+- AF5: Updated existing mesh and glTF loader tests to work with the new primitive-based structure
+- AF6: Refactored glTF loader extractMesh function to process all primitives separately via extractPrimitive helper
+- AF7: Updated glTF loader module interface to reflect new primitive-based architecture
+- AF8: Removed old duplicate mesh extraction code from glTF loader
+
+**Tests:** 12 new primitive tests covering construction, bounds calculation, mesh primitive management, and glTF loader integration. All mesh tests (196 assertions), asset tests (37 assertions), primitive tests (82 assertions), and glTF loader tests (29 assertions) now pass.
+**Notes:** This change aligns with glTF specification structure where each mesh can contain multiple primitives with different materials. The new architecture preserves per-primitive material information and enables modern GPU rendering patterns. All existing functionality remains compatible through the new API.
+
 ## 2025-09-06 — ECS Developer Documentation Added
 **Summary:** Added a short developer note in `src/runtime/ecs.ixx` clarifying the single-threaded assumption and listing TODOs for multi-component queries and parallel iteration.
 

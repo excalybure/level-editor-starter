@@ -227,12 +227,48 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 
 	if ( verbose )
 		console::info( "extractMesh: Processing mesh with {} primitives", gltfMesh->primitives_count );
+
 	auto mesh = std::make_shared<assets::Mesh>();
 
-	// Process first primitive for now (MVP)
-	cgltf_primitive *primitive = &gltfMesh->primitives[0];
+	// Process each primitive and create Primitive objects
+	for ( cgltf_size primitiveIndex = 0; primitiveIndex < gltfMesh->primitives_count; ++primitiveIndex )
+	{
+		cgltf_primitive *gltfPrimitive = &gltfMesh->primitives[primitiveIndex];
+		if ( verbose )
+			console::info( "extractMesh: Processing primitive {} with {} attributes", primitiveIndex, gltfPrimitive->attributes_count );
+
+		// Extract this primitive's data into a Primitive object
+		const auto primitive = extractPrimitive( gltfPrimitive, data, verbose );
+		if ( primitive )
+		{
+			mesh->addPrimitive( *primitive );
+			if ( verbose )
+				console::info( "extractMesh: Added primitive {} with {} vertices", primitiveIndex, primitive->getVertexCount() );
+		}
+		else
+		{
+			console::error( "extractMesh: Failed to extract primitive {}", primitiveIndex );
+		}
+	}
+
 	if ( verbose )
-		console::info( "extractMesh: Primitive has {} attributes", primitive->attributes_count );
+		console::info( "extractMesh: Extracted mesh with {} primitives, total {} vertices",
+			mesh->getPrimitiveCount(),
+			mesh->getVertexCount() );
+
+	return mesh;
+}
+
+// NEW: Helper function to extract a single primitive
+std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive *primitive, cgltf_data *data, bool verbose ) const
+{
+	if ( !primitive )
+	{
+		console::error( "extractPrimitive: Invalid primitive" );
+		return nullptr;
+	}
+
+	auto primitiveObj = std::make_unique<assets::Primitive>();
 
 	// Find required and optional attributes
 	cgltf_accessor *positionAccessor = nullptr;
@@ -243,33 +279,33 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 	for ( cgltf_size i = 0; i < primitive->attributes_count; ++i )
 	{
 		if ( verbose )
-			console::info( "extractMesh: Attribute {} has type {}", i, static_cast<int>( primitive->attributes[i].type ) );
+			console::info( "extractPrimitive: Attribute {} has type {}", i, static_cast<int>( primitive->attributes[i].type ) );
 
 		switch ( primitive->attributes[i].type )
 		{
 		case cgltf_attribute_type_position:
 			positionAccessor = primitive->attributes[i].data;
 			if ( verbose )
-				console::info( "extractMesh: Found POSITION attribute" );
+				console::info( "extractPrimitive: Found POSITION attribute" );
 			break;
 		case cgltf_attribute_type_normal:
 			normalAccessor = primitive->attributes[i].data;
 			if ( verbose )
-				console::info( "extractMesh: Found NORMAL attribute" );
+				console::info( "extractPrimitive: Found NORMAL attribute" );
 			break;
 		case cgltf_attribute_type_texcoord:
 			texCoordAccessor = primitive->attributes[i].data;
 			if ( verbose )
-				console::info( "extractMesh: Found TEXCOORD attribute" );
+				console::info( "extractPrimitive: Found TEXCOORD attribute" );
 			break;
 		case cgltf_attribute_type_tangent:
 			tangentAccessor = primitive->attributes[i].data;
 			if ( verbose )
-				console::info( "extractMesh: Found TANGENT attribute" );
+				console::info( "extractPrimitive: Found TANGENT attribute" );
 			break;
 		default:
 			if ( verbose )
-				console::info( "extractMesh: Ignoring unsupported attribute type {}", static_cast<int>( primitive->attributes[i].type ) );
+				console::info( "extractPrimitive: Ignoring unsupported attribute type {}", static_cast<int>( primitive->attributes[i].type ) );
 			break;
 		}
 	}
@@ -278,12 +314,10 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 	if ( positionAccessor )
 	{
 		if ( verbose )
-			console::info( "extractMesh: Position accessor has {} vertices", positionAccessor->count );
+			console::info( "extractPrimitive: Position accessor has {} vertices", positionAccessor->count );
 
 		if ( positionAccessor->count > 0 && positionAccessor->component_type == cgltf_component_type_r_32f && positionAccessor->type == cgltf_type_vec3 )
 		{
-			mesh->reserveVertices( positionAccessor->count );
-
 			// Get buffer data through accessor
 			if ( positionAccessor->buffer_view )
 			{
@@ -293,7 +327,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 				if ( buffer && buffer->data )
 				{
 					if ( verbose )
-						console::info( "extractMesh: Buffer data available, extracting positions" );
+						console::info( "extractPrimitive: Buffer data available, extracting positions" );
 
 					// Extract positions using corrected buffer offset logic
 					const float *bufferData = reinterpret_cast<const float *>( buffer->data );
@@ -319,7 +353,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 								normalBufferView->stride );
 
 							if ( verbose )
-								console::info( "extractMesh: Extracted {} normals", normals.size() );
+								console::info( "extractPrimitive: Extracted {} normals", normals.size() );
 						}
 					}
 
@@ -340,7 +374,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 								uvBufferView->stride );
 
 							if ( verbose )
-								console::info( "extractMesh: Extracted {} UVs", uvs.size() );
+								console::info( "extractPrimitive: Extracted {} UVs", uvs.size() );
 						}
 					}
 
@@ -361,7 +395,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 								tangentBufferView->stride );
 
 							if ( verbose )
-								console::info( "extractMesh: Extracted {} tangents", tangents.size() );
+								console::info( "extractPrimitive: Extracted {} tangents", tangents.size() );
 						}
 					}
 
@@ -401,30 +435,34 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 							vertex.tangent = Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f };
 						}
 
-						mesh->addVertex( vertex );
+						primitiveObj->addVertex( vertex );
 					}
 
 					if ( verbose )
-						console::info( "extractMesh: Added {} vertices to mesh", mesh->getVertexCount() );
+						console::info( "extractPrimitive: Added {} vertices to primitive", primitiveObj->getVertexCount() );
 				}
 				else
 				{
-					console::error( "extractMesh: No buffer data available" );
+					console::error( "extractPrimitive: No buffer data available" );
+					return nullptr;
 				}
 			}
 			else
 			{
-				console::error( "extractMesh: No buffer view for position accessor" );
+				console::error( "extractPrimitive: No buffer view for position accessor" );
+				return nullptr;
 			}
 		}
 		else
 		{
-			console::error( "extractMesh: Invalid position accessor format" );
+			console::error( "extractPrimitive: Invalid position accessor format" );
+			return nullptr;
 		}
 	}
 	else
 	{
-		console::error( "extractMesh: No POSITION attribute found" );
+		console::error( "extractPrimitive: No POSITION attribute found" );
+		return nullptr;
 	}
 
 	// Extract indices if available
@@ -439,8 +477,6 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 
 			if ( buffer && buffer->data )
 			{
-				mesh->reserveIndices( indexAccessor->count );
-
 				// Convert component type to our enum
 				ComponentType componentType;
 				switch ( indexAccessor->component_type )
@@ -455,34 +491,37 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 					componentType = ComponentType::UnsignedInt;
 					break;
 				default:
-					console::error( "Unsupported index component type: {}", static_cast<int>( indexAccessor->component_type ) );
-					return mesh; // Return mesh with vertices but no indices
+					console::error( "extractPrimitive: Unsupported index component type: {}", static_cast<int>( indexAccessor->component_type ) );
+					return primitiveObj; // Return primitive with vertices but no indices
 				}
 
 				// Extract indices using the utility function
 				const std::uint8_t *bufferData = reinterpret_cast<const std::uint8_t *>( buffer->data );
 				if ( verbose )
 				{
-					console::info( "extractMesh: Index buffer size: {}, byteOffset: {}, accessor offset: {}", buffer->size, bufferView->offset, indexAccessor->offset );
-					console::info( "extractMesh: Index component type: {}, count: {}", static_cast<int>( indexAccessor->component_type ), indexAccessor->count );
+					console::info( "extractPrimitive: Index buffer size: {}, byteOffset: {}, accessor offset: {}", buffer->size, bufferView->offset, indexAccessor->offset );
+					console::info( "extractPrimitive: Index component type: {}, count: {}", static_cast<int>( indexAccessor->component_type ), indexAccessor->count );
 				}
-				auto indices = extractIndicesAsUint32(
+				const auto indices = extractIndicesAsUint32(
 					bufferData,
 					indexAccessor->count,
 					componentType,
 					bufferView->offset + indexAccessor->offset,
 					bufferView->stride );
 
-				// Add extracted indices to mesh
-				for ( auto index : indices )
+				// Add extracted indices to primitive
+				for ( const auto index : indices )
 				{
-					mesh->addIndex( index );
+					primitiveObj->addIndex( index );
 				}
+
+				if ( verbose )
+					console::info( "extractPrimitive: Added {} indices to primitive", primitiveObj->getIndexCount() );
 			}
 		}
 	}
 
-	return mesh;
+	return primitiveObj;
 }
 
 std::span<const std::uint8_t> GLTFLoader::getAccessorData( void *accessorPtr, void *dataPtr ) const

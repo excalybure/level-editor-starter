@@ -197,8 +197,9 @@ private:
 	// Helper methods for glTF processing (use void* to avoid forward declaration issues)
 	std::unique_ptr<assets::SceneNode> processNode( cgltf_node *gltfNode, cgltf_data *data ) const;
 
-	// NEW: Mesh extraction helper
+	// Mesh extraction helpers
 	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose = false ) const;
+	std::unique_ptr<assets::Primitive> extractPrimitive( cgltf_primitive *gltfPrimitive, cgltf_data *data, bool verbose = false ) const;
 
 	// Helper to get accessor data as typed spans
 	std::span<const std::uint8_t> getAccessorData( void *accessor, void *data ) const;

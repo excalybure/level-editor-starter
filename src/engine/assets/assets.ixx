@@ -40,11 +40,11 @@ export struct Vertex
 	math::Vec4f tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
 };
 
-export class Mesh : public Asset
+// Primitive class - represents a single drawable primitive with its own vertex/index data and material
+export class Primitive
 {
 public:
-	AssetType getType() const override { return AssetType::Mesh; }
-
+	// Vertex and index accessors
 	const std::vector<Vertex> &getVertices() const { return m_vertices; }
 	const std::vector<std::uint32_t> &getIndices() const { return m_indices; }
 
@@ -52,7 +52,7 @@ public:
 	std::uint32_t getVertexCount() const { return static_cast<std::uint32_t>( m_vertices.size() ); }
 	std::uint32_t getIndexCount() const { return static_cast<std::uint32_t>( m_indices.size() ); }
 
-	// Methods for building mesh data
+	// Methods for building primitive data
 	void addVertex( const Vertex &vertex )
 	{
 		m_vertices.push_back( vertex );
@@ -75,6 +75,11 @@ public:
 	// Bounding box accessors
 	const math::BoundingBox3Df &getBounds() const { return m_bounds; }
 	bool hasBounds() const { return m_bounds.isValid(); }
+
+	// Material reference
+	const std::string &getMaterialPath() const { return m_materialPath; }
+	void setMaterialPath( const std::string &path ) { m_materialPath = path; }
+	bool hasMaterial() const { return !m_materialPath.empty(); }
 
 	// Compute bounds center and size
 	void getBoundsCenter( float center[3] ) const
@@ -106,6 +111,7 @@ public:
 private:
 	std::vector<Vertex> m_vertices;
 	std::vector<std::uint32_t> m_indices;
+	std::string m_materialPath;
 
 	// Bounding box data
 	math::BoundingBox3Df m_bounds;
@@ -118,6 +124,198 @@ private:
 	void resetBounds()
 	{
 		m_bounds = math::BoundingBox3Df{};
+	}
+};
+
+export class Mesh : public Asset
+{
+public:
+	AssetType getType() const override { return AssetType::Mesh; }
+
+	// Primitive-based access
+	const std::vector<Primitive> &getPrimitives() const { return m_primitives; }
+	std::vector<Primitive> &getPrimitives() { return m_primitives; }
+
+	std::uint32_t getPrimitiveCount() const { return static_cast<std::uint32_t>( m_primitives.size() ); }
+
+	const Primitive &getPrimitive( std::uint32_t index ) const
+	{
+		return m_primitives.at( index );
+	}
+
+	Primitive &getPrimitive( std::uint32_t index )
+	{
+		return m_primitives.at( index );
+	}
+
+	// Add a new primitive to this mesh
+	void addPrimitive( const Primitive &primitive )
+	{
+		m_primitives.push_back( primitive );
+		updateBounds( primitive.getBounds() );
+	}
+
+	void addPrimitive( Primitive &&primitive )
+	{
+		updateBounds( primitive.getBounds() );
+		m_primitives.push_back( std::move( primitive ) );
+	}
+
+	// Legacy compatibility methods - aggregate data from all primitives
+	std::vector<Vertex> getVertices() const
+	{
+		std::vector<Vertex> allVertices;
+		for ( const auto &primitive : m_primitives )
+		{
+			const auto &primVertices = primitive.getVertices();
+			allVertices.insert( allVertices.end(), primVertices.begin(), primVertices.end() );
+		}
+		return allVertices;
+	}
+
+	std::vector<std::uint32_t> getIndices() const
+	{
+		std::vector<std::uint32_t> allIndices;
+		std::uint32_t vertexOffset = 0;
+		for ( const auto &primitive : m_primitives )
+		{
+			const auto &primIndices = primitive.getIndices();
+			for ( auto index : primIndices )
+			{
+				allIndices.push_back( index + vertexOffset );
+			}
+			vertexOffset += primitive.getVertexCount();
+		}
+		return allIndices;
+	}
+
+	// Aggregate vertex and index counts
+	std::uint32_t getVertexCount() const
+	{
+		std::uint32_t total = 0;
+		for ( const auto &primitive : m_primitives )
+		{
+			total += primitive.getVertexCount();
+		}
+		return total;
+	}
+
+	std::uint32_t getIndexCount() const
+	{
+		std::uint32_t total = 0;
+		for ( const auto &primitive : m_primitives )
+		{
+			total += primitive.getIndexCount();
+		}
+		return total;
+	}
+
+	// Legacy methods for building mesh data (create single primitive)
+	void addVertex( const Vertex &vertex )
+	{
+		ensureSinglePrimitive();
+		m_primitives[0].addVertex( vertex );
+		updateBounds( m_primitives[0].getBounds() );
+	}
+
+	void addIndex( std::uint32_t index )
+	{
+		ensureSinglePrimitive();
+		m_primitives[0].addIndex( index );
+	}
+
+	void clearVertices()
+	{
+		for ( auto &primitive : m_primitives )
+		{
+			primitive.clearVertices();
+		}
+		resetBounds();
+	}
+
+	void clearIndices()
+	{
+		for ( auto &primitive : m_primitives )
+		{
+			primitive.clearIndices();
+		}
+	}
+
+	void reserveVertices( std::size_t count )
+	{
+		ensureSinglePrimitive();
+		m_primitives[0].reserveVertices( count );
+	}
+
+	void reserveIndices( std::size_t count )
+	{
+		ensureSinglePrimitive();
+		m_primitives[0].reserveIndices( count );
+	}
+
+	// Bounding box accessors - aggregate from all primitives
+	const math::BoundingBox3Df &getBounds() const { return m_bounds; }
+	bool hasBounds() const { return m_bounds.isValid(); }
+
+	// Compute bounds center and size
+	void getBoundsCenter( float center[3] ) const
+	{
+		if ( !m_bounds.isValid() )
+		{
+			center[0] = center[1] = center[2] = 0.0f;
+			return;
+		}
+		const auto centerVec = m_bounds.center();
+		center[0] = centerVec.x;
+		center[1] = centerVec.y;
+		center[2] = centerVec.z;
+	}
+
+	void getBoundsSize( float size[3] ) const
+	{
+		if ( !m_bounds.isValid() )
+		{
+			size[0] = size[1] = size[2] = 0.0f;
+			return;
+		}
+		const auto sizeVec = m_bounds.size();
+		size[0] = sizeVec.x;
+		size[1] = sizeVec.y;
+		size[2] = sizeVec.z;
+	}
+
+private:
+	std::vector<Primitive> m_primitives;
+
+	// Aggregate bounding box data from all primitives
+	math::BoundingBox3Df m_bounds;
+
+	// Helper to ensure we have at least one primitive for legacy operations
+	void ensureSinglePrimitive()
+	{
+		if ( m_primitives.empty() )
+		{
+			m_primitives.emplace_back();
+		}
+	}
+
+	void updateBounds( const math::BoundingBox3Df &primitiveBounds )
+	{
+		if ( primitiveBounds.isValid() )
+		{
+			m_bounds.expand( primitiveBounds.min );
+			m_bounds.expand( primitiveBounds.max );
+		}
+	}
+
+	void resetBounds()
+	{
+		m_bounds = math::BoundingBox3Df{};
+		// Recalculate from all primitives
+		for ( const auto &primitive : m_primitives )
+		{
+			updateBounds( primitive.getBounds() );
+		}
 	}
 };
 

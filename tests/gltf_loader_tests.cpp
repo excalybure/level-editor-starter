@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <cstdio>
+#include <cgltf.h>
 
 import engine.gltf_loader;
 import engine.assets;
@@ -157,11 +158,13 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
 
-		// Verify vertex count matches the glTF data (3 vertices)
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		// NEW: Test primitive-based structure
+		// Each mesh should contain one primitive for this simple case
+		REQUIRE( meshPtr->getPrimitiveCount() == 1 );
 
-		// Verify index count matches the glTF data (3 indices)
-		REQUIRE( meshPtr->getIndexCount() == 3 );
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.getVertexCount() == 3 );
+		REQUIRE( primitive.getIndexCount() == 3 );
 
 		// Verify actual vertex positions (triangle vertices: (0,0,0), (1,0,0), (0.5,1,0))
 		const auto &vertices = meshPtr->getVertices();

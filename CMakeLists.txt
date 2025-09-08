@@ -398,6 +398,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gltf_loader_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp
+    tests/primitive_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
