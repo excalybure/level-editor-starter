@@ -155,13 +155,6 @@ export struct Selected {
     math::Vec3<> highlightColor{1.0f, 0.8f, 0.2f};
 };
 
-// Hierarchy metadata
-export struct Hierarchy {
-    ecs::Entity parent{};
-    std::vector<ecs::Entity> children;
-    bool expanded = true; // For tree view UI
-};
-
 } // namespace components
 ```
 
@@ -285,6 +278,30 @@ protected:
     bool m_loaded = false;
 };
 
+// Material representation
+export class Material : public Asset {
+public:
+    AssetType getType() const override { return AssetType::Material; }
+    
+    struct PBRMaterial {
+        math::Vec4<> baseColorFactor{1.0f, 1.0f, 1.0f, 1.0f};
+        float metallicFactor = 0.0f;
+        float roughnessFactor = 1.0f;
+        math::Vec3<> emissiveFactor{0.0f, 0.0f, 0.0f};
+        
+        std::string baseColorTexture;
+        std::string metallicRoughnessTexture;
+        std::string normalTexture;
+        std::string emissiveTexture;
+    };
+    
+    const PBRMaterial& getPBRMaterial() const { return m_pbrMaterial; }
+    
+private:
+    friend class AssetManager;
+    PBRMaterial m_pbrMaterial;
+};
+
 // Mesh data representation
 export struct Vertex {
     math::Vec3<> position;
@@ -316,30 +333,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_indexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView{};
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView{};
-};
-
-// Material representation
-export class Material : public Asset {
-public:
-    AssetType getType() const override { return AssetType::Material; }
-    
-    struct PBRMaterial {
-        math::Vec4<> baseColorFactor{1.0f, 1.0f, 1.0f, 1.0f};
-        float metallicFactor = 0.0f;
-        float roughnessFactor = 1.0f;
-        math::Vec3<> emissiveFactor{0.0f, 0.0f, 0.0f};
-        
-        std::string baseColorTexture;
-        std::string metallicRoughnessTexture;
-        std::string normalTexture;
-        std::string emissiveTexture;
-    };
-    
-    const PBRMaterial& getPBRMaterial() const { return m_pbrMaterial; }
-    
-private:
-    friend class AssetManager;
-    PBRMaterial m_pbrMaterial;
 };
 
 // Scene hierarchy from glTF
