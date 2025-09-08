@@ -76,10 +76,7 @@ TEST_CASE( "Mesh Tests", "[assets][mesh]" )
 	SECTION( "Mesh type and initial state" )
 	{
 		REQUIRE( mesh->getType() == assets::AssetType::Mesh );
-		REQUIRE( mesh->getVertexCount() == 0 );
-		REQUIRE( mesh->getIndexCount() == 0 );
-		REQUIRE( mesh->getVertices().empty() );
-		REQUIRE( mesh->getIndices().empty() );
+		REQUIRE( mesh->getPrimitiveCount() == 0 );
 		REQUIRE_FALSE( mesh->isLoaded() );
 	}
 
@@ -88,17 +85,11 @@ TEST_CASE( "Mesh Tests", "[assets][mesh]" )
 		const auto &constMesh = *mesh;
 
 		// These should compile without issues - testing const correctness
-		const auto &vertices = constMesh.getVertices();
-		const auto &indices = constMesh.getIndices();
-		const auto vertexCount = constMesh.getVertexCount();
-		const auto indexCount = constMesh.getIndexCount();
+		const auto primitiveCount = constMesh.getPrimitiveCount();
 		const auto type = constMesh.getType();
 		const auto loaded = constMesh.isLoaded();
 
-		REQUIRE( vertices.empty() );
-		REQUIRE( indices.empty() );
-		REQUIRE( vertexCount == 0 );
-		REQUIRE( indexCount == 0 );
+		REQUIRE( primitiveCount == 0 );
 		REQUIRE( type == assets::AssetType::Mesh );
 		REQUIRE_FALSE( loaded );
 	}
@@ -384,7 +375,10 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 		assets::Vertex vertex{};
 		vertex.position = math::Vec3f{ 1.0f, 2.0f, 3.0f };
 
-		mesh->addVertex( vertex );
+		// Create a primitive and add vertex to it
+		assets::Primitive primitive;
+		primitive.addVertex( vertex );
+		mesh->addPrimitive( std::move( primitive ) );
 
 		const auto &bounds = mesh->getBounds();
 		REQUIRE( bounds.isValid() );
@@ -404,9 +398,12 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 		v2.position = math::Vec3f{ 5.0f, 1.0f, 2.0f };
 		v3.position = math::Vec3f{ 0.0f, 4.0f, -1.0f };
 
-		mesh->addVertex( v1 );
-		mesh->addVertex( v2 );
-		mesh->addVertex( v3 );
+		// Create a primitive and add vertices to it
+		assets::Primitive primitive;
+		primitive.addVertex( v1 );
+		primitive.addVertex( v2 );
+		primitive.addVertex( v3 );
+		mesh->addPrimitive( std::move( primitive ) );
 
 		const auto &bounds = mesh->getBounds();
 		REQUIRE( bounds.isValid() );
@@ -427,11 +424,17 @@ TEST_CASE( "Mesh Bounds BoundingBox3D Integration", "[assets][mesh][bounds]" )
 	{
 		assets::Vertex vertex{};
 		vertex.position = math::Vec3f{ 1.0f, 1.0f, 1.0f };
-		mesh->addVertex( vertex );
+
+		// Create a primitive and add vertex to it
+		assets::Primitive primitive;
+		primitive.addVertex( vertex );
+		mesh->addPrimitive( std::move( primitive ) );
 
 		REQUIRE( mesh->hasBounds() );
 
-		mesh->clearVertices();
+		// Clear all primitives and recalculate bounds
+		mesh->getPrimitives().clear();
+		mesh->recalculateBounds();
 
 		const auto &bounds = mesh->getBounds();
 		REQUIRE_FALSE( bounds.isValid() );

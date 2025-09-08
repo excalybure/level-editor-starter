@@ -48,9 +48,12 @@ TEST_CASE( "Mesh Extraction Base Triangle", "[mesh-extraction][tdd]" )
 	REQUIRE( meshPtr != nullptr );
 
 	// REQUIRE: Mesh has the expected triangle data
-	REQUIRE( meshPtr->getVertexCount() == 3 );
+	REQUIRE( meshPtr->getPrimitiveCount() == 1 );
 
-	const auto &vertices = meshPtr->getVertices();
+	const auto &primitive = meshPtr->getPrimitive( 0 );
+	REQUIRE( primitive.getVertexCount() == 3 );
+
+	const auto &vertices = primitive.getVertices();
 	REQUIRE( vertices.size() == 3 );
 
 	// Check vertex positions: (0,0,0), (1,0,0), (0.5,1,0)
@@ -119,9 +122,12 @@ TEST_CASE( "Mesh Extraction With Normals", "[mesh-extraction][tdd][normals]" )
 
 	const auto meshPtr = rootNodes[0]->getFirstMesh();
 	REQUIRE( meshPtr != nullptr );
-	REQUIRE( meshPtr->getVertexCount() == 3 );
+	REQUIRE( meshPtr->getPrimitiveCount() == 1 );
 
-	const auto &vertices = meshPtr->getVertices();
+	const auto &primitive = meshPtr->getPrimitive( 0 );
+	REQUIRE( primitive.getVertexCount() == 3 );
+
+	const auto &vertices = primitive.getVertices();
 	REQUIRE( vertices.size() == 3 );
 
 	REQUIRE( vertices[0].normal.x == 0.0f );

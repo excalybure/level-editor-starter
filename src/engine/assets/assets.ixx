@@ -161,97 +161,6 @@ public:
 		m_primitives.push_back( std::move( primitive ) );
 	}
 
-	// Legacy compatibility methods - aggregate data from all primitives
-	std::vector<Vertex> getVertices() const
-	{
-		std::vector<Vertex> allVertices;
-		for ( const auto &primitive : m_primitives )
-		{
-			const auto &primVertices = primitive.getVertices();
-			allVertices.insert( allVertices.end(), primVertices.begin(), primVertices.end() );
-		}
-		return allVertices;
-	}
-
-	std::vector<std::uint32_t> getIndices() const
-	{
-		std::vector<std::uint32_t> allIndices;
-		std::uint32_t vertexOffset = 0;
-		for ( const auto &primitive : m_primitives )
-		{
-			const auto &primIndices = primitive.getIndices();
-			for ( auto index : primIndices )
-			{
-				allIndices.push_back( index + vertexOffset );
-			}
-			vertexOffset += primitive.getVertexCount();
-		}
-		return allIndices;
-	}
-
-	// Aggregate vertex and index counts
-	std::uint32_t getVertexCount() const
-	{
-		std::uint32_t total = 0;
-		for ( const auto &primitive : m_primitives )
-		{
-			total += primitive.getVertexCount();
-		}
-		return total;
-	}
-
-	std::uint32_t getIndexCount() const
-	{
-		std::uint32_t total = 0;
-		for ( const auto &primitive : m_primitives )
-		{
-			total += primitive.getIndexCount();
-		}
-		return total;
-	}
-
-	// Legacy methods for building mesh data (create single primitive)
-	void addVertex( const Vertex &vertex )
-	{
-		ensureSinglePrimitive();
-		m_primitives[0].addVertex( vertex );
-		updateBounds( m_primitives[0].getBounds() );
-	}
-
-	void addIndex( std::uint32_t index )
-	{
-		ensureSinglePrimitive();
-		m_primitives[0].addIndex( index );
-	}
-
-	void clearVertices()
-	{
-		for ( auto &primitive : m_primitives )
-		{
-			primitive.clearVertices();
-		}
-		resetBounds();
-	}
-
-	void clearIndices()
-	{
-		for ( auto &primitive : m_primitives )
-		{
-			primitive.clearIndices();
-		}
-	}
-
-	void reserveVertices( std::size_t count )
-	{
-		ensureSinglePrimitive();
-		m_primitives[0].reserveVertices( count );
-	}
-
-	void reserveIndices( std::size_t count )
-	{
-		ensureSinglePrimitive();
-		m_primitives[0].reserveIndices( count );
-	}
 
 	// Bounding box accessors - aggregate from all primitives
 	const math::BoundingBox3Df &getBounds() const { return m_bounds; }
@@ -284,20 +193,22 @@ public:
 		size[2] = sizeVec.z;
 	}
 
+	// Recalculate bounds from all primitives (call after modifying primitives directly)
+	void recalculateBounds()
+	{
+		m_bounds = math::BoundingBox3Df{};
+		// Recalculate from all primitives
+		for ( const auto &primitive : m_primitives )
+		{
+			updateBounds( primitive.getBounds() );
+		}
+	}
+
 private:
 	std::vector<Primitive> m_primitives;
 
 	// Aggregate bounding box data from all primitives
 	math::BoundingBox3Df m_bounds;
-
-	// Helper to ensure we have at least one primitive for legacy operations
-	void ensureSinglePrimitive()
-	{
-		if ( m_primitives.empty() )
-		{
-			m_primitives.emplace_back();
-		}
-	}
 
 	void updateBounds( const math::BoundingBox3Df &primitiveBounds )
 	{
@@ -305,16 +216,6 @@ private:
 		{
 			m_bounds.expand( primitiveBounds.min );
 			m_bounds.expand( primitiveBounds.max );
-		}
-	}
-
-	void resetBounds()
-	{
-		m_bounds = math::BoundingBox3Df{};
-		// Recalculate from all primitives
-		for ( const auto &primitive : m_primitives )
-		{
-			updateBounds( primitive.getBounds() );
 		}
 	}
 };

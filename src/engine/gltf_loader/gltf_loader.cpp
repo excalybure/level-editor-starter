@@ -252,9 +252,16 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 	}
 
 	if ( verbose )
+	{
+		std::uint32_t totalVertices = 0;
+		for ( const auto &primitive : mesh->getPrimitives() )
+		{
+			totalVertices += primitive.getVertexCount();
+		}
 		console::info( "extractMesh: Extracted mesh with {} primitives, total {} vertices",
 			mesh->getPrimitiveCount(),
-			mesh->getVertexCount() );
+			totalVertices );
+	}
 
 	return mesh;
 }

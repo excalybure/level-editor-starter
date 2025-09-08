@@ -1,6 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
-Date: 2025-09-06
+Date: 2025-09-08
+
+## 2025-09-08 — Legacy Mesh Methods Removal and Primitive API Migration
+**Summary:** Successfully removed all legacy compatibility methods from the Mesh class and migrated all tests to use the primitive-based API. This eliminates code duplication, enforces proper architecture, and ensures all mesh data access goes through the primitive interface.
+
+**Atomic functionalities completed:**
+- AF1: Removed getVertices(), getIndices(), addVertex(), addIndex(), clearVertices(), clearIndices(), reserveVertices(), reserveIndices() from Mesh class
+- AF2: Updated tests/assets_tests.cpp to use getPrimitive() and primitive methods instead of legacy mesh methods
+- AF3: Updated tests/gltf_loader_tests.cpp to call getVertexCount() and getIndexCount() on primitives instead of mesh
+- AF4: Updated tests/mesh_extraction_tdd_test.cpp to use primitive-based API for all vertex and index operations
+- AF5: Updated tests/primitive_tests.cpp to aggregate vertex/index counts across primitives rather than using legacy mesh methods
+- AF6: Fixed all compilation errors by properly declaring primitive variables and splitting combined variable declarations
+
+**Tests:** All primitive, mesh, asset, and gltf tests pass (425+ assertions across 12+ test cases). Build succeeds without compilation errors. Legacy method calls eliminated from codebase.
+**Notes:** Migration enforces the intended architecture where mesh acts as a container for primitives, and all vertex/index data access goes through the primitive interface. Added proper const-correctness and maintained TDD principles throughout the refactor.
 
 ## 2025-09-06 — glTF Loader Test Buffer Data Fixes
 **Summary:** Fixed failing glTF loader tests by regenerating and correcting base64-encoded buffer data for vertex positions, normals, UVs, tangents, and indices

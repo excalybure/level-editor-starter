@@ -167,7 +167,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( primitive.getIndexCount() == 3 );
 
 		// Verify actual vertex positions (triangle vertices: (0,0,0), (1,0,0), (0.5,1,0))
-		const auto &vertices = meshPtr->getVertices();
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// Check first vertex position (0,0,0)
@@ -186,7 +186,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( vertices[2].position.z == 0.0f );
 
 		// Verify indices are correct (0, 1, 2)
-		const auto &indices = meshPtr->getIndices();
+		const auto &indices = primitive.getIndices();
 		REQUIRE( indices.size() == 3 );
 		REQUIRE( indices[0] == 0 );
 		REQUIRE( indices[1] == 1 );
@@ -269,10 +269,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify default normal values are used when normals are missing
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// All vertices should have default normal (0, 0, 1)
@@ -333,11 +334,12 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
-		REQUIRE( meshPtr->getIndexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getIndexCount() == 3 );
 
 		// Verify indices are correctly converted from uint8 to uint32
-		const auto &indices = meshPtr->getIndices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &indices = primitive.getIndices();
 		REQUIRE( indices.size() == 3 );
 		REQUIRE( indices[0] == 0 );
 		REQUIRE( indices[1] == 1 );
@@ -395,10 +397,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify UV coordinates are correctly extracted
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// Check UV coordinates: (0,0), (1,0), (0.5,1)
@@ -463,10 +466,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 2 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 2 );
 
 		// Verify UV coordinates are correctly extracted from interleaved data
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 2 );
 
 		// Check UV coordinates from interleaved buffer
@@ -516,10 +520,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify default UV coordinates are used when UVs are missing
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// All vertices should have default UV (0.0, 0.0)
@@ -633,10 +638,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify tangent vectors are correctly extracted
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// Check tangent vectors: all should be (1,0,0,1) for this test
@@ -700,10 +706,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 2 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 2 );
 
 		// Verify tangent vectors with different handedness
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 2 );
 
 		// First tangent: (1, 0, 0, 1) - right-handed
@@ -770,10 +777,11 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify default tangent vectors are used when tangents are missing
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// All vertices should have default tangent (1.0, 0.0, 0.0, 1.0)
@@ -865,11 +873,12 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
-		REQUIRE( meshPtr->getIndexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getIndexCount() == 3 );
 
 		// Verify all vertex attributes are correctly extracted
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		// Verify first vertex has all attributes
@@ -891,7 +900,7 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 		REQUIRE( v0.tangent.w == 1.0f );
 
 		// Verify indices are correctly extracted
-		const auto &indices = meshPtr->getIndices();
+		const auto &indices = primitive.getIndices();
 		REQUIRE( indices.size() == 3 );
 		REQUIRE( indices[0] == 0 );
 		REQUIRE( indices[1] == 1 );
@@ -966,10 +975,11 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 2 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 2 );
 
 		// Verify interleaved data extraction
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 2 );
 
 		// Check that stride correctly extracts each vertex's attributes
@@ -1039,10 +1049,11 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 3 );
 
 		// Verify UVs are extracted and defaults are used for missing attributes
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 3 );
 
 		for ( std::size_t i = 0; i < vertices.size(); ++i )
@@ -1153,11 +1164,12 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 
 		const auto meshPtr = rootNodes[0]->getFirstMesh();
 		REQUIRE( meshPtr != nullptr );
-		REQUIRE( meshPtr->getVertexCount() == 4 );
-		REQUIRE( meshPtr->getIndexCount() == 6 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getVertexCount() == 4 );
+		REQUIRE( meshPtr->getPrimitive( 0 ).getIndexCount() == 6 );
 
 		// Verify quad mesh extraction
-		const auto &vertices = meshPtr->getVertices();
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		const auto &vertices = primitive.getVertices();
 		REQUIRE( vertices.size() == 4 );
 
 		// Verify all vertices have valid attributes
@@ -1176,7 +1188,7 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 		}
 
 		// Verify indices form proper triangles (0,1,2) and (1,3,2) for quad
-		const auto &indices = meshPtr->getIndices();
+		const auto &indices = primitive.getIndices();
 		REQUIRE( indices.size() == 6 );
 		// Check that indices are within valid range
 		for ( auto index : indices )

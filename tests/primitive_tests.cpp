@@ -88,41 +88,4 @@ TEST_CASE( "Mesh Primitive-based Operations", "[mesh][primitive][tdd]" )
 		REQUIRE( retrievedPrimitive.getVertexCount() == 1 );
 		REQUIRE( retrievedPrimitive.getIndexCount() == 1 );
 	}
-
-	SECTION( "Legacy getVertexCount works with primitives" )
-	{
-		assets::Mesh mesh;
-		assets::Primitive primitive1;
-		assets::Primitive primitive2;
-
-		// Add vertices to primitives
-		assets::Vertex vertex;
-		primitive1.addVertex( vertex );
-		primitive1.addVertex( vertex );
-		primitive2.addVertex( vertex );
-
-		mesh.addPrimitive( primitive1 );
-		mesh.addPrimitive( primitive2 );
-
-		// Should aggregate from all primitives
-		REQUIRE( mesh.getVertexCount() == 3 );
-	}
-
-	SECTION( "Legacy getIndexCount works with primitives" )
-	{
-		assets::Mesh mesh;
-		assets::Primitive primitive1;
-		assets::Primitive primitive2;
-
-		// Add indices to primitives
-		primitive1.addIndex( 0 );
-		primitive1.addIndex( 1 );
-		primitive2.addIndex( 0 );
-
-		mesh.addPrimitive( primitive1 );
-		mesh.addPrimitive( primitive2 );
-
-		// Should aggregate from all primitives
-		REQUIRE( mesh.getIndexCount() == 3 );
-	}
 }
