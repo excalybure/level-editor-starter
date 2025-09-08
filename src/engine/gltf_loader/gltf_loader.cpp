@@ -570,10 +570,10 @@ std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( void *gltfMateria
 		const auto &pbr = gltfMaterial->pbr_metallic_roughness;
 
 		// Extract base color factor (default: [1.0, 1.0, 1.0, 1.0])
-		pbrMaterial.baseColorFactor[0] = pbr.base_color_factor[0];
-		pbrMaterial.baseColorFactor[1] = pbr.base_color_factor[1];
-		pbrMaterial.baseColorFactor[2] = pbr.base_color_factor[2];
-		pbrMaterial.baseColorFactor[3] = pbr.base_color_factor[3];
+		pbrMaterial.baseColorFactor.x = pbr.base_color_factor[0];
+		pbrMaterial.baseColorFactor.y = pbr.base_color_factor[1];
+		pbrMaterial.baseColorFactor.z = pbr.base_color_factor[2];
+		pbrMaterial.baseColorFactor.w = pbr.base_color_factor[3];
 
 		// Extract metallic factor (default: 1.0)
 		pbrMaterial.metallicFactor = pbr.metallic_factor;
@@ -584,10 +584,10 @@ std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( void *gltfMateria
 		if ( verbose )
 		{
 			console::info( "extractMaterial: Base color factor: [{}, {}, {}, {}]",
-				pbrMaterial.baseColorFactor[0],
-				pbrMaterial.baseColorFactor[1],
-				pbrMaterial.baseColorFactor[2],
-				pbrMaterial.baseColorFactor[3] );
+				pbrMaterial.baseColorFactor.x,
+				pbrMaterial.baseColorFactor.y,
+				pbrMaterial.baseColorFactor.z,
+				pbrMaterial.baseColorFactor.w );
 			console::info( "extractMaterial: Metallic factor: {}", pbrMaterial.metallicFactor );
 			console::info( "extractMaterial: Roughness factor: {}", pbrMaterial.roughnessFactor );
 		}
@@ -610,16 +610,16 @@ std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( void *gltfMateria
 	}
 
 	// Extract emissive factor (default: [0.0, 0.0, 0.0])
-	pbrMaterial.emissiveFactor[0] = gltfMaterial->emissive_factor[0];
-	pbrMaterial.emissiveFactor[1] = gltfMaterial->emissive_factor[1];
-	pbrMaterial.emissiveFactor[2] = gltfMaterial->emissive_factor[2];
+	pbrMaterial.emissiveFactor.x = gltfMaterial->emissive_factor[0];
+	pbrMaterial.emissiveFactor.y = gltfMaterial->emissive_factor[1];
+	pbrMaterial.emissiveFactor.z = gltfMaterial->emissive_factor[2];
 
 	if ( verbose )
 	{
 		console::info( "extractMaterial: Emissive factor: [{}, {}, {}]",
-			pbrMaterial.emissiveFactor[0],
-			pbrMaterial.emissiveFactor[1],
-			pbrMaterial.emissiveFactor[2] );
+			pbrMaterial.emissiveFactor.x,
+			pbrMaterial.emissiveFactor.y,
+			pbrMaterial.emissiveFactor.z );
 	}
 
 	// Extract normal texture

@@ -60,10 +60,10 @@ public:
 
 	struct PBRMaterial
 	{
-		float baseColorFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		math::Vec4f baseColorFactor = { 1.0f, 1.0f, 1.0f, 1.0f };
 		float metallicFactor = 0.0f;
 		float roughnessFactor = 1.0f;
-		float emissiveFactor[3] = { 0.0f, 0.0f, 0.0f };
+		math::Vec3f emissiveFactor = { 0.0f, 0.0f, 0.0f };
 
 		std::string baseColorTexture;
 		std::string metallicRoughnessTexture;

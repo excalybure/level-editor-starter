@@ -2,6 +2,17 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — Material PBR Factor Type Modernization
+**Summary:** Modernized PBRMaterial structure by replacing C-style float arrays with proper math::Vec types for baseColorFactor and emissiveFactor. This improves type safety, provides better C++ semantics, and maintains compatibility with existing glTF loader code.
+
+**Atomic functionalities completed:**
+- AF1: Created failing unit tests for Vec-based baseColorFactor and emissiveFactor assignments
+- AF2: Updated baseColorFactor from float[4] to math::Vec4f in PBRMaterial struct
+- AF3: Updated emissiveFactor from float[3] to math::Vec3f in PBRMaterial struct
+- AF4: Fixed gltf_loader.cpp to use Vec component access (.x, .y, .z, .w) instead of array indexing
+
+**Notes:** Vec types don't support array indexing operators, so component access via .x/.y/.z/.w is required. All existing glTF loading functionality preserved.
+
 ## 2025-09-08 — Scene Hierarchy / Transforms Implementation
 **Summary:** Implemented comprehensive transform extraction from glTF nodes, including TRS (translation, rotation, scale) and matrix-based transformations. Added quaternion-to-Euler angle conversion and integrated transform data into SceneNode structure. This completes Task 5 of M2-P2.
 
