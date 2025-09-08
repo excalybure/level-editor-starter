@@ -302,6 +302,30 @@ Refs: M2-P1-T03
 The runner supports flags such as `--list-tests`, `--list-tags`, `--reporter`, `--durations`, `--abort`, `--abortx`, `--order`, `--rng-seed`, `--colour-mode`, and sharding options. Use these to target and speed up local test runs. Ignore incidental `[INFO]/[WARNING]/[ERROR]` lines unless the test itself fails.
 
 ---
+## 12) Base 64 encoding
+If you need to produce a base64 encoded string, generate a python script that will do the encoding for you. The script should look like this:
+```
+python -c "
+import struct
+import base64
+
+# Positions: (0,0,0), (1,0,0), (0,1,0)
+positions = struct.pack('<9f', 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+# UVs: (0,0), (1,0), (0.5,1)
+uvs = struct.pack('<6f', 0.0, 0.0, 1.0, 0.0, 0.5, 1.0)
+
+# Combine positions and UVs
+combined = positions + uvs
+print('data:application/octet-stream;base64,' + base64.b64encode(combined).decode())
+print('Length:', len(combined))
+"
+```
+
+When you run this script, it will output a base64 encoded string that you can use in your code. For example:
+```
+data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAD8AAIA/
+Length: 60
+```
 
 ### End
 Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `PROGRESS_<N>.md`** and **update `M<X>_P<Y>.md`** and **emit a commit message** using the template above.
