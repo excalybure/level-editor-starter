@@ -42,15 +42,18 @@ export enum class AttributeType {
 export std::vector<Vec3f> extractFloat3Positions( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
 	// Calculate effective stride (minimum of 12 bytes for float3 or specified stride)
-	const std::size_t floatOffset = byteOffset / sizeof( float );
-	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 3;
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
 
 	std::vector<Vec3f> positions;
 	positions.reserve( count );
 
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
 	for ( std::size_t i = 0; i < count; ++i )
 	{
-		const float *vertex = buffer + floatOffset + ( i * effectiveStride );
+		const std::uint8_t *vertexBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *vertex = reinterpret_cast<const float *>( vertexBytes );
 		positions.push_back( { vertex[0], vertex[1], vertex[2] } );
 	}
 
@@ -59,21 +62,39 @@ export std::vector<Vec3f> extractFloat3Positions( const float *buffer, std::size
 
 export std::vector<Vec3f> extractFloat3Normals( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
-	// Reuse the same logic as positions since they're both float3
-	return extractFloat3Positions( buffer, count, byteOffset, byteStride );
+	// Use the same logic as positions since they're both float3, but implemented directly for clarity
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
+
+	std::vector<Vec3f> normals;
+	normals.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( std::size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *normalBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *normal = reinterpret_cast<const float *>( normalBytes );
+		normals.push_back( { normal[0], normal[1], normal[2] } );
+	}
+
+	return normals;
 }
 
 export std::vector<Vec2f> extractFloat2UVs( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
-	const std::size_t floatOffset = byteOffset / sizeof( float );
-	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 2;
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 2 * sizeof( float ) );
 
 	std::vector<Vec2f> uvs;
 	uvs.reserve( count );
 
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
 	for ( std::size_t i = 0; i < count; ++i )
 	{
-		const float *uv = buffer + floatOffset + ( i * effectiveStride );
+		const std::uint8_t *uvBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *uv = reinterpret_cast<const float *>( uvBytes );
 		uvs.push_back( { uv[0], uv[1] } );
 	}
 
@@ -82,15 +103,18 @@ export std::vector<Vec2f> extractFloat2UVs( const float *buffer, std::size_t cou
 
 export std::vector<Vec4f> extractFloat4Tangents( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
 {
-	const std::size_t floatOffset = byteOffset / sizeof( float );
-	const std::size_t effectiveStride = ( byteStride > 0 ) ? ( byteStride / sizeof( float ) ) : 4;
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 4 * sizeof( float ) );
 
 	std::vector<Vec4f> tangents;
 	tangents.reserve( count );
 
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
 	for ( std::size_t i = 0; i < count; ++i )
 	{
-		const float *tangent = buffer + floatOffset + ( i * effectiveStride );
+		const std::uint8_t *tangentBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *tangent = reinterpret_cast<const float *>( tangentBytes );
 		tangents.push_back( { tangent[0], tangent[1], tangent[2], tangent[3] } );
 	}
 

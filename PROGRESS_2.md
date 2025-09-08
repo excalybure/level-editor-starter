@@ -2,6 +2,20 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — GLTF Loader Unaligned Byte Offset Fix
+**Summary:** Fixed critical alignment issue in GLTF loader where extractFloat3Positions and similar functions incorrectly assumed byteOffset was aligned to sizeof(float). This prevented correct loading of meshes with multiple primitives where buffer offsets weren't 4-byte aligned.
+
+**Atomic functionalities completed:**
+- AF1: Fixed extractFloat3Positions to handle unaligned byte offsets by using byte-level addressing with reinterpret_cast
+- AF2: Fixed extractFloat3Normals to properly handle unaligned offsets using same byte-addressing approach  
+- AF3: Fixed extractFloat2UVs to work with unaligned byte offsets for texture coordinate data
+- AF4: Fixed extractFloat4Tangents to handle unaligned offsets for tangent vector data
+- AF5: Added comprehensive test cases to verify all functions work correctly with deliberately unaligned offsets (2, 6, 10 byte offsets)
+- AF6: Verified existing multiple primitives test now passes, confirming normals are correctly extracted from second primitive
+
+**Tests:** All GLTF tests now pass (185+ assertions across multiple test cases). New unaligned offset tests added with 11 assertions verifying byte-level addressing works correctly. Multiple primitives test that was previously failing due to alignment issue now passes.
+**Notes:** The root cause was byteOffset/sizeof(float) integer division losing precision when offsets weren't multiples of 4. Solution uses byte-level pointer arithmetic then reinterpret_cast to access float data at any offset. This enables proper loading of complex GLTF files with tightly packed buffer layouts where primitives don't start at aligned boundaries.
+
 ## 2025-09-08 — Legacy Mesh Methods Removal and Primitive API Migration
 **Summary:** Successfully removed all legacy compatibility methods from the Mesh class and migrated all tests to use the primitive-based API. This eliminates code duplication, enforces proper architecture, and ensures all mesh data access goes through the primitive interface.
 

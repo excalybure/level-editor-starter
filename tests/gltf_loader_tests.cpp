@@ -1195,6 +1195,164 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 			REQUIRE( index < 4 );
 		}
 	}
+
+	SECTION( "Extract mesh with multiple primitives" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: mesh with two primitives (both triangles with positions and normals)
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [
+					{
+						"attributes": { 
+							"POSITION": 0,
+							"NORMAL": 1
+						},
+						"indices": 2
+					},
+					{
+						"attributes": { 
+							"POSITION": 3,
+							"NORMAL": 4
+						},
+						"indices": 5
+					}
+				]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 2,
+					"componentType": 5123,
+					"count": 3,
+					"type": "SCALAR"
+				},
+				{
+					"bufferView": 3,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 4,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 5,
+					"componentType": 5123,
+					"count": 3,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 72, "byteLength": 6 },
+				{ "buffer": 0, "byteOffset": 78, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 114, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 150, "byteLength": 6 }
+			],
+			"buffers": [{
+				"byteLength": 156,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAABAAIAAAAAQAAAAAAAAAAAAABAQAAAAAAAAAAAAAAgQAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAABAAIA"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+
+		// Verify the mesh has exactly 2 primitives
+		REQUIRE( meshPtr->getPrimitiveCount() == 2 );
+
+		// Verify first primitive (triangle 1)
+		const auto &primitive1 = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive1.getVertexCount() == 3 );
+		REQUIRE( primitive1.getIndexCount() == 3 );
+
+		const auto &vertices1 = primitive1.getVertices();
+		REQUIRE( vertices1.size() == 3 );
+
+		// Verify triangle vertices have positions and normals
+		for ( const auto &vertex : vertices1 )
+		{
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
+
+			// Default UV coordinates since not provided
+			REQUIRE( vertex.texCoord.x == 0.0f );
+			REQUIRE( vertex.texCoord.y == 0.0f );
+		}
+
+		const auto &indices1 = primitive1.getIndices();
+		REQUIRE( indices1.size() == 3 );
+		REQUIRE( indices1[0] == 0 );
+		REQUIRE( indices1[1] == 1 );
+		REQUIRE( indices1[2] == 2 );
+
+		// Verify second primitive (triangle 2)
+		const auto &primitive2 = meshPtr->getPrimitive( 1 );
+		REQUIRE( primitive2.getVertexCount() == 3 );
+		REQUIRE( primitive2.getIndexCount() == 3 );
+
+		const auto &vertices2 = primitive2.getVertices();
+		REQUIRE( vertices2.size() == 3 );
+
+		// Verify second triangle has positions and normals
+		for ( const auto &vertex : vertices2 )
+		{
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
+
+			// Default UV coordinates since not provided
+			REQUIRE( vertex.texCoord.x == 0.0f );
+			REQUIRE( vertex.texCoord.y == 0.0f );
+		}
+
+		const auto &indices2 = primitive2.getIndices();
+		REQUIRE( indices2.size() == 3 );
+		REQUIRE( indices2[0] == 0 );
+		REQUIRE( indices2[1] == 1 );
+		REQUIRE( indices2[2] == 2 );
+
+		// Verify that mesh bounds encompass both primitives
+		REQUIRE( meshPtr->hasBounds() );
+		const auto &bounds = meshPtr->getBounds();
+
+		// Bounds should cover both triangles (x: 0-3, y: 0-1, z: 0)
+		REQUIRE( bounds.min.x == 0.0f );
+		REQUIRE( bounds.min.y == 0.0f );
+		REQUIRE( bounds.min.z == 0.0f );
+		REQUIRE( bounds.max.x == 3.0f );
+		REQUIRE( bounds.max.y == 1.0f );
+		REQUIRE( bounds.max.z == 0.0f );
+	}
 }
 
 // RED Phase: Tests for file-based loading (should fail initially)
@@ -1315,5 +1473,63 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 		// Clean up
 		std::remove( gltfPath.c_str() );
 		std::remove( binPath.c_str() );
+	}
+}
+
+// Test unaligned byte offset handling in extractFloat functions
+TEST_CASE( "GLTFLoader Unaligned Byte Offset Handling", "[gltf][loader][unaligned]" )
+{
+	SECTION( "extractFloat3Positions handles unaligned offsets correctly" )
+	{
+		// Create a buffer with float data starting at unaligned offset (offset 2)
+		// Layout: [2 padding bytes][float1][float2][float3]
+		std::vector<std::uint8_t> buffer( 16, 0 );
+
+		// Place float values at offset 2 (unaligned)
+		const float expectedValues[] = { 1.0f, 2.0f, 3.0f };
+		std::memcpy( buffer.data() + 2, expectedValues, sizeof( expectedValues ) );
+
+		const float *floatBuffer = reinterpret_cast<const float *>( buffer.data() );
+		const auto positions = gltf_loader::extractFloat3Positions( floatBuffer, 1, 2, 0 );
+
+		REQUIRE( positions.size() == 1 );
+		REQUIRE( positions[0].x == 1.0f );
+		REQUIRE( positions[0].y == 2.0f );
+		REQUIRE( positions[0].z == 3.0f );
+	}
+
+	SECTION( "extractFloat3Normals handles unaligned offsets correctly" )
+	{
+		// Create a buffer with normal data starting at unaligned offset (offset 6)
+		std::vector<std::uint8_t> buffer( 20, 0 );
+
+		// Place float values at offset 6 (unaligned)
+		const float expectedNormals[] = { 0.0f, 1.0f, 0.0f };
+		std::memcpy( buffer.data() + 6, expectedNormals, sizeof( expectedNormals ) );
+
+		const float *floatBuffer = reinterpret_cast<const float *>( buffer.data() );
+		const auto normals = gltf_loader::extractFloat3Normals( floatBuffer, 1, 6, 0 );
+
+		REQUIRE( normals.size() == 1 );
+		REQUIRE( normals[0].x == 0.0f );
+		REQUIRE( normals[0].y == 1.0f );
+		REQUIRE( normals[0].z == 0.0f );
+	}
+
+	SECTION( "extractFloat2UVs handles unaligned offsets correctly" )
+	{
+		// Create a buffer with UV data starting at unaligned offset (offset 10)
+		std::vector<std::uint8_t> buffer( 20, 0 );
+
+		// Place float values at offset 10 (unaligned)
+		const float expectedUVs[] = { 0.5f, 0.75f };
+		std::memcpy( buffer.data() + 10, expectedUVs, sizeof( expectedUVs ) );
+
+		const float *floatBuffer = reinterpret_cast<const float *>( buffer.data() );
+		const auto uvs = gltf_loader::extractFloat2UVs( floatBuffer, 1, 10, 0 );
+
+		REQUIRE( uvs.size() == 1 );
+		REQUIRE( uvs[0].x == 0.5f );
+		REQUIRE( uvs[0].y == 0.75f );
 	}
 }
