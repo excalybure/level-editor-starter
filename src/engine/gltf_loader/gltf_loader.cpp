@@ -528,7 +528,136 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 		}
 	}
 
+	// Handle material assignment
+	if ( primitive->material )
+	{
+		// For now, create a simple material identifier based on the material index in the glTF data
+		// TODO: This should be replaced with actual material asset path/ID when AssetManager is implemented
+		const std::string materialPath = std::string( "material_" ) + std::to_string( reinterpret_cast<std::uintptr_t>( primitive->material ) );
+		primitiveObj->setMaterialPath( materialPath );
+
+		if ( verbose )
+			console::info( "extractPrimitive: Assigned material path: {}", materialPath );
+	}
+
 	return primitiveObj;
+}
+
+std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( void *gltfMaterialPtr, void *dataPtr, bool verbose ) const
+{
+	cgltf_material *gltfMaterial = static_cast<cgltf_material *>( gltfMaterialPtr );
+	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
+
+	if ( !gltfMaterial )
+	{
+		console::error( "extractMaterial: Invalid material pointer" );
+		return nullptr;
+	}
+
+	if ( verbose )
+		console::info( "extractMaterial: Processing material '{}'", gltfMaterial->name ? gltfMaterial->name : "Unnamed" );
+
+	auto material = std::make_shared<assets::Material>();
+	auto &pbrMaterial = material->getPBRMaterial();
+
+	// Extract PBR Metallic Roughness properties
+	if ( gltfMaterial->has_pbr_metallic_roughness )
+	{
+		const auto &pbr = gltfMaterial->pbr_metallic_roughness;
+
+		// Extract base color factor (default: [1.0, 1.0, 1.0, 1.0])
+		pbrMaterial.baseColorFactor[0] = pbr.base_color_factor[0];
+		pbrMaterial.baseColorFactor[1] = pbr.base_color_factor[1];
+		pbrMaterial.baseColorFactor[2] = pbr.base_color_factor[2];
+		pbrMaterial.baseColorFactor[3] = pbr.base_color_factor[3];
+
+		// Extract metallic factor (default: 1.0)
+		pbrMaterial.metallicFactor = pbr.metallic_factor;
+
+		// Extract roughness factor (default: 1.0)
+		pbrMaterial.roughnessFactor = pbr.roughness_factor;
+
+		if ( verbose )
+		{
+			console::info( "extractMaterial: Base color factor: [{}, {}, {}, {}]",
+				pbrMaterial.baseColorFactor[0],
+				pbrMaterial.baseColorFactor[1],
+				pbrMaterial.baseColorFactor[2],
+				pbrMaterial.baseColorFactor[3] );
+			console::info( "extractMaterial: Metallic factor: {}", pbrMaterial.metallicFactor );
+			console::info( "extractMaterial: Roughness factor: {}", pbrMaterial.roughnessFactor );
+		}
+
+		// Extract base color texture
+		if ( pbr.base_color_texture.texture )
+		{
+			pbrMaterial.baseColorTexture = extractTextureURI( const_cast<cgltf_texture_view *>( &pbr.base_color_texture ), data );
+			if ( verbose && !pbrMaterial.baseColorTexture.empty() )
+				console::info( "extractMaterial: Base color texture: {}", pbrMaterial.baseColorTexture );
+		}
+
+		// Extract metallic roughness texture
+		if ( pbr.metallic_roughness_texture.texture )
+		{
+			pbrMaterial.metallicRoughnessTexture = extractTextureURI( const_cast<cgltf_texture_view *>( &pbr.metallic_roughness_texture ), data );
+			if ( verbose && !pbrMaterial.metallicRoughnessTexture.empty() )
+				console::info( "extractMaterial: Metallic roughness texture: {}", pbrMaterial.metallicRoughnessTexture );
+		}
+	}
+
+	// Extract emissive factor (default: [0.0, 0.0, 0.0])
+	pbrMaterial.emissiveFactor[0] = gltfMaterial->emissive_factor[0];
+	pbrMaterial.emissiveFactor[1] = gltfMaterial->emissive_factor[1];
+	pbrMaterial.emissiveFactor[2] = gltfMaterial->emissive_factor[2];
+
+	if ( verbose )
+	{
+		console::info( "extractMaterial: Emissive factor: [{}, {}, {}]",
+			pbrMaterial.emissiveFactor[0],
+			pbrMaterial.emissiveFactor[1],
+			pbrMaterial.emissiveFactor[2] );
+	}
+
+	// Extract normal texture
+	if ( gltfMaterial->normal_texture.texture )
+	{
+		pbrMaterial.normalTexture = extractTextureURI( const_cast<cgltf_texture_view *>( &gltfMaterial->normal_texture ), data );
+		if ( verbose && !pbrMaterial.normalTexture.empty() )
+			console::info( "extractMaterial: Normal texture: {}", pbrMaterial.normalTexture );
+	}
+
+	// Extract emissive texture
+	if ( gltfMaterial->emissive_texture.texture )
+	{
+		pbrMaterial.emissiveTexture = extractTextureURI( const_cast<cgltf_texture_view *>( &gltfMaterial->emissive_texture ), data );
+		if ( verbose && !pbrMaterial.emissiveTexture.empty() )
+			console::info( "extractMaterial: Emissive texture: {}", pbrMaterial.emissiveTexture );
+	}
+
+	if ( verbose )
+		console::info( "extractMaterial: Material extraction completed" );
+
+	return material;
+}
+
+std::string GLTFLoader::extractTextureURI( void *textureInfoPtr, void *dataPtr ) const
+{
+	cgltf_texture_view *textureInfo = static_cast<cgltf_texture_view *>( textureInfoPtr );
+	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
+
+	if ( !textureInfo || !textureInfo->texture || !data )
+		return {};
+
+	cgltf_texture *texture = textureInfo->texture;
+	if ( !texture->image )
+		return {};
+
+	cgltf_image *image = texture->image;
+	if ( !image->uri )
+		return {};
+
+	// Return the URI string directly
+	return std::string( image->uri );
 }
 
 std::span<const std::uint8_t> GLTFLoader::getAccessorData( void *accessorPtr, void *dataPtr ) const

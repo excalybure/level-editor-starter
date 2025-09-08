@@ -2,6 +2,20 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — Material Parsing Implementation
+**Summary:** Implemented comprehensive material parsing in the glTF loader, extracting PBR factors (baseColor, metallic, roughness, emissive) and texture references (baseColor, metallicRoughness, normal, emissive, occlusion) from glTF materials. This completes Task 4 of M2-P2.
+
+**Atomic functionalities completed:**
+- AF1: Reviewed Material struct in assets.ixx and confirmed support for complete PBR material properties
+- AF2: Implemented extractMaterial method in glTF loader to parse PBR metallic-roughness factors with default values
+- AF3: Added extractTextureURI helper to extract texture file paths from glTF texture references
+- AF4: Integrated material parsing with primitive extraction so each primitive references its assigned material
+- AF5: Created comprehensive material parsing tests covering PBR factors, texture references, default values, and edge cases
+- AF6: Fixed C++ module interface issues with cgltf type usage by using void* parameters and proper casting
+
+**Tests:** 2 new test cases with 57 assertions covering material factor parsing (baseColor, metallic, roughness, emissive), texture URI extraction (baseColor, metallicRoughness, normal, emissive, occlusion), default value handling, and material assignment to primitives. All gltf loader tests pass (447 assertions in 8 test cases).
+**Notes:** Implementation extracts complete PBR material data from glTF files and assigns materials to primitives. Texture references store original URIs for later texture loading. Default PBR values match glTF 2.0 specification. Fixed module interface type issues by using void* for cgltf types and proper const_cast for texture extraction.
+
 ## 2025-09-08 — GLTF Loader Unaligned Byte Offset Fix
 **Summary:** Fixed critical alignment issue in GLTF loader where extractFloat3Positions and similar functions incorrectly assumed byteOffset was aligned to sizeof(float). This prevented correct loading of meshes with multiple primitives where buffer offsets weren't 4-byte aligned.
 

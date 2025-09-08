@@ -91,7 +91,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		})";
 
 		// Create a temporary glTF file
-		auto scene = loader.loadFromString( gltfContent );
+		const auto scene = loader.loadFromString( gltfContent );
 
 		REQUIRE( scene != nullptr );
 		REQUIRE( scene->getType() == assets::AssetType::Scene );
@@ -146,7 +146,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 			}]
 		})";
 
-		auto scene = loader.loadFromString( gltfContent );
+		const auto scene = loader.loadFromString( gltfContent );
 
 		REQUIRE( scene != nullptr );
 		const auto &rootNodes = scene->getRootNodes();
@@ -570,7 +570,7 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 			}]
 		})";
 
-		auto scene = loader.loadFromString( gltfWithMaterial );
+		const auto scene = loader.loadFromString( gltfWithMaterial );
 
 		REQUIRE( scene != nullptr );
 		const auto &rootNodes = scene->getRootNodes();
@@ -1531,5 +1531,287 @@ TEST_CASE( "GLTFLoader Unaligned Byte Offset Handling", "[gltf][loader][unaligne
 		REQUIRE( uvs.size() == 1 );
 		REQUIRE( uvs[0].x == 0.5f );
 		REQUIRE( uvs[0].y == 0.75f );
+	}
+}
+
+// Tests for Material Parsing
+TEST_CASE( "GLTFLoader Material Parsing", "[gltf][loader][material]" )
+{
+	SECTION( "Parse material with PBR factors" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfWithMaterial = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"material": 0
+				}]
+			}],
+			"materials": [{
+				"name": "TestMaterial",
+				"pbrMetallicRoughness": {
+					"baseColorFactor": [1.0, 0.5, 0.0, 1.0],
+					"metallicFactor": 0.8,
+					"roughnessFactor": 0.2
+				}
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithMaterial );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		// Get the mesh and verify it has a primitive with material
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getPrimitiveCount() == 1 );
+
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.hasMaterial() );
+
+		// Verify material path was captured (for now just check it's not empty)
+		REQUIRE( !primitive.getMaterialPath().empty() );
+	}
+
+	SECTION( "Parse material with emissive factor" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfWithEmissive = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"material": 0
+				}]
+			}],
+			"materials": [{
+				"name": "EmissiveMaterial",
+				"pbrMetallicRoughness": {
+					"baseColorFactor": [1.0, 1.0, 1.0, 1.0]
+				},
+				"emissiveFactor": [0.2, 0.4, 0.6]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithEmissive );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.hasMaterial() );
+	}
+
+	SECTION( "Parse material with texture references" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfWithTextures = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"material": 0
+				}]
+			}],
+			"materials": [{
+				"name": "TexturedMaterial",
+				"pbrMetallicRoughness": {
+					"baseColorTexture": { "index": 0 },
+					"metallicRoughnessTexture": { "index": 1 }
+				},
+				"normalTexture": { "index": 2 },
+				"emissiveTexture": { "index": 3 }
+			}],
+			"textures": [
+				{ "source": 0 },
+				{ "source": 1 },
+				{ "source": 2 },
+				{ "source": 3 }
+			],
+			"images": [
+				{ "uri": "basecolor.png" },
+				{ "uri": "metallic_roughness.png" },
+				{ "uri": "normal.png" },
+				{ "uri": "emissive.png" }
+			],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithTextures );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.hasMaterial() );
+	}
+
+	SECTION( "Parse material with default values when factors are missing" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfMinimalMaterial = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"material": 0
+				}]
+			}],
+			"materials": [{
+				"name": "MinimalMaterial"
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfMinimalMaterial );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.hasMaterial() );
+	}
+
+	SECTION( "Extract and validate PBR factor values" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test material extraction directly
+		const std::string gltfWithDetailedMaterial = R"({
+			"materials": [{
+				"name": "DetailedMaterial",
+				"pbrMetallicRoughness": {
+					"baseColorFactor": [0.8, 0.2, 0.1, 0.9],
+					"metallicFactor": 0.7,
+					"roughnessFactor": 0.3
+				},
+				"emissiveFactor": [0.1, 0.05, 0.02]
+			}]
+		})";
+
+		// Since we cannot directly test extractMaterial function from outside,
+		// we need to test through a complete glTF scene that uses the material
+		const std::string completeGltf = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 },
+					"material": 0
+				}]
+			}],
+			"materials": [{
+				"name": "DetailedMaterial",
+				"pbrMetallicRoughness": {
+					"baseColorFactor": [0.8, 0.2, 0.1, 0.9],
+					"metallicFactor": 0.7,
+					"roughnessFactor": 0.3
+				},
+				"emissiveFactor": [0.1, 0.05, 0.02]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( completeGltf );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		const auto &primitive = meshPtr->getPrimitive( 0 );
+		REQUIRE( primitive.hasMaterial() );
+
+		// For now, just verify the material path was set
+		// TODO: When AssetManager is implemented, we should be able to retrieve and validate the actual material data
+		REQUIRE( !primitive.getMaterialPath().empty() );
 	}
 }

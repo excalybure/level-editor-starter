@@ -40,6 +40,32 @@ export struct Vertex
 	math::Vec4f tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
 };
 
+// Material representation
+export class Material : public Asset
+{
+public:
+	AssetType getType() const override { return AssetType::Material; }
+
+	struct PBRMaterial
+	{
+		float baseColorFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		float metallicFactor = 0.0f;
+		float roughnessFactor = 1.0f;
+		float emissiveFactor[3] = { 0.0f, 0.0f, 0.0f };
+
+		std::string baseColorTexture;
+		std::string metallicRoughnessTexture;
+		std::string normalTexture;
+		std::string emissiveTexture;
+	};
+
+	const PBRMaterial &getPBRMaterial() const { return m_pbrMaterial; }
+	PBRMaterial &getPBRMaterial() { return m_pbrMaterial; }
+
+private:
+	PBRMaterial m_pbrMaterial;
+};
+
 // Primitive class - represents a single drawable primitive with its own vertex/index data and material
 export class Primitive
 {
@@ -206,32 +232,6 @@ private:
 			m_bounds.expand( primitiveBounds.max );
 		}
 	}
-};
-
-// Material representation
-export class Material : public Asset
-{
-public:
-	AssetType getType() const override { return AssetType::Material; }
-
-	struct PBRMaterial
-	{
-		float baseColorFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		float metallicFactor = 0.0f;
-		float roughnessFactor = 1.0f;
-		float emissiveFactor[3] = { 0.0f, 0.0f, 0.0f };
-
-		std::string baseColorTexture;
-		std::string metallicRoughnessTexture;
-		std::string normalTexture;
-		std::string emissiveTexture;
-	};
-
-	const PBRMaterial &getPBRMaterial() const { return m_pbrMaterial; }
-	PBRMaterial &getPBRMaterial() { return m_pbrMaterial; }
-
-private:
-	PBRMaterial m_pbrMaterial;
 };
 
 // Simple scene node structure

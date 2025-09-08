@@ -225,6 +225,10 @@ private:
 	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose = false ) const;
 	std::unique_ptr<assets::Primitive> extractPrimitive( cgltf_primitive *gltfPrimitive, cgltf_data *data, bool verbose = false ) const;
 
+	// Material extraction helpers
+	std::shared_ptr<assets::Material> extractMaterial( void *gltfMaterial, void *data, bool verbose = false ) const;
+	std::string extractTextureURI( void *textureInfo, void *data ) const;
+
 	// Helper to get accessor data as typed spans
 	std::span<const std::uint8_t> getAccessorData( void *accessor, void *data ) const;
 };
