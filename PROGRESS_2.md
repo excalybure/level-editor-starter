@@ -2,6 +2,23 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — Scene Hierarchy / Transforms Implementation
+**Summary:** Implemented comprehensive transform extraction from glTF nodes, including TRS (translation, rotation, scale) and matrix-based transformations. Added quaternion-to-Euler angle conversion and integrated transform data into SceneNode structure. This completes Task 5 of M2-P2.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed existing Transform component and SceneNode structure to understand current transform handling
+- AF2: Added simple Transform structure to assets module to avoid circular dependencies with runtime.components
+- AF3: Implemented extractTransformFromNode method to handle both TRS and matrix-based glTF node transformations
+- AF4: Implemented extractTransformFromTRS to extract translation, rotation (quaternion), and scale from glTF TRS components
+- AF5: Implemented extractTransformFromMatrix to decompose glTF transformation matrices into translation and scale
+- AF6: Added quaternionToEulerAngles conversion using the existing math::Quat module's toEulerAngles method
+- AF7: Updated SceneNode with hasTransform/getTransform/setTransform methods to store and access transform data
+- AF8: Integrated transform extraction into the processNode method to populate SceneNode transforms during loading
+- AF9: Added comprehensive transform tests covering TRS extraction, matrix decomposition, quaternion conversion, and default values
+
+**Tests:** 3 new test sections with 36 assertions covering TRS extraction from glTF nodes (translation, rotation, scale), matrix decomposition (translation and scale extraction), quaternion-to-Euler conversion with realistic rotation values, and default identity transform handling. All gltf loader tests continue to pass (483 assertions in 9 test cases).
+**Notes:** Transform extraction properly handles glTF's TRS format and matrix fallback. Quaternion rotations are converted to Euler angles using the math::Quat module. Matrix rotation extraction is simplified (assumes no rotation) but includes proper translation and scale decomposition. SceneNode now contains transform data that can be used during ECS import. Added engine.quat and engine.matrix dependencies to glTF loader.
+
 ## 2025-09-08 — Material Parsing Implementation
 **Summary:** Implemented comprehensive material parsing in the glTF loader, extracting PBR factors (baseColor, metallic, roughness, emissive) and texture references (baseColor, metallicRoughness, normal, emissive, occlusion) from glTF materials. This completes Task 4 of M2-P2.
 

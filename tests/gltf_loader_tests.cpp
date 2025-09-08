@@ -1815,3 +1815,189 @@ TEST_CASE( "GLTFLoader Material Parsing", "[gltf][loader][material]" )
 		REQUIRE( !primitive.getMaterialPath().empty() );
 	}
 }
+
+// Tests for transform extraction from glTF nodes
+TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
+{
+	SECTION( "Extract TRS from glTF node with translation, rotation, scale" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfWithTransforms = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{
+				"name": "TransformedNode",
+				"translation": [1.0, 2.0, 3.0],
+				"rotation": [0.0, 0.0, 0.7071068, 0.7071068],
+				"scale": [2.0, 1.0, 0.5],
+				"mesh": 0
+			}],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithTransforms );
+		REQUIRE( scene != nullptr );
+
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+
+		const auto &node = rootNodes[0];
+		REQUIRE( node->name == "TransformedNode" );
+
+		// Check that the node now has transform data
+		// This test will fail initially since SceneNode doesn't store transform data yet
+		REQUIRE( node->hasTransform() );
+		const auto &transform = node->getTransform();
+
+		// Verify translation
+		REQUIRE( transform.position.x == 1.0f );
+		REQUIRE( transform.position.y == 2.0f );
+		REQUIRE( transform.position.z == 3.0f );
+
+		// Verify scale
+		REQUIRE( transform.scale.x == 2.0f );
+		REQUIRE( transform.scale.y == 1.0f );
+		REQUIRE( transform.scale.z == 0.5f );
+
+		// Verify rotation (quaternion [0, 0, 0.7071068, 0.7071068] should convert to ~90 degrees around Z)
+		// This is approximately 90 degrees (π/2 radians) around Z-axis
+		REQUIRE( std::abs( transform.rotation.x ) < 0.001f );
+		REQUIRE( std::abs( transform.rotation.y ) < 0.001f );
+		REQUIRE( std::abs( transform.rotation.z - 1.5708f ) < 0.01f ); // π/2 ≈ 1.5708
+	}
+
+	SECTION( "Extract transform from glTF node with matrix" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Matrix representing translation (2, 3, 4) and scale (1.5, 1.5, 1.5)
+		const std::string gltfWithMatrix = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{
+				"name": "MatrixNode",
+				"matrix": [
+					1.5, 0.0, 0.0, 0.0,
+					0.0, 1.5, 0.0, 0.0,
+					0.0, 0.0, 1.5, 0.0,
+					2.0, 3.0, 4.0, 1.0
+				],
+				"mesh": 0
+			}],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithMatrix );
+		REQUIRE( scene != nullptr );
+
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+
+		const auto &node = rootNodes[0];
+		REQUIRE( node->name == "MatrixNode" );
+
+		// Check transform extracted from matrix
+		REQUIRE( node->hasTransform() );
+		const auto &transform = node->getTransform();
+
+		// Translation should be extracted from the last column
+		REQUIRE( std::abs( transform.position.x - 2.0f ) < 0.001f );
+		REQUIRE( std::abs( transform.position.y - 3.0f ) < 0.001f );
+		REQUIRE( std::abs( transform.position.z - 4.0f ) < 0.001f );
+
+		// Scale should be extracted from diagonal (approximately 1.5)
+		REQUIRE( std::abs( transform.scale.x - 1.5f ) < 0.001f );
+		REQUIRE( std::abs( transform.scale.y - 1.5f ) < 0.001f );
+		REQUIRE( std::abs( transform.scale.z - 1.5f ) < 0.001f );
+	}
+
+	SECTION( "Default transform for node without TRS or matrix" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		const std::string gltfWithoutTransforms = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{
+				"name": "DefaultNode",
+				"mesh": 0
+			}],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithoutTransforms );
+		REQUIRE( scene != nullptr );
+
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+
+		const auto &node = rootNodes[0];
+		REQUIRE( node->name == "DefaultNode" );
+
+		// Should have default identity transform
+		REQUIRE( node->hasTransform() );
+		const auto &transform = node->getTransform();
+
+		// Default values: position (0,0,0), rotation (0,0,0), scale (1,1,1)
+		REQUIRE( transform.position.x == 0.0f );
+		REQUIRE( transform.position.y == 0.0f );
+		REQUIRE( transform.position.z == 0.0f );
+
+		REQUIRE( transform.rotation.x == 0.0f );
+		REQUIRE( transform.rotation.y == 0.0f );
+		REQUIRE( transform.rotation.z == 0.0f );
+
+		REQUIRE( transform.scale.x == 1.0f );
+		REQUIRE( transform.scale.y == 1.0f );
+		REQUIRE( transform.scale.z == 1.0f );
+	}
+}

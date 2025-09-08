@@ -203,6 +203,10 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode
 		}
 	}
 
+	// Extract transform data from glTF node
+	const auto transform = extractTransformFromNode( gltfNode );
+	sceneNode->setTransform( transform );
+
 	// Process child nodes recursively
 	for ( cgltf_size i = 0; i < gltfNode->children_count; ++i )
 	{
@@ -678,6 +682,111 @@ std::span<const std::uint8_t> GLTFLoader::getAccessorData( void *accessorPtr, vo
 	std::size_t dataSize = accessor->count * cgltf_num_components( accessor->type ) * cgltf_component_size( accessor->component_type );
 
 	return std::span<const std::uint8_t>( start, dataSize );
+}
+
+assets::Transform GLTFLoader::extractTransformFromNode( cgltf_node *gltfNode ) const
+{
+	if ( !gltfNode )
+	{
+		// Return identity transform
+		return assets::Transform{};
+	}
+
+	// Check if node has matrix transformation
+	if ( gltfNode->has_matrix )
+	{
+		return extractTransformFromMatrix( gltfNode->matrix );
+	}
+
+	// Extract from TRS components
+	const float *translation = gltfNode->has_translation ? gltfNode->translation : nullptr;
+	const float *rotation = gltfNode->has_rotation ? gltfNode->rotation : nullptr;
+	const float *scale = gltfNode->has_scale ? gltfNode->scale : nullptr;
+
+	return extractTransformFromTRS( translation, rotation, scale );
+}
+
+assets::Transform GLTFLoader::extractTransformFromTRS( const float *translation, const float *rotation, const float *scale ) const
+{
+	assets::Transform transform;
+
+	// Extract translation (default: 0, 0, 0)
+	if ( translation )
+	{
+		transform.position.x = translation[0];
+		transform.position.y = translation[1];
+		transform.position.z = translation[2];
+	}
+	else
+	{
+		transform.position = math::Vec3f{ 0.0f, 0.0f, 0.0f };
+	}
+
+	// Extract rotation from quaternion (default: 0, 0, 0, 1 - identity)
+	if ( rotation )
+	{
+		// glTF quaternion format: [x, y, z, w]
+		const auto eulerAngles = quaternionToEulerAngles( rotation[0], rotation[1], rotation[2], rotation[3] );
+		transform.rotation = eulerAngles;
+	}
+	else
+	{
+		transform.rotation = math::Vec3f{ 0.0f, 0.0f, 0.0f };
+	}
+
+	// Extract scale (default: 1, 1, 1)
+	if ( scale )
+	{
+		transform.scale.x = scale[0];
+		transform.scale.y = scale[1];
+		transform.scale.z = scale[2];
+	}
+	else
+	{
+		transform.scale = math::Vec3f{ 1.0f, 1.0f, 1.0f };
+	}
+
+	return transform;
+}
+
+assets::Transform GLTFLoader::extractTransformFromMatrix( const float *matrix ) const
+{
+	assets::Transform transform;
+
+	if ( !matrix )
+	{
+		// Return identity transform
+		return transform;
+	}
+
+	// glTF matrices are column-major, 4x4
+	// Extract translation from the last column (indices 12, 13, 14)
+	transform.position.x = matrix[12];
+	transform.position.y = matrix[13];
+	transform.position.z = matrix[14];
+
+	// Extract scale from the lengths of the first three columns
+	const float scaleX = std::sqrt( matrix[0] * matrix[0] + matrix[1] * matrix[1] + matrix[2] * matrix[2] );
+	const float scaleY = std::sqrt( matrix[4] * matrix[4] + matrix[5] * matrix[5] + matrix[6] * matrix[6] );
+	const float scaleZ = std::sqrt( matrix[8] * matrix[8] + matrix[9] * matrix[9] + matrix[10] * matrix[10] );
+
+	transform.scale.x = scaleX;
+	transform.scale.y = scaleY;
+	transform.scale.z = scaleZ;
+
+	// For rotation extraction from matrix, we'd need to normalize the rotation part
+	// and convert to Euler angles. For simplicity, we'll assume no rotation from matrix for now
+	// TODO: Implement proper rotation extraction from matrix if needed
+	transform.rotation = math::Vec3f{ 0.0f, 0.0f, 0.0f };
+
+	return transform;
+}
+
+math::Vec3f GLTFLoader::quaternionToEulerAngles( float x, float y, float z, float w ) const
+{
+	// Create a quaternion and use the built-in conversion
+	const math::Quatf quat{ w, x, y, z };
+	return quat.toEulerAngles();
 }
 
 } // namespace gltf_loader

@@ -8,6 +8,8 @@ export module engine.gltf_loader;
 import std;
 import engine.assets;
 import engine.vec;
+import engine.quat;
+import engine.matrix;
 import runtime.console;
 
 export namespace gltf_loader
@@ -228,6 +230,12 @@ private:
 	// Material extraction helpers
 	std::shared_ptr<assets::Material> extractMaterial( void *gltfMaterial, void *data, bool verbose = false ) const;
 	std::string extractTextureURI( void *textureInfo, void *data ) const;
+
+	// Transform extraction helpers
+	assets::Transform extractTransformFromNode( cgltf_node *gltfNode ) const;
+	assets::Transform extractTransformFromTRS( const float *translation, const float *rotation, const float *scale ) const;
+	assets::Transform extractTransformFromMatrix( const float *matrix ) const;
+	math::Vec3f quaternionToEulerAngles( float x, float y, float z, float w ) const;
 
 	// Helper to get accessor data as typed spans
 	std::span<const std::uint8_t> getAccessorData( void *accessor, void *data ) const;

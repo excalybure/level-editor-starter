@@ -16,6 +16,18 @@ export enum class AssetType {
 	Scene
 };
 
+// Simple transform structure for scene nodes
+export struct Transform
+{
+	math::Vec3f position{ 0.0f, 0.0f, 0.0f };
+	math::Vec3f rotation{ 0.0f, 0.0f, 0.0f }; // Euler angles (radians)
+	math::Vec3f scale{ 1.0f, 1.0f, 1.0f };
+
+	Transform() = default;
+	Transform( const math::Vec3f &pos, const math::Vec3f &rot, const math::Vec3f &scl )
+		: position( pos ), rotation( rot ), scale( scl ) {}
+};
+
 // Base asset interface
 export class Asset
 {
@@ -244,6 +256,10 @@ export struct SceneNode
 	// NEW: Store actual mesh objects directly for simple cases
 	std::vector<std::shared_ptr<Mesh>> meshObjects;
 
+	// Transform data from glTF
+	Transform transform;
+	bool hasTransformData = false;
+
 	SceneNode() = default;
 	SceneNode( const std::string &nodeName ) : name( nodeName ) {}
 
@@ -251,6 +267,15 @@ export struct SceneNode
 	bool hasMesh() const { return !meshObjects.empty(); }
 	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
+
+	// Transform methods
+	bool hasTransform() const { return hasTransformData; }
+	const Transform &getTransform() const { return transform; }
+	void setTransform( const Transform &t )
+	{
+		transform = t;
+		hasTransformData = true;
+	}
 
 	// NEW: Get first mesh object for direct access
 	std::shared_ptr<Mesh> getFirstMesh() const
