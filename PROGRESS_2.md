@@ -39,6 +39,15 @@ Date: 2025-09-08
 - AF3: Updated updateBounds() method to use BoundingBox3D::expand() and initialization semantics with isValid() checking
  - AF4: Replaced getBoundsMin/getBoundsMax with getBounds() returning const BoundingBox3Df& reference
 - AF5: Updated getBoundsCenter/getBoundsSize methods to use BoundingBox3D::center() and size() methods internally
+
+## 2025-09-08 — Mesh bounds API small refinement
+**Summary:** Switched `Mesh::getBoundsCenter` and `Mesh::getBoundsSize` to return `math::Vec3f` instead of writing into caller-provided `float[3]` arrays. Updated all call sites (tests) accordingly.
+
+**Atomic functionalities completed:**
+- AF1: Change API to return `math::Vec3f` for center and size
+- AF2: Update tests to use `.x/.y/.z` on returned vectors
+
+**Notes:** This aligns the API with modern C++ usage and the project's `math` types.
 - AF6: Fixed gltf_loader_tests.cpp to use new getBounds().min/.max API instead of deprecated getBoundsMin/getBoundsMax methods
 - AF7: Added engine.bounding_box_3d to engine.assets target_link_libraries in CMakeLists.txt for proper module dependency
 

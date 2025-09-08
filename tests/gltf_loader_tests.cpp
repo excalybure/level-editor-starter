@@ -207,18 +207,17 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( bounds.max.y == 1.0f );
 		REQUIRE( bounds.max.z == 0.0f );
 
-		// Verify computed center and size
-		float center[3], size[3];
-		meshPtr->getBoundsCenter( center );
-		meshPtr->getBoundsSize( size );
+	// Verify computed center and size
+	const auto center = meshPtr->getBoundsCenter();
+	const auto size = meshPtr->getBoundsSize();
 
-		REQUIRE( center[0] == 0.5f );
-		REQUIRE( center[1] == 0.5f );
-		REQUIRE( center[2] == 0.0f );
+	REQUIRE( center.x == 0.5f );
+	REQUIRE( center.y == 0.5f );
+	REQUIRE( center.z == 0.0f );
 
-		REQUIRE( size[0] == 1.0f );
-		REQUIRE( size[1] == 1.0f );
-		REQUIRE( size[2] == 0.0f );
+	REQUIRE( size.x == 1.0f );
+	REQUIRE( size.y == 1.0f );
+	REQUIRE( size.z == 0.0f );
 	}
 
 	SECTION( "Load invalid glTF should throw or return null" )
