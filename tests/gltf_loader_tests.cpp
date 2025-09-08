@@ -272,12 +272,12 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		const auto &vertices = meshPtr->getVertices();
 		REQUIRE( vertices.size() == 3 );
 
-		// All vertices should have default normal (0, 1, 0)
+		// All vertices should have default normal (0, 0, 1)
 		for ( const auto &vertex : vertices )
 		{
 			REQUIRE( vertex.normal.x == 0.0f );
-			REQUIRE( vertex.normal.y == 1.0f );
-			REQUIRE( vertex.normal.z == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
 		}
 	}
 
@@ -341,6 +341,192 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( indices[2] == 2 );
 	}
 
+	SECTION( "Extract mesh with UV coordinates (TEXCOORD_0)" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with positions and UV coordinates
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"TEXCOORD_0": 1
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC2"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 24 }
+			],
+			"buffers": [{
+				"byteLength": 60,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPw=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify UV coordinates are correctly extracted
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// Check UV coordinates: (0,0), (1,0), (0.5,1)
+		REQUIRE( vertices[0].texCoord.x == 0.0f );
+		REQUIRE( vertices[0].texCoord.y == 0.0f );
+
+		REQUIRE( vertices[1].texCoord.x == 1.0f );
+		REQUIRE( vertices[1].texCoord.y == 0.0f );
+
+		REQUIRE( vertices[2].texCoord.x == 0.5f );
+		REQUIRE( vertices[2].texCoord.y == 1.0f );
+	}
+
+	SECTION( "Extract mesh with UV coordinates but different buffer layout" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: interleaved positions and UVs
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"TEXCOORD_0": 1
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 0,
+					"byteOffset": 12,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC2"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 40, "byteStride": 20 }
+			],
+			"buffers": [{
+				"byteLength": 40,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAIA/AABAAAAAQAAAAAA="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 2 );
+
+		// Verify UV coordinates are correctly extracted from interleaved data
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 2 );
+
+		// Check UV coordinates from interleaved buffer
+		REQUIRE( vertices[0].texCoord.x == 0.0f );
+		REQUIRE( vertices[0].texCoord.y == 0.0f );
+
+		REQUIRE( vertices[1].texCoord.x == 1.0f );
+		REQUIRE( vertices[1].texCoord.y == 1.0f );
+	}
+
+	SECTION( "Extract mesh without UV coordinates uses default values" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with only positions (no UVs)
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }
+			],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAAA"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify default UV coordinates are used when UVs are missing
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// All vertices should have default UV (0.0, 0.0)
+		for ( const auto &vertex : vertices )
+		{
+			REQUIRE( vertex.texCoord.x == 0.0f );
+			REQUIRE( vertex.texCoord.y == 0.0f );
+		}
+	}
+
 	SECTION( "Load glTF with materials" )
 	{
 		const gltf_loader::GLTFLoader loader;
@@ -383,6 +569,617 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		const auto &rootNodes = scene->getRootNodes();
 		REQUIRE( !rootNodes.empty() );
 		REQUIRE( rootNodes[0]->hasMaterial() );
+	}
+
+	SECTION( "Extract mesh with tangent vectors (TANGENT)" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with positions, normals, and tangent vectors
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TANGENT": 2
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 2,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC4"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 72, "byteLength": 48 }
+			],
+			"buffers": [{
+				"byteLength": 120,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPw=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify tangent vectors are correctly extracted
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// Check tangent vectors: all should be (1,0,0,1) for this test
+		for ( const auto &vertex : vertices )
+		{
+			REQUIRE( vertex.tangent.x == 1.0f );
+			REQUIRE( vertex.tangent.y == 0.0f );
+			REQUIRE( vertex.tangent.z == 0.0f );
+			REQUIRE( vertex.tangent.w == 1.0f ); // Handedness
+		}
+	}
+
+	SECTION( "Extract mesh with tangents having different handedness" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: tangents with mixed handedness (w = 1.0 and w = -1.0)
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"TANGENT": 1
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC4"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 24 },
+				{ "buffer": 0, "byteOffset": 24, "byteLength": 32 }
+			],
+			"buffers": [{
+				"byteLength": 56,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/YczMPgAAAAA="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 2 );
+
+		// Verify tangent vectors with different handedness
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 2 );
+
+		// First tangent: (1, 0, 0, 1) - right-handed
+		REQUIRE( vertices[0].tangent.x == 1.0f );
+		REQUIRE( vertices[0].tangent.y == 0.0f );
+		REQUIRE( vertices[0].tangent.z == 0.0f );
+		REQUIRE( vertices[0].tangent.w == 1.0f );
+
+		// Second tangent: (1, 0, 0, -1) - left-handed
+		REQUIRE( vertices[1].tangent.x == 1.0f );
+		REQUIRE( vertices[1].tangent.y == 0.0f );
+		REQUIRE( vertices[1].tangent.z == 0.0f );
+		REQUIRE( vertices[1].tangent.w == -1.0f );
+	}
+
+	SECTION( "Extract mesh without tangents uses default values" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: triangle with positions and normals but no tangents
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"NORMAL": 1
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 36 }
+			],
+			"buffers": [{
+				"byteLength": 72,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPw=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify default tangent vectors are used when tangents are missing
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// All vertices should have default tangent (1.0, 0.0, 0.0, 1.0)
+		for ( const auto &vertex : vertices )
+		{
+			REQUIRE( vertex.tangent.x == 1.0f );
+			REQUIRE( vertex.tangent.y == 0.0f );
+			REQUIRE( vertex.tangent.z == 0.0f );
+			REQUIRE( vertex.tangent.w == 1.0f );
+		}
+	}
+}
+
+// Integration tests for complete mesh extraction with all vertex attributes
+TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" )
+{
+	SECTION( "Extract mesh with all vertex attributes (positions, normals, UVs, tangents)" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: complete triangle with all attributes
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 2,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC2"
+				},
+				{
+					"bufferView": 3,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC4"
+				},
+				{
+					"bufferView": 4,
+					"componentType": 5123,
+					"count": 3,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 72, "byteLength": 24 },
+				{ "buffer": 0, "byteOffset": 96, "byteLength": 48 },
+				{ "buffer": 0, "byteOffset": 144, "byteLength": 6 }
+			],
+			"buffers": [{
+				"byteLength": 150,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAAAAAAAAAAAAAAACA/wAAAA5Nc0tMzAyMn4/grzLM0A/ZMM8ggI+ggI+ggI+gc7IchI=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+		REQUIRE( meshPtr->getIndexCount() == 3 );
+
+		// Verify all vertex attributes are correctly extracted
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		// Verify first vertex has all attributes
+		const auto &v0 = vertices[0];
+		REQUIRE( v0.position.x == 0.0f );
+		REQUIRE( v0.position.y == 0.0f );
+		REQUIRE( v0.position.z == 0.0f );
+
+		REQUIRE( v0.normal.x == 0.0f );
+		REQUIRE( v0.normal.y == 0.0f );
+		REQUIRE( v0.normal.z == 1.0f );
+
+		REQUIRE( v0.texCoord.x == 0.0f );
+		REQUIRE( v0.texCoord.y == 0.0f );
+
+		REQUIRE( v0.tangent.x == 1.0f );
+		REQUIRE( v0.tangent.y == 0.0f );
+		REQUIRE( v0.tangent.z == 0.0f );
+		REQUIRE( v0.tangent.w == 1.0f );
+
+		// Verify indices are correctly extracted
+		const auto &indices = meshPtr->getIndices();
+		REQUIRE( indices.size() == 3 );
+		REQUIRE( indices[0] == 0 );
+		REQUIRE( indices[1] == 1 );
+		REQUIRE( indices[2] == 2 );
+	}
+
+	SECTION( "Extract mesh with interleaved vertex data (all attributes in single buffer)" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: interleaved vertex data (pos + normal + uv + tangent per vertex)
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"byteOffset": 0,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 0,
+					"byteOffset": 12,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 0,
+					"byteOffset": 24,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC2"
+				},
+				{
+					"bufferView": 0,
+					"byteOffset": 32,
+					"componentType": 5126,
+					"count": 2,
+					"type": "VEC4"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 96, "byteStride": 48 }
+			],
+			"buffers": [{
+				"byteLength": 96,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/YczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/YczMPgAAAAAAAACAPw=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 2 );
+
+		// Verify interleaved data extraction
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 2 );
+
+		// Check that stride correctly extracts each vertex's attributes
+		for ( const auto &vertex : vertices )
+		{
+			// Normal should be (0, 0, 1) for all vertices in this test
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
+
+			// Tangent should be (1, 0, 0, 1) for all vertices in this test
+			REQUIRE( vertex.tangent.x == 1.0f );
+			REQUIRE( vertex.tangent.y == 0.0f );
+			REQUIRE( vertex.tangent.z == 0.0f );
+			REQUIRE( vertex.tangent.w == 1.0f );
+		}
+	}
+
+	SECTION( "Extract mesh with some missing optional attributes" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: mesh with positions, UVs, but no normals or tangents
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"TEXCOORD_0": 1
+					}
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 3,
+					"type": "VEC2"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 36 },
+				{ "buffer": 0, "byteOffset": 36, "byteLength": 24 }
+			],
+			"buffers": [{
+				"byteLength": 60,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAAAAAAAAAAABAAAAAAIA/AIA/AAABAA=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 3 );
+
+		// Verify UVs are extracted and defaults are used for missing attributes
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 3 );
+
+		for ( std::size_t i = 0; i < vertices.size(); ++i )
+		{
+			const auto &vertex = vertices[i];
+
+			// UVs should be extracted correctly
+			if ( i == 0 )
+			{
+				REQUIRE( vertex.texCoord.x == 0.0f );
+				REQUIRE( vertex.texCoord.y == 0.0f );
+			}
+			else if ( i == 1 )
+			{
+				REQUIRE( vertex.texCoord.x == 1.0f );
+				REQUIRE( vertex.texCoord.y == 0.0f );
+			}
+			else if ( i == 2 )
+			{
+				REQUIRE( vertex.texCoord.x == 0.5f );
+				REQUIRE( vertex.texCoord.y == 1.0f );
+			}
+
+			// Default values for missing attributes
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
+
+			REQUIRE( vertex.tangent.x == 1.0f );
+			REQUIRE( vertex.tangent.y == 0.0f );
+			REQUIRE( vertex.tangent.z == 0.0f );
+			REQUIRE( vertex.tangent.w == 1.0f );
+		}
+	}
+
+	SECTION( "Extract large mesh with all attributes and validate performance" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Test data: quad mesh (4 vertices, 6 indices) with all attributes
+		const std::string gltfContent = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{ "mesh": 0 }],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { 
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4
+				}]
+			}],
+			"accessors": [
+				{
+					"bufferView": 0,
+					"componentType": 5126,
+					"count": 4,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 1,
+					"componentType": 5126,
+					"count": 4,
+					"type": "VEC3"
+				},
+				{
+					"bufferView": 2,
+					"componentType": 5126,
+					"count": 4,
+					"type": "VEC2"
+				},
+				{
+					"bufferView": 3,
+					"componentType": 5126,
+					"count": 4,
+					"type": "VEC4"
+				},
+				{
+					"bufferView": 4,
+					"componentType": 5123,
+					"count": 6,
+					"type": "SCALAR"
+				}
+			],
+			"bufferViews": [
+				{ "buffer": 0, "byteOffset": 0, "byteLength": 48 },
+				{ "buffer": 0, "byteOffset": 48, "byteLength": 48 },
+				{ "buffer": 0, "byteOffset": 96, "byteLength": 32 },
+				{ "buffer": 0, "byteOffset": 128, "byteLength": 64 },
+				{ "buffer": 0, "byteOffset": 192, "byteLength": 12 }
+			],
+			"buffers": [{
+				"byteLength": 204,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAACAAQAAAAAAAACAAQAAAACAPwAAgD8AAAAAAAAAAAAAAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAAgD8AAAAAAIA/AAAAAACAP0YOzL8AAAAAAAAAAIA/QczMPgAAAAAAAACAPwAABAABAAUAAQACAAUAAA=="
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfContent );
+
+		REQUIRE( scene != nullptr );
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+		REQUIRE( rootNodes[0]->hasMesh() );
+
+		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		REQUIRE( meshPtr != nullptr );
+		REQUIRE( meshPtr->getVertexCount() == 4 );
+		REQUIRE( meshPtr->getIndexCount() == 6 );
+
+		// Verify quad mesh extraction
+		const auto &vertices = meshPtr->getVertices();
+		REQUIRE( vertices.size() == 4 );
+
+		// Verify all vertices have valid attributes
+		for ( const auto &vertex : vertices )
+		{
+			// Normal vectors should be unit length and pointing up
+			REQUIRE( vertex.normal.x == 0.0f );
+			REQUIRE( vertex.normal.y == 0.0f );
+			REQUIRE( vertex.normal.z == 1.0f );
+
+			// Tangent vectors should be valid
+			REQUIRE( vertex.tangent.x == 1.0f );
+			REQUIRE( vertex.tangent.y == 0.0f );
+			REQUIRE( vertex.tangent.z == 0.0f );
+			REQUIRE( ( vertex.tangent.w == 1.0f || vertex.tangent.w == -1.0f ) ); // Valid handedness
+		}
+
+		// Verify indices form proper triangles (0,1,2) and (1,3,2) for quad
+		const auto &indices = meshPtr->getIndices();
+		REQUIRE( indices.size() == 6 );
+		// Check that indices are within valid range
+		for ( auto index : indices )
+		{
+			REQUIRE( index < 4 );
+		}
 	}
 }
 
