@@ -2,6 +2,19 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — Bounds & Aggregation Implementation
+**Summary:** Verified and enhanced the comprehensive bounds calculation system for primitive-based meshes. The existing infrastructure already provided automatic per-primitive AABB computation and mesh-level bounds aggregation. Added additional test coverage to demonstrate per-primitive bounds validation in multi-primitive meshes via glTF loader integration.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed existing bounds implementation confirming automatic per-primitive AABB calculation via `addVertex()` 
+- AF2: Verified mesh-level bounds aggregation via `addPrimitive()` with BoundingBox3D integration
+- AF3: Confirmed comprehensive bounds test coverage in assets_tests.cpp (21 assertions) and gltf_loader_tests.cpp
+- AF4: Added per-primitive bounds validation test for multi-primitive mesh extraction (20 new assertions)
+- AF5: Updated M2_P2.md to mark task 6 "Bounds & Aggregation" as completed with implementation details
+
+**Tests:** 20 new assertions in "GLTFLoader Complete Mesh Extraction" test case; verified 496 total assertions pass across all glTF tests.
+**Notes:** Infrastructure was already robust with BoundingBox3D providing validation, center/size computation, and automatic expansion. The primitive-based design correctly maintains individual primitive bounds while aggregating at mesh level.
+
 ## 2025-01-21 — Refactor extractTransformFromMatrix to use Mat4 utilities with normalization
 **Summary:** Successfully refactored the glTF loader's matrix-based transform extraction to use Mat4 and Mat3 utility methods for robust transform decomposition. Added Mat3::normalize() function to remove scale from rotation matrices before Euler angle extraction. The function now properly handles column-major to row-major conversion, uses Mat4::extractScale(), Mat3::normalize(), and Mat3::toEulerAngles() for accurate transform extraction.
 **Atomic functionalities completed:**
