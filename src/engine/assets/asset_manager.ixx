@@ -61,6 +61,9 @@ public:
 	// Import scene into ECS (requires importSceneCallback to be set)
 	bool importScene( const std::string &path, ecs::Scene &ecsScene );
 
+	// Set the scene loader callback for external scene loading implementation
+	static void setSceneLoaderCallback( SceneLoaderCallback callback );
+
 private:
 	// Cache storage: path -> shared_ptr<Asset>
 	std::unordered_map<std::string, std::shared_ptr<Asset>> m_cache;
@@ -204,13 +207,18 @@ inline bool AssetManager::importScene( const std::string &path, ecs::Scene &ecsS
 	return false;
 }
 
+inline void AssetManager::setSceneLoaderCallback( SceneLoaderCallback callback )
+{
+	sceneLoaderCallback = callback;
+}
+
 // Internal loading implementations
 inline std::shared_ptr<Scene> AssetManager::loadScene( const std::string &path )
 {
 	// Basic validation
 	if ( path.empty() )
 	{
-		return {};
+		return nullptr;
 	}
 
 	// Use scene loader callback if available (for real glTF loading)
@@ -225,25 +233,7 @@ inline std::shared_ptr<Scene> AssetManager::loadScene( const std::string &path )
 		}
 	}
 
-	// Fallback: check if file exists using std::filesystem
-	// Valid files get empty scene (placeholder), invalid ones get empty scene but aren't cached
-	auto scene = std::make_shared<Scene>();
-	scene->setPath( path );
-
-	// Simple check for file existence (placeholder until real loading)
-	std::ifstream file( path );
-	if ( file.good() )
-	{
-		// File exists - this would be a successful load, so mark as loaded
-		scene->setLoaded( true );
-	}
-	else
-	{
-		// File doesn't exist - return empty scene but mark as not loaded
-		scene->setLoaded( false );
-	}
-
-	return scene;
+	return nullptr;
 }
 
 inline std::shared_ptr<Material> AssetManager::loadMaterial( const std::string &path )
