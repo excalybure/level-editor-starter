@@ -38,6 +38,10 @@ public:
 	const std::string &getPath() const { return m_path; }
 	bool isLoaded() const { return m_loaded; }
 
+	// Setters for asset management
+	void setPath( const std::string &path ) { m_path = path; }
+	void setLoaded( bool loaded ) { m_loaded = loaded; }
+
 protected:
 	std::string m_path;
 	bool m_loaded = false;

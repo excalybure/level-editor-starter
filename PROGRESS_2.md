@@ -2,6 +2,22 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — AssetManager Implementation via TDD
+**Summary:** Implemented a comprehensive AssetManager system using strict TDD methodology. Delivered a production-ready asset caching and management solution with template API, reference counting, integration patterns, and ECS import support. All functionality built incrementally with Red-Green-Refactor cycles, ensuring robust test coverage and clean design.
+
+**Atomic functionalities completed:**
+- AF1: Design AssetManager API with template methods `load<T>()`, `get<T>()`, `store<T>()`, `unload()`, `clearCache()`, `isCached()`
+- AF2: Implement core caching mechanism using `std::unordered_map<string, shared_ptr<Asset>>` with automatic reference counting
+- AF3: Add template specializations for Scene, Material, and Mesh types with type-safe casting
+- AF4: Implement unload logic that only removes assets when uniquely referenced (use_count == 1)
+- AF5: Create store/get integration pattern to avoid circular dependencies with glTF loader
+- AF6: Design ECS import API using callback pattern with `ImportSceneCallback` typedef
+- AF7: Add `importScene(path, ecs::Scene&)` method that delegates to external callback for ECS integration
+- AF8: Write comprehensive test suite covering all functionality, edge cases, and integration scenarios
+
+**Tests:** 7 test cases with 39 assertions; filtered commands: `unit_test_runner.exe "*AssetManager*"`. Full coverage of caching behavior, reference counting, template API, store/get patterns, unload conditions, and ECS import callback mechanism.
+**Notes:** Used callback pattern to maintain AssetManager independence from ECS while enabling external integration. Template specializations provide type safety. Reference counting via shared_ptr enables automatic memory management and safe unloading. Integration test demonstrates seamless glTF loader connectivity.
+
 ## 2025-09-08 — Bounds & Aggregation Implementation
 **Summary:** Verified and enhanced the comprehensive bounds calculation system for primitive-based meshes. The existing infrastructure already provided automatic per-primitive AABB computation and mesh-level bounds aggregation. Added additional test coverage to demonstrate per-primitive bounds validation in multi-primitive meshes via glTF loader integration.
 

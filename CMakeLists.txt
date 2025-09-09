@@ -169,6 +169,7 @@ add_library(engine.assets)
 target_sources(engine.assets PUBLIC
   FILE_SET CXX_MODULES FILES
     src/engine/assets/assets.ixx
+    src/engine/assets/asset_manager.ixx
   PRIVATE
     src/engine/assets/assets.cpp
 )
@@ -395,6 +396,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/shader_manager_performance_test.cpp
     tests/shader_include_dependency_tests.cpp
     tests/assets_tests.cpp
+    tests/asset_manager_tests.cpp
     tests/gltf_loader_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp

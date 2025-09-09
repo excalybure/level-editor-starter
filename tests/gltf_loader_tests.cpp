@@ -1356,27 +1356,29 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 		// NEW: Verify individual primitive bounds
 		REQUIRE( meshPtr->getPrimitiveCount() == 2 );
 
-		// First primitive bounds (triangle 1: (0,0,0), (1,0,0), (0.5,1,0))
-		const auto &primitive1 = meshPtr->getPrimitive( 0 );
-		REQUIRE( primitive1.hasBounds() );
-		const auto &bounds1 = primitive1.getBounds();
-		REQUIRE( bounds1.min.x == 0.0f );
-		REQUIRE( bounds1.min.y == 0.0f );
-		REQUIRE( bounds1.min.z == 0.0f );
-		REQUIRE( bounds1.max.x == 1.0f );
-		REQUIRE( bounds1.max.y == 1.0f );
-		REQUIRE( bounds1.max.z == 0.0f );
+		{
+			// First primitive bounds (triangle 1: (0,0,0), (1,0,0), (0.5,1,0))
+			const auto &primitive1 = meshPtr->getPrimitive( 0 );
+			REQUIRE( primitive1.hasBounds() );
+			const auto &bounds1 = primitive1.getBounds();
+			REQUIRE( bounds1.min.x == 0.0f );
+			REQUIRE( bounds1.min.y == 0.0f );
+			REQUIRE( bounds1.min.z == 0.0f );
+			REQUIRE( bounds1.max.x == 1.0f );
+			REQUIRE( bounds1.max.y == 1.0f );
+			REQUIRE( bounds1.max.z == 0.0f );
 
-		// Second primitive bounds (triangle 2: (2,0,0), (3,0,0), (2.5,1,0))
-		const auto &primitive2 = meshPtr->getPrimitive( 1 );
-		REQUIRE( primitive2.hasBounds() );
-		const auto &bounds2 = primitive2.getBounds();
-		REQUIRE( bounds2.min.x == 2.0f );
-		REQUIRE( bounds2.min.y == 0.0f );
-		REQUIRE( bounds2.min.z == 0.0f );
-		REQUIRE( bounds2.max.x == 3.0f );
-		REQUIRE( bounds2.max.y == 1.0f );
-		REQUIRE( bounds2.max.z == 0.0f );
+			// Second primitive bounds (triangle 2: (2,0,0), (3,0,0), (2.5,1,0))
+			const auto &primitive2 = meshPtr->getPrimitive( 1 );
+			REQUIRE( primitive2.hasBounds() );
+			const auto &bounds2 = primitive2.getBounds();
+			REQUIRE( bounds2.min.x == 2.0f );
+			REQUIRE( bounds2.min.y == 0.0f );
+			REQUIRE( bounds2.min.z == 0.0f );
+			REQUIRE( bounds2.max.x == 3.0f );
+			REQUIRE( bounds2.max.y == 1.0f );
+			REQUIRE( bounds2.max.z == 0.0f );
+		}
 	}
 }
 
