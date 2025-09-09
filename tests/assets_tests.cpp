@@ -110,19 +110,19 @@ TEST_CASE( "Material Tests", "[assets][material]" )
 		const auto &pbr = material->getPBRMaterial();
 
 		// Check base color factor default (1, 1, 1, 1)
-		REQUIRE( pbr.baseColorFactor[0] == 1.0f );
-		REQUIRE( pbr.baseColorFactor[1] == 1.0f );
-		REQUIRE( pbr.baseColorFactor[2] == 1.0f );
-		REQUIRE( pbr.baseColorFactor[3] == 1.0f );
+		REQUIRE( pbr.baseColorFactor.x == 1.0f );
+		REQUIRE( pbr.baseColorFactor.y == 1.0f );
+		REQUIRE( pbr.baseColorFactor.z == 1.0f );
+		REQUIRE( pbr.baseColorFactor.w == 1.0f );
 
 		// Check metallic and roughness defaults
 		REQUIRE( pbr.metallicFactor == 0.0f );
 		REQUIRE( pbr.roughnessFactor == 1.0f );
 
 		// Check emissive factor default (0, 0, 0)
-		REQUIRE( pbr.emissiveFactor[0] == 0.0f );
-		REQUIRE( pbr.emissiveFactor[1] == 0.0f );
-		REQUIRE( pbr.emissiveFactor[2] == 0.0f );
+		REQUIRE( pbr.emissiveFactor.x == 0.0f );
+		REQUIRE( pbr.emissiveFactor.y == 0.0f );
+		REQUIRE( pbr.emissiveFactor.z == 0.0f );
 
 		// Check texture paths are empty
 		REQUIRE( pbr.baseColorTexture.empty() );
@@ -136,34 +136,34 @@ TEST_CASE( "Material Tests", "[assets][material]" )
 		auto &pbr = material->getPBRMaterial();
 
 		// Modify values
-		pbr.baseColorFactor[0] = 0.8f;
-		pbr.baseColorFactor[1] = 0.6f;
-		pbr.baseColorFactor[2] = 0.4f;
-		pbr.baseColorFactor[3] = 0.9f;
+		pbr.baseColorFactor.x = 0.8f;
+		pbr.baseColorFactor.y = 0.6f;
+		pbr.baseColorFactor.z = 0.4f;
+		pbr.baseColorFactor.w = 0.9f;
 
 		pbr.metallicFactor = 0.7f;
 		pbr.roughnessFactor = 0.3f;
 
-		pbr.emissiveFactor[0] = 0.1f;
-		pbr.emissiveFactor[1] = 0.2f;
-		pbr.emissiveFactor[2] = 0.05f;
+		pbr.emissiveFactor.x = 0.1f;
+		pbr.emissiveFactor.y = 0.2f;
+		pbr.emissiveFactor.z = 0.05f;
 
 		pbr.baseColorTexture = "textures/base_color.png";
 		pbr.normalTexture = "textures/normal.png";
 
 		// Verify modifications
 		const auto &constPbr = material->getPBRMaterial();
-		REQUIRE( constPbr.baseColorFactor[0] == 0.8f );
-		REQUIRE( constPbr.baseColorFactor[1] == 0.6f );
-		REQUIRE( constPbr.baseColorFactor[2] == 0.4f );
-		REQUIRE( constPbr.baseColorFactor[3] == 0.9f );
+		REQUIRE( constPbr.baseColorFactor.x == 0.8f );
+		REQUIRE( constPbr.baseColorFactor.y == 0.6f );
+		REQUIRE( constPbr.baseColorFactor.z == 0.4f );
+		REQUIRE( constPbr.baseColorFactor.w == 0.9f );
 
 		REQUIRE( constPbr.metallicFactor == 0.7f );
 		REQUIRE( constPbr.roughnessFactor == 0.3f );
 
-		REQUIRE( constPbr.emissiveFactor[0] == 0.1f );
-		REQUIRE( constPbr.emissiveFactor[1] == 0.2f );
-		REQUIRE( constPbr.emissiveFactor[2] == 0.05f );
+		REQUIRE( constPbr.emissiveFactor.x == 0.1f );
+		REQUIRE( constPbr.emissiveFactor.y == 0.2f );
+		REQUIRE( constPbr.emissiveFactor.z == 0.05f );
 
 		REQUIRE( constPbr.baseColorTexture == "textures/base_color.png" );
 		REQUIRE( constPbr.normalTexture == "textures/normal.png" );
