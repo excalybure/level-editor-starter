@@ -398,6 +398,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/shader_include_dependency_tests.cpp
     tests/assets_tests.cpp
     tests/asset_manager_tests.cpp
+    tests/ecs_import_tests.cpp
     tests/gltf_loader_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp

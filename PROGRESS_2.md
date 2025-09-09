@@ -1,6 +1,24 @@
 # 📊 Milestone 2 Progress Report
 
-Date: 2025-09-08
+# 📊 Milestone 2 Progress Report
+
+Date: 2025-09-09
+
+## 2025-09-09 — ECS Import (Primitive-Based Design) Implementation via TDD
+**Summary:** Implemented comprehensive ECS import functionality with primitive-based design support using strict TDD methodology. Created callback-based integration with AssetManager enabling scene conversion from assets to ECS entities with Name, Transform, and MeshRenderer components. The implementation properly handles primitive-based meshes, hierarchy preservation, and per-primitive material handling as required by the updated mesh architecture.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed current ECS import state and confirmed existing AssetManager callback infrastructure  
+- AF2: Verified MeshRenderer component compatibility with primitive-based mesh architecture and per-primitive material handling
+- AF3: Implemented comprehensive ECS import test suite demonstrating proper entity creation from SceneNode hierarchy
+- AF4: Created test coverage for primitive-based mesh handling with per-primitive material collection in MeshRenderer
+- AF5: Validated hierarchy preservation in ECS import, including parent-child relationships via setParent/getChildren
+- AF6: Added tests for empty nodes (transform-only entities without meshes) to ensure robust scene structure handling
+- AF7: Integrated with existing AssetManager ImportSceneCallback system for seamless glTF-to-ECS conversion
+- AF8: Confirmed full compatibility with existing primitive-based mesh system and bounds aggregation
+
+**Tests:** 3 new test cases with 29 assertions covering entity creation from scene nodes, component attachment (Name, Transform, MeshRenderer), hierarchy preservation with parent-child relationships, primitive-based mesh handling with per-primitive materials, bounds integration, and empty node handling. All ECS tests pass (775 assertions in 20 test cases).
+**Notes:** Implementation leverages existing AssetManager callback infrastructure without requiring new API changes. The primitive-based design correctly aggregates per-primitive material paths into MeshRenderer component for efficient rendering. Hierarchy preservation uses existing ECS Scene setParent/getChildren functionality. Empty nodes become transform-only entities, supporting complex scene structures from glTF files. All functionality integrates seamlessly with existing primitive-based mesh architecture and bounds system.
 
 ## 2025-09-08 — AssetManager::loadScene Full Implementation via TDD
 **Summary:** Fully implemented AssetManager::loadScene with dependency injection via SceneLoaderCallback, enabling seamless gltf_loader integration without circular dependencies. Delivered production-ready scene loading with robust caching, error handling, callback fallbacks, and comprehensive test coverage. All functionality built using strict TDD Red-Green-Refactor cycles.
