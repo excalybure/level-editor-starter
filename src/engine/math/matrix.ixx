@@ -403,6 +403,36 @@ struct Mat3
 		};
 	}
 
+	// Normalize the matrix by dividing each column by its magnitude to remove scale
+	// Returns a pure rotation matrix suitable for Euler angle extraction
+	constexpr Mat3 normalize() const
+	{
+		// Get column vectors
+		const Vec3<T> col0{ row0.x, row1.x, row2.x };
+		const Vec3<T> col1{ row0.y, row1.y, row2.y };
+		const Vec3<T> col2{ row0.z, row1.z, row2.z };
+
+		// Calculate column magnitudes
+		const T mag0 = length( col0 );
+		const T mag1 = length( col1 );
+		const T mag2 = length( col2 );
+
+		// Avoid division by zero
+		if ( mag0 == static_cast<T>( 0 ) || mag1 == static_cast<T>( 0 ) || mag2 == static_cast<T>( 0 ) )
+		{
+			return identity();
+		}
+
+		// Return normalized matrix by dividing each column by its magnitude
+		// clang-format off
+		return {
+			row0.x / mag0, row0.y / mag1, row0.z / mag2,
+			row1.x / mag0, row1.y / mag1, row1.z / mag2,
+			row2.x / mag0, row2.y / mag1, row2.z / mag2
+		};
+		// clang-format on
+	}
+
 	// Convert rotation matrix to Euler angles (roll, pitch, yaw in radians)
 	// Matches the convention used in Quat::toEulerAngles()
 	constexpr Vec3<T> toEulerAngles() const

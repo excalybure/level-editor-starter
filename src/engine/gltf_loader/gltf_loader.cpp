@@ -759,25 +759,32 @@ assets::Transform GLTFLoader::extractTransformFromMatrix( const float *matrix ) 
 		return transform;
 	}
 
-	// glTF matrices are column-major, 4x4
-	// Extract translation from the last column (indices 12, 13, 14)
-	transform.position.x = matrix[12];
-	transform.position.y = matrix[13];
-	transform.position.z = matrix[14];
+	// Convert glTF matrix (column-major, 4x4) to Mat4 using row-major constructor
+	// glTF matrix layout: [m0,m1,m2,m3, m4,m5,m6,m7, m8,m9,m10,m11, m12,m13,m14,m15]
+	// Need to transpose for row-major Mat4 constructor
 
-	// Extract scale from the lengths of the first three columns
-	const float scaleX = std::sqrt( matrix[0] * matrix[0] + matrix[1] * matrix[1] + matrix[2] * matrix[2] );
-	const float scaleY = std::sqrt( matrix[4] * matrix[4] + matrix[5] * matrix[5] + matrix[6] * matrix[6] );
-	const float scaleZ = std::sqrt( matrix[8] * matrix[8] + matrix[9] * matrix[9] + matrix[10] * matrix[10] );
+	// clang-format off
+	const math::Mat4<float> mat4{
+		matrix[0], matrix[4], matrix[8], matrix[12],   // Row 0: m0, m4, m8, m12
+		matrix[1], matrix[5], matrix[9], matrix[13],   // Row 1: m1, m5, m9, m13
+		matrix[2], matrix[6], matrix[10], matrix[14],  // Row 2: m2, m6, m10, m14
+		matrix[3], matrix[7], matrix[11], matrix[15]   // Row 3: m3, m7, m11, m15
+	};
+	// clang-format on
 
-	transform.scale.x = scaleX;
-	transform.scale.y = scaleY;
-	transform.scale.z = scaleZ;
+	// Extract translation directly from the last column (4th column in our row-major representation)
+	transform.position.x = mat4.m03();
+	transform.position.y = mat4.m13();
+	transform.position.z = mat4.m23();
 
-	// For rotation extraction from matrix, we'd need to normalize the rotation part
-	// and convert to Euler angles. For simplicity, we'll assume no rotation from matrix for now
-	// TODO: Implement proper rotation extraction from matrix if needed
-	transform.rotation = math::Vec3f{ 0.0f, 0.0f, 0.0f };
+	// Extract scale using Mat4's extractScale functionality
+	const auto scale = mat4.extractScale();
+	transform.scale = scale;
+
+	// Extract rotation by converting to Mat3, normalizing to remove scale, then to Euler angles
+	const auto rotationMatrix = mat4.toMat3();
+	const auto normalizedRotation = rotationMatrix.normalize();
+	transform.rotation = normalizedRotation.toEulerAngles();
 
 	return transform;
 }

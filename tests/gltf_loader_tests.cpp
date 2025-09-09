@@ -1944,6 +1944,81 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( std::abs( transform.scale.z - 1.5f ) < 0.001f );
 	}
 
+	SECTION( "Extract transform from complex matrix with rotation using Mat4 functionality" )
+	{
+		const gltf_loader::GLTFLoader loader;
+
+		// Complex transformation matrix: translation (10, 20, 30), scale (2, 3, 4), and 45-degree rotation around Y-axis
+		// Matrix is column-major: [col0, col1, col2, col3]
+		// For 45° Y rotation: cos(45°)=sin(45°)=√2/2≈0.7071068
+		// Scale (2,3,4) applied to rotation gives:
+		// Col0: [2*cos(45°), 0, 2*(-sin(45°))] = [1.4142136, 0, -1.4142136]
+		// Col1: [0, 3, 0]
+		// Col2: [4*sin(45°), 0, 4*cos(45°)] = [2.8284272, 0, 2.8284272]
+		const float cos45 = 0.7071068f;
+		const float sin45 = 0.7071068f;
+		const std::string gltfWithComplexMatrix = R"({
+			"asset": { "version": "2.0" },
+			"scene": 0,
+			"scenes": [{ "nodes": [0] }],
+			"nodes": [{
+				"name": "ComplexMatrixNode",
+				"matrix": [
+					1.4142136, 0.0, -1.4142136, 0.0,
+					0.0, 3.0, 0.0, 0.0,
+					2.8284272, 0.0, 2.8284272, 0.0,
+					10.0, 20.0, 30.0, 1.0
+				],
+				"mesh": 0
+			}],
+			"meshes": [{
+				"primitives": [{
+					"attributes": { "POSITION": 0 }
+				}]
+			}],
+			"accessors": [{
+				"bufferView": 0,
+				"componentType": 5126,
+				"count": 3,
+				"type": "VEC3"
+			}],
+			"bufferViews": [{ "buffer": 0, "byteOffset": 0, "byteLength": 36 }],
+			"buffers": [{
+				"byteLength": 36,
+				"uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/"
+			}]
+		})";
+
+		const auto scene = loader.loadFromString( gltfWithComplexMatrix );
+		REQUIRE( scene != nullptr );
+
+		const auto &rootNodes = scene->getRootNodes();
+		REQUIRE( !rootNodes.empty() );
+
+		const auto &node = rootNodes[0];
+		REQUIRE( node->name == "ComplexMatrixNode" );
+
+		// Check transform extracted from complex matrix using Mat4 functionality
+		REQUIRE( node->hasTransform() );
+		const auto &transform = node->getTransform();
+
+		// Translation should be extracted correctly
+		REQUIRE( std::abs( transform.position.x - 10.0f ) < 0.001f );
+		REQUIRE( std::abs( transform.position.y - 20.0f ) < 0.001f );
+		REQUIRE( std::abs( transform.position.z - 30.0f ) < 0.001f );
+
+		// Scale should be extracted correctly (column magnitudes: ~2, 3, ~4)
+		REQUIRE( std::abs( transform.scale.x - 2.0f ) < 0.01f );
+		REQUIRE( std::abs( transform.scale.y - 3.0f ) < 0.01f );
+		REQUIRE( std::abs( transform.scale.z - 4.0f ) < 0.01f );
+
+		// Rotation should be extracted using Mat4->Mat3->Euler conversion
+		// 45-degree rotation around Y should give ~45 degrees (π/4 ≈ 0.785 radians) in Y component
+		REQUIRE( std::abs( transform.rotation.x ) < 0.01f );
+		REQUIRE( std::abs( transform.rotation.y - 0.785f ) < 0.01f ); // π/4 ≈ 0.785
+		REQUIRE( std::abs( transform.rotation.z ) < 0.01f );
+	}
+
 	SECTION( "Default transform for node without TRS or matrix" )
 	{
 		const gltf_loader::GLTFLoader loader;
