@@ -264,6 +264,12 @@ struct Mat3
 		};
 	}
 
+	// Composite rotation from Euler angles (yaw, pitch, roll)
+	static Mat3 fromEulerAngles( T yaw, T pitch, T roll )
+	{
+		return rotationZ( yaw ) * rotationY( pitch ) * rotationX( roll );
+	}
+
 	// Translation matrix constructor (for 2D with homogeneous coordinates)
 	static constexpr Mat3 translation( T tx, T ty )
 	{
@@ -545,6 +551,12 @@ struct Mat4
 			Vec4<T>{ static_cast<T>( 0 ), static_cast<T>( 0 ), static_cast<T>( 1 ), static_cast<T>( 0 ) },
 			Vec4<T>{ static_cast<T>( 0 ), static_cast<T>( 0 ), static_cast<T>( 0 ), static_cast<T>( 1 ) }
 		};
+	}
+
+	// Composite rotation from Euler angles (yaw, pitch, roll)
+	static Mat4 fromEulerAngles( T yaw, T pitch, T roll )
+	{
+		return rotationZ( yaw ) * rotationY( pitch ) * rotationX( roll );
 	}
 
 	// Translation matrix constructor (for 3D with homogeneous coordinates)

@@ -2,6 +2,28 @@
 
 Date: 2025-09-08
 
+## 2025-01-20 — Improve fromEulerAngles tests with round-trip validation
+**Summary:** Updated fromEulerAngles tests to use toEulerAngles for round-trip validation instead of manual matrix composition, providing better verification that both functions work correctly together.
+**Atomic functionalities completed:**
+- AF1: Replace Mat3 fromEulerAngles test to use toEulerAngles for round-trip validation
+- AF2: Replace Mat4 fromEulerAngles test to use toEulerAngles via Mat3 conversion for validation
+**Tests:** 52 assertions in fromEulerAngles tests; "*fromEulerAngles*" and "[matrix]" filters used.
+**Notes:** Round-trip testing (fromEulerAngles → matrix → toEulerAngles) provides more robust validation than manual composition. All matrix tests (176 assertions) continue to pass.
+
+## 2025-09-08 — Mat3 and Mat4 fromEulerAngles Static Functions Implementation via TDD
+**Summary:** Added `fromEulerAngles` static functions to both Mat3 and Mat4 structs that create composite rotation matrices from Euler angles. Renamed from `rotationXYZ` and updated parameter order to match Quat constructor convention (yaw, pitch, roll), providing consistency across the math library.
+
+**Atomic functionalities completed:**
+- AF1: Created failing unit tests for Mat3::fromEulerAngles testing zero rotations (identity), composite Euler rotation equivalence to manual composition, and single-axis rotations matching individual rotation functions
+- AF2: Created failing unit tests for Mat4::fromEulerAngles with identical test coverage but for 4x4 matrices including proper homogeneous coordinate handling
+- AF3: Implemented Mat3::fromEulerAngles(yaw, pitch, roll) static function using composition: rotationZ(yaw) * rotationY(pitch) * rotationX(roll)
+- AF4: Implemented Mat4::fromEulerAngles(yaw, pitch, roll) static function using identical composition pattern for 4x4 matrices
+- AF5: Updated tests to use (yaw, pitch, roll) parameter order and improved test descriptions to reflect rotation type (yaw/pitch/roll instead of X/Y/Z)
+- AF6: Verified all tests pass and existing matrix tests remain unaffected
+
+**Tests:** 2 new test cases with 64 assertions covering zero rotation identity verification, composite rotation matrix equivalence to manual Z*Y*X composition, and single-axis rotation validation. All matrix tests pass (188 assertions in 10 test cases).
+**Notes:** The function name `fromEulerAngles` matches quaternion naming conventions for consistency. Parameter order (yaw, pitch, roll) matches `Quat(yaw, pitch, roll)` constructor. The rotation order Z→Y→X (applied right-to-left in matrix multiplication) maintains the same mathematical behavior as before while providing clearer semantic meaning aligned with standard graphics terminology.
+
 ## 2025-09-08 — Matrix Utility Functions Implementation via TDD
 **Summary:** Implemented three essential matrix utility functions for 3D graphics: Mat4 to Mat3 conversion, scale extraction from Mat4, and Mat3 to Euler angles conversion. All functions mirror quaternion conventions and include comprehensive test coverage with edge cases.
 

@@ -398,6 +398,144 @@ TEST_CASE( "Mat4 transformations", "[math][matrix][mat4]" )
 	}
 }
 
+TEST_CASE( "Mat3 fromEulerAngles creates composite rotation matrix", "[math][matrix][mat3][rotation][euler]" )
+{
+	SECTION( "Zero rotations produce identity matrix" )
+	{
+		const Mat3<float> mat3 = Mat3<float>::fromEulerAngles( 0.0f, 0.0f, 0.0f );
+		const Mat3<float> identity = Mat3<float>::identity();
+
+		REQUIRE( mat3.m00() == Approx( identity.m00() ) );
+		REQUIRE( mat3.m01() == Approx( identity.m01() ) );
+		REQUIRE( mat3.m02() == Approx( identity.m02() ) );
+		REQUIRE( mat3.m10() == Approx( identity.m10() ) );
+		REQUIRE( mat3.m11() == Approx( identity.m11() ) );
+		REQUIRE( mat3.m12() == Approx( identity.m12() ) );
+		REQUIRE( mat3.m20() == Approx( identity.m20() ) );
+		REQUIRE( mat3.m21() == Approx( identity.m21() ) );
+		REQUIRE( mat3.m22() == Approx( identity.m22() ) );
+	}
+
+	SECTION( "Euler angles round-trip correctly" )
+	{
+		const float yaw = math::radians( 30.0f );
+		const float pitch = math::radians( 45.0f );
+		const float roll = math::radians( 60.0f );
+
+		const Mat3<float> matrix = Mat3<float>::fromEulerAngles( yaw, pitch, roll );
+		const Vec3<float> extractedAngles = matrix.toEulerAngles();
+
+		// Check that extracted angles match input angles
+		// Note: roll (X) maps to extractedAngles.x
+		// Note: pitch (Y) maps to extractedAngles.y
+		// Note: yaw (Z) maps to extractedAngles.z
+		REQUIRE( extractedAngles.x == Approx( roll ).margin( 1e-5f ) );
+		REQUIRE( extractedAngles.y == Approx( pitch ).margin( 1e-5f ) );
+		REQUIRE( extractedAngles.z == Approx( yaw ).margin( 1e-5f ) );
+	}
+
+	SECTION( "Single axis rotations match individual rotation functions" )
+	{
+		const float angle = math::radians( 45.0f );
+
+		// Test roll-only rotation (X-axis)
+		const Mat3<float> rollOnly = Mat3<float>::fromEulerAngles( 0.0f, 0.0f, angle );
+		const Mat3<float> xIndividual = Mat3<float>::rotationX( angle );
+		REQUIRE( rollOnly.m00() == Approx( xIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( rollOnly.m11() == Approx( xIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( rollOnly.m22() == Approx( xIndividual.m22() ).margin( 1e-5f ) );
+
+		// Test pitch-only rotation (Y-axis)
+		const Mat3<float> pitchOnly = Mat3<float>::fromEulerAngles( 0.0f, angle, 0.0f );
+		const Mat3<float> yIndividual = Mat3<float>::rotationY( angle );
+		REQUIRE( pitchOnly.m00() == Approx( yIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( pitchOnly.m11() == Approx( yIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( pitchOnly.m22() == Approx( yIndividual.m22() ).margin( 1e-5f ) );
+
+		// Test yaw-only rotation (Z-axis)
+		const Mat3<float> yawOnly = Mat3<float>::fromEulerAngles( angle, 0.0f, 0.0f );
+		const Mat3<float> zIndividual = Mat3<float>::rotationZ( angle );
+		REQUIRE( yawOnly.m00() == Approx( zIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( yawOnly.m11() == Approx( zIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( yawOnly.m22() == Approx( zIndividual.m22() ).margin( 1e-5f ) );
+	}
+}
+
+TEST_CASE( "Mat4 fromEulerAngles creates composite rotation matrix", "[math][matrix][mat4][rotation][euler]" )
+{
+	SECTION( "Zero rotations produce identity matrix" )
+	{
+		const Mat4<float> mat4 = Mat4<float>::fromEulerAngles( 0.0f, 0.0f, 0.0f );
+		const Mat4<float> identity = Mat4<float>::identity();
+
+		REQUIRE( mat4.m00() == Approx( identity.m00() ) );
+		REQUIRE( mat4.m01() == Approx( identity.m01() ) );
+		REQUIRE( mat4.m02() == Approx( identity.m02() ) );
+		REQUIRE( mat4.m03() == Approx( identity.m03() ) );
+		REQUIRE( mat4.m10() == Approx( identity.m10() ) );
+		REQUIRE( mat4.m11() == Approx( identity.m11() ) );
+		REQUIRE( mat4.m12() == Approx( identity.m12() ) );
+		REQUIRE( mat4.m13() == Approx( identity.m13() ) );
+		REQUIRE( mat4.m20() == Approx( identity.m20() ) );
+		REQUIRE( mat4.m21() == Approx( identity.m21() ) );
+		REQUIRE( mat4.m22() == Approx( identity.m22() ) );
+		REQUIRE( mat4.m23() == Approx( identity.m23() ) );
+		REQUIRE( mat4.m30() == Approx( identity.m30() ) );
+		REQUIRE( mat4.m31() == Approx( identity.m31() ) );
+		REQUIRE( mat4.m32() == Approx( identity.m32() ) );
+		REQUIRE( mat4.m33() == Approx( identity.m33() ) );
+	}
+
+	SECTION( "Euler angles round-trip correctly" )
+	{
+		const float yaw = math::radians( 30.0f );
+		const float pitch = math::radians( 45.0f );
+		const float roll = math::radians( 60.0f );
+
+		const Mat4<float> matrix = Mat4<float>::fromEulerAngles( yaw, pitch, roll );
+		// Extract rotation part as Mat3 and convert back to Euler angles
+		const Mat3<float> rotationPart = matrix.toMat3();
+		const Vec3<float> extractedAngles = rotationPart.toEulerAngles();
+
+		// Check that extracted angles match input angles
+		// Note: roll (X) maps to extractedAngles.x
+		// Note: pitch (Y) maps to extractedAngles.y
+		// Note: yaw (Z) maps to extractedAngles.z
+		REQUIRE( extractedAngles.x == Approx( roll ).margin( 1e-5f ) );
+		REQUIRE( extractedAngles.y == Approx( pitch ).margin( 1e-5f ) );
+		REQUIRE( extractedAngles.z == Approx( yaw ).margin( 1e-5f ) );
+	}
+
+	SECTION( "Single axis rotations match individual rotation functions" )
+	{
+		const float angle = math::radians( 45.0f );
+
+		// Test roll-only rotation (X-axis)
+		const Mat4<float> rollOnly = Mat4<float>::fromEulerAngles( 0.0f, 0.0f, angle );
+		const Mat4<float> xIndividual = Mat4<float>::rotationX( angle );
+		REQUIRE( rollOnly.m00() == Approx( xIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( rollOnly.m11() == Approx( xIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( rollOnly.m22() == Approx( xIndividual.m22() ).margin( 1e-5f ) );
+		REQUIRE( rollOnly.m33() == Approx( xIndividual.m33() ).margin( 1e-5f ) );
+
+		// Test pitch-only rotation (Y-axis)
+		const Mat4<float> pitchOnly = Mat4<float>::fromEulerAngles( 0.0f, angle, 0.0f );
+		const Mat4<float> yIndividual = Mat4<float>::rotationY( angle );
+		REQUIRE( pitchOnly.m00() == Approx( yIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( pitchOnly.m11() == Approx( yIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( pitchOnly.m22() == Approx( yIndividual.m22() ).margin( 1e-5f ) );
+		REQUIRE( pitchOnly.m33() == Approx( yIndividual.m33() ).margin( 1e-5f ) );
+
+		// Test yaw-only rotation (Z-axis)
+		const Mat4<float> yawOnly = Mat4<float>::fromEulerAngles( angle, 0.0f, 0.0f );
+		const Mat4<float> zIndividual = Mat4<float>::rotationZ( angle );
+		REQUIRE( yawOnly.m00() == Approx( zIndividual.m00() ).margin( 1e-5f ) );
+		REQUIRE( yawOnly.m11() == Approx( zIndividual.m11() ).margin( 1e-5f ) );
+		REQUIRE( yawOnly.m22() == Approx( zIndividual.m22() ).margin( 1e-5f ) );
+		REQUIRE( yawOnly.m33() == Approx( zIndividual.m33() ).margin( 1e-5f ) );
+	}
+}
+
 TEST_CASE( "Matrix view transformations", "[math][matrix][mat4][view]" )
 {
 	SECTION( "Look-at matrix" )
