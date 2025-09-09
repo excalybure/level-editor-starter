@@ -36,9 +36,9 @@ TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 	SECTION( "Get retrieves cached assets" )
 	{
 		// Set up mock callback for loading
-		assets::AssetManager::sceneLoaderCallback = []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			return std::make_shared<assets::Scene>();
-		};
+		} );
 
 		// Load first
 		const auto scene1 = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
@@ -50,7 +50,7 @@ TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 		REQUIRE( scene1.get() == scene2.get() );
 
 		// Clean up
-		assets::AssetManager::sceneLoaderCallback = nullptr;
+		assets::AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "Get returns nullptr for non-cached assets" )
@@ -127,9 +127,9 @@ TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 	AssetManager manager;
 
 	// Set up mock callback for scene loading
-	assets::AssetManager::sceneLoaderCallback = []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+	assets::AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 		return std::make_shared<assets::Scene>();
-	};
+	} );
 
 	// Load several assets
 	const auto material = manager.load<Material>( "clear_test1.mtl" );
@@ -150,7 +150,7 @@ TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 	REQUIRE( scene != nullptr );
 
 	// Clean up
-	assets::AssetManager::sceneLoaderCallback = nullptr;
+	assets::AssetManager::clearSceneLoaderCallback();
 }
 
 TEST_CASE( "AssetManager integration with GLTFLoader", "[AssetManager][integration]" )
@@ -202,17 +202,17 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	} mockEcsScene;
 
 	// Set up the callback to capture ECS integration
-	AssetManager::importSceneCallback = [&mockEcsScene]( std::shared_ptr<assets::Scene> scene, ecs::Scene & ) {
+	AssetManager::setImportSceneCallback( [&mockEcsScene]( std::shared_ptr<assets::Scene> scene, ecs::Scene & ) {
 		mockEcsScene.wasImported = true;
 		mockEcsScene.importedScene = scene;
-	};
+	} );
 
 	SECTION( "importScene calls callback when set" )
 	{
 		// Set up mock scene loader callback
-		assets::AssetManager::sceneLoaderCallback = []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+		AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			return std::make_shared<assets::Scene>();
-		};
+		} );
 
 		// The static cast here is a bit of a hack for testing, but it demonstrates the callback mechanism
 		const bool result = manager.importScene( "tests/test_assets/simple_triangle.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
@@ -224,12 +224,12 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 		REQUIRE( mockEcsScene.importedScene->isLoaded() == true );
 
 		// Clean up scene loader callback
-		assets::AssetManager::sceneLoaderCallback = nullptr;
+		AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "importScene returns false when no callback set" )
 	{
-		AssetManager::importSceneCallback = nullptr;
+		AssetManager::clearImportSceneCallback();
 
 		const bool result = manager.importScene( "tests/test_assets/simple_triangle.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
 
@@ -238,7 +238,7 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	}
 
 	// Clean up callback after test
-	AssetManager::importSceneCallback = nullptr;
+	AssetManager::clearImportSceneCallback();
 }
 
 TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][loadScene][integration]" )
@@ -248,7 +248,7 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 	SECTION( "loadScene returns nullptr without callback" )
 	{
 		// Ensure no callback is set
-		assets::AssetManager::sceneLoaderCallback = nullptr;
+		AssetManager::clearSceneLoaderCallback();
 
 		// Load the test triangle scene
 		const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
@@ -260,11 +260,9 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 
 	SECTION( "loadScene handles invalid file path gracefully" )
 	{
-		// Set up a mock loader callback
-		assets::AssetManager::sceneLoaderCallback = []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
-			auto scene = std::make_shared<assets::Scene>();
-			return scene;
-		};
+		// Ensure no callback is set
+		AssetManager::clearSceneLoaderCallback();
+
 		const auto scene = manager.load<Scene>( "non_existent_file.gltf" );
 		REQUIRE( scene == nullptr ); // Without callback, returns nullptr
 		REQUIRE_FALSE( manager.isCached( "non_existent_file.gltf" ) );
@@ -273,10 +271,10 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 	SECTION( "loadScene caches successfully loaded scenes" )
 	{
 		// Set up a mock loader callback
-		assets::AssetManager::sceneLoaderCallback = []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+		AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			auto scene = std::make_shared<assets::Scene>();
 			return scene;
-		};
+		} );
 
 		// Load scene first time
 		const auto scene1 = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
@@ -289,14 +287,14 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		REQUIRE( scene1.get() == scene2.get() ); // Same object
 
 		// Clean up
-		assets::AssetManager::sceneLoaderCallback = nullptr;
+		assets::AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "loadScene uses callback when available" )
 	{
 		// Set up a mock loader callback using the static method
 		bool callbackCalled = false;
-		AssetManager::setSceneLoaderCallback( [&callbackCalled]( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+		AssetManager::setSceneLoaderCallback( [&callbackCalled]( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			callbackCalled = true;
 
 			// Create a mock scene with some content
@@ -314,13 +312,13 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		REQUIRE( scene->getRootNodes()[0]->name == "test_node" );
 
 		// Clean up using the static method
-		AssetManager::setSceneLoaderCallback( nullptr );
+		AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "loadScene returns nullptr when callback unavailable" )
 	{
 		// Ensure no callback is set
-		assets::AssetManager::sceneLoaderCallback = nullptr;
+		AssetManager::clearSceneLoaderCallback();
 
 		const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
 		REQUIRE( scene == nullptr ); // No callback means no loading

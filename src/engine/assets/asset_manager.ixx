@@ -55,18 +55,22 @@ public:
 	using ImportSceneCallback = std::function<void( std::shared_ptr<Scene>, ecs::Scene & )>;
 	using SceneLoaderCallback = std::function<std::shared_ptr<Scene>( const std::string & )>;
 
-	static ImportSceneCallback importSceneCallback;
-	static SceneLoaderCallback sceneLoaderCallback;
-
 	// Import scene into ECS (requires importSceneCallback to be set)
 	bool importScene( const std::string &path, ecs::Scene &ecsScene );
 
-	// Set the scene loader callback for external scene loading implementation
+	// Callback management methods
 	static void setSceneLoaderCallback( SceneLoaderCallback callback );
+	static void clearSceneLoaderCallback();
+	static void setImportSceneCallback( ImportSceneCallback callback );
+	static void clearImportSceneCallback();
 
 private:
 	// Cache storage: path -> shared_ptr<Asset>
 	std::unordered_map<std::string, std::shared_ptr<Asset>> m_cache;
+
+	// Static callback storage
+	static ImportSceneCallback s_importSceneCallback;
+	static SceneLoaderCallback s_sceneLoaderCallback;
 
 	// Internal loading functions for different asset types
 	std::shared_ptr<Scene> loadScene( const std::string &path );
@@ -76,8 +80,8 @@ private:
 
 // Static callback definition (to be set by external integration code)
 // Static member initialization
-AssetManager::ImportSceneCallback AssetManager::importSceneCallback = nullptr;
-AssetManager::SceneLoaderCallback AssetManager::sceneLoaderCallback = nullptr;
+AssetManager::ImportSceneCallback AssetManager::s_importSceneCallback = nullptr;
+AssetManager::SceneLoaderCallback AssetManager::s_sceneLoaderCallback = nullptr;
 
 // Template specializations for supported asset types
 template <>
@@ -197,9 +201,9 @@ inline bool AssetManager::importScene( const std::string &path, ecs::Scene &ecsS
 	}
 
 	// Use the callback if available
-	if ( importSceneCallback )
+	if ( s_importSceneCallback )
 	{
-		importSceneCallback( scene, ecsScene );
+		s_importSceneCallback( scene, ecsScene );
 		return true;
 	}
 
@@ -209,7 +213,22 @@ inline bool AssetManager::importScene( const std::string &path, ecs::Scene &ecsS
 
 inline void AssetManager::setSceneLoaderCallback( SceneLoaderCallback callback )
 {
-	sceneLoaderCallback = callback;
+	s_sceneLoaderCallback = callback;
+}
+
+inline void AssetManager::clearSceneLoaderCallback()
+{
+	s_sceneLoaderCallback = nullptr;
+}
+
+inline void AssetManager::setImportSceneCallback( ImportSceneCallback callback )
+{
+	s_importSceneCallback = callback;
+}
+
+inline void AssetManager::clearImportSceneCallback()
+{
+	s_importSceneCallback = nullptr;
 }
 
 // Internal loading implementations
@@ -222,9 +241,9 @@ inline std::shared_ptr<Scene> AssetManager::loadScene( const std::string &path )
 	}
 
 	// Use scene loader callback if available (for real glTF loading)
-	if ( sceneLoaderCallback )
+	if ( s_sceneLoaderCallback )
 	{
-		auto scene = sceneLoaderCallback( path );
+		auto scene = s_sceneLoaderCallback( path );
 		if ( scene )
 		{
 			scene->setPath( path );
