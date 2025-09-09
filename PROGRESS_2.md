@@ -2,6 +2,18 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — Matrix Utility Functions Implementation via TDD
+**Summary:** Implemented three essential matrix utility functions for 3D graphics: Mat4 to Mat3 conversion, scale extraction from Mat4, and Mat3 to Euler angles conversion. All functions mirror quaternion conventions and include comprehensive test coverage with edge cases.
+
+**Atomic functionalities completed:**
+- AF1: Implemented Mat4::toMat3() method to extract upper-left 3x3 rotation/scale matrix from 4x4 transformation matrix
+- AF2: Implemented Mat4::extractScale() method to extract X, Y, Z scale factors by calculating basis vector lengths  
+- AF3: Implemented Mat3::toEulerAngles() method to convert rotation matrix to Euler angles (roll, pitch, yaw), mirroring Quat::toEulerAngles() convention
+- AF4: Added comprehensive unit tests covering identity matrices, pure rotations (90° X, Y, Z), small angle precision, and gimbal lock edge cases
+
+**Tests:** 3 new test sections with 15 assertions covering Mat4 to Mat3 extraction, Mat4 scale extraction with non-uniform scaling, Mat3 to Euler conversion with multiple rotation axes, small angle precision testing, and edge case handling. All matrix tests pass (482 assertions in 20 test cases).
+**Notes:** TDD workflow followed strictly: Red (failing test) → Green (minimal implementation) → Refactor. Mat3::toEulerAngles() uses standard matrix-to-Euler formulas with gimbal lock detection matching quaternion behavior. Functions enable transform decomposition for editor gizmos and animation systems. Implementation handles edge cases like near-gimbal-lock conditions with appropriate tolerance testing.
+
 ## 2025-09-08 — Material PBR Factor Type Modernization
 **Summary:** Modernized PBRMaterial structure by replacing C-style float arrays with proper math::Vec types for baseColorFactor and emissiveFactor. This improves type safety, provides better C++ semantics, and maintains compatibility with existing glTF loader code.
 

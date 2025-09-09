@@ -396,6 +396,32 @@ struct Mat3
 				( row0.x * row1.y - row0.y * row1.x ) * invDet }
 		};
 	}
+
+	// Convert rotation matrix to Euler angles (roll, pitch, yaw in radians)
+	// Matches the convention used in Quat::toEulerAngles()
+	constexpr Vec3<T> toEulerAngles() const
+	{
+		Vec3<T> angles;
+
+		// Roll (x-axis rotation) - using atan2(m21, m22)
+		angles.x = std::atan2( row2.y, row2.z );
+
+		// Pitch (y-axis rotation) - using asin(-m20), with gimbal lock handling
+		const T sinp = -row2.x;
+		if ( std::abs( sinp ) >= static_cast<T>( 1 ) )
+		{
+			angles.y = std::copysign( static_cast<T>( 1.5707963267948966 ), sinp ); // π/2
+		}
+		else
+		{
+			angles.y = std::asin( sinp );
+		}
+
+		// Yaw (z-axis rotation) - using atan2(m10, m00)
+		angles.z = std::atan2( row1.x, row0.x );
+
+		return angles;
+	}
 };
 
 // Scalar-matrix multiplication (commutative property)
@@ -746,6 +772,26 @@ struct Mat4
 			Vec4<T>{ c20, c21, c22, c23 },
 			Vec4<T>{ c30, c31, c32, c33 }
 		};
+	}
+
+	// Convert to Mat3 by extracting the upper-left 3x3 portion (ignores translation)
+	constexpr Mat3<T> toMat3() const
+	{
+		return {
+			Vec3<T>{ row0.x, row0.y, row0.z },
+			Vec3<T>{ row1.x, row1.y, row1.z },
+			Vec3<T>{ row2.x, row2.y, row2.z }
+		};
+	}
+
+	// Extract scale factors from the transformation matrix
+	Vec3<T> extractScale() const
+	{
+		// Scale factors are the lengths of the basis vectors (first 3 columns)
+		const T scaleX = std::sqrt( row0.x * row0.x + row1.x * row1.x + row2.x * row2.x );
+		const T scaleY = std::sqrt( row0.y * row0.y + row1.y * row1.y + row2.y * row2.y );
+		const T scaleZ = std::sqrt( row0.z * row0.z + row1.z * row1.z + row2.z * row2.z );
+		return Vec3<T>{ scaleX, scaleY, scaleZ };
 	}
 };
 

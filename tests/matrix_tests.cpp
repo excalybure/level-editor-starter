@@ -15,6 +15,125 @@ using math::Vec2;
 using math::Vec3;
 using math::Vec4;
 
+TEST_CASE( "Mat4 to Mat3 conversion extracts upper-left 3x3", "[math][matrix][mat4][conversion]" )
+{
+	SECTION( "Identity matrix conversion" )
+	{
+		const Mat4<float> mat4 = Mat4<float>::identity();
+		const Mat3<float> mat3 = mat4.toMat3();
+
+		// Check that the 3x3 portion matches
+		REQUIRE( mat3.m00() == 1.0f );
+		REQUIRE( mat3.m11() == 1.0f );
+		REQUIRE( mat3.m22() == 1.0f );
+		REQUIRE( mat3.m01() == 0.0f );
+		REQUIRE( mat3.m02() == 0.0f );
+		REQUIRE( mat3.m10() == 0.0f );
+		REQUIRE( mat3.m12() == 0.0f );
+		REQUIRE( mat3.m20() == 0.0f );
+		REQUIRE( mat3.m21() == 0.0f );
+	}
+
+	SECTION( "Translation matrix ignores translation component" )
+	{
+		const Mat4<float> mat4 = Mat4<float>::translation( 5.0f, 10.0f, 15.0f );
+		const Mat3<float> mat3 = mat4.toMat3();
+
+		// Should be identity 3x3 (translation ignored)
+		REQUIRE( mat3.m00() == 1.0f );
+		REQUIRE( mat3.m11() == 1.0f );
+		REQUIRE( mat3.m22() == 1.0f );
+		REQUIRE( mat3.m01() == 0.0f );
+		REQUIRE( mat3.m02() == 0.0f );
+		REQUIRE( mat3.m10() == 0.0f );
+		REQUIRE( mat3.m12() == 0.0f );
+		REQUIRE( mat3.m20() == 0.0f );
+		REQUIRE( mat3.m21() == 0.0f );
+	}
+}
+
+TEST_CASE( "Mat4 extractScale returns scale factors from transformation matrix", "[math][matrix][mat4][scale]" )
+{
+	SECTION( "Identity matrix has unit scale" )
+	{
+		const Mat4<float> mat4 = Mat4<float>::identity();
+		const Vec3<float> scale = mat4.extractScale();
+
+		REQUIRE( scale.x == Approx( 1.0f ) );
+		REQUIRE( scale.y == Approx( 1.0f ) );
+		REQUIRE( scale.z == Approx( 1.0f ) );
+	}
+
+	SECTION( "Pure scale matrix extracts correct values" )
+	{
+		const Mat4<float> mat4 = Mat4<float>::scale( 2.0f, 3.0f, 4.0f );
+		const Vec3<float> scale = mat4.extractScale();
+
+		REQUIRE( scale.x == Approx( 2.0f ) );
+		REQUIRE( scale.y == Approx( 3.0f ) );
+		REQUIRE( scale.z == Approx( 4.0f ) );
+	}
+}
+
+TEST_CASE( "Mat3 toEulerAngles converts rotation matrix to Euler angles", "[math][matrix][mat3][euler]" )
+{
+	SECTION( "Identity matrix has zero rotation" )
+	{
+		const Mat3<float> mat3 = Mat3<float>::identity();
+		const Vec3<float> angles = mat3.toEulerAngles();
+
+		REQUIRE( angles.x == Approx( 0.0f ) );
+		REQUIRE( angles.y == Approx( 0.0f ) );
+		REQUIRE( angles.z == Approx( 0.0f ) );
+	}
+
+	SECTION( "90 degree Z rotation converts correctly" )
+	{
+		const Mat3<float> mat3 = Mat3<float>::rotationZ( math::radians( 90.0f ) );
+		const Vec3<float> angles = mat3.toEulerAngles();
+
+		// Should have 90 degrees rotation in Z
+		REQUIRE( angles.x == Approx( 0.0f ) );
+		REQUIRE( angles.y == Approx( 0.0f ) );
+		REQUIRE( angles.z == Approx( math::radians( 90.0f ) ) );
+	}
+
+	SECTION( "90 degree X rotation converts correctly" )
+	{
+		const Mat3<float> mat3 = Mat3<float>::rotationX( math::radians( 90.0f ) );
+		const Vec3<float> angles = mat3.toEulerAngles();
+
+		// Should have 90 degrees rotation in X
+		REQUIRE( angles.x == Approx( math::radians( 90.0f ) ) );
+		REQUIRE( angles.y == Approx( 0.0f ) );
+		REQUIRE( angles.z == Approx( 0.0f ) );
+	}
+
+	SECTION( "90 degree Y rotation converts correctly" )
+	{
+		// Test with smaller angle to avoid gimbal lock
+		const float angle = math::radians( 45.0f );
+		const Mat3<float> mat3 = Mat3<float>::rotationY( angle );
+		const Vec3<float> angles = mat3.toEulerAngles();
+
+		// Should have 45 degrees rotation in Y, with X and Z close to zero
+		REQUIRE( std::abs( angles.x ) < 0.01f );
+		REQUIRE( std::abs( angles.y - angle ) < 0.01f );
+		REQUIRE( std::abs( angles.z ) < 0.01f );
+	}
+
+	SECTION( "Small angle rotation preserves precision" )
+	{
+		const float smallAngle = math::radians( 5.0f );
+		const Mat3<float> mat3 = Mat3<float>::rotationX( smallAngle );
+		const Vec3<float> angles = mat3.toEulerAngles();
+
+		REQUIRE( angles.x == Approx( smallAngle ).margin( 1e-6f ) );
+		REQUIRE( angles.y == Approx( 0.0f ).margin( 1e-6f ) );
+		REQUIRE( angles.z == Approx( 0.0f ).margin( 1e-6f ) );
+	}
+}
+
 TEST_CASE( "Mat2 basic operations", "[math][matrix][mat2]" )
 {
 	Mat2<float> identity = Mat2<float>::identity();
