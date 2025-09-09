@@ -53,7 +53,10 @@ public:
 	// This method signature allows external code to provide the implementation
 	// while keeping the AssetManager independent of ECS
 	using ImportSceneCallback = std::function<void( std::shared_ptr<Scene>, ecs::Scene & )>;
+	using SceneLoaderCallback = std::function<std::shared_ptr<Scene>( const std::string & )>;
+
 	static ImportSceneCallback importSceneCallback;
+	static SceneLoaderCallback sceneLoaderCallback;
 
 	// Import scene into ECS (requires importSceneCallback to be set)
 	bool importScene( const std::string &path, ecs::Scene &ecsScene );
@@ -69,7 +72,9 @@ private:
 };
 
 // Static callback definition (to be set by external integration code)
+// Static member initialization
 AssetManager::ImportSceneCallback AssetManager::importSceneCallback = nullptr;
+AssetManager::SceneLoaderCallback AssetManager::sceneLoaderCallback = nullptr;
 
 // Template specializations for supported asset types
 template <>
@@ -84,8 +89,9 @@ inline std::shared_ptr<Scene> AssetManager::load<Scene>( const std::string &path
 
 	// Load new asset
 	auto scene = loadScene( path );
-	if ( scene )
+	if ( scene && scene->isLoaded() )
 	{
+		// Only cache scenes that were successfully loaded
 		m_cache[path] = scene;
 	}
 	return scene;
@@ -198,14 +204,45 @@ inline bool AssetManager::importScene( const std::string &path, ecs::Scene &ecsS
 	return false;
 }
 
-// Internal loading implementations (temporary - will be connected to actual loaders later)
+// Internal loading implementations
 inline std::shared_ptr<Scene> AssetManager::loadScene( const std::string &path )
 {
-	// TODO: Connect to gltf_loader when dependency cycle is resolved
-	// For now, create empty scene for testing
+	// Basic validation
+	if ( path.empty() )
+	{
+		return {};
+	}
+
+	// Use scene loader callback if available (for real glTF loading)
+	if ( sceneLoaderCallback )
+	{
+		auto scene = sceneLoaderCallback( path );
+		if ( scene )
+		{
+			scene->setPath( path );
+			scene->setLoaded( true );
+			return scene;
+		}
+	}
+
+	// Fallback: check if file exists using std::filesystem
+	// Valid files get empty scene (placeholder), invalid ones get empty scene but aren't cached
 	auto scene = std::make_shared<Scene>();
 	scene->setPath( path );
-	scene->setLoaded( true );
+
+	// Simple check for file existence (placeholder until real loading)
+	std::ifstream file( path );
+	if ( file.good() )
+	{
+		// File exists - this would be a successful load, so mark as loaded
+		scene->setLoaded( true );
+	}
+	else
+	{
+		// File doesn't exist - return empty scene but mark as not loaded
+		scene->setLoaded( false );
+	}
+
 	return scene;
 }
 

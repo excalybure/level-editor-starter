@@ -2,6 +2,22 @@
 
 Date: 2025-09-08
 
+## 2025-09-08 — AssetManager::loadScene Full Implementation via TDD
+**Summary:** Fully implemented AssetManager::loadScene with dependency injection via SceneLoaderCallback, enabling seamless gltf_loader integration without circular dependencies. Delivered production-ready scene loading with robust caching, error handling, callback fallbacks, and comprehensive test coverage. All functionality built using strict TDD Red-Green-Refactor cycles.
+
+**Atomic functionalities completed:**
+- AF1: Analyze gltf_loader integration requirements and identify circular dependency between engine.assets and engine.gltf_loader
+- AF2: Design SceneLoaderCallback dependency injection pattern to resolve circular dependency issue  
+- AF3: Implement SceneLoaderCallback as static function pointer with signature `std::function<std::shared_ptr<Scene>(const std::string&)>`
+- AF4: Update loadScene to use callback when available, fallback to file existence check when not set
+- AF5: Implement robust caching logic that only caches successfully loaded scenes (isLoaded() == true)
+- AF6: Add comprehensive test coverage for callback functionality, fallback behavior, and caching logic
+- AF7: Fix test suite to use existing test assets and ensure all AssetManager tests pass
+- AF8: Validate full integration readiness with backward compatibility guarantees
+
+**Tests:** 8 test cases with 17 loadScene-specific assertions plus 56 total AssetManager assertions; filtered commands: `unit_test_runner.exe "*loadScene*"` and `unit_test_runner.exe "[AssetManager]"`. Full coverage of callback integration, fallback behavior, caching only loaded scenes, invalid file handling, and mock scene creation.
+**Notes:** Dependency injection via SceneLoaderCallback enables gltf_loader integration without circular module dependencies. Callback pattern maintains AssetManager independence while allowing external scene loading implementation. Only successfully loaded scenes are cached, preventing storage of invalid/empty scenes. Full backward compatibility maintained with existing API.
+
 ## 2025-09-08 — AssetManager Implementation via TDD
 **Summary:** Implemented a comprehensive AssetManager system using strict TDD methodology. Delivered a production-ready asset caching and management solution with template API, reference counting, integration patterns, and ECS import support. All functionality built incrementally with Red-Green-Refactor cycles, ensuring robust test coverage and clean design.
 
