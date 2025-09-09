@@ -177,6 +177,16 @@ target_sources(engine.assets PUBLIC
 target_compile_features(engine.assets PUBLIC cxx_std_23)
 target_link_libraries(engine.assets PUBLIC engine.vec engine.bounding_box_3d)
 
+add_library(engine.asset_gpu_buffers)
+target_sources(engine.asset_gpu_buffers PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/asset_gpu_buffers/asset_gpu_buffers.ixx
+  PRIVATE
+    src/engine/asset_gpu_buffers/asset_gpu_buffers.cpp
+)
+target_compile_features(engine.asset_gpu_buffers PUBLIC cxx_std_23)
+target_link_libraries(engine.asset_gpu_buffers PUBLIC engine.assets platform.dx12 runtime.console)
+
 add_library(engine.gltf_loader)
 target_sources(engine.gltf_loader PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -403,6 +413,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp
     tests/primitive_tests.cpp
+    tests/gpu_buffer_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -432,6 +443,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     editor.ui
     platform.win32
     engine.assets
+    engine.asset_gpu_buffers
     engine.gltf_loader
     Catch2::Catch2WithMain
   )

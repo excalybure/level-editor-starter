@@ -1,8 +1,22 @@
 # 📊 Milestone 2 Progress Report
 
-# 📊 Milestone 2 Progress Report
-
 Date: 2025-09-09
+
+## 2025-09-09 — GPU Buffer Creation (Primitive-Based Design) Implementation via TDD
+**Summary:** Implemented comprehensive GPU buffer creation functionality for primitive-based mesh architecture using strict TDD methodology. Created new `engine.asset_gpu_buffers` module with `PrimitiveGPUBuffer` and `MeshGPUBuffers` classes supporting per-primitive D3D12 resource management. The implementation properly handles upload heap allocation, error conditions, and resource lifecycle management for modern rendering with per-primitive draw calls.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed existing GPU/DX12 infrastructure and identified integration points for asset-based GPU buffers
+- AF2: Designed primitive-based GPU buffer architecture with per-primitive resource management
+- AF3: Implemented `PrimitiveGPUBuffer` class with D3D12 vertex/index buffer creation and upload heap management
+- AF4: Created `MeshGPUBuffers` collection class for managing multiple primitive buffers per mesh
+- AF5: Added proper error handling for empty primitives and resource creation failures
+- AF6: Implemented resource lifecycle management with RAII patterns and proper cleanup
+- AF7: Created comprehensive test suite covering normal cases, error conditions, and large data scenarios
+- AF8: Integrated new module with CMake build system and test runner configuration
+
+**Tests:** 6 new test cases with 30 assertions covering GPU buffer creation, error handling for empty primitives, mesh-level buffer management, large vertex counts, and proper D3D12 resource allocation. All tests use headless D3D12 device initialization for reliable testing environment.
+**Notes:** New `engine.asset_gpu_buffers` module provides clean separation from existing renderer buffers. Implementation uses upload heap for simplicity as specified for Phase 2. Per-primitive approach enables efficient modern rendering with individual draw calls per primitive. Error handling gracefully manages empty primitives and resource failures. All GPU buffer tests pass, with proper error logging for debugging.
 
 ## 2025-09-09 — ECS Import (Primitive-Based Design) Implementation via TDD
 **Summary:** Implemented comprehensive ECS import functionality with primitive-based design support using strict TDD methodology. Created callback-based integration with AssetManager enabling scene conversion from assets to ECS entities with Name, Transform, and MeshRenderer components. The implementation properly handles primitive-based meshes, hierarchy preservation, and per-primitive material handling as required by the updated mesh architecture.
