@@ -573,6 +573,330 @@ private:
 
 ---
 
+## 📦 Phase 2.5: GPU Resource Architecture & Rendering Integration (Week 2.5-3)
+
+### 2.5.1 Current State Analysis
+**Problem**: Phase 2 created the asset loading pipeline but left a critical gap between asset data and actual rendering:
+
+- **Asset Side**: `MeshRenderer` stores string paths (`meshPath`, `materialPaths`) requiring runtime lookups
+- **GPU Side**: `MeshGPUBuffers` exist but are disconnected from the rendering pipeline
+- **Performance**: Multiple entities sharing the same mesh create duplicate GPU resources
+- **Architecture**: No material GPU resource management for shaders, textures, and rendering state
+
+**Gap**: The system can load assets and create ECS scenes, but cannot efficiently render them.
+
+### 2.5.2 MaterialGPU Implementation
+**Target Module**: `engine.material_gpu`
+
+**Design**: Create GPU-ready material resources that handle all rendering state:
+
+```cpp
+export module engine.material_gpu;
+
+import platform.dx12;
+import engine.assets;
+import engine.shader_manager;
+import std;
+
+export namespace material_gpu {
+
+// GPU material resource management
+export class MaterialGPU {
+public:
+    MaterialGPU(dx12::Device& device, const assets::Material& material);
+    ~MaterialGPU() = default;
+
+    // No copy/move for resource management simplicity
+    MaterialGPU(const MaterialGPU&) = delete;
+    MaterialGPU& operator=(const MaterialGPU&) = delete;
+
+    // Rendering pipeline binding
+    void bindToCommandList(ID3D12GraphicsCommandList* commandList, UINT rootParameterIndex);
+    
+    // Resource accessors
+    ID3D12PipelineState* getPipelineState() const { return m_pipelineState.Get(); }
+    ID3D12Resource* getConstantBuffer() const { return m_constantBuffer.Get(); }
+    
+    // Texture management
+    std::span<const Microsoft::WRL::ComPtr<ID3D12Resource>> getTextures() const;
+    D3D12_GPU_DESCRIPTOR_HANDLE getTextureDescriptorHeap() const;
+    
+    // Validation
+    bool isValid() const noexcept;
+
+private:
+    dx12::Device& m_device;
+    
+    // Core rendering resources
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_textureDescriptorHeap;
+    
+    // Texture resources
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> m_textures;
+    
+    // Material constant buffer data
+    struct MaterialConstants {
+        math::Vec4<> baseColorFactor;
+        math::Vec3<> emissiveFactor;
+        float metallicFactor;
+        float roughnessFactor;
+        // Texture binding flags, etc.
+    };
+    
+    void createPipelineState(const assets::Material& material);
+    void createConstantBuffer(const assets::Material& material);
+    void loadTextures(const assets::Material& material);
+};
+
+} // namespace material_gpu
+```
+
+### 2.5.3 GPU Resource Manager
+**Target Module**: `engine.gpu_resource_manager`
+
+**Design**: Centralized caching and sharing of GPU resources across multiple entities:
+
+```cpp
+export module engine.gpu_resource_manager;
+
+import engine.asset_gpu_buffers;
+import engine.material_gpu;
+import engine.assets;
+import platform.dx12;
+import std;
+
+export namespace gpu_resource_manager {
+
+// Centralized GPU resource caching and management
+export class GPUResourceManager {
+public:
+    GPUResourceManager(dx12::Device& device);
+    ~GPUResourceManager() = default;
+
+    // Mesh GPU resource management
+    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> getMeshGPUBuffers(
+        const std::string& meshAssetPath);
+    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> getMeshGPUBuffers(
+        std::shared_ptr<assets::Mesh> mesh);
+    
+    // Material GPU resource management  
+    std::shared_ptr<material_gpu::MaterialGPU> getMaterialGPU(
+        const std::string& materialAssetPath);
+    std::shared_ptr<material_gpu::MaterialGPU> getMaterialGPU(
+        std::shared_ptr<assets::Material> material);
+    
+    // Cache management
+    void clearCache();
+    void unloadUnusedResources(); // Remove resources with only 1 reference
+    
+    // Statistics
+    size_t getMeshResourceCount() const;
+    size_t getMaterialResourceCount() const;
+    size_t getMemoryUsageMB() const;
+
+private:
+    dx12::Device& m_device;
+    
+    // Resource caches with automatic sharing
+    std::unordered_map<std::string, std::weak_ptr<asset_gpu_buffers::MeshGPUBuffers>> m_meshCache;
+    std::unordered_map<std::string, std::weak_ptr<material_gpu::MaterialGPU>> m_materialCache;
+    
+    // Asset integration for loading
+    assets::AssetManager* m_assetManager = nullptr;
+    
+    void cleanupExpiredReferences();
+};
+
+} // namespace gpu_resource_manager
+```
+
+### 2.5.4 Enhanced PrimitiveGPUBuffer Integration
+**Target Module**: `engine.asset_gpu_buffers` enhancement
+
+**Design**: Integrate material references directly into primitive GPU buffers:
+
+```cpp
+// Updated PrimitiveGPUBuffer class
+export class PrimitiveGPUBuffer {
+public:
+    PrimitiveGPUBuffer(dx12::Device& device, 
+                      const assets::Primitive& primitive,
+                      std::shared_ptr<material_gpu::MaterialGPU> material);
+
+    // Geometry resources (existing)
+    D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const noexcept;
+    D3D12_INDEX_BUFFER_VIEW getIndexBufferView() const noexcept;
+    
+    // NEW: Material integration
+    std::shared_ptr<material_gpu::MaterialGPU> getMaterial() const { return m_material; }
+    void setMaterial(std::shared_ptr<material_gpu::MaterialGPU> material) { m_material = material; }
+    
+    // Complete rendering setup
+    void bindForRendering(ID3D12GraphicsCommandList* commandList, 
+                         UINT materialRootParameterIndex);
+
+private:
+    // Existing geometry resources...
+    std::shared_ptr<material_gpu::MaterialGPU> m_material;
+};
+```
+
+### 2.5.5 Streamlined MeshRenderer Component
+**Target Module**: `runtime.components` enhancement
+
+**Design**: Remove string paths and direct GPU resource references for efficiency:
+
+```cpp
+// Updated MeshRenderer component
+export struct MeshRenderer {
+    // Direct GPU resource references (no string lookups)
+    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> gpuBuffers;
+    
+    // Rendering properties
+    math::BoundingBox3Df bounds; // For frustum culling
+    float lodBias = 1.0f;        // Level of detail control
+    
+    // Removed: meshPath, materialPaths, enabled (handled by component presence)
+    
+    MeshRenderer() = default;
+    MeshRenderer(std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> buffers)
+        : gpuBuffers(std::move(buffers)) {}
+};
+```
+
+### 2.5.6 Scene Importer Module
+**Target Module**: `runtime.scene_importer`
+
+**Design**: Dedicated module for converting `assets::Scene` to `ecs::Scene` with support for both GPU and non-GPU scenarios:
+
+```cpp
+export module runtime.scene_importer;
+
+import std;
+import engine.assets;
+import runtime.ecs;
+import runtime.components;
+import engine.gpu_resource_manager;
+
+export namespace scene_importer {
+
+export class SceneImporter {
+public:
+    // For tests, headless servers, editor tools (current approach)
+    static void importScene(std::shared_ptr<assets::Scene> assetScene, 
+                           ecs::Scene& ecsScene);
+    
+    // For rendering applications with GPU resources (future approach)
+    static void importSceneWithGPU(std::shared_ptr<assets::Scene> assetScene,
+                                  ecs::Scene& ecsScene,
+                                  gpu_resource_manager::GPUResourceManager& gpuManager);
+
+private:
+    // Shared logic for both approaches
+    static ecs::Entity importNode(const assets::SceneNode& node, 
+                                 ecs::Scene& scene, 
+                                 ecs::Entity parent = {});
+    
+    // Transform component setup (shared)
+    static void setupTransformComponent(const assets::SceneNode& node,
+                                       ecs::Entity entity,
+                                       ecs::Scene& scene);
+    
+    // GPU-enabled component setup (optimized rendering path)
+    static void setupMeshRendererWithGPU(const assets::SceneNode& node,
+                                        ecs::Entity entity,
+                                        ecs::Scene& scene,
+                                        gpu_resource_manager::GPUResourceManager& gpuManager);
+    
+    // String path component setup (compatibility/testing path)
+    static void setupMeshRendererPaths(const assets::SceneNode& node,
+                                      ecs::Entity entity,
+                                      ecs::Scene& scene,
+                                      const std::string& scenePath);
+    
+    // Hierarchy processing (shared)
+    static void processHierarchy(const assets::SceneNode& node,
+                                ecs::Entity entity,
+                                ecs::Scene& scene);
+};
+
+} // namespace scene_importer
+```
+
+**Integration with AssetManager**: The existing callback system will use this module:
+
+```cpp
+// For tests and headless scenarios
+AssetManager::setImportSceneCallback([](auto assetScene, auto& ecsScene) {
+    scene_importer::SceneImporter::importScene(assetScene, ecsScene);
+});
+
+// For production rendering with GPU resources
+AssetManager::setImportSceneCallback([&gpuManager](auto assetScene, auto& ecsScene) {
+    scene_importer::SceneImporter::importSceneWithGPU(assetScene, ecsScene, gpuManager);
+});
+```
+
+**Benefits**:
+- **Architectural Clarity**: Dedicated module for asset-to-ECS conversion
+- **Testing Support**: Maintains fast unit tests without GPU overhead  
+- **Performance**: GPU path eliminates string lookups during rendering
+- **Flexibility**: Applications choose appropriate import method
+- **Maintainability**: All conversion logic centralized and testable
+- **Incremental Migration**: Existing tests continue working while adding GPU features
+
+### 2.5.7 Updated ECS Import Integration
+**Target Module**: `engine.asset_manager` enhancement
+
+**Design**: Integration with GPU resource manager during ECS import:
+
+```cpp
+// Enhanced AssetManager with GPU resource integration
+export class AssetManager {
+public:
+    // Existing API...
+    
+    // NEW: GPU resource integration
+    void setGPUResourceManager(gpu_resource_manager::GPUResourceManager* manager);
+    
+    // Enhanced ECS import with GPU resources
+    bool importSceneWithGPUResources(const std::string& path, ecs::Scene& ecsScene);
+
+private:
+    gpu_resource_manager::GPUResourceManager* m_gpuResourceManager = nullptr;
+    
+    // Updated import callback with GPU resources
+    static ImportSceneWithGPUCallback s_importSceneWithGPUCallback;
+};
+
+// Updated import callback signature
+using ImportSceneWithGPUCallback = std::function<void(
+    std::shared_ptr<assets::Scene>, 
+    ecs::Scene&,
+    gpu_resource_manager::GPUResourceManager&
+)>;
+```
+
+**Deliverables**:
+- ✅ MaterialGPU class with complete rendering state management
+- ✅ GPUResourceManager for efficient resource sharing and caching
+- ✅ Enhanced PrimitiveGPUBuffer with material integration
+- ✅ Streamlined MeshRenderer component with direct GPU resource references
+- ✅ Updated ECS import system with GPU resource creation
+- ✅ Performance optimization: eliminated string lookups in rendering path
+- ✅ Memory optimization: shared GPU resources across multiple entities
+- ✅ Architectural clean-up: clear separation between asset data and GPU resources
+
+**Key Benefits**:
+- **Performance**: Direct GPU resource access eliminates runtime string lookups
+- **Memory Efficiency**: Multiple entities sharing meshes use the same GPU buffers
+- **Rendering Ready**: Complete pipeline from asset loading to GPU rendering
+- **Maintainable**: Clear ownership and lifecycle management of GPU resources
+- **Scalable**: Resource caching supports large scenes with many entities
+
+---
+
 ## 📦 Phase 3: Object Picking & Selection System (Week 3-4)
 
 ### 3.1 Ray-Casting Infrastructure
