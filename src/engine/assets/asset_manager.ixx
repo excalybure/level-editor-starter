@@ -78,11 +78,6 @@ private:
 	std::shared_ptr<Mesh> loadMesh( const std::string &path );
 };
 
-// Static callback definition (to be set by external integration code)
-// Static member initialization
-AssetManager::ImportSceneCallback AssetManager::s_importSceneCallback = nullptr;
-AssetManager::SceneLoaderCallback AssetManager::s_sceneLoaderCallback = nullptr;
-
 // Template specializations for supported asset types
 template <>
 inline std::shared_ptr<Scene> AssetManager::load<Scene>( const std::string &path )

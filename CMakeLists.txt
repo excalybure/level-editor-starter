@@ -172,6 +172,7 @@ target_sources(engine.assets PUBLIC
     src/engine/assets/asset_manager.ixx
   PRIVATE
     src/engine/assets/assets.cpp
+    src/engine/assets/asset_manager.cpp
 )
 target_compile_features(engine.assets PUBLIC cxx_std_23)
 target_link_libraries(engine.assets PUBLIC engine.vec engine.bounding_box_3d)
