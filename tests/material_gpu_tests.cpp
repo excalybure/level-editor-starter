@@ -1,0 +1,99 @@
+#include <catch2/catch_test_macros.hpp>
+
+import engine.material_gpu;
+import engine.assets;
+import platform.dx12;
+
+TEST_CASE( "MaterialGPU can be created from assets::Material", "[MaterialGPU][unit]" )
+{
+	// Arrange
+	auto material = std::make_shared<assets::Material>();
+	material->getPBRMaterial().baseColorFactor = { 1.0f, 0.5f, 0.2f, 1.0f };
+	material->getPBRMaterial().metallicFactor = 0.8f;
+	material->getPBRMaterial().roughnessFactor = 0.3f;
+	material->setPath( "test_material" );
+	material->setLoaded( true );
+
+	// Act
+	engine::MaterialGPU materialGPU{ material };
+
+	// Assert
+	REQUIRE( materialGPU.isValid() );
+	REQUIRE( materialGPU.getSourceMaterial() == material );
+
+	const auto &constants = materialGPU.getMaterialConstants();
+	REQUIRE( constants.baseColorFactor.x == 1.0f );
+	REQUIRE( constants.baseColorFactor.y == 0.5f );
+	REQUIRE( constants.baseColorFactor.z == 0.2f );
+	REQUIRE( constants.baseColorFactor.w == 1.0f );
+	REQUIRE( constants.metallicFactor == 0.8f );
+	REQUIRE( constants.roughnessFactor == 0.3f );
+}
+
+TEST_CASE( "MaterialGPU sets texture flags correctly based on material textures", "[MaterialGPU][unit]" )
+{
+	// Arrange
+	auto material = std::make_shared<assets::Material>();
+	auto &pbr = material->getPBRMaterial();
+	pbr.baseColorTexture = "base_color.png";
+	pbr.normalTexture = "normal.png";
+	// Leave metallic roughness and emissive empty
+	material->setPath( "textured_material" );
+	material->setLoaded( true );
+
+	// Act
+	engine::MaterialGPU materialGPU{ material };
+
+	// Assert
+	REQUIRE( materialGPU.isValid() );
+	const auto &constants = materialGPU.getMaterialConstants();
+
+	// Check that only base color and normal texture bits are set
+	REQUIRE( ( constants.textureFlags & engine::MaterialConstants::kBaseColorTextureBit ) != 0 );
+	REQUIRE( ( constants.textureFlags & engine::MaterialConstants::kNormalTextureBit ) != 0 );
+	REQUIRE( ( constants.textureFlags & engine::MaterialConstants::kMetallicRoughnessTextureBit ) == 0 );
+	REQUIRE( ( constants.textureFlags & engine::MaterialConstants::kEmissiveTextureBit ) == 0 );
+}
+
+TEST_CASE( "MaterialGPU handles null material gracefully", "[MaterialGPU][unit]" )
+{
+	// Arrange & Act
+	engine::MaterialGPU materialGPU{ nullptr };
+
+	// Assert
+	REQUIRE_FALSE( materialGPU.isValid() );
+	REQUIRE( materialGPU.getSourceMaterial() == nullptr );
+}
+
+TEST_CASE( "MaterialGPU bindToCommandList handles null command list gracefully", "[MaterialGPU][unit]" )
+{
+	// Arrange
+	auto material = std::make_shared<assets::Material>();
+	material->setPath( "test_material" );
+	material->setLoaded( true );
+	engine::MaterialGPU materialGPU{ material };
+
+	// Act & Assert - should not crash
+	REQUIRE_NOTHROW( materialGPU.bindToCommandList( nullptr ) );
+}
+
+TEST_CASE( "MaterialGPU supports move semantics", "[MaterialGPU][unit]" )
+{
+	// Arrange
+	auto material = std::make_shared<assets::Material>();
+	material->getPBRMaterial().metallicFactor = 0.7f;
+	material->setPath( "movable_material" );
+	material->setLoaded( true );
+
+	engine::MaterialGPU original{ material };
+	REQUIRE( original.isValid() );
+
+	// Act - Move constructor
+	engine::MaterialGPU moved{ std::move( original ) };
+
+	// Assert
+	REQUIRE( moved.isValid() );
+	REQUIRE( moved.getSourceMaterial() == material );
+	REQUIRE( moved.getMaterialConstants().metallicFactor == 0.7f );
+	REQUIRE_FALSE( original.isValid() ); // Original should be invalidated
+}

@@ -187,6 +187,16 @@ target_sources(engine.asset_gpu_buffers PUBLIC
 target_compile_features(engine.asset_gpu_buffers PUBLIC cxx_std_23)
 target_link_libraries(engine.asset_gpu_buffers PUBLIC engine.assets platform.dx12 runtime.console)
 
+add_library(engine.material_gpu)
+target_sources(engine.material_gpu PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/material_gpu/material_gpu.ixx
+  PRIVATE
+    src/engine/material_gpu/material_gpu.cpp
+)
+target_compile_features(engine.material_gpu PUBLIC cxx_std_23)
+target_link_libraries(engine.material_gpu PUBLIC engine.assets engine.vec platform.dx12 engine.shader_manager runtime.console)
+
 add_library(engine.gltf_loader)
 target_sources(engine.gltf_loader PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -414,6 +424,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/mesh_extraction_tdd_test.cpp
     tests/primitive_tests.cpp
     tests/gpu_buffer_tests.cpp
+    tests/material_gpu_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -444,6 +455,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     platform.win32
     engine.assets
     engine.asset_gpu_buffers
+    engine.material_gpu
     engine.gltf_loader
     Catch2::Catch2WithMain
   )
