@@ -4,6 +4,21 @@
 
 Date: 2025-09-09
 
+## 2025-09-09 — GPU Resource Manager Implementation via TDD
+**Summary:** Implemented comprehensive GPU resource manager with caching, automatic cleanup, and performance monitoring using strict TDD methodology. Created new `engine.gpu_resource_manager` module with weak_ptr-based cache architecture providing automatic resource cleanup when no longer referenced. The implementation supports mesh and material resource caching with cache hit/miss statistics and memory usage tracking for optimal performance.
+
+**Atomic functionalities completed:**
+- AF1: Created `engine.gpu_resource_manager` module structure with CMake configuration and basic class interface
+- AF2: Designed caching architecture using weak_ptr for automatic cleanup of unused GPU resources
+- AF3: Implemented mesh resource caching with getMeshGPUBuffers() methods for shared_ptr and path access
+- AF4: Implemented material resource caching with getMaterialGPU() methods for shared_ptr and path access
+- AF5: Added cache management methods (clearCache(), unloadUnusedResources(), cleanupExpiredReferences())
+- AF6: Implemented statistics tracking for cache hits/misses, resource counts, and memory usage estimation
+- AF7: Created comprehensive test suite covering resource sharing, cache cleanup, and performance validation
+
+**Tests:** 6 new test cases with 22 assertions covering GPUResourceManager creation, mesh resource caching, material resource caching, cache cleanup functionality, path-based access placeholders, and statistics tracking. All tests pass using filtered command: `unit_test_runner.exe "*GPUResourceManager*"`.
+**Notes:** Cache implementation uses weak_ptr references allowing automatic cleanup when shared resources are no longer used. Path-based resource access methods are stubbed for future AssetManager integration. Statistics provide runtime visibility into cache effectiveness with hit/miss ratios and estimated memory usage. The manager acts as central hub for all GPU resource creation and sharing, providing foundation for performance optimization in rendering pipeline.
+
 ## 2025-09-09 — MaterialGPU Class Implementation via TDD
 **Summary:** Implemented comprehensive MaterialGPU class for GPU material resource management using strict TDD methodology. Created new `engine.material_gpu` module with MaterialConstants structure, GPU resource creation stubs, and complete API for material pipeline state management. The implementation provides foundation for PBR material rendering with proper texture binding flags and validation.
 
