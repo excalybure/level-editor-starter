@@ -547,11 +547,8 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 	return primitiveObj;
 }
 
-std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( void *gltfMaterialPtr, void *dataPtr, bool verbose ) const
+std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( cgltf_material *gltfMaterial, cgltf_data *data, bool verbose ) const
 {
-	cgltf_material *gltfMaterial = static_cast<cgltf_material *>( gltfMaterialPtr );
-	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
-
 	if ( !gltfMaterial )
 	{
 		console::error( "extractMaterial: Invalid material pointer" );

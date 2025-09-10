@@ -228,7 +228,7 @@ private:
 	std::unique_ptr<assets::Primitive> extractPrimitive( cgltf_primitive *gltfPrimitive, cgltf_data *data, bool verbose = false ) const;
 
 	// Material extraction helpers
-	std::shared_ptr<assets::Material> extractMaterial( void *gltfMaterial, void *data, bool verbose = false ) const;
+	std::shared_ptr<assets::Material> extractMaterial( cgltf_material *gltfMaterial, cgltf_data *data, bool verbose = false ) const;
 	std::string extractTextureURI( void *textureInfo, void *data ) const;
 
 	// Transform extraction helpers
