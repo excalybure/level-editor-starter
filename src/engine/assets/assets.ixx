@@ -2,6 +2,7 @@ export module engine.assets;
 
 import std;
 import engine.vec;
+import engine.math;
 import engine.bounding_box_3d;
 
 export namespace assets
@@ -15,6 +16,14 @@ export enum class AssetType {
 	Texture,
 	Scene
 };
+
+// Handle types for index-based resource references
+export using MeshHandle = std::size_t;
+export using MaterialHandle = std::size_t;
+
+// Invalid handle constants
+export constexpr MeshHandle INVALID_MESH_HANDLE = std::numeric_limits<MeshHandle>::max();
+export constexpr MaterialHandle INVALID_MATERIAL_HANDLE = std::numeric_limits<MaterialHandle>::max();
 
 // Simple transform structure for scene nodes
 export struct Transform
@@ -263,10 +272,13 @@ private:
 export struct SceneNode
 {
 	std::string name;
-	std::vector<std::string> materials; // Material asset paths
+	std::vector<std::string> materials; // Legacy: Material asset paths (for backward compatibility)
 	std::vector<std::unique_ptr<SceneNode>> children;
 
-	// NEW: Store actual mesh objects directly for simple cases
+	// NEW: Handle-based mesh references
+	std::vector<MeshHandle> meshHandles;
+
+	// Legacy: Direct mesh objects (for backward compatibility during transition)
 	std::vector<std::shared_ptr<Mesh>> meshObjects;
 
 	// Transform data from glTF
@@ -276,8 +288,19 @@ export struct SceneNode
 	SceneNode() = default;
 	SceneNode( const std::string &nodeName ) : name( nodeName ) {}
 
-	// Utility methods
-	bool hasMesh() const { return !meshObjects.empty(); }
+	// Utility methods for handle-based meshes
+	bool hasMeshHandles() const { return !meshHandles.empty(); }
+	const std::vector<MeshHandle> &getMeshHandles() const { return meshHandles; }
+	void addMeshHandle( MeshHandle handle )
+	{
+		if ( handle != INVALID_MESH_HANDLE )
+		{
+			meshHandles.push_back( handle );
+		}
+	}
+
+	// Legacy utility methods (for backward compatibility)
+	bool hasMesh() const { return !meshObjects.empty() || !meshHandles.empty(); }
 	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
 
@@ -290,13 +313,12 @@ export struct SceneNode
 		hasTransformData = true;
 	}
 
-	// NEW: Get first mesh object for direct access
+	// Legacy mesh access (for backward compatibility)
 	std::shared_ptr<Mesh> getFirstMesh() const
 	{
 		return meshObjects.empty() ? nullptr : meshObjects[0];
 	}
 
-	// NEW: Add mesh object
 	void addMeshObject( std::shared_ptr<Mesh> mesh )
 	{
 		if ( mesh )
@@ -311,6 +333,54 @@ export class Scene : public Asset
 public:
 	AssetType getType() const override { return AssetType::Scene; }
 
+	// Root-level resource collections (matching glTF structure)
+	const std::vector<std::shared_ptr<Material>> &getMaterials() const { return m_materials; }
+	const std::vector<std::shared_ptr<Mesh>> &getMeshes() const { return m_meshes; }
+
+	// Resource management with handle-based access
+	MaterialHandle addMaterial( std::shared_ptr<Material> material )
+	{
+		if ( !material )
+			return INVALID_MATERIAL_HANDLE;
+		m_materials.push_back( material );
+		return static_cast<MaterialHandle>( m_materials.size() - 1 );
+	}
+
+	MeshHandle addMesh( std::shared_ptr<Mesh> mesh )
+	{
+		if ( !mesh )
+			return INVALID_MESH_HANDLE;
+		m_meshes.push_back( mesh );
+		return static_cast<MeshHandle>( m_meshes.size() - 1 );
+	}
+
+	// Safe indexed access with bounds checking
+	std::shared_ptr<Material> getMaterial( MaterialHandle handle ) const
+	{
+		return ( handle < m_materials.size() ) ? m_materials[handle] : nullptr;
+	}
+
+	std::shared_ptr<Mesh> getMesh( MeshHandle handle ) const
+	{
+		return ( handle < m_meshes.size() ) ? m_meshes[handle] : nullptr;
+	}
+
+	// Validation
+	bool isValidMaterialHandle( MaterialHandle handle ) const
+	{
+		return handle < m_materials.size();
+	}
+
+	bool isValidMeshHandle( MeshHandle handle ) const
+	{
+		return handle < m_meshes.size();
+	}
+
+	// Resource counts
+	std::size_t getMaterialCount() const { return m_materials.size(); }
+	std::size_t getMeshCount() const { return m_meshes.size(); }
+
+	// Scene graph access (unchanged)
 	const std::vector<std::unique_ptr<SceneNode>> &getRootNodes() const
 	{
 		return m_rootNodes;
@@ -336,6 +406,11 @@ public:
 	}
 
 private:
+	// Root-level resource collections (matching glTF structure)
+	std::vector<std::shared_ptr<Material>> m_materials;
+	std::vector<std::shared_ptr<Mesh>> m_meshes;
+
+	// Scene graph
 	std::vector<std::unique_ptr<SceneNode>> m_rootNodes;
 };
 

@@ -224,8 +224,8 @@ private:
 	std::unique_ptr<assets::SceneNode> processNode(
 		cgltf_node *gltfNode,
 		cgltf_data *data,
-		const std::vector<std::shared_ptr<assets::Mesh>> &extractedMeshes,
-		const std::vector<std::shared_ptr<assets::Material>> &extractedMaterials ) const;
+		const std::vector<assets::MeshHandle> &meshHandles,
+		const std::vector<assets::MaterialHandle> &materialHandles ) const;
 
 	// Mesh extraction helpers
 	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose = false ) const;
