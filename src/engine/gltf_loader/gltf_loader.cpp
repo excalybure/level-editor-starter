@@ -73,72 +73,8 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 		}
 	}
 
-	// Create scene using the same logic as loadFromString
-	auto scene = std::make_unique<assets::Scene>();
-
-	// 1. Extract ALL materials from root level first and add to scene
-	std::vector<assets::MaterialHandle> materialHandles;
-	materialHandles.reserve( data->materials_count );
-	for ( cgltf_size i = 0; i < data->materials_count; ++i )
-	{
-		auto material = extractMaterial( &data->materials[i], data );
-		if ( material )
-		{
-			assets::MaterialHandle handle = scene->addMaterial( material );
-			materialHandles.push_back( handle );
-		}
-		else
-		{
-			// Add invalid handle placeholder to maintain indexing
-			materialHandles.push_back( assets::INVALID_MATERIAL_HANDLE );
-		}
-	}
-
-	// 2. Extract ALL meshes from root level and add to scene
-	std::vector<assets::MeshHandle> meshHandles;
-	meshHandles.reserve( data->meshes_count );
-	for ( cgltf_size i = 0; i < data->meshes_count; ++i )
-	{
-		auto mesh = extractMesh( &data->meshes[i], data );
-		if ( mesh )
-		{
-			assets::MeshHandle handle = scene->addMesh( mesh );
-			meshHandles.push_back( handle );
-		}
-		else
-		{
-			// Add invalid handle placeholder to maintain indexing
-			meshHandles.push_back( assets::INVALID_MESH_HANDLE );
-		}
-	}
-
-	// 3. Process default scene or first scene
-	cgltf_scene *gltfScene = nullptr;
-	if ( data->scene )
-	{
-		gltfScene = data->scene;
-	}
-	else if ( data->scenes_count > 0 )
-	{
-		gltfScene = &data->scenes[0];
-	}
-
-	if ( gltfScene )
-	{
-		// Process root nodes with extracted resources
-		for ( cgltf_size i = 0; i < gltfScene->nodes_count; ++i )
-		{
-			cgltf_node *gltfNode = gltfScene->nodes[i];
-			if ( gltfNode )
-			{
-				auto sceneNode = processNode( gltfNode, data, meshHandles, materialHandles );
-				if ( sceneNode )
-				{
-					scene->addRootNode( std::move( sceneNode ) );
-				}
-			}
-		}
-	}
+	// Process the parsed glTF data into a scene
+	auto scene = processSceneData( data );
 
 	cgltf_free( data );
 	return scene;
@@ -168,6 +104,21 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 	{
 		console::error( "Failed to load buffers for glTF content, result: {}", static_cast<int>( result ) );
 		// Continue anyway - some buffers might have loaded successfully
+	}
+
+	// Process the parsed glTF data into a scene
+	auto scene = processSceneData( data );
+
+	cgltf_free( data );
+	return scene;
+}
+
+std::unique_ptr<assets::Scene> GLTFLoader::processSceneData( cgltf_data *data ) const
+{
+	if ( !data )
+	{
+		console::error( "processSceneData: Invalid glTF data" );
+		return nullptr;
 	}
 
 	// Create scene
@@ -237,7 +188,6 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 		}
 	}
 
-	cgltf_free( data );
 	return scene;
 }
 

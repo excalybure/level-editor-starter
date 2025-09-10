@@ -102,8 +102,8 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( !rootNodes.empty() );
 
 		// First node should have a mesh
-		REQUIRE( rootNodes[0]->hasMesh() );
-		REQUIRE( !rootNodes[0]->meshObjects.empty() );
+		REQUIRE( rootNodes[0]->hasMeshHandles() );
+		REQUIRE( !rootNodes[0]->getMeshHandles().empty() );
 	}
 
 	SECTION( "Extract real triangle mesh data from glTF" )
@@ -151,11 +151,13 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( scene != nullptr );
 		const auto &rootNodes = scene->getRootNodes();
 		REQUIRE( !rootNodes.empty() );
-		REQUIRE( rootNodes[0]->hasMesh() );
+		REQUIRE( rootNodes[0]->hasMeshHandles() );
 
 		// NEW: Test that we extract actual mesh data rather than placeholder strings
-		// Access the actual mesh object (this will fail until we implement extractMesh)
-		const auto meshPtr = rootNodes[0]->getFirstMesh();
+		// Access the actual mesh object using the new handle-based API
+		const auto &meshHandles = rootNodes[0]->getMeshHandles();
+		REQUIRE( !meshHandles.empty() );
+		const auto meshPtr = scene->getMesh( meshHandles[0] );
 		REQUIRE( meshPtr != nullptr );
 
 		// NEW: Test primitive-based structure
@@ -1401,8 +1403,8 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 		REQUIRE( !rootNodes.empty() );
 
 		// First node should have a mesh and be named
-		REQUIRE( rootNodes[0]->hasMesh() );
-		REQUIRE( !rootNodes[0]->meshObjects.empty() );
+		REQUIRE( rootNodes[0]->hasMeshHandles() );
+		REQUIRE( !rootNodes[0]->getMeshHandles().empty() );
 		REQUIRE( rootNodes[0]->name == "TriangleNode" );
 	}
 

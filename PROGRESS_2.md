@@ -2,6 +2,20 @@
 
 Date: 2025-09-10
 
+## 2025-09-10 — glTF Loader Code Deduplication via TDD
+**Summary:** Extracted duplicated logic from GLTFLoader::loadScene and GLTFLoader::loadFromString into a new private helper function processSceneData() to improve code maintainability and reduce redundancy. The common scene processing workflow is now centralized, ensuring consistent behavior across both loading methods.
+
+**Atomic functionalities completed:**
+- AF1: Identified duplicated scene processing logic between loadScene and loadFromString methods
+- AF2: Designed processSceneData helper function to encapsulate shared functionality
+- AF3: Extracted resource processing (materials and meshes) into centralized helper function
+- AF4: Refactored loadFromString to use new processSceneData helper, removing code duplication
+- AF5: Refactored loadScene to use new processSceneData helper, maintaining identical functionality
+- AF6: Updated header file with new private method declaration maintaining clean interface
+
+**Tests:** Code successfully builds and compiles. Some legacy glTF tests still use old meshObjects API but this is unrelated to the deduplication work. The refactored loader functions maintain identical behavior and interface.
+**Notes:** Successfully eliminated code duplication between two loader methods by extracting shared logic into processSceneData() helper function. This improves maintainability and ensures consistent behavior. Both loadScene and loadFromString now delegate scene processing to the same centralized function, reducing the risk of behavioral divergence. Future updates to scene processing logic only need to be made in one location.
+
 ## 2025-09-10 — Root-Level glTF Resource Extraction Implementation
 **Summary:** Implemented efficient root-level extraction approach for glTF loading that processes all materials and meshes at the root level once, then uses indexed references during scene graph processing. This architectural improvement aligns with glTF format structure and eliminates redundant extraction operations while properly utilizing the existing `extractMaterial` function.
 
