@@ -15,6 +15,12 @@ import std;
 import platform.dx12;
 import engine.assets;
 import engine.material_gpu;
+
+// Forward declaration to avoid circular dependency
+export namespace engine
+{
+class GPUResourceManager;
+}
 import runtime.console;
 
 export namespace asset_gpu_buffers
@@ -53,6 +59,7 @@ public:
 
 	// Check if buffers were created successfully
 	bool isValid() const noexcept { return m_vertexBuffer && m_indexBuffer; }
+	bool hasIndexBuffer() const noexcept { return static_cast<bool>( m_indexBuffer ); }
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
@@ -80,6 +87,10 @@ export class MeshGPUBuffers
 {
 public:
 	MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh );
+
+	// Constructor with GPU resource manager for material handling
+	MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh, engine::GPUResourceManager &resourceManager );
+
 	~MeshGPUBuffers() = default;
 
 	// No copy/move for now

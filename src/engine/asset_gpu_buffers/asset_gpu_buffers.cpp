@@ -153,7 +153,31 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PrimitiveGPUBuffer::createUploadBuffer( s
 
 void PrimitiveGPUBuffer::bindForRendering( ID3D12GraphicsCommandList *commandList ) const
 {
-	// To be implemented
+	if ( !commandList )
+	{
+		console::error( "PrimitiveGPUBuffer::bindForRendering - commandList is null" );
+		return;
+	}
+
+	if ( !isValid() )
+	{
+		console::error( "PrimitiveGPUBuffer::bindForRendering - GPU buffers are not valid" );
+		return;
+	}
+
+	// Bind geometry buffers
+	commandList->IASetVertexBuffers( 0, 1, &m_vertexBufferView );
+
+	if ( hasIndexBuffer() )
+	{
+		commandList->IASetIndexBuffer( &m_indexBufferView );
+	}
+
+	// Bind material resources if material is available
+	if ( m_material && m_material->isValid() )
+	{
+		m_material->bindToCommandList( commandList );
+	}
 }
 
 MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh )
@@ -166,6 +190,43 @@ MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh )
 	for ( const auto &primitive : primitives )
 	{
 		// For now, create without material - this will be enhanced when GPU resource manager is integrated
+		auto gpuBuffer = std::make_unique<PrimitiveGPUBuffer>( device, primitive );
+		if ( gpuBuffer->isValid() )
+		{
+			m_primitiveBuffers.push_back( std::move( gpuBuffer ) );
+		}
+		else
+		{
+			console::error( "Failed to create GPU buffers for a primitive in mesh" );
+		}
+	}
+
+	if ( m_primitiveBuffers.size() != primitives.size() )
+	{
+		console::error( "Some primitive buffers failed to create. Expected: {}, Created: {}",
+			primitives.size(),
+			m_primitiveBuffers.size() );
+	}
+}
+
+MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh, engine::GPUResourceManager &resourceManager )
+	: m_device( device )
+{
+	// Create GPU buffers for each primitive in the mesh with material handling
+	const auto &primitives = mesh.getPrimitives();
+	m_primitiveBuffers.reserve( primitives.size() );
+
+	for ( const auto &primitive : primitives )
+	{
+		// TODO: Implement material loading via resourceManager
+		// For now, check if primitive has material and log it for future implementation
+		if ( primitive.hasMaterial() )
+		{
+			const std::string &materialPath = primitive.getMaterialPath();
+			console::error( "Material loading from path '{}' not yet implemented - creating primitive without material", materialPath );
+		}
+
+		// Create primitive GPU buffer without material for now
 		auto gpuBuffer = std::make_unique<PrimitiveGPUBuffer>( device, primitive );
 		if ( gpuBuffer->isValid() )
 		{

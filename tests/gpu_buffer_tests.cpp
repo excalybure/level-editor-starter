@@ -4,6 +4,7 @@
 import engine.assets;
 import engine.asset_gpu_buffers;
 import engine.material_gpu;
+import engine.gpu_resource_manager;
 import platform.dx12;
 
 using namespace assets;
@@ -226,7 +227,6 @@ TEST_CASE( "PrimitiveGPUBuffer constructor with MaterialGPU creates valid buffer
 
 	// Create a test material
 	const auto material = std::make_shared<assets::Material>();
-	material->setName( "TestMaterial" );
 	material->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
 	material->setMetallicFactor( 0.5f );
 	material->setRoughnessFactor( 0.3f );
@@ -293,4 +293,62 @@ TEST_CASE( "PrimitiveGPUBuffer bindForRendering sets vertex and index buffers", 
 	// For this test, we're mainly checking that the method can be called without crashing
 	// bindForRendering with nullptr should handle gracefully
 	gpuBuffer.bindForRendering( nullptr ); // Should log error but not crash
+}
+
+TEST_CASE( "MeshGPUBuffers constructor with GPU resource manager handles materials", "[gpu][mesh][material][unit]" )
+{
+	// Create a headless D3D12 device for testing
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create GPU resource manager
+	engine::GPUResourceManager resourceManager( device );
+	REQUIRE( resourceManager.isValid() );
+
+	// Create a test mesh with primitives that have material paths
+	assets::Mesh mesh;
+
+	// Add first primitive with material
+	assets::Primitive primitive1;
+	primitive1.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addIndex( 0 );
+	primitive1.addIndex( 1 );
+	primitive1.addIndex( 2 );
+	primitive1.setMaterialPath( "materials/test_material.mat" );
+
+	// Add second primitive without material
+	assets::Primitive primitive2;
+	primitive2.addVertex( Vertex{ { 2.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( Vertex{ { 3.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( Vertex{ { 2.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addIndex( 0 );
+	primitive2.addIndex( 1 );
+	primitive2.addIndex( 2 );
+	// No material path set for primitive2
+
+	mesh.addPrimitive( std::move( primitive1 ) );
+	mesh.addPrimitive( std::move( primitive2 ) );
+
+	// Create MeshGPUBuffers with resource manager
+	MeshGPUBuffers meshBuffers( device, mesh, resourceManager );
+
+	// Verify mesh buffers were created correctly
+	REQUIRE( meshBuffers.isValid() );
+	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
+
+	// Verify both primitives were created (material loading will be stubbed for now)
+	// The test verifies that primitives with material paths are handled gracefully
+	// even when material loading is not yet implemented
+	const auto &buffer1 = meshBuffers.getPrimitiveBuffers( 0 );
+	const auto &buffer2 = meshBuffers.getPrimitiveBuffers( 1 );
+
+	REQUIRE( buffer1.isValid() );
+	REQUIRE( buffer2.isValid() );
+
+	// Currently materials won't be loaded (stubbed), so both should have no material
+	// This will change when full material integration is implemented
+	REQUIRE_FALSE( buffer1.hasMaterial() );
+	REQUIRE_FALSE( buffer2.hasMaterial() );
 }
