@@ -145,30 +145,18 @@ public:
 	bool hasMaterial() const { return !m_materialPath.empty(); }
 
 	// Compute bounds center and size
-	void getBoundsCenter( float center[3] ) const
+	math::Vec3f getBoundsCenter() const
 	{
 		if ( !m_bounds.isValid() )
-		{
-			center[0] = center[1] = center[2] = 0.0f;
-			return;
-		}
-		const auto centerVec = m_bounds.center();
-		center[0] = centerVec.x;
-		center[1] = centerVec.y;
-		center[2] = centerVec.z;
+			return { 0.0f, 0.0f, 0.0f };
+		return m_bounds.center();
 	}
 
-	void getBoundsSize( float size[3] ) const
+	math::Vec3f getBoundsSize() const
 	{
 		if ( !m_bounds.isValid() )
-		{
-			size[0] = size[1] = size[2] = 0.0f;
-			return;
-		}
-		const auto sizeVec = m_bounds.size();
-		size[0] = sizeVec.x;
-		size[1] = sizeVec.y;
-		size[2] = sizeVec.z;
+			return { 0.0f, 0.0f, 0.0f };
+		return m_bounds.size();
 	}
 
 private:
