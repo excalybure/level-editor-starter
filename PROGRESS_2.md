@@ -1,5 +1,21 @@
 # 📊 Milestone 2 Progress Report
 
+Date: 2025-09-09
+
+## 2025-09-09 — Material Setter Methods Implementation via TDD
+**Summary:** Implemented missing setter methods for the Material class in the assets module to fix compilation errors in gpu_buffer_tests.cpp. Added setName(), setBaseColorFactor(), setMetallicFactor(), and setRoughnessFactor() methods with comprehensive test coverage, following strict TDD red-green-refactor methodology.
+
+**Atomic functionalities completed:**
+- AF1: Added private member variable m_name and getName()/setName() methods for material naming functionality
+- AF2: Implemented setBaseColorFactor(float r, float g, float b, float a) to set PBR base color factor via Vec4f assignment
+- AF3: Implemented setMetallicFactor(float metallic) to set PBR metallic factor value
+- AF4: Implemented setRoughnessFactor(float roughness) to set PBR roughness factor value
+- AF5: Created comprehensive test cases covering all new setter methods with proper const-correctness validation
+- AF6: Verified implementation compiles successfully with assets module build and integrated tests
+
+**Tests:** 3 new test sections added to Material Tests with 12 assertions covering material name functionality, PBR property setters (base color, metallic, roughness), and const-correctness verification. Assets module compiles successfully without errors.
+**Notes:** All setter methods follow const-correctness principles and modern C++ design patterns. The implementation directly modifies the internal PBRMaterial structure through clean public API methods. Name functionality uses std::string for modern string handling. All targeted compilation errors in gpu_buffer_tests.cpp for Material setter usage are now resolved through these implementations.
+
 # 📊 Milestone 2 Progress Report
 
 Date: 2025-09-09

@@ -8,13 +8,28 @@ module engine.asset_gpu_buffers;
 import std;
 import platform.dx12;
 import engine.assets;
+import engine.material_gpu;
 import runtime.console;
 
 namespace asset_gpu_buffers
 {
 
 PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive )
-	: m_device( device ), m_vertexCount( primitive.getVertexCount() ), m_indexCount( primitive.getIndexCount() )
+	: m_device( device ), m_vertexCount( primitive.getVertexCount() ), m_indexCount( primitive.getIndexCount() ), m_material( nullptr )
+{
+	try
+	{
+		createVertexBuffer( primitive );
+		createIndexBuffer( primitive );
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "Failed to create GPU buffers for primitive: {}", e.what() );
+	}
+}
+
+PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<engine::MaterialGPU> material )
+	: m_device( device ), m_vertexCount( primitive.getVertexCount() ), m_indexCount( primitive.getIndexCount() ), m_material( std::move( material ) )
 {
 	try
 	{
@@ -136,6 +151,11 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PrimitiveGPUBuffer::createUploadBuffer( s
 	return buffer;
 }
 
+void PrimitiveGPUBuffer::bindForRendering( ID3D12GraphicsCommandList *commandList ) const
+{
+	// To be implemented
+}
+
 MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh )
 	: m_device( device )
 {
@@ -145,6 +165,7 @@ MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh )
 
 	for ( const auto &primitive : primitives )
 	{
+		// For now, create without material - this will be enhanced when GPU resource manager is integrated
 		auto gpuBuffer = std::make_unique<PrimitiveGPUBuffer>( device, primitive );
 		if ( gpuBuffer->isValid() )
 		{

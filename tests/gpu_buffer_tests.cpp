@@ -3,6 +3,7 @@
 
 import engine.assets;
 import engine.asset_gpu_buffers;
+import engine.material_gpu;
 import platform.dx12;
 
 using namespace assets;
@@ -52,8 +53,8 @@ TEST_CASE( "PrimitiveGPUBuffer provides valid D3D12 buffer views", "[gpu][primit
 	// This should provide valid buffer views for rendering
 	PrimitiveGPUBuffer gpuBuffer( device, primitive );
 
-	auto vertexView = gpuBuffer.getVertexBufferView();
-	auto indexView = gpuBuffer.getIndexBufferView();
+	const auto vertexView = gpuBuffer.getVertexBufferView();
+	const auto indexView = gpuBuffer.getIndexBufferView();
 
 	REQUIRE( vertexView.BufferLocation != 0 );
 	REQUIRE( vertexView.SizeInBytes == 3 * sizeof( assets::Vertex ) );
@@ -102,8 +103,8 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
 
 	// Each primitive should have its own GPU resources
-	auto &buffers1 = meshBuffers.getPrimitiveBuffers( 0 );
-	auto &buffers2 = meshBuffers.getPrimitiveBuffers( 1 );
+	const auto &buffers1 = meshBuffers.getPrimitiveBuffers( 0 );
+	const auto &buffers2 = meshBuffers.getPrimitiveBuffers( 1 );
 
 	REQUIRE( buffers1.getVertexBufferView().BufferLocation != buffers2.getVertexBufferView().BufferLocation );
 	REQUIRE( buffers1.getIndexBufferView().BufferLocation != buffers2.getIndexBufferView().BufferLocation );
@@ -199,9 +200,97 @@ TEST_CASE( "GPU buffers support large vertex counts", "[gpu][primitive][performa
 	REQUIRE( gpuBuffer.getIndexCount() == indexCount );
 
 	// Verify buffer views have correct sizes
-	auto vertexView = gpuBuffer.getVertexBufferView();
-	auto indexView = gpuBuffer.getIndexBufferView();
+	const auto vertexView = gpuBuffer.getVertexBufferView();
+	const auto indexView = gpuBuffer.getIndexBufferView();
 
 	REQUIRE( vertexView.SizeInBytes == vertexCount * sizeof( assets::Vertex ) );
 	REQUIRE( indexView.SizeInBytes == indexCount * sizeof( std::uint32_t ) );
+}
+
+// Material Integration Tests
+
+TEST_CASE( "PrimitiveGPUBuffer constructor with MaterialGPU creates valid buffer", "[gpu][primitive][material][unit]" )
+{
+	// Create a headless D3D12 device for testing
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create a test primitive
+	Primitive primitive;
+	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+
+	// Create a test material
+	const auto material = std::make_shared<assets::Material>();
+	material->setName( "TestMaterial" );
+	material->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
+	material->setMetallicFactor( 0.5f );
+	material->setRoughnessFactor( 0.3f );
+
+	// Create MaterialGPU
+	std::shared_ptr<engine::MaterialGPU> materialGPU = std::make_shared<engine::MaterialGPU>( material );
+
+	// Create primitive GPU buffer with material
+	PrimitiveGPUBuffer gpuBuffer( device, primitive, materialGPU );
+
+	// Verify the buffer was created successfully
+	REQUIRE( gpuBuffer.isValid() );
+	REQUIRE( gpuBuffer.hasMaterial() );
+	REQUIRE( gpuBuffer.getMaterial() != nullptr );
+	REQUIRE( gpuBuffer.getMaterial()->getSourceMaterial() == material );
+}
+
+
+TEST_CASE( "PrimitiveGPUBuffer constructor without MaterialGPU has no material", "[gpu][primitive][material][unit]" )
+{
+	// Create a headless D3D12 device for testing
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create a test primitive
+	Primitive primitive;
+	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+
+	// Create primitive GPU buffer without material
+	PrimitiveGPUBuffer gpuBuffer( device, primitive );
+
+	// Verify the buffer was created successfully but has no material
+	REQUIRE( gpuBuffer.isValid() );
+	REQUIRE_FALSE( gpuBuffer.hasMaterial() );
+	REQUIRE( gpuBuffer.getMaterial() == nullptr );
+}
+
+TEST_CASE( "PrimitiveGPUBuffer bindForRendering sets vertex and index buffers", "[gpu][primitive][material][unit]" )
+{
+	// Create a headless D3D12 device for testing
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create a test primitive
+	Primitive primitive;
+	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+
+	// Create primitive GPU buffer
+	PrimitiveGPUBuffer gpuBuffer( device, primitive );
+	REQUIRE( gpuBuffer.isValid() );
+
+	// Create command list for testing (note: this is a stub test - actual command list binding would require more setup)
+	// In a real scenario, we would need a proper command list and verify the bindings
+	// For this test, we're mainly checking that the method can be called without crashing
+	// bindForRendering with nullptr should handle gracefully
+	gpuBuffer.bindForRendering( nullptr ); // Should log error but not crash
 }

@@ -169,6 +169,42 @@ TEST_CASE( "Material Tests", "[assets][material]" )
 		REQUIRE( constPbr.normalTexture == "textures/normal.png" );
 	}
 
+	SECTION( "Material name functionality" )
+	{
+		// Initially, material should have empty name
+		REQUIRE( material->getName().empty() );
+
+		// Set name and verify
+		const std::string testName = "TestMaterial";
+		material->setName( testName );
+		REQUIRE( material->getName() == testName );
+
+		// Test const correctness of getName
+		const auto &constMaterial = *material;
+		REQUIRE( constMaterial.getName() == testName );
+	}
+
+	SECTION( "Material setter methods for PBR properties" )
+	{
+		// Test setBaseColorFactor
+		material->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
+		const auto &pbr1 = material->getPBRMaterial();
+		REQUIRE( pbr1.baseColorFactor.x == 1.0f );
+		REQUIRE( pbr1.baseColorFactor.y == 0.0f );
+		REQUIRE( pbr1.baseColorFactor.z == 0.0f );
+		REQUIRE( pbr1.baseColorFactor.w == 1.0f );
+
+		// Test setMetallicFactor
+		material->setMetallicFactor( 0.5f );
+		const auto &pbr2 = material->getPBRMaterial();
+		REQUIRE( pbr2.metallicFactor == 0.5f );
+
+		// Test setRoughnessFactor
+		material->setRoughnessFactor( 0.3f );
+		const auto &pbr3 = material->getPBRMaterial();
+		REQUIRE( pbr3.roughnessFactor == 0.3f );
+	}
+
 	SECTION( "Material accessors are const correct" )
 	{
 		const auto &constMaterial = *material;

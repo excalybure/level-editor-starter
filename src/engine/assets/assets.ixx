@@ -78,7 +78,28 @@ public:
 	const PBRMaterial &getPBRMaterial() const { return m_pbrMaterial; }
 	PBRMaterial &getPBRMaterial() { return m_pbrMaterial; }
 
+	// Name functionality
+	const std::string &getName() const { return m_name; }
+	void setName( const std::string &name ) { m_name = name; }
+
+	// PBR material setter methods
+	void setBaseColorFactor( float r, float g, float b, float a )
+	{
+		m_pbrMaterial.baseColorFactor = { r, g, b, a };
+	}
+
+	void setMetallicFactor( float metallic )
+	{
+		m_pbrMaterial.metallicFactor = metallic;
+	}
+
+	void setRoughnessFactor( float roughness )
+	{
+		m_pbrMaterial.roughnessFactor = roughness;
+	}
+
 private:
+	std::string m_name;
 	PBRMaterial m_pbrMaterial;
 };
 

@@ -185,7 +185,7 @@ target_sources(engine.asset_gpu_buffers PUBLIC
     src/engine/asset_gpu_buffers/asset_gpu_buffers.cpp
 )
 target_compile_features(engine.asset_gpu_buffers PUBLIC cxx_std_23)
-target_link_libraries(engine.asset_gpu_buffers PUBLIC engine.assets platform.dx12 runtime.console)
+target_link_libraries(engine.asset_gpu_buffers PUBLIC engine.assets platform.dx12 engine.material_gpu runtime.console)
 
 add_library(engine.material_gpu)
 target_sources(engine.material_gpu PUBLIC
