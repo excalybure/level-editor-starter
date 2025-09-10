@@ -221,7 +221,11 @@ public:
 
 private:
 	// Helper methods for glTF processing (use void* to avoid forward declaration issues)
-	std::unique_ptr<assets::SceneNode> processNode( cgltf_node *gltfNode, cgltf_data *data ) const;
+	std::unique_ptr<assets::SceneNode> processNode(
+		cgltf_node *gltfNode,
+		cgltf_data *data,
+		const std::vector<std::shared_ptr<assets::Mesh>> &extractedMeshes,
+		const std::vector<std::shared_ptr<assets::Material>> &extractedMaterials ) const;
 
 	// Mesh extraction helpers
 	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose = false ) const;

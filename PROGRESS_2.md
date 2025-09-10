@@ -1,6 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
-Date: 2025-09-09
+Date: 2025-09-10
+
+## 2025-09-10 — Root-Level glTF Resource Extraction Implementation
+**Summary:** Implemented efficient root-level extraction approach for glTF loading that processes all materials and meshes at the root level once, then uses indexed references during scene graph processing. This architectural improvement aligns with glTF format structure and eliminates redundant extraction operations while properly utilizing the existing `extractMaterial` function.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed glTF format structure confirming materials and meshes are stored at root level with indexed references
+- AF2: Implemented root-level material extraction processing all materials once during initial loading
+- AF3: Implemented root-level mesh extraction processing all meshes once during initial loading  
+- AF4: Updated processNode to use indexed access to pre-extracted resources instead of on-demand extraction
+- AF5: Enhanced material processing to collect unique material indices per node using pointer arithmetic
+- AF6: Updated module interface to support new processNode signature with resource vector parameters
+
+**Tests:** All 11 glTF test cases pass with 528 assertions, confirming root-level extraction maintains compatibility while improving efficiency.
+**Notes:** This implementation properly matches the glTF format where all materials and meshes are defined at root level and referenced by index. The approach eliminates duplicate extractions when multiple nodes reference the same resources, improves performance, and enables proper utilization of the `extractMaterial` function. Material indices are calculated using pointer arithmetic from cgltf data structures, maintaining consistency with glTF specification.
 
 ## 2025-09-09 — PrimitiveGPUBuffer Material Integration via TDD
 **Summary:** Completed Task 3: PrimitiveGPUBuffer Material Integration by implementing material handling throughout GPU buffer architecture using strict TDD methodology. Added material support to both PrimitiveGPUBuffer and MeshGPUBuffers classes, enabling complete rendering pipeline integration with MaterialGPU resources and comprehensive resource binding functionality.

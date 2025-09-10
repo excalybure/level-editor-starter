@@ -76,7 +76,41 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 	// Create scene using the same logic as loadFromString
 	auto scene = std::make_unique<assets::Scene>();
 
-	// Process default scene or first scene
+	// 1. Extract ALL materials from root level first
+	std::vector<std::shared_ptr<assets::Material>> extractedMaterials;
+	extractedMaterials.reserve( data->materials_count );
+	for ( cgltf_size i = 0; i < data->materials_count; ++i )
+	{
+		auto material = extractMaterial( &data->materials[i], data );
+		if ( material )
+		{
+			extractedMaterials.push_back( material );
+		}
+		else
+		{
+			// Add null placeholder to maintain indexing
+			extractedMaterials.push_back( nullptr );
+		}
+	}
+
+	// 2. Extract ALL meshes from root level
+	std::vector<std::shared_ptr<assets::Mesh>> extractedMeshes;
+	extractedMeshes.reserve( data->meshes_count );
+	for ( cgltf_size i = 0; i < data->meshes_count; ++i )
+	{
+		auto mesh = extractMesh( &data->meshes[i], data );
+		if ( mesh )
+		{
+			extractedMeshes.push_back( mesh );
+		}
+		else
+		{
+			// Add null placeholder to maintain indexing
+			extractedMeshes.push_back( nullptr );
+		}
+	}
+
+	// 3. Process default scene or first scene
 	cgltf_scene *gltfScene = nullptr;
 	if ( data->scene )
 	{
@@ -89,13 +123,13 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 
 	if ( gltfScene )
 	{
-		// Process root nodes
+		// Process root nodes with extracted resources
 		for ( cgltf_size i = 0; i < gltfScene->nodes_count; ++i )
 		{
 			cgltf_node *gltfNode = gltfScene->nodes[i];
 			if ( gltfNode )
 			{
-				auto sceneNode = processNode( gltfNode, data );
+				auto sceneNode = processNode( gltfNode, data, extractedMeshes, extractedMaterials );
 				if ( sceneNode )
 				{
 					scene->addRootNode( std::move( sceneNode ) );
@@ -137,7 +171,41 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 	// Create scene
 	auto scene = std::make_unique<assets::Scene>();
 
-	// Process default scene or first scene
+	// 1. Extract ALL materials from root level first
+	std::vector<std::shared_ptr<assets::Material>> extractedMaterials;
+	extractedMaterials.reserve( data->materials_count );
+	for ( cgltf_size i = 0; i < data->materials_count; ++i )
+	{
+		auto material = extractMaterial( &data->materials[i], data );
+		if ( material )
+		{
+			extractedMaterials.push_back( material );
+		}
+		else
+		{
+			// Add null placeholder to maintain indexing
+			extractedMaterials.push_back( nullptr );
+		}
+	}
+
+	// 2. Extract ALL meshes from root level
+	std::vector<std::shared_ptr<assets::Mesh>> extractedMeshes;
+	extractedMeshes.reserve( data->meshes_count );
+	for ( cgltf_size i = 0; i < data->meshes_count; ++i )
+	{
+		auto mesh = extractMesh( &data->meshes[i], data );
+		if ( mesh )
+		{
+			extractedMeshes.push_back( mesh );
+		}
+		else
+		{
+			// Add null placeholder to maintain indexing
+			extractedMeshes.push_back( nullptr );
+		}
+	}
+
+	// 3. Process default scene or first scene
 	cgltf_scene *gltfScene = nullptr;
 	if ( data->scene )
 	{
@@ -150,13 +218,13 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 
 	if ( gltfScene )
 	{
-		// Process root nodes
+		// Process root nodes with extracted resources
 		for ( cgltf_size i = 0; i < gltfScene->nodes_count; ++i )
 		{
 			cgltf_node *gltfNode = gltfScene->nodes[i];
 			if ( gltfNode )
 			{
-				auto sceneNode = processNode( gltfNode, data );
+				auto sceneNode = processNode( gltfNode, data, extractedMeshes, extractedMaterials );
 				if ( sceneNode )
 				{
 					scene->addRootNode( std::move( sceneNode ) );
@@ -169,7 +237,11 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 	return scene;
 }
 
-std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode, cgltf_data *data ) const
+std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
+	cgltf_node *gltfNode,
+	cgltf_data *data,
+	const std::vector<std::shared_ptr<assets::Mesh>> &extractedMeshes,
+	const std::vector<std::shared_ptr<assets::Material>> &extractedMaterials ) const
 {
 	if ( !gltfNode )
 		return nullptr;
@@ -178,27 +250,37 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode
 	std::string nodeName = gltfNode->name ? gltfNode->name : "UnnamedNode";
 	auto sceneNode = std::make_unique<assets::SceneNode>( nodeName );
 
-	// Process mesh if node has one
+	// Process mesh if node has one (using mesh index)
 	if ( gltfNode->mesh )
 	{
-		// NEW: Extract actual mesh data instead of placeholder
-		auto meshPtr = extractMesh( gltfNode->mesh, data );
-		if ( meshPtr )
+		// Calculate mesh index from pointer offset
+		const cgltf_size meshIndex = static_cast<cgltf_size>( gltfNode->mesh - data->meshes );
+		if ( meshIndex < extractedMeshes.size() && extractedMeshes[meshIndex] )
 		{
-			sceneNode->addMeshObject( meshPtr );
-		}
-	}
+			sceneNode->addMeshObject( extractedMeshes[meshIndex] );
 
-	// Process material if available
-	if ( gltfNode->mesh && gltfNode->mesh->primitives_count > 0 )
-	{
-		for ( cgltf_size i = 0; i < gltfNode->mesh->primitives_count; ++i )
-		{
-			cgltf_primitive *primitive = &gltfNode->mesh->primitives[i];
-			if ( primitive->material )
+			// Process materials for this mesh's primitives
+			std::unordered_set<cgltf_size> uniqueMaterialIndices;
+			for ( cgltf_size i = 0; i < gltfNode->mesh->primitives_count; ++i )
 			{
-				sceneNode->materials.push_back( "material_placeholder" );
-				break; // Just add one material for now
+				cgltf_primitive *primitive = &gltfNode->mesh->primitives[i];
+				if ( primitive->material )
+				{
+					// Calculate material index from pointer offset
+					const cgltf_size materialIndex = static_cast<cgltf_size>( primitive->material - data->materials );
+					if ( materialIndex < extractedMaterials.size() && extractedMaterials[materialIndex] )
+					{
+						uniqueMaterialIndices.insert( materialIndex );
+					}
+				}
+			}
+
+			// Add unique material references to scene node
+			for ( cgltf_size materialIndex : uniqueMaterialIndices )
+			{
+				// For now, store as path. Could be enhanced to store Material objects when SceneNode supports it
+				const std::string materialPath = "material_" + std::to_string( materialIndex );
+				sceneNode->materials.push_back( materialPath );
 			}
 		}
 	}
@@ -211,7 +293,7 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode( cgltf_node *gltfNode
 	for ( cgltf_size i = 0; i < gltfNode->children_count; ++i )
 	{
 		cgltf_node *childNode = gltfNode->children[i];
-		auto childSceneNode = processNode( childNode, data );
+		auto childSceneNode = processNode( childNode, data, extractedMeshes, extractedMaterials );
 		if ( childSceneNode )
 		{
 			sceneNode->children.push_back( std::move( childSceneNode ) );
