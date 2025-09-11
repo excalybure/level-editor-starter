@@ -45,9 +45,8 @@ TEST_CASE( "Mesh Extraction Base Triangle", "[mesh-extraction][tdd]" )
 	REQUIRE( rootNodes[0]->hasMeshHandles() );
 
 	// Get mesh using handle-based API
-	const auto &meshHandles = rootNodes[0]->getMeshHandles();
-	REQUIRE( !meshHandles.empty() );
-	const auto meshPtr = scene->getMesh( meshHandles[0] );
+	REQUIRE( rootNodes[0]->meshCount() > 0 );
+	const auto meshPtr = scene->getMesh( rootNodes[0]->getMeshHandle( 0 ) );
 	REQUIRE( meshPtr != nullptr );
 
 	// REQUIRE: Mesh has the expected triangle data
@@ -124,9 +123,8 @@ TEST_CASE( "Mesh Extraction With Normals", "[mesh-extraction][tdd][normals]" )
 	REQUIRE( rootNodes[0]->hasMeshHandles() );
 
 	// Get mesh using handle-based API
-	const auto &meshHandles = rootNodes[0]->getMeshHandles();
-	REQUIRE( !meshHandles.empty() );
-	const auto meshPtr = scene->getMesh( meshHandles[0] );
+	REQUIRE( rootNodes[0]->meshCount() > 0 );
+	const auto meshPtr = scene->getMesh( rootNodes[0]->getMeshHandle( 0 ) );
 	REQUIRE( meshPtr != nullptr );
 	REQUIRE( meshPtr->getPrimitiveCount() == 1 );
 

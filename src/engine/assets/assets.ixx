@@ -287,8 +287,16 @@ export struct SceneNode
 
 	// Utility methods for handle-based meshes
 	bool hasMeshHandles() const { return !meshHandles.empty(); }
-	const std::vector<MeshHandle> &getMeshHandles() const { return meshHandles; }
+	size_t meshCount() const { return meshHandles.size(); }
 	MeshHandle getMeshHandle( size_t index ) const { return meshHandles.at( index ); }
+	template <typename Func>
+	void foreachMeshHandle( Func &&func ) const
+	{
+		for ( const auto &handle : meshHandles )
+		{
+			func( handle );
+		}
+	}
 	void addMeshHandle( MeshHandle handle )
 	{
 		if ( handle != INVALID_MESH_HANDLE )
@@ -298,7 +306,6 @@ export struct SceneNode
 	}
 
 	// Legacy utility methods (for backward compatibility)
-	bool hasMesh() const { return !meshHandles.empty(); }
 	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
 

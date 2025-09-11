@@ -79,8 +79,7 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 			}
 
 			// Add MeshRenderer for each mesh handle
-			for ( const auto &meshHandle : rootNode->getMeshHandles() )
-			{
+			rootNode->foreachMeshHandle( [&]( assets::MeshHandle meshHandle ) {
 				MeshRenderer renderer;
 				renderer.meshPath = assetScene->getPath(); // Reference the scene asset
 
@@ -108,7 +107,7 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 				}
 
 				targetScene.addComponent( entity, renderer );
-			}
+			} );
 		}
 	} );
 
@@ -298,7 +297,7 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 			}
 
 			// Only add MeshRenderer if node has meshes
-			if ( rootNode->hasMesh() )
+			if ( rootNode->hasMeshHandles() )
 			{
 				for ( const auto meshHandle : rootNode->meshHandles )
 				{
