@@ -149,3 +149,50 @@ TEST_CASE( "GPUResourceManager tracks cache statistics", "[gpu_resource_manager]
 	REQUIRE( stats.cacheHits == 2 );   // Two cache hits
 	REQUIRE( stats.cacheMisses == 2 ); // Two cache misses
 }
+
+TEST_CASE( "Extract and validate PBR factor values", "[gpu_resource_manager][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+	engine::GPUResourceManager manager( device );
+
+	// Create a material with specific PBR factor values
+	auto material = std::make_shared<assets::Material>();
+	material->setPath( "pbr_test_material.mat" );
+	material->setName( "PBRTestMaterial" );
+
+	// Set specific PBR factors to test extraction
+	material->setBaseColorFactor( 0.8f, 0.2f, 0.1f, 0.9f );
+	material->setMetallicFactor( 0.7f );
+	material->setRoughnessFactor( 0.3f );
+
+	// Set emissive factor through direct access to PBR material
+	auto &pbrMaterial = material->getPBRMaterial();
+	pbrMaterial.emissiveFactor = { 0.1f, 0.05f, 0.02f };
+
+	// Act - get MaterialGPU which should extract PBR factors
+	const auto materialGPU = manager.getMaterialGPU( material );
+
+	// Assert - MaterialGPU should exist and be valid
+	REQUIRE( materialGPU != nullptr );
+	REQUIRE( materialGPU->isValid() );
+
+	// Validate PBR factor extraction
+	const auto &constants = materialGPU->getMaterialConstants();
+
+	// Check base color factor
+	REQUIRE( constants.baseColorFactor.x == 0.8f );
+	REQUIRE( constants.baseColorFactor.y == 0.2f );
+	REQUIRE( constants.baseColorFactor.z == 0.1f );
+	REQUIRE( constants.baseColorFactor.w == 0.9f );
+
+	// Check metallic and roughness factors
+	REQUIRE( constants.metallicFactor == 0.7f );
+	REQUIRE( constants.roughnessFactor == 0.3f );
+
+	// Check emissive factor
+	REQUIRE( constants.emissiveFactor.x == 0.1f );
+	REQUIRE( constants.emissiveFactor.y == 0.05f );
+	REQUIRE( constants.emissiveFactor.z == 0.02f );
+}

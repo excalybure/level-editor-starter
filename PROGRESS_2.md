@@ -2,6 +2,20 @@
 
 Date: 2025-01-03
 
+## 2025-09-11 — PBR Factor Validation Test Implementation via TDD
+**Summary:** Implemented comprehensive test case "Extract and validate PBR factor values" to verify that GPUResourceManager and MaterialGPU correctly extract and store PBR material factors from source assets::Material objects. The implementation was already present and working correctly.
+
+**Atomic functionalities completed:**
+- AF1: Created test case for PBR factor validation - Added test verifying MaterialGPU correctly extracts baseColorFactor, metallicFactor, roughnessFactor, and emissiveFactor from source Material
+- AF2: Verified existing implementation - Confirmed MaterialGPU.updateMaterialConstants() already correctly extracts all PBR factors via const-correct access to Material.getPBRMaterial()
+- AF3: Validated MaterialConstants structure - Verified MaterialConstants correctly stores all PBR factors with proper Vec4f and Vec3f types for GPU consumption
+- AF4: Confirmed test suite integration - Verified new test integrates properly with existing GPUResourceManager test suite (32 assertions across 6 test cases)
+- AF5: Reviewed const-correctness and clarity - Confirmed MaterialGPU implementation follows proper const-correctness patterns and maintains clear separation of concerns
+
+**Tests:** 1 new test case with 12 assertions validating PBR factor extraction; all GPUResourceManager tests continue to pass with proper material content validation
+
+**Notes:** The MaterialGPU implementation already contained complete PBR factor extraction functionality via updateMaterialConstants() method. Test validates baseColorFactor (Vec4f), metallicFactor/roughnessFactor (float), and emissiveFactor (Vec3f) are correctly copied from assets::Material to MaterialConstants for GPU rendering pipeline.
+
 ## 2025-01-03 — GPU Module Namespace Organization Migration
 **Summary:** Successfully migrated all GPU-related modules to a unified `engine::gpu` namespace organization, improving code maintainability and providing clear separation of GPU resource management functionality.
 **Atomic functionalities completed:**

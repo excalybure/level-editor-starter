@@ -1829,9 +1829,31 @@ TEST_CASE( "GLTFLoader Material Parsing", "[gltf][loader][material]" )
 		const auto &primitive = meshPtr->getPrimitive( 0 );
 		REQUIRE( primitive.hasMaterial() );
 
-		// For now, just verify the material handle was set
-		// TODO: When AssetManager is implemented, we should be able to retrieve and validate the actual material data
+		// Verify the material handle was set
 		REQUIRE( primitive.getMaterialHandle() != assets::INVALID_MATERIAL_HANDLE );
+
+		// Now validate the actual material data
+		const auto materialPtr = scene->getMaterial( primitive.getMaterialHandle() );
+		REQUIRE( materialPtr != nullptr );
+		REQUIRE( materialPtr->getName() == "DetailedMaterial" );
+
+		// Validate PBR factor values
+		const auto &pbrMaterial = materialPtr->getPBRMaterial();
+
+		// Check base color factor
+		REQUIRE( pbrMaterial.baseColorFactor.x == 0.8f );
+		REQUIRE( pbrMaterial.baseColorFactor.y == 0.2f );
+		REQUIRE( pbrMaterial.baseColorFactor.z == 0.1f );
+		REQUIRE( pbrMaterial.baseColorFactor.w == 0.9f );
+
+		// Check metallic and roughness factors
+		REQUIRE( pbrMaterial.metallicFactor == 0.7f );
+		REQUIRE( pbrMaterial.roughnessFactor == 0.3f );
+
+		// Check emissive factor
+		REQUIRE( pbrMaterial.emissiveFactor.x == 0.1f );
+		REQUIRE( pbrMaterial.emissiveFactor.y == 0.05f );
+		REQUIRE( pbrMaterial.emissiveFactor.z == 0.02f );
 	}
 }
 

@@ -580,6 +580,13 @@ std::shared_ptr<assets::Material> GLTFLoader::extractMaterial( cgltf_material *g
 		console::info( "extractMaterial: Processing material '{}'", gltfMaterial->name ? gltfMaterial->name : "Unnamed" );
 
 	auto material = std::make_shared<assets::Material>();
+
+	// Set material name if available
+	if ( gltfMaterial->name )
+	{
+		material->setName( gltfMaterial->name );
+	}
+
 	auto &pbrMaterial = material->getPBRMaterial();
 
 	// Extract PBR Metallic Roughness properties
