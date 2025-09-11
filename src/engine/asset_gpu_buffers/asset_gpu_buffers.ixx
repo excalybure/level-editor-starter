@@ -15,13 +15,13 @@ import std;
 import platform.dx12;
 import engine.assets;
 import engine.material_gpu;
+import runtime.console;
 
 // Forward declaration to avoid circular dependency
 export namespace engine
 {
 class GPUResourceManager;
 }
-import runtime.console;
 
 export namespace asset_gpu_buffers
 {

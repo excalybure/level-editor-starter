@@ -7,6 +7,13 @@ import engine.bounding_box_3d;
 import runtime.entity;
 import <string>;
 import <vector>;
+import <memory>;
+
+// Forward declaration for MeshGPUBuffers to avoid circular dependencies
+namespace asset_gpu_buffers
+{
+class MeshGPUBuffers;
+}
 
 export namespace components
 {
@@ -84,13 +91,12 @@ struct Visible
 // Renderable mesh component
 struct MeshRenderer
 {
-	std::string meshPath;
-	std::vector<std::string> materialPaths;
+	std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> gpuBuffers;
 	math::BoundingBox3Df bounds; // Local space bounding box
-	bool enabled = true;
+	float lodBias = 0.0f;		 // Level of detail bias for rendering
 
 	MeshRenderer() = default;
-	MeshRenderer( const std::string &mesh ) : meshPath( mesh ) {}
+	MeshRenderer( std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> buffers ) : gpuBuffers( std::move( buffers ) ) {}
 };
 
 // Selection state for editor

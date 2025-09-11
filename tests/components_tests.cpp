@@ -136,27 +136,60 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 	SECTION( "Default constructor" )
 	{
 		MeshRenderer renderer;
-		REQUIRE( renderer.meshPath.empty() );
-		REQUIRE( renderer.materialPaths.empty() );
-		REQUIRE( renderer.enabled );
+		REQUIRE( renderer.gpuBuffers == nullptr );
+		REQUIRE( renderer.lodBias == 0.0f );
 	}
 
-	SECTION( "Mesh constructor" )
+	SECTION( "GPU buffer constructor" )
 	{
-		MeshRenderer renderer( "test_mesh.obj" );
-		REQUIRE( renderer.meshPath == "test_mesh.obj" );
-		REQUIRE( renderer.enabled );
+		// Note: We can't create a real MeshGPUBuffers without DirectX device,
+		// so this tests the constructor pattern with null shared_ptr
+		MeshRenderer renderer( nullptr );
+		REQUIRE( renderer.gpuBuffers == nullptr );
+		REQUIRE( renderer.lodBias == 0.0f );
 	}
 
-	SECTION( "Material assignment" )
+	SECTION( "LOD bias assignment" )
 	{
 		MeshRenderer renderer;
-		renderer.materialPaths.push_back( "material1.mat" );
-		renderer.materialPaths.push_back( "material2.mat" );
+		renderer.lodBias = 2.5f;
 
-		REQUIRE( renderer.materialPaths.size() == 2 );
-		REQUIRE( renderer.materialPaths[0] == "material1.mat" );
-		REQUIRE( renderer.materialPaths[1] == "material2.mat" );
+		REQUIRE( renderer.lodBias == Catch::Approx( 2.5f ) );
+	}
+
+	SECTION( "Bounds assignment" )
+	{
+		MeshRenderer renderer;
+		const math::Vec3f minPoint{ -1.0f, -2.0f, -3.0f };
+		const math::Vec3f maxPoint{ 1.0f, 2.0f, 3.0f };
+		renderer.bounds = math::BoundingBox3Df{ minPoint, maxPoint };
+
+		REQUIRE( renderer.bounds.min.x == Catch::Approx( -1.0f ) );
+		REQUIRE( renderer.bounds.min.y == Catch::Approx( -2.0f ) );
+		REQUIRE( renderer.bounds.min.z == Catch::Approx( -3.0f ) );
+		REQUIRE( renderer.bounds.max.x == Catch::Approx( 1.0f ) );
+		REQUIRE( renderer.bounds.max.y == Catch::Approx( 2.0f ) );
+		REQUIRE( renderer.bounds.max.z == Catch::Approx( 3.0f ) );
+	}
+
+	SECTION( "Component size optimization verification" )
+	{
+		// Verify that the new MeshRenderer structure is more memory-efficient
+		// Old structure had: std::string + std::vector<std::string> + bool + bounds
+		// New structure has: shared_ptr + float + bounds
+
+		// The new structure should be significantly smaller due to:
+		// - shared_ptr (8 bytes) vs string + vector of strings (potentially 100+ bytes)
+		// - float (4 bytes) vs bool (1 byte, but with padding considerations)
+		const std::size_t rendererSize = sizeof( MeshRenderer );
+
+		// Reasonable upper bound: shared_ptr(8) + float(4) + bounds(24) + padding ≈ 40 bytes
+		// Old structure with strings could easily be 100+ bytes
+		REQUIRE( rendererSize <= 64 ); // Conservative upper limit
+
+		// Verify that size is at least the minimum expected components
+		const std::size_t minimumSize = sizeof( std::shared_ptr<void> ) + sizeof( float ) + sizeof( math::BoundingBox3Df );
+		REQUIRE( rendererSize >= minimumSize );
 	}
 }
 
@@ -226,7 +259,7 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 	Visible visible;
 	visible.castShadows = false;
 
-	MeshRenderer renderer( "cube.obj" );
+	MeshRenderer renderer;
 	Selected selected;
 	selected.selected = true;
 
@@ -251,6 +284,5 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 
 	REQUIRE( storedName->name == "TestEntity" );
 	REQUIRE_FALSE( storedVisible->castShadows );
-	REQUIRE( storedRenderer->meshPath == "cube.obj" );
 	REQUIRE( storedSelected->selected );
 }
