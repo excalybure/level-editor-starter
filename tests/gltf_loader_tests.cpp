@@ -1402,7 +1402,7 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 		// First node should have a mesh and be named
 		REQUIRE( rootNodes[0]->hasMeshHandles() );
 		REQUIRE( rootNodes[0]->meshCount() > 0 );
-		REQUIRE( rootNodes[0]->name == "TriangleNode" );
+		REQUIRE( rootNodes[0]->getName() == "TriangleNode" );
 	}
 
 	SECTION( "Load non-existent glTF file should return nullptr" )
@@ -1494,7 +1494,7 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 		const auto &rootNodes = scene->getRootNodes();
 		REQUIRE( !rootNodes.empty() );
 		REQUIRE( rootNodes[0]->hasMeshHandles() );
-		REQUIRE( rootNodes[0]->name == "ExternalNode" );
+		REQUIRE( rootNodes[0]->getName() == "ExternalNode" );
 
 		// Clean up
 		std::remove( gltfPath.c_str() );
@@ -1885,7 +1885,7 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( !rootNodes.empty() );
 
 		const auto &node = rootNodes[0];
-		REQUIRE( node->name == "TransformedNode" );
+		REQUIRE( node->getName() == "TransformedNode" );
 
 		// Check that the node now has transform data
 		// This test will fail initially since SceneNode doesn't store transform data yet
@@ -1953,7 +1953,7 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( !rootNodes.empty() );
 
 		const auto &node = rootNodes[0];
-		REQUIRE( node->name == "MatrixNode" );
+		REQUIRE( node->getName() == "MatrixNode" );
 
 		// Check transform extracted from matrix
 		REQUIRE( node->hasTransform() );
@@ -2022,7 +2022,7 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( !rootNodes.empty() );
 
 		const auto &node = rootNodes[0];
-		REQUIRE( node->name == "ComplexMatrixNode" );
+		REQUIRE( node->getName() == "ComplexMatrixNode" );
 
 		// Check transform extracted from complex matrix using Mat4 functionality
 		REQUIRE( node->hasTransform() );
@@ -2082,7 +2082,7 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( !rootNodes.empty() );
 
 		const auto &node = rootNodes[0];
-		REQUIRE( node->name == "DefaultNode" );
+		REQUIRE( node->getName() == "DefaultNode" );
 
 		// Should have default identity transform
 		REQUIRE( node->hasTransform() );

@@ -229,7 +229,7 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 
 		REQUIRE( node.getName().empty() );
 		REQUIRE( node.meshCount() == 0 );
-		REQUIRE( node.getChildren().empty() );
+		REQUIRE( node.getChildCount() == 0 );
 
 		REQUIRE_FALSE( node.hasMeshHandles() );
 		REQUIRE_FALSE( node.hasChildren() );
@@ -242,7 +242,7 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 
 		REQUIRE( node.getName() == nodeName );
 		REQUIRE( node.meshCount() == 0 );
-		REQUIRE( node.getChildren().empty() );
+		REQUIRE( node.getChildCount() == 0 );
 
 		REQUIRE_FALSE( node.hasMeshHandles() );
 		REQUIRE_FALSE( node.hasChildren() );
@@ -265,14 +265,14 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 		REQUIRE( node.hasChildren() );
 
 		REQUIRE( node.meshCount() == 2 );
-		REQUIRE( node.getChildren().size() == 1 );
+		REQUIRE( node.getChildCount() == 1 );
 
 		REQUIRE( node.getMeshHandle( 0 ) == assets::MeshHandle{ 1 } );
 		REQUIRE( node.getMeshHandle( 1 ) == assets::MeshHandle{ 2 } );
 
-		REQUIRE( node.getChildren()[0]->getName() == "ChildNode" );
-		REQUIRE( node.getChildren()[0]->hasMeshHandles() );
-		REQUIRE_FALSE( node.getChildren()[0]->hasChildren() );
+		REQUIRE( node.getChild( 0 ).getName() == "ChildNode" );
+		REQUIRE( node.getChild( 0 ).hasMeshHandles() );
+		REQUIRE_FALSE( node.getChild( 0 ).hasChildren() );
 	}
 }
 
@@ -305,8 +305,8 @@ TEST_CASE( "Scene Tests", "[assets][scene]" )
 		REQUIRE( scene->getTotalNodeCount() == 2 );
 
 		const auto &nodes = scene->getRootNodes();
-		REQUIRE( nodes[0]->name == "Root1" );
-		REQUIRE( nodes[1]->name == "Root2" );
+		REQUIRE( nodes[0]->getName() == "Root1" );
+		REQUIRE( nodes[1]->getName() == "Root2" );
 
 		REQUIRE( nodes[0]->hasMeshHandles() );
 

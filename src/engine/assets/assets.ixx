@@ -280,9 +280,20 @@ public:
 	void setName( const std::string &name ) { m_name = name; }
 
 	// Children accessors
-	const std::vector<std::unique_ptr<SceneNode>> &getChildren() const { return m_children; }
-	std::vector<std::unique_ptr<SceneNode>> &getChildren() { return m_children; }
 	bool hasChildren() const { return !m_children.empty(); }
+	size_t getChildCount() const { return m_children.size(); }
+
+	const SceneNode &getChild( size_t index ) const { return *m_children.at( index ); }
+
+	template <typename Func>
+	void foreachChild( Func &&func ) const
+	{
+		for ( const auto &child : m_children )
+		{
+			func( *child );
+		}
+	}
+
 	void addChild( std::unique_ptr<SceneNode> child )
 	{
 		if ( child )

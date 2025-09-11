@@ -300,7 +300,7 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 			// Create a mock scene with some content
 			auto scene = std::make_shared<assets::Scene>();
 			auto rootNode = std::make_unique<assets::SceneNode>();
-			rootNode->name = "test_node";
+			rootNode->setName( "test_node" );
 			scene->addRootNode( std::move( rootNode ) );
 			return scene;
 		} );
@@ -309,7 +309,7 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		REQUIRE( scene != nullptr );
 		REQUIRE( callbackCalled );
 		REQUIRE( scene->getRootNodes().size() == 1 );
-		REQUIRE( scene->getRootNodes()[0]->name == "test_node" );
+		REQUIRE( scene->getRootNodes()[0]->getName() == "test_node" );
 
 		// Clean up using the static method
 		AssetManager::clearSceneLoaderCallback();

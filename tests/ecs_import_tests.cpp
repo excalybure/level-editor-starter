@@ -65,7 +65,7 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 		// Import each root node
 		for ( const auto &rootNode : assetScene->getRootNodes() )
 		{
-			Entity entity = targetScene.createEntity( rootNode->name );
+			Entity entity = targetScene.createEntity( rootNode->getName() );
 
 			// Add Transform component
 			if ( rootNode->hasTransform() )
@@ -172,7 +172,7 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	childNode->setTransform( childTransform );
 
 	// Add child to parent
-	parentNode->children.push_back( std::move( childNode ) );
+	parentNode->addChild( std::move( childNode ) );
 	scene->addRootNode( std::move( parentNode ) );
 
 	// Set up ECS scene
@@ -201,10 +201,9 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 			}
 
 			// Import children recursively
-			for ( const auto &child : node.getChildren() )
-			{
-				importNode( *child, entity );
-			}
+			node.foreachChild( [&]( const SceneNode &child ) {
+				importNode( child, entity );
+			} );
 
 			return entity;
 		};
@@ -283,7 +282,7 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		for ( const auto &rootNode : assetScene->getRootNodes() )
 		{
-			Entity entity = targetScene.createEntity( rootNode->name );
+			Entity entity = targetScene.createEntity( rootNode->getName() );
 
 			// Add Transform component
 			if ( rootNode->hasTransform() )
@@ -299,12 +298,13 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 			// Only add MeshRenderer if node has meshes
 			if ( rootNode->hasMeshHandles() )
 			{
-				for ( const auto meshHandle : rootNode->meshHandles )
-				{
+				rootNode->foreachMeshHandle( [&]( MeshHandle meshHandle ) {
 					MeshRenderer renderer;
 					// TODO: Will need to set the MeshRenderer with a MeshGPUBuffers
+					// For now, just mark meshHandle as used to avoid warning
+					(void)meshHandle;
 					targetScene.addComponent( entity, renderer );
-				}
+				} );
 			}
 		}
 	} );
