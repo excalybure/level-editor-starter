@@ -49,15 +49,25 @@ TEST_CASE( "Primitive Basic Operations", "[primitive][tdd]" )
 		REQUIRE( indices[2] == 2 );
 	}
 
-	SECTION( "Set material path" )
+	SECTION( "Set material handle" )
 	{
 		assets::Primitive primitive;
-		const std::string materialPath = "materials/test.mat";
+		const assets::MaterialHandle materialHandle = 42;
 
-		primitive.setMaterialPath( materialPath );
+		primitive.setMaterialHandle( materialHandle );
 
 		REQUIRE( primitive.hasMaterial() );
-		REQUIRE( primitive.getMaterialPath() == materialPath );
+		REQUIRE( primitive.getMaterialHandle() == materialHandle );
+	}
+
+	SECTION( "Set invalid material handle" )
+	{
+		assets::Primitive primitive;
+
+		primitive.setMaterialHandle( assets::INVALID_MATERIAL_HANDLE );
+
+		REQUIRE_FALSE( primitive.hasMaterial() );
+		REQUIRE( primitive.getMaterialHandle() == assets::INVALID_MATERIAL_HANDLE );
 	}
 }
 

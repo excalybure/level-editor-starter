@@ -147,7 +147,7 @@ std::unique_ptr<assets::Scene> GLTFLoader::processSceneData( cgltf_data *data ) 
 	meshHandles.reserve( data->meshes_count );
 	for ( cgltf_size i = 0; i < data->meshes_count; ++i )
 	{
-		auto mesh = extractMesh( &data->meshes[i], data );
+		auto mesh = extractMesh( &data->meshes[i], data, materialHandles );
 		if ( mesh )
 		{
 			assets::MeshHandle handle = scene->addMesh( mesh );
@@ -234,7 +234,7 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 	return sceneNode;
 }
 
-std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose ) const
+std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, const std::vector<assets::MaterialHandle> &materialHandles, bool verbose ) const
 {
 	if ( !gltfMesh || gltfMesh->primitives_count == 0 )
 	{
@@ -255,7 +255,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 			console::info( "extractMesh: Processing primitive {} with {} attributes", primitiveIndex, gltfPrimitive->attributes_count );
 
 		// Extract this primitive's data into a Primitive object
-		const auto primitive = extractPrimitive( gltfPrimitive, data, verbose );
+		const auto primitive = extractPrimitive( gltfPrimitive, data, materialHandles, verbose );
 		if ( primitive )
 		{
 			mesh->addPrimitive( *primitive );
@@ -284,7 +284,7 @@ std::shared_ptr<assets::Mesh> GLTFLoader::extractMesh( cgltf_mesh *gltfMesh, cgl
 }
 
 // NEW: Helper function to extract a single primitive
-std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive *primitive, cgltf_data *data, bool verbose ) const
+std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive *primitive, cgltf_data *data, const std::vector<assets::MaterialHandle> &materialHandles, bool verbose ) const
 {
 	if ( !primitive )
 	{
@@ -548,13 +548,21 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 	// Handle material assignment
 	if ( primitive->material )
 	{
-		// For now, create a simple material identifier based on the material index in the glTF data
-		// TODO: This should be replaced with actual material asset path/ID when AssetManager is implemented
-		const std::string materialPath = std::string( "material_" ) + std::to_string( reinterpret_cast<std::uintptr_t>( primitive->material ) );
-		primitiveObj->setMaterialPath( materialPath );
+		// Calculate material index from the material pointer
+		const cgltf_size materialIndex = primitive->material - data->materials;
 
-		if ( verbose )
-			console::info( "extractPrimitive: Assigned material path: {}", materialPath );
+		// Validate the material index and assign the corresponding handle
+		if ( materialIndex < materialHandles.size() && materialHandles[materialIndex] != assets::INVALID_MATERIAL_HANDLE )
+		{
+			primitiveObj->setMaterialHandle( materialHandles[materialIndex] );
+
+			if ( verbose )
+				console::info( "extractPrimitive: Assigned material handle: {}", materialHandles[materialIndex] );
+		}
+		else
+		{
+			console::error( "extractPrimitive: Invalid material index {} or material handle", materialIndex );
+		}
 	}
 
 	return primitiveObj;

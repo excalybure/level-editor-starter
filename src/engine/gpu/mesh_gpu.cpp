@@ -222,8 +222,8 @@ MeshGPUBuffers::MeshGPUBuffers( dx12::Device &device, const assets::Mesh &mesh, 
 		// For now, check if primitive has material and log it for future implementation
 		if ( primitive.hasMaterial() )
 		{
-			const std::string &materialPath = primitive.getMaterialPath();
-			console::error( "Material loading from path '{}' not yet implemented - creating primitive without material", materialPath );
+			const assets::MaterialHandle materialHandle = primitive.getMaterialHandle();
+			console::error( "Material loading from handle '{}' not yet implemented - creating primitive without material", materialHandle );
 		}
 
 		// Create primitive GPU buffer without material for now

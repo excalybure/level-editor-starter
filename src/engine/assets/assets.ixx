@@ -149,9 +149,9 @@ public:
 	bool hasBounds() const { return m_bounds.isValid(); }
 
 	// Material reference
-	const std::string &getMaterialPath() const { return m_materialPath; }
-	void setMaterialPath( const std::string &path ) { m_materialPath = path; }
-	bool hasMaterial() const { return !m_materialPath.empty(); }
+	MaterialHandle getMaterialHandle() const { return m_materialHandle; }
+	void setMaterialHandle( MaterialHandle handle ) { m_materialHandle = handle; }
+	bool hasMaterial() const { return m_materialHandle != INVALID_MATERIAL_HANDLE; }
 
 	// Compute bounds center and size
 	math::Vec3f getBoundsCenter() const
@@ -171,7 +171,7 @@ public:
 private:
 	std::vector<Vertex> m_vertices;
 	std::vector<std::uint32_t> m_indices;
-	std::string m_materialPath;
+	MaterialHandle m_materialHandle = INVALID_MATERIAL_HANDLE;
 
 	// Bounding box data
 	math::BoundingBox3Df m_bounds;

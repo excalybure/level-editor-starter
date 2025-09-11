@@ -83,7 +83,7 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	primitive1.addIndex( 0 );
 	primitive1.addIndex( 1 );
 	primitive1.addIndex( 2 );
-	primitive1.setMaterialPath( "material1.json" );
+	primitive1.setMaterialHandle( 0 );
 
 	// Add second primitive
 	Primitive primitive2;
@@ -93,7 +93,7 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	primitive2.addIndex( 0 );
 	primitive2.addIndex( 1 );
 	primitive2.addIndex( 2 );
-	primitive2.setMaterialPath( "material2.json" );
+	primitive2.setMaterialHandle( 1 );
 
 	mesh.addPrimitive( std::move( primitive1 ) );
 	mesh.addPrimitive( std::move( primitive2 ) );
@@ -316,7 +316,7 @@ TEST_CASE( "MeshGPUBuffers constructor with GPU resource manager handles materia
 	primitive1.addIndex( 0 );
 	primitive1.addIndex( 1 );
 	primitive1.addIndex( 2 );
-	primitive1.setMaterialPath( "materials/test_material.mat" );
+	primitive1.setMaterialHandle( 0 );
 
 	// Add second primitive without material
 	assets::Primitive primitive2;

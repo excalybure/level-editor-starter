@@ -26,19 +26,28 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	// Create a mesh with two primitives
 	auto mesh = std::make_shared<Mesh>();
 
+	// Create and add materials to the scene first
+	auto material1 = std::make_shared<Material>();
+	material1->setName( "Material1" );
+	const auto material1Handle = scene->addMaterial( material1 );
+
+	auto material2 = std::make_shared<Material>();
+	material2->setName( "Material2" );
+	const auto material2Handle = scene->addMaterial( material2 );
+
 	// First primitive
 	Primitive primitive1;
 	primitive1.addVertex( { .position = { 0.0f, 0.0f, 0.0f } } );
 	primitive1.addVertex( { .position = { 1.0f, 0.0f, 0.0f } } );
 	primitive1.addVertex( { .position = { 0.0f, 1.0f, 0.0f } } );
-	primitive1.setMaterialPath( "material1.mat" );
+	primitive1.setMaterialHandle( material1Handle );
 
 	// Second primitive
 	Primitive primitive2;
 	primitive2.addVertex( { .position = { 2.0f, 0.0f, 0.0f } } );
 	primitive2.addVertex( { .position = { 3.0f, 0.0f, 0.0f } } );
 	primitive2.addVertex( { .position = { 2.0f, 1.0f, 0.0f } } );
-	primitive2.setMaterialPath( "material2.mat" );
+	primitive2.setMaterialHandle( material2Handle );
 
 	mesh->addPrimitive( std::move( primitive1 ) );
 	mesh->addPrimitive( std::move( primitive2 ) );

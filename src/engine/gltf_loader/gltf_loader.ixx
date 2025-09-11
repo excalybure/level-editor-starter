@@ -230,8 +230,8 @@ private:
 		const std::vector<assets::MaterialHandle> &materialHandles ) const;
 
 	// Mesh extraction helpers
-	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, bool verbose = false ) const;
-	std::unique_ptr<assets::Primitive> extractPrimitive( cgltf_primitive *gltfPrimitive, cgltf_data *data, bool verbose = false ) const;
+	std::shared_ptr<assets::Mesh> extractMesh( cgltf_mesh *gltfMesh, cgltf_data *data, const std::vector<assets::MaterialHandle> &materialHandles, bool verbose = false ) const;
+	std::unique_ptr<assets::Primitive> extractPrimitive( cgltf_primitive *gltfPrimitive, cgltf_data *data, const std::vector<assets::MaterialHandle> &materialHandles, bool verbose = false ) const;
 
 	// Material extraction helpers
 	std::shared_ptr<assets::Material> extractMaterial( cgltf_material *gltfMaterial, cgltf_data *data, bool verbose = false ) const;

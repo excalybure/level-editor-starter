@@ -1614,8 +1614,8 @@ TEST_CASE( "GLTFLoader Material Parsing", "[gltf][loader][material]" )
 		const auto &primitive = meshPtr->getPrimitive( 0 );
 		REQUIRE( primitive.hasMaterial() );
 
-		// Verify material path was captured (for now just check it's not empty)
-		REQUIRE( !primitive.getMaterialPath().empty() );
+		// Verify material handle was captured (should not be invalid)
+		REQUIRE( primitive.getMaterialHandle() != assets::INVALID_MATERIAL_HANDLE );
 	}
 
 	SECTION( "Parse material with emissive factor" )
@@ -1836,9 +1836,9 @@ TEST_CASE( "GLTFLoader Material Parsing", "[gltf][loader][material]" )
 		const auto &primitive = meshPtr->getPrimitive( 0 );
 		REQUIRE( primitive.hasMaterial() );
 
-		// For now, just verify the material path was set
+		// For now, just verify the material handle was set
 		// TODO: When AssetManager is implemented, we should be able to retrieve and validate the actual material data
-		REQUIRE( !primitive.getMaterialPath().empty() );
+		REQUIRE( primitive.getMaterialHandle() != assets::INVALID_MATERIAL_HANDLE );
 	}
 }
 
