@@ -1,4 +1,4 @@
-module engine.gpu_resource_manager;
+module engine.gpu.gpu_resource_manager;
 
 import runtime.console;
 

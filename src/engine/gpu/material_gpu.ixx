@@ -7,7 +7,7 @@ module;
 #include <DirectXMath.h>
 #include <wrl.h>
 
-export module engine.material_gpu;
+export module engine.gpu.material_gpu;
 
 import std;
 import engine.assets;

@@ -2,9 +2,9 @@
 #include <catch2/catch_template_test_macros.hpp>
 
 import engine.assets;
-import engine.asset_gpu_buffers;
-import engine.material_gpu;
-import engine.gpu_resource_manager;
+import engine.gpu.mesh_gpu;
+import engine.gpu.material_gpu;
+import engine.gpu.gpu_resource_manager;
 import platform.dx12;
 
 using namespace assets;

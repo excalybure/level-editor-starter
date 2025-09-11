@@ -1,4 +1,4 @@
-module engine.material_gpu;
+module engine.gpu.material_gpu;
 
 import runtime.console;
 

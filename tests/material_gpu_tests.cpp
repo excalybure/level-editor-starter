@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-import engine.material_gpu;
+import engine.gpu.material_gpu;
 import engine.assets;
 import platform.dx12;
 

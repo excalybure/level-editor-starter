@@ -9,12 +9,12 @@ module;
 #include <winerror.h>
 #include <comdef.h>
 
-export module engine.asset_gpu_buffers;
+export module engine.gpu.mesh_gpu;
 
 import std;
 import platform.dx12;
 import engine.assets;
-import engine.material_gpu;
+import engine.gpu.material_gpu;
 import runtime.console;
 
 // Forward declaration to avoid circular dependency

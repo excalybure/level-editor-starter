@@ -3,12 +3,12 @@ module;
 
 #include <comdef.h>
 
-module engine.asset_gpu_buffers;
+module engine.gpu.mesh_gpu;
 
 import std;
 import platform.dx12;
 import engine.assets;
-import engine.material_gpu;
+import engine.gpu.material_gpu;
 import runtime.console;
 
 namespace engine::gpu
