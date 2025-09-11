@@ -228,7 +228,7 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 		const assets::SceneNode node{};
 
 		REQUIRE( node.name.empty() );
-		REQUIRE( node.meshObjects.empty() );
+		REQUIRE( node.getMeshHandles().empty() );
 		REQUIRE( node.materials.empty() );
 		REQUIRE( node.children.empty() );
 
@@ -243,7 +243,7 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 		const assets::SceneNode node( nodeName );
 
 		REQUIRE( node.name == nodeName );
-		REQUIRE( node.meshObjects.empty() );
+		REQUIRE( node.getMeshHandles().empty() );
 		REQUIRE( node.materials.empty() );
 		REQUIRE( node.children.empty() );
 
@@ -256,29 +256,26 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 	{
 		assets::SceneNode node( "RootNode" );
 
-		// Add mesh objects and materials
-		auto cubeMesh = std::make_shared<assets::Mesh>();
-		auto sphereMesh = std::make_shared<assets::Mesh>();
-		node.addMeshObject( cubeMesh );
-		node.addMeshObject( sphereMesh );
+		// Add mesh handles and materials
+		node.addMeshHandle( assets::MeshHandle{ 1 } );
+		node.addMeshHandle( assets::MeshHandle{ 2 } );
 		node.materials.push_back( "materials/metal.mat" );
 
 		// Add a child node
 		auto child = std::make_unique<assets::SceneNode>( "ChildNode" );
-		auto childMesh = std::make_shared<assets::Mesh>();
-		child->addMeshObject( childMesh );
+		child->addMeshHandle( assets::MeshHandle{ 3 } );
 		node.children.push_back( std::move( child ) );
 
 		REQUIRE( node.hasMesh() );
 		REQUIRE( node.hasMaterial() );
 		REQUIRE( node.hasChildren() );
 
-		REQUIRE( node.meshObjects.size() == 2 );
+		REQUIRE( node.getMeshHandles().size() == 2 );
 		REQUIRE( node.materials.size() == 1 );
 		REQUIRE( node.children.size() == 1 );
 
-		REQUIRE( node.meshObjects[0] == cubeMesh );
-		REQUIRE( node.meshObjects[1] == sphereMesh );
+		REQUIRE( node.getMeshHandles()[0] == assets::MeshHandle{ 1 } );
+		REQUIRE( node.getMeshHandles()[1] == assets::MeshHandle{ 2 } );
 		REQUIRE( node.materials[0] == "materials/metal.mat" );
 
 		REQUIRE( node.children[0]->name == "ChildNode" );
@@ -307,7 +304,8 @@ TEST_CASE( "Scene Tests", "[assets][scene]" )
 		auto rootNode2 = std::make_unique<assets::SceneNode>( "Root2" );
 
 		auto root1Mesh = std::make_shared<assets::Mesh>();
-		rootNode1->addMeshObject( root1Mesh );
+		const auto meshHandle = scene->addMesh( root1Mesh );
+		rootNode1->addMeshHandle( meshHandle );
 		rootNode2->materials.push_back( "materials/root2.mat" );
 
 		scene->addRootNode( std::move( rootNode1 ) );

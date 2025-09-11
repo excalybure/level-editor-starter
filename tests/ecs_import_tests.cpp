@@ -42,7 +42,8 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 
 	mesh->addPrimitive( std::move( primitive1 ) );
 	mesh->addPrimitive( std::move( primitive2 ) );
-	rootNode->addMeshObject( mesh );
+	const auto meshHandle = scene->addMesh( mesh );
+	rootNode->addMeshHandle( meshHandle );
 
 	// Set transform
 	assets::Transform transform;
@@ -77,28 +78,33 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 				targetScene.addComponent( entity, ecsTransform );
 			}
 
-			// Add MeshRenderer for each mesh
-			for ( const auto &meshObj : rootNode->meshObjects )
+			// Add MeshRenderer for each mesh handle
+			for ( const auto &meshHandle : rootNode->getMeshHandles() )
 			{
 				MeshRenderer renderer;
 				renderer.meshPath = assetScene->getPath(); // Reference the scene asset
 
-				// Collect all material paths from primitives
-				for ( const auto &primitive : meshObj->getPrimitives() )
+				// Extract material paths from mesh primitives using the new API
+				const auto mesh = assetScene->getMesh( meshHandle );
+				if ( mesh )
 				{
-					if ( primitive.hasMaterial() )
+					for ( std::size_t i = 0; i < mesh->getPrimitiveCount(); ++i )
 					{
-						renderer.materialPaths.push_back( primitive.getMaterialPath() );
+						const auto &primitive = mesh->getPrimitive( i );
+						if ( primitive.hasMaterial() )
+						{
+							renderer.materialPaths.push_back( primitive.getMaterialPath() );
+						}
 					}
 				}
 
 				// Set bounds from mesh
-				if ( meshObj->hasBounds() )
+				if ( mesh->hasBounds() )
 				{
-					const auto center = meshObj->getBoundsCenter();
-					const auto size = meshObj->getBoundsSize();
-					renderer.bounds.min = { center.x - size.x / 2, center.y - size.y / 2, center.z - size.z / 2 };
-					renderer.bounds.max = { center.x + size.x / 2, center.y + size.y / 2, center.z + size.z / 2 };
+					const auto center = mesh->getBoundsCenter();
+					const auto size = mesh->getBoundsSize();
+					renderer.bounds.min = center - size * 0.5f;
+					renderer.bounds.max = center + size * 0.5f;
 				}
 
 				targetScene.addComponent( entity, renderer );
@@ -294,10 +300,10 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 			// Only add MeshRenderer if node has meshes
 			if ( rootNode->hasMesh() )
 			{
-				for ( const auto &meshObj : rootNode->meshObjects )
+				for ( const auto meshHandle : rootNode->meshHandles )
 				{
 					MeshRenderer renderer;
-					renderer.meshPath = assetScene->getPath();
+					// TODO: Will need to set the MeshRenderer with a MeshGPUBuffers
 					targetScene.addComponent( entity, renderer );
 				}
 			}

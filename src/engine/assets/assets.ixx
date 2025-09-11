@@ -278,9 +278,6 @@ export struct SceneNode
 	// NEW: Handle-based mesh references
 	std::vector<MeshHandle> meshHandles;
 
-	// Legacy: Direct mesh objects (for backward compatibility during transition)
-	std::vector<std::shared_ptr<Mesh>> meshObjects;
-
 	// Transform data from glTF
 	Transform transform;
 	bool hasTransformData = false;
@@ -291,6 +288,7 @@ export struct SceneNode
 	// Utility methods for handle-based meshes
 	bool hasMeshHandles() const { return !meshHandles.empty(); }
 	const std::vector<MeshHandle> &getMeshHandles() const { return meshHandles; }
+	MeshHandle getMeshHandle( size_t index ) const { return meshHandles.at( index ); }
 	void addMeshHandle( MeshHandle handle )
 	{
 		if ( handle != INVALID_MESH_HANDLE )
@@ -300,7 +298,7 @@ export struct SceneNode
 	}
 
 	// Legacy utility methods (for backward compatibility)
-	bool hasMesh() const { return !meshObjects.empty() || !meshHandles.empty(); }
+	bool hasMesh() const { return !meshHandles.empty(); }
 	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
 
@@ -311,20 +309,6 @@ export struct SceneNode
 	{
 		transform = t;
 		hasTransformData = true;
-	}
-
-	// Legacy mesh access (for backward compatibility)
-	std::shared_ptr<Mesh> getFirstMesh() const
-	{
-		return meshObjects.empty() ? nullptr : meshObjects[0];
-	}
-
-	void addMeshObject( std::shared_ptr<Mesh> mesh )
-	{
-		if ( mesh )
-		{
-			meshObjects.push_back( mesh );
-		}
 	}
 };
 
