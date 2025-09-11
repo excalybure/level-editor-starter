@@ -1352,32 +1352,25 @@ TEST_CASE( "GLTFLoader Complete Mesh Extraction", "[gltf][loader][integration]" 
 		REQUIRE( bounds.max.y == 1.0f );
 		REQUIRE( bounds.max.z == 0.0f );
 
-		// NEW: Verify individual primitive bounds
-		REQUIRE( meshPtr->getPrimitiveCount() == 2 );
+		// First primitive bounds (triangle 1: (0,0,0), (1,0,0), (0.5,1,0))
+		REQUIRE( primitive1.hasBounds() );
+		const auto &bounds1 = primitive1.getBounds();
+		REQUIRE( bounds1.min.x == 0.0f );
+		REQUIRE( bounds1.min.y == 0.0f );
+		REQUIRE( bounds1.min.z == 0.0f );
+		REQUIRE( bounds1.max.x == 1.0f );
+		REQUIRE( bounds1.max.y == 1.0f );
+		REQUIRE( bounds1.max.z == 0.0f );
 
-		{
-			// First primitive bounds (triangle 1: (0,0,0), (1,0,0), (0.5,1,0))
-			const auto &primitive1 = meshPtr->getPrimitive( 0 );
-			REQUIRE( primitive1.hasBounds() );
-			const auto &bounds1 = primitive1.getBounds();
-			REQUIRE( bounds1.min.x == 0.0f );
-			REQUIRE( bounds1.min.y == 0.0f );
-			REQUIRE( bounds1.min.z == 0.0f );
-			REQUIRE( bounds1.max.x == 1.0f );
-			REQUIRE( bounds1.max.y == 1.0f );
-			REQUIRE( bounds1.max.z == 0.0f );
-
-			// Second primitive bounds (triangle 2: (2,0,0), (3,0,0), (2.5,1,0))
-			const auto &primitive2 = meshPtr->getPrimitive( 1 );
-			REQUIRE( primitive2.hasBounds() );
-			const auto &bounds2 = primitive2.getBounds();
-			REQUIRE( bounds2.min.x == 2.0f );
-			REQUIRE( bounds2.min.y == 0.0f );
-			REQUIRE( bounds2.min.z == 0.0f );
-			REQUIRE( bounds2.max.x == 3.0f );
-			REQUIRE( bounds2.max.y == 1.0f );
-			REQUIRE( bounds2.max.z == 0.0f );
-		}
+		// Second primitive bounds (triangle 2: (2,0,0), (3,0,0), (2.5,1,0))
+		REQUIRE( primitive2.hasBounds() );
+		const auto &bounds2 = primitive2.getBounds();
+		REQUIRE( bounds2.min.x == 2.0f );
+		REQUIRE( bounds2.min.y == 0.0f );
+		REQUIRE( bounds2.min.z == 0.0f );
+		REQUIRE( bounds2.max.x == 3.0f );
+		REQUIRE( bounds2.max.y == 1.0f );
+		REQUIRE( bounds2.max.z == 0.0f );
 	}
 }
 
@@ -1981,8 +1974,6 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		// Col0: [2*cos(45�), 0, 2*(-sin(45�))] = [1.4142136, 0, -1.4142136]
 		// Col1: [0, 3, 0]
 		// Col2: [4*sin(45�), 0, 4*cos(45�)] = [2.8284272, 0, 2.8284272]
-		const float cos45 = 0.7071068f;
-		const float sin45 = 0.7071068f;
 		const std::string gltfWithComplexMatrix = R"({
 			"asset": { "version": "2.0" },
 			"scene": 0,

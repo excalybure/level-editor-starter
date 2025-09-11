@@ -142,7 +142,7 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 
 	SECTION( "GPU buffer constructor" )
 	{
-		// Note: We can't create a real MeshGPUBuffers without DirectX device,
+		// Note: We can't create a real MeshGPU without DirectX device,
 		// so this tests the constructor pattern with null shared_ptr
 		MeshRenderer renderer( nullptr );
 		REQUIRE( renderer.gpuBuffers == nullptr );

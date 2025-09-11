@@ -4,13 +4,13 @@ module;
 #include <d3d12.h>
 #include <wrl.h>
 
-export module engine.gpu.gpu_resource_manager;
+export module engine.gpu_resource_manager;
 
 import std;
 import platform.dx12;
 import engine.assets;
-import engine.gpu.mesh_gpu;
-import engine.gpu.material_gpu;
+import engine.asset_gpu_buffers;
+import engine.material_gpu;
 import runtime.console;
 
 export namespace engine

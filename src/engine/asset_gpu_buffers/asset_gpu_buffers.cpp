@@ -3,12 +3,12 @@ module;
 
 #include <comdef.h>
 
-module engine.gpu.mesh_gpu;
+module engine.asset_gpu_buffers;
 
 import std;
 import platform.dx12;
 import engine.assets;
-import engine.gpu.material_gpu;
+import engine.material_gpu;
 import runtime.console;
 
 namespace engine::gpu
@@ -222,8 +222,8 @@ MeshGPU::MeshGPU( dx12::Device &device, const assets::Mesh &mesh, engine::GPURes
 		// For now, check if primitive has material and log it for future implementation
 		if ( primitive.hasMaterial() )
 		{
-			const assets::MaterialHandle materialHandle = primitive.getMaterialHandle();
-			console::error( "Material loading from handle '{}' not yet implemented - creating primitive without material", materialHandle );
+			const std::string &materialPath = primitive.getMaterialPath();
+			console::error( "Material loading from path '{}' not yet implemented - creating primitive without material", materialPath );
 		}
 
 		// Create primitive GPU buffer without material for now

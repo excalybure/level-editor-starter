@@ -579,7 +579,7 @@ private:
 **Problem**: Phase 2 created the asset loading pipeline but left a critical gap between asset data and actual rendering:
 
 - **Asset Side**: `MeshRenderer` stores string paths (`meshPath`, `materialPaths`) requiring runtime lookups
-- **GPU Side**: `MeshGPUBuffers` exist but are disconnected from the rendering pipeline
+- **GPU Side**: `MeshGPU` exist but are disconnected from the rendering pipeline
 - **Performance**: Multiple entities sharing the same mesh create duplicate GPU resources
 - **Architecture**: No material GPU resource management for shaders, textures, and rendering state
 
@@ -675,9 +675,9 @@ public:
     ~GPUResourceManager() = default;
 
     // Mesh GPU resource management
-    std::shared_ptr<engine::gpu::MeshGPUBuffers> getMeshGPUBuffers(
+    std::shared_ptr<engine::gpu::MeshGPU> getMeshGPU(
         const std::string& meshAssetPath);
-    std::shared_ptr<engine::gpu::MeshGPUBuffers> getMeshGPUBuffers(
+    std::shared_ptr<engine::gpu::MeshGPU> getMeshGPU(
         std::shared_ptr<assets::Mesh> mesh);
     
     // Material GPU resource management  
@@ -699,7 +699,7 @@ private:
     dx12::Device& m_device;
     
     // Resource caches with automatic sharing
-    std::unordered_map<std::string, std::weak_ptr<asset_gpu_buffers::MeshGPUBuffers>> m_meshCache;
+    std::unordered_map<std::string, std::weak_ptr<asset_gpu_buffers::MeshGPU>> m_meshCache;
     std::unordered_map<std::string, std::weak_ptr<material_gpu::MaterialGPU>> m_materialCache;
     
     // Asset integration for loading
@@ -711,16 +711,16 @@ private:
 } // namespace gpu_resource_manager
 ```
 
-### 2.5.4 Enhanced PrimitiveGPUBuffer Integration
+### 2.5.4 Enhanced PrimitiveGPU Integration
 **Target Module**: `engine.asset_gpu_buffers` enhancement
 
 **Design**: Integrate material references directly into primitive GPU buffers:
 
 ```cpp
-// Updated PrimitiveGPUBuffer class
-export class PrimitiveGPUBuffer {
+// Updated PrimitiveGPU class
+export class PrimitiveGPU {
 public:
-    PrimitiveGPUBuffer(dx12::Device& device, 
+    PrimitiveGPU(dx12::Device& device, 
                       const assets::Primitive& primitive,
                       std::shared_ptr<material_gpu::MaterialGPU> material);
 
@@ -751,7 +751,7 @@ private:
 // Updated MeshRenderer component
 export struct MeshRenderer {
     // Direct GPU resource references (no string lookups)
-    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> gpuBuffers;
+    std::shared_ptr<asset_gpu_buffers::MeshGPU> gpuBuffers;
     
     // Rendering properties
     math::BoundingBox3Df bounds; // For frustum culling
@@ -760,7 +760,7 @@ export struct MeshRenderer {
     // Removed: meshPath, materialPaths, enabled (handled by component presence)
     
     MeshRenderer() = default;
-    MeshRenderer(std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> buffers)
+    MeshRenderer(std::shared_ptr<asset_gpu_buffers::MeshGPU> buffers)
         : gpuBuffers(std::move(buffers)) {}
 };
 ```
@@ -881,7 +881,7 @@ using ImportSceneWithGPUCallback = std::function<void(
 **Deliverables**:
 - ✅ MaterialGPU class with complete rendering state management
 - ✅ GPUResourceManager for efficient resource sharing and caching
-- ✅ Enhanced PrimitiveGPUBuffer with material integration
+- ✅ Enhanced PrimitiveGPU with material integration
 - ✅ Streamlined MeshRenderer component with direct GPU resource references
 - ✅ Updated ECS import system with GPU resource creation
 - ✅ Performance optimization: eliminated string lookups in rendering path

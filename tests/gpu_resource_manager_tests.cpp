@@ -45,8 +45,8 @@ TEST_CASE( "GPUResourceManager caches mesh GPU buffers from shared_ptr", "[gpu_r
 	mesh->addPrimitive( primitive );
 
 	// Act - get GPU buffers twice
-	const auto buffers1 = manager.getMeshGPUBuffers( mesh );
-	const auto buffers2 = manager.getMeshGPUBuffers( mesh );
+	const auto buffers1 = manager.getMeshGPU( mesh );
+	const auto buffers2 = manager.getMeshGPU( mesh );
 
 	// Assert - same instance should be returned (caching working)
 	REQUIRE( buffers1 != nullptr );
@@ -97,7 +97,7 @@ TEST_CASE( "GPUResourceManager clears cache properly", "[gpu_resource_manager][u
 	material->setPath( "test_material.mat" );
 
 	// Load resources into cache
-	const auto meshBuffers = manager.getMeshGPUBuffers( mesh );
+	const auto meshBuffers = manager.getMeshGPU( mesh );
 	const auto materialGPU = manager.getMaterialGPU( material );
 
 	REQUIRE( meshBuffers != nullptr );
@@ -107,7 +107,7 @@ TEST_CASE( "GPUResourceManager clears cache properly", "[gpu_resource_manager][u
 	manager.clearCache();
 
 	// Assert - new requests should create new instances
-	const auto newMeshBuffers = manager.getMeshGPUBuffers( mesh );
+	const auto newMeshBuffers = manager.getMeshGPU( mesh );
 	const auto newMaterialGPU = manager.getMaterialGPU( material );
 
 	REQUIRE( newMeshBuffers != nullptr );
@@ -137,11 +137,11 @@ TEST_CASE( "GPUResourceManager tracks cache statistics", "[gpu_resource_manager]
 	material->setPath( "test_material.mat" );
 
 	// Act - load resources (cache misses)
-	const auto meshBuffers1 = manager.getMeshGPUBuffers( mesh );
+	const auto meshBuffers1 = manager.getMeshGPU( mesh );
 	const auto materialGPU1 = manager.getMaterialGPU( material );
 
 	// Load same resources again (cache hits)
-	const auto meshBuffers2 = manager.getMeshGPUBuffers( mesh );
+	const auto meshBuffers2 = manager.getMeshGPU( mesh );
 	const auto materialGPU2 = manager.getMaterialGPU( material );
 
 	// Assert - statistics should track hits and misses

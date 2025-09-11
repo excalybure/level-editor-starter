@@ -306,7 +306,7 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 			{
 				rootNode->foreachMeshHandle( [&]( MeshHandle meshHandle ) {
 					MeshRenderer renderer;
-					// TODO: Will need to set the MeshRenderer with a MeshGPUBuffers
+					// TODO: Will need to set the MeshRenderer with a MeshGPU
 					// For now, just mark meshHandle as used to avoid warning
 					(void)meshHandle;
 					targetScene.addComponent( entity, renderer );

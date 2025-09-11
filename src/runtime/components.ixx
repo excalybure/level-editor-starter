@@ -9,10 +9,10 @@ import <string>;
 import <vector>;
 import <memory>;
 
-// Forward declaration for MeshGPUBuffers to avoid circular dependencies
+// Forward declaration for MeshGPU to avoid circular dependencies
 namespace engine::gpu
 {
-class MeshGPUBuffers;
+class MeshGPU;
 }
 
 export namespace components
@@ -91,12 +91,12 @@ struct Visible
 // Renderable mesh component
 struct MeshRenderer
 {
-	std::shared_ptr<engine::gpu::MeshGPUBuffers> gpuBuffers;
+	std::shared_ptr<engine::gpu::MeshGPU> gpuBuffers;
 	math::BoundingBox3Df bounds; // Local space bounding box
 	float lodBias = 0.0f;		 // Level of detail bias for rendering
 
 	MeshRenderer() = default;
-	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPUBuffers> buffers ) : gpuBuffers( std::move( buffers ) ) {}
+	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPU> buffers ) : gpuBuffers( std::move( buffers ) ) {}
 };
 
 // Selection state for editor

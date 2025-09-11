@@ -7,8 +7,8 @@ Date: 2025-01-03
 **Atomic functionalities completed:**
 - AF1: Updated MaterialGPU module namespace - Migrated `src/engine/material_gpu/material_gpu.ixx` and `.cpp` from `material_gpu` to `engine::gpu` namespace
 - AF2: Updated AssetGPUBuffers module namespace - Migrated `src/engine/asset_gpu_buffers/asset_gpu_buffers.ixx` and `.cpp` from `asset_gpu_buffers` to `engine::gpu` namespace  
-- AF3: Updated GPUResourceManager references - Updated `src/engine/gpu_resource_manager/gpu_resource_manager.ixx` and `.cpp` to reference `engine::gpu::MaterialGPU` and `engine::gpu::MeshGPUBuffers`
-- AF4: Updated runtime components - Modified `src/runtime/components.ixx` to use `engine::gpu::MeshGPUBuffers` forward declaration and MeshRenderer component
+- AF3: Updated GPUResourceManager references - Updated `src/engine/gpu_resource_manager/gpu_resource_manager.ixx` and `.cpp` to reference `engine::gpu::MaterialGPU` and `engine::gpu::MeshGPU`
+- AF4: Updated runtime components - Modified `src/runtime/components.ixx` to use `engine::gpu::MeshGPU` forward declaration and MeshRenderer component
 - AF5: Updated test files - Migrated all test files referencing GPU classes to use `engine::gpu` namespace
 - AF6: Build and test validation - Verified namespace migration with CMake build and comprehensive unit test execution
 **Tests:** All existing tests continue to pass; validated with MeshRenderer (15 assertions in 2 test cases), GPU buffer (49 assertions in 10 test cases), MaterialGPU (30 assertions in 7 test cases), and component tests
@@ -18,8 +18,8 @@ Date: 2025-01-03
 **Summary:** Successfully refactored MeshRenderer component to use direct GPU resource references instead of string paths, achieving significant memory optimization and eliminating runtime string lookups.
 **Atomic functionalities completed:**
 - AF1: Examined current MeshRenderer structure - Analyzed existing string-based component with meshPath, materialPaths, and enabled fields
-- AF2: Updated MeshRenderer to use GPU resource references - Replaced string paths with shared_ptr<MeshGPUBuffers>, removed enabled field, added lodBias for rendering optimization
-- AF3: Added GPU-enabled constructor - Implemented constructor accepting MeshGPUBuffers shared_ptr for proper resource lifetime management
+- AF2: Updated MeshRenderer to use GPU resource references - Replaced string paths with shared_ptr<MeshGPU>, removed enabled field, added lodBias for rendering optimization
+- AF3: Added GPU-enabled constructor - Implemented constructor accepting MeshGPU shared_ptr for proper resource lifetime management
 - AF4: Updated component tests - Modernized tests to validate GPU resource-based structure with bounds assignment, LOD bias, and size optimization validation
 - AF5: Validated component size optimization - Added test to verify memory footprint reduction compared to string-based approach
 **Tests:** Updated 1 test case with 8 assertions covering all new functionality; all existing tests continue to pass
@@ -120,19 +120,19 @@ Date: 2025-01-03
 **Tests:** All 11 glTF test cases pass with 528 assertions, confirming root-level extraction maintains compatibility while improving efficiency.
 **Notes:** This implementation properly matches the glTF format where all materials and meshes are defined at root level and referenced by index. The approach eliminates duplicate extractions when multiple nodes reference the same resources, improves performance, and enables proper utilization of the `extractMaterial` function. Material indices are calculated using pointer arithmetic from cgltf data structures, maintaining consistency with glTF specification.
 
-## 2025-09-09 — PrimitiveGPUBuffer Material Integration via TDD
-**Summary:** Completed Task 3: PrimitiveGPUBuffer Material Integration by implementing material handling throughout GPU buffer architecture using strict TDD methodology. Added material support to both PrimitiveGPUBuffer and MeshGPUBuffers classes, enabling complete rendering pipeline integration with MaterialGPU resources and comprehensive resource binding functionality.
+## 2025-09-09 — PrimitiveGPU Material Integration via TDD
+**Summary:** Completed Task 3: PrimitiveGPU Material Integration by implementing material handling throughout GPU buffer architecture using strict TDD methodology. Added material support to both PrimitiveGPU and MeshGPU classes, enabling complete rendering pipeline integration with MaterialGPU resources and comprehensive resource binding functionality.
 
 **Atomic functionalities completed:**
-- AF1: Enhanced PrimitiveGPUBuffer class to accept MaterialGPU shared_ptr in constructor for material integration
+- AF1: Enhanced PrimitiveGPU class to accept MaterialGPU shared_ptr in constructor for material integration
 - AF2: Implemented complete bindForRendering() method that binds both geometry buffers and material resources in single call
-- AF3: Added hasIndexBuffer() method to PrimitiveGPUBuffer for proper rendering decision support
-- AF4: Created new MeshGPUBuffers constructor accepting material paths with GPU resource manager integration
+- AF3: Added hasIndexBuffer() method to PrimitiveGPU for proper rendering decision support
+- AF4: Created new MeshGPU constructor accepting material paths with GPU resource manager integration
 - AF5: Implemented material loading stub with proper fallback handling for primitives without materials
 - AF6: Added comprehensive test coverage for material integration including edge cases and validation
 
-**Tests:** 2 new test cases with 8 additional assertions covering PrimitiveGPUBuffer material integration, complete resource binding functionality, MeshGPUBuffers material path handling, and graceful fallback for missing materials. All GPU buffer tests pass (49 assertions in 10 test cases) using filtered command: `unit_test_runner.exe "[gpu][unit]"`.
-**Notes:** Implementation provides foundation for complete material-geometry rendering pipeline. PrimitiveGPUBuffer now supports both geometry and material binding in single bindForRendering() call. MeshGPUBuffers constructor integrates with GPUResourceManager for material loading with proper fallback when materials unavailable. Material loading currently stubbed for future AssetManager integration. Backward compatibility maintained for primitives without materials. All functionality validated through comprehensive test suite covering normal operation and edge cases.
+**Tests:** 2 new test cases with 8 additional assertions covering PrimitiveGPU material integration, complete resource binding functionality, MeshGPU material path handling, and graceful fallback for missing materials. All GPU buffer tests pass (49 assertions in 10 test cases) using filtered command: `unit_test_runner.exe "[gpu][unit]"`.
+**Notes:** Implementation provides foundation for complete material-geometry rendering pipeline. PrimitiveGPU now supports both geometry and material binding in single bindForRendering() call. MeshGPU constructor integrates with GPUResourceManager for material loading with proper fallback when materials unavailable. Material loading currently stubbed for future AssetManager integration. Backward compatibility maintained for primitives without materials. All functionality validated through comprehensive test suite covering normal operation and edge cases.
 
 ## 2025-09-09 — Material Setter Methods Implementation via TDD
 **Summary:** Implemented missing setter methods for the Material class in the assets module to fix compilation errors in gpu_buffer_tests.cpp. Added setName(), setBaseColorFactor(), setMetallicFactor(), and setRoughnessFactor() methods with comprehensive test coverage, following strict TDD red-green-refactor methodology.
@@ -158,7 +158,7 @@ Date: 2025-09-09
 **Atomic functionalities completed:**
 - AF1: Created `engine.gpu_resource_manager` module structure with CMake configuration and basic class interface
 - AF2: Designed caching architecture using weak_ptr for automatic cleanup of unused GPU resources
-- AF3: Implemented mesh resource caching with getMeshGPUBuffers() methods for shared_ptr and path access
+- AF3: Implemented mesh resource caching with getMeshGPU() methods for shared_ptr and path access
 - AF4: Implemented material resource caching with getMaterialGPU() methods for shared_ptr and path access
 - AF5: Added cache management methods (clearCache(), unloadUnusedResources(), cleanupExpiredReferences())
 - AF6: Implemented statistics tracking for cache hits/misses, resource counts, and memory usage estimation
@@ -182,13 +182,13 @@ Date: 2025-09-09
 **Notes:** Implementation provides stub methods for actual GPU resource creation (pipeline state, constant buffer, texture loading) which can be enhanced in future phases. MaterialConstants uses raw float arrays for now to avoid math type dependency issues, with proper conversion from assets::Material PBR properties. The class supports proper RAII resource management and move semantics for efficient GPU resource handling. Foundation ready for integration with rendering pipeline and shader binding.
 
 ## 2025-09-09 — GPU Buffer Creation (Primitive-Based Design) Implementation via TDD
-**Summary:** Implemented comprehensive GPU buffer creation functionality for primitive-based mesh architecture using strict TDD methodology. Created new `engine.asset_gpu_buffers` module with `PrimitiveGPUBuffer` and `MeshGPUBuffers` classes supporting per-primitive D3D12 resource management. The implementation properly handles upload heap allocation, error conditions, and resource lifecycle management for modern rendering with per-primitive draw calls.
+**Summary:** Implemented comprehensive GPU buffer creation functionality for primitive-based mesh architecture using strict TDD methodology. Created new `engine.asset_gpu_buffers` module with `PrimitiveGPU` and `MeshGPU` classes supporting per-primitive D3D12 resource management. The implementation properly handles upload heap allocation, error conditions, and resource lifecycle management for modern rendering with per-primitive draw calls.
 
 **Atomic functionalities completed:**
 - AF1: Analyzed existing GPU/DX12 infrastructure and identified integration points for asset-based GPU buffers
 - AF2: Designed primitive-based GPU buffer architecture with per-primitive resource management
-- AF3: Implemented `PrimitiveGPUBuffer` class with D3D12 vertex/index buffer creation and upload heap management
-- AF4: Created `MeshGPUBuffers` collection class for managing multiple primitive buffers per mesh
+- AF3: Implemented `PrimitiveGPU` class with D3D12 vertex/index buffer creation and upload heap management
+- AF4: Created `MeshGPU` collection class for managing multiple primitive buffers per mesh
 - AF5: Added proper error handling for empty primitives and resource creation failures
 - AF6: Implemented resource lifecycle management with RAII patterns and proper cleanup
 - AF7: Created comprehensive test suite covering normal cases, error conditions, and large data scenarios
