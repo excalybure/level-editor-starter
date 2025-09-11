@@ -2,6 +2,24 @@
 
 Date: 2025-09-10
 
+## 2025-01-03 — SceneNode::materials Field and Method Removal Complete
+**Summary:** Successfully removed the `std::vector<std::string> materials` field and `hasMaterial()` method from SceneNode struct, along with all associated code in the glTF loader and test files. This completes the cleanup of legacy material handling code and ensures the asset architecture relies solely on the handle-based API for resource management.
+
+**Atomic functionalities completed:**
+- AF1: Remove SceneNode::materials field - Eliminated `std::vector<std::string> materials` field from SceneNode struct in assets.ixx
+- AF2: Remove SceneNode::hasMaterial() method - Removed the `hasMaterial()` method from SceneNode struct in assets.ixx  
+- AF3: Update glTF loader - Removed all code in gltf_loader.cpp that pushed material paths to `node.materials`
+- AF4: Update assets tests - Removed all references to `node.materials`, `hasMaterial()`, and related test assertions from assets_tests.cpp
+- AF5: Update glTF loader tests - Removed SceneNode `hasMaterial()` assertion from gltf_loader_tests.cpp
+- AF6: Verify no remaining usages - Searched for any remaining SceneNode::materials or hasMaterial() usages in the codebase and confirmed none exist
+- AF7: Build and test validation - Built the project and ran comprehensive tests to ensure no regressions after removal
+
+**Tests:** All tests pass (gltf: 511 assertions in 9 test cases, assets: 17 assertions in 2 test cases, ecs: 107 assertions in 7 test cases); build successful with only expected warnings
+**Notes:** The removal eliminates redundant material storage at the SceneNode level, as material information is now properly maintained at the primitive level within meshes. This architectural improvement reduces code duplication and ensures a single source of truth for material data. The glTF loader no longer needs to track materials separately from primitives, simplifying the loading pipeline. All existing functionality remains intact through the handle-based API.
+
+**Build Status:** ✅ SUCCESSFUL - Clean build with only expected warnings  
+**Test Status:** ✅ PASSING - All asset, glTF, and ECS tests pass
+
 ## 2025-01-03 — SceneNode Mesh API Modernization Complete
 **Summary:** Successfully modernized the SceneNode mesh API by removing legacy mesh access methods and implementing new utility methods for cleaner, more efficient mesh handle management. All tests and code usage updated to use the new API patterns.
 

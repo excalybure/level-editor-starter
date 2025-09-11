@@ -272,7 +272,6 @@ private:
 export struct SceneNode
 {
 	std::string name;
-	std::vector<std::string> materials; // Legacy: Material asset paths (for backward compatibility)
 	std::vector<std::unique_ptr<SceneNode>> children;
 
 	// NEW: Handle-based mesh references
@@ -306,7 +305,6 @@ export struct SceneNode
 	}
 
 	// Legacy utility methods (for backward compatibility)
-	bool hasMaterial() const { return !materials.empty(); }
 	bool hasChildren() const { return !children.empty(); }
 
 	// Transform methods

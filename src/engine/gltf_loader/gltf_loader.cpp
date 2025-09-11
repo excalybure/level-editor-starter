@@ -213,30 +213,6 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 		{
 			// Add mesh handle to scene node
 			sceneNode->addMeshHandle( meshHandles[meshIndex] );
-
-			// Process materials for this mesh's primitives
-			std::unordered_set<cgltf_size> uniqueMaterialIndices;
-			for ( cgltf_size i = 0; i < gltfNode->mesh->primitives_count; ++i )
-			{
-				cgltf_primitive *primitive = &gltfNode->mesh->primitives[i];
-				if ( primitive->material )
-				{
-					// Calculate material index from pointer offset
-					const cgltf_size materialIndex = static_cast<cgltf_size>( primitive->material - data->materials );
-					if ( materialIndex < materialHandles.size() && materialHandles[materialIndex] != assets::INVALID_MATERIAL_HANDLE )
-					{
-						uniqueMaterialIndices.insert( materialIndex );
-					}
-				}
-			}
-
-			// Add unique material references to scene node (legacy path support for now)
-			for ( cgltf_size materialIndex : uniqueMaterialIndices )
-			{
-				// For now, store as path. Could be enhanced to store Material objects when SceneNode supports it
-				const std::string materialPath = "material_" + std::to_string( materialIndex );
-				sceneNode->materials.push_back( materialPath );
-			}
 		}
 	}
 

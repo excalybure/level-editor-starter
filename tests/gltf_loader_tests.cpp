@@ -575,7 +575,6 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( scene != nullptr );
 		const auto &rootNodes = scene->getRootNodes();
 		REQUIRE( !rootNodes.empty() );
-		REQUIRE( rootNodes[0]->hasMaterial() );
 	}
 
 	SECTION( "Extract mesh with tangent vectors (TANGENT)" )

@@ -229,11 +229,9 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 
 		REQUIRE( node.name.empty() );
 		REQUIRE( node.meshCount() == 0 );
-		REQUIRE( node.materials.empty() );
 		REQUIRE( node.children.empty() );
 
 		REQUIRE_FALSE( node.hasMeshHandles() );
-		REQUIRE_FALSE( node.hasMaterial() );
 		REQUIRE_FALSE( node.hasChildren() );
 	}
 
@@ -244,11 +242,9 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 
 		REQUIRE( node.name == nodeName );
 		REQUIRE( node.meshCount() == 0 );
-		REQUIRE( node.materials.empty() );
 		REQUIRE( node.children.empty() );
 
 		REQUIRE_FALSE( node.hasMeshHandles() );
-		REQUIRE_FALSE( node.hasMaterial() );
 		REQUIRE_FALSE( node.hasChildren() );
 	}
 
@@ -256,10 +252,9 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 	{
 		assets::SceneNode node( "RootNode" );
 
-		// Add mesh handles and materials
+		// Add mesh handles
 		node.addMeshHandle( assets::MeshHandle{ 1 } );
 		node.addMeshHandle( assets::MeshHandle{ 2 } );
-		node.materials.push_back( "materials/metal.mat" );
 
 		// Add a child node
 		auto child = std::make_unique<assets::SceneNode>( "ChildNode" );
@@ -267,20 +262,16 @@ TEST_CASE( "SceneNode Tests", "[assets][scene][node]" )
 		node.children.push_back( std::move( child ) );
 
 		REQUIRE( node.hasMeshHandles() );
-		REQUIRE( node.hasMaterial() );
 		REQUIRE( node.hasChildren() );
 
 		REQUIRE( node.meshCount() == 2 );
-		REQUIRE( node.materials.size() == 1 );
 		REQUIRE( node.children.size() == 1 );
 
 		REQUIRE( node.getMeshHandle( 0 ) == assets::MeshHandle{ 1 } );
 		REQUIRE( node.getMeshHandle( 1 ) == assets::MeshHandle{ 2 } );
-		REQUIRE( node.materials[0] == "materials/metal.mat" );
 
 		REQUIRE( node.children[0]->name == "ChildNode" );
 		REQUIRE( node.children[0]->hasMeshHandles() );
-		REQUIRE_FALSE( node.children[0]->hasMaterial() );
 		REQUIRE_FALSE( node.children[0]->hasChildren() );
 	}
 }
@@ -306,7 +297,6 @@ TEST_CASE( "Scene Tests", "[assets][scene]" )
 		auto root1Mesh = std::make_shared<assets::Mesh>();
 		const auto meshHandle = scene->addMesh( root1Mesh );
 		rootNode1->addMeshHandle( meshHandle );
-		rootNode2->materials.push_back( "materials/root2.mat" );
 
 		scene->addRootNode( std::move( rootNode1 ) );
 		scene->addRootNode( std::move( rootNode2 ) );
@@ -319,10 +309,8 @@ TEST_CASE( "Scene Tests", "[assets][scene]" )
 		REQUIRE( nodes[1]->name == "Root2" );
 
 		REQUIRE( nodes[0]->hasMeshHandles() );
-		REQUIRE_FALSE( nodes[0]->hasMaterial() );
 
 		REQUIRE_FALSE( nodes[1]->hasMeshHandles() );
-		REQUIRE( nodes[1]->hasMaterial() );
 	}
 
 	SECTION( "Scene rejects null nodes" )
