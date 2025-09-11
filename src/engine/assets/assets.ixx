@@ -268,30 +268,38 @@ private:
 	}
 };
 
-// Simple scene node structure
-export struct SceneNode
+// Scene node class with proper encapsulation
+export class SceneNode
 {
-	std::string name;
-	std::vector<std::unique_ptr<SceneNode>> children;
-
-	// NEW: Handle-based mesh references
-	std::vector<MeshHandle> meshHandles;
-
-	// Transform data from glTF
-	Transform transform;
-	bool hasTransformData = false;
-
+public:
 	SceneNode() = default;
-	SceneNode( const std::string &nodeName ) : name( nodeName ) {}
+	SceneNode( const std::string &nodeName ) : m_name( nodeName ) {}
 
-	// Utility methods for handle-based meshes
-	bool hasMeshHandles() const { return !meshHandles.empty(); }
-	size_t meshCount() const { return meshHandles.size(); }
-	MeshHandle getMeshHandle( size_t index ) const { return meshHandles.at( index ); }
+	// Name accessors
+	const std::string &getName() const { return m_name; }
+	void setName( const std::string &name ) { m_name = name; }
+
+	// Children accessors
+	const std::vector<std::unique_ptr<SceneNode>> &getChildren() const { return m_children; }
+	std::vector<std::unique_ptr<SceneNode>> &getChildren() { return m_children; }
+	bool hasChildren() const { return !m_children.empty(); }
+	void addChild( std::unique_ptr<SceneNode> child )
+	{
+		if ( child )
+		{
+			m_children.push_back( std::move( child ) );
+		}
+	}
+
+	// Mesh handle accessors
+	const std::vector<MeshHandle> &getMeshHandles() const { return m_meshHandles; }
+	bool hasMeshHandles() const { return !m_meshHandles.empty(); }
+	size_t meshCount() const { return m_meshHandles.size(); }
+	MeshHandle getMeshHandle( size_t index ) const { return m_meshHandles.at( index ); }
 	template <typename Func>
 	void foreachMeshHandle( Func &&func ) const
 	{
-		for ( const auto &handle : meshHandles )
+		for ( const auto &handle : m_meshHandles )
 		{
 			func( handle );
 		}
@@ -300,21 +308,25 @@ export struct SceneNode
 	{
 		if ( handle != INVALID_MESH_HANDLE )
 		{
-			meshHandles.push_back( handle );
+			m_meshHandles.push_back( handle );
 		}
 	}
 
-	// Legacy utility methods (for backward compatibility)
-	bool hasChildren() const { return !children.empty(); }
-
-	// Transform methods
-	bool hasTransform() const { return hasTransformData; }
-	const Transform &getTransform() const { return transform; }
+	// Transform accessors
+	bool hasTransform() const { return m_hasTransformData; }
+	const Transform &getTransform() const { return m_transform; }
 	void setTransform( const Transform &t )
 	{
-		transform = t;
-		hasTransformData = true;
+		m_transform = t;
+		m_hasTransformData = true;
 	}
+
+private:
+	std::string m_name;
+	std::vector<std::unique_ptr<SceneNode>> m_children;
+	std::vector<MeshHandle> m_meshHandles;
+	Transform m_transform;
+	bool m_hasTransformData = false;
 };
 
 export class Scene : public Asset

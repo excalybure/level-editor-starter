@@ -181,7 +181,7 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	// Register callback that imports hierarchy
 	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		std::function<Entity( const SceneNode &, Entity )> importNode = [&]( const SceneNode &node, Entity parent ) -> Entity {
-			Entity entity = targetScene.createEntity( node.name );
+			Entity entity = targetScene.createEntity( node.getName() );
 
 			// Add Transform component
 			if ( node.hasTransform() )
@@ -201,7 +201,7 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 			}
 
 			// Import children recursively
-			for ( const auto &child : node.children )
+			for ( const auto &child : node.getChildren() )
 			{
 				importNode( *child, entity );
 			}

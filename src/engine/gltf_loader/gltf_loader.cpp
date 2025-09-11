@@ -227,7 +227,7 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 		auto childSceneNode = processNode( childNode, data, meshHandles, materialHandles );
 		if ( childSceneNode )
 		{
-			sceneNode->children.push_back( std::move( childSceneNode ) );
+			sceneNode->addChild( std::move( childSceneNode ) );
 		}
 	}
 
