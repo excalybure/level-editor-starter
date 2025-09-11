@@ -33,10 +33,10 @@ public:
 	GPUResourceManager &operator=( GPUResourceManager && ) = delete;
 
 	// Mesh resource caching
-	std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> getMeshGPUBuffers( std::shared_ptr<assets::Mesh> mesh );
+	std::shared_ptr<engine::gpu::MeshGPUBuffers> getMeshGPUBuffers( std::shared_ptr<assets::Mesh> mesh );
 
 	// Material resource caching
-	std::shared_ptr<MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material );
+	std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material );
 
 	// Cache management
 	void clearCache();
@@ -63,8 +63,8 @@ private:
 	dx12::Device *m_device = nullptr;
 
 	// Cache maps using weak_ptr for automatic cleanup
-	std::unordered_map<assets::Mesh *, std::weak_ptr<asset_gpu_buffers::MeshGPUBuffers>> m_meshCache;
-	std::unordered_map<assets::Material *, std::weak_ptr<MaterialGPU>> m_materialCache;
+	std::unordered_map<assets::Mesh *, std::weak_ptr<engine::gpu::MeshGPUBuffers>> m_meshCache;
+	std::unordered_map<assets::Material *, std::weak_ptr<engine::gpu::MaterialGPU>> m_materialCache;
 
 	// Statistics tracking
 	mutable Statistics m_statistics;

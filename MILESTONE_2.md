@@ -598,7 +598,7 @@ import engine.assets;
 import engine.shader_manager;
 import std;
 
-export namespace material_gpu {
+export namespace engine::gpu {
 
 // GPU material resource management
 export class MaterialGPU {
@@ -649,7 +649,7 @@ private:
     void loadTextures(const assets::Material& material);
 };
 
-} // namespace material_gpu
+} // namespace engine::gpu
 ```
 
 ### 2.5.3 GPU Resource Manager
@@ -666,7 +666,7 @@ import engine.assets;
 import platform.dx12;
 import std;
 
-export namespace gpu_resource_manager {
+export namespace engine::gpu_resource_manager {
 
 // Centralized GPU resource caching and management
 export class GPUResourceManager {
@@ -675,15 +675,15 @@ public:
     ~GPUResourceManager() = default;
 
     // Mesh GPU resource management
-    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> getMeshGPUBuffers(
+    std::shared_ptr<engine::gpu::MeshGPUBuffers> getMeshGPUBuffers(
         const std::string& meshAssetPath);
-    std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> getMeshGPUBuffers(
+    std::shared_ptr<engine::gpu::MeshGPUBuffers> getMeshGPUBuffers(
         std::shared_ptr<assets::Mesh> mesh);
     
     // Material GPU resource management  
-    std::shared_ptr<material_gpu::MaterialGPU> getMaterialGPU(
+    std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU(
         const std::string& materialAssetPath);
-    std::shared_ptr<material_gpu::MaterialGPU> getMaterialGPU(
+    std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU(
         std::shared_ptr<assets::Material> material);
     
     // Cache management

@@ -8,7 +8,7 @@ import engine.gpu_resource_manager;
 import platform.dx12;
 
 using namespace assets;
-using namespace asset_gpu_buffers;
+using namespace engine::gpu;
 
 TEST_CASE( "PrimitiveGPUBuffer creates vertex buffer from primitive", "[gpu][primitive][unit]" )
 {
@@ -232,7 +232,7 @@ TEST_CASE( "PrimitiveGPUBuffer constructor with MaterialGPU creates valid buffer
 	material->setRoughnessFactor( 0.3f );
 
 	// Create MaterialGPU
-	std::shared_ptr<engine::MaterialGPU> materialGPU = std::make_shared<engine::MaterialGPU>( material );
+	std::shared_ptr<MaterialGPU> materialGPU = std::make_shared<MaterialGPU>( material );
 
 	// Create primitive GPU buffer with material
 	PrimitiveGPUBuffer gpuBuffer( device, primitive, materialGPU );

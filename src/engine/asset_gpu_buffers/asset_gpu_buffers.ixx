@@ -23,7 +23,7 @@ export namespace engine
 class GPUResourceManager;
 }
 
-export namespace asset_gpu_buffers
+export namespace engine::gpu
 {
 
 // Individual primitive GPU buffer management
@@ -31,7 +31,7 @@ export class PrimitiveGPUBuffer
 {
 public:
 	PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive );
-	PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<engine::MaterialGPU> material );
+	PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<MaterialGPU> material );
 	~PrimitiveGPUBuffer() = default;
 
 	// No copy/move for now to keep resource management simple
@@ -51,7 +51,7 @@ public:
 	ID3D12Resource *getIndexResource() const noexcept { return m_indexBuffer.Get(); }
 
 	// Material access
-	std::shared_ptr<engine::MaterialGPU> getMaterial() const noexcept { return m_material; }
+	std::shared_ptr<MaterialGPU> getMaterial() const noexcept { return m_material; }
 	bool hasMaterial() const noexcept { return static_cast<bool>( m_material ); }
 
 	// Complete resource binding for rendering (geometry + material)
@@ -72,7 +72,7 @@ private:
 	std::uint32_t m_indexCount = 0;
 
 	dx12::Device &m_device;
-	std::shared_ptr<engine::MaterialGPU> m_material;
+	std::shared_ptr<MaterialGPU> m_material;
 
 	// Helper methods for buffer creation
 	void createVertexBuffer( const assets::Primitive &primitive );
@@ -111,4 +111,4 @@ private:
 	dx12::Device &m_device;
 };
 
-} // namespace asset_gpu_buffers
+} // namespace engine::gpu

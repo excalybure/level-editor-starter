@@ -18,7 +18,7 @@ GPUResourceManager::GPUResourceManager( dx12::Device &device )
 	console::info( "GPUResourceManager initialized successfully" );
 }
 
-std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> GPUResourceManager::getMeshGPUBuffers( std::shared_ptr<assets::Mesh> mesh )
+std::shared_ptr<engine::gpu::MeshGPUBuffers> GPUResourceManager::getMeshGPUBuffers( std::shared_ptr<assets::Mesh> mesh )
 {
 	if ( !mesh )
 	{
@@ -41,7 +41,7 @@ std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> GPUResourceManager::getMeshGP
 
 	// Cache miss - create new GPU buffers
 	++m_statistics.cacheMisses;
-	const auto gpuBuffers = std::make_shared<asset_gpu_buffers::MeshGPUBuffers>( *m_device, *mesh );
+	const auto gpuBuffers = std::make_shared<engine::gpu::MeshGPUBuffers>( *m_device, *mesh );
 	if ( !gpuBuffers->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create GPU buffers for mesh" );
@@ -55,7 +55,7 @@ std::shared_ptr<asset_gpu_buffers::MeshGPUBuffers> GPUResourceManager::getMeshGP
 }
 
 
-std::shared_ptr<MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr<assets::Material> material )
+std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr<assets::Material> material )
 {
 	if ( !material )
 	{
@@ -78,7 +78,7 @@ std::shared_ptr<MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr
 
 	// Cache miss - create new MaterialGPU
 	++m_statistics.cacheMisses;
-	const auto materialGPU = std::make_shared<MaterialGPU>( material );
+	const auto materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material );
 	if ( !materialGPU->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create MaterialGPU" );

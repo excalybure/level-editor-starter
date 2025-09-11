@@ -11,7 +11,7 @@ import engine.assets;
 import engine.material_gpu;
 import runtime.console;
 
-namespace asset_gpu_buffers
+namespace engine::gpu
 {
 
 PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive )
@@ -28,7 +28,7 @@ PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Prim
 	}
 }
 
-PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<engine::MaterialGPU> material )
+PrimitiveGPUBuffer::PrimitiveGPUBuffer( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<MaterialGPU> material )
 	: m_device( device ), m_vertexCount( primitive.getVertexCount() ), m_indexCount( primitive.getIndexCount() ), m_material( std::move( material ) )
 {
 	try
@@ -270,4 +270,4 @@ bool MeshGPUBuffers::isValid() const noexcept
 		std::all_of( m_primitiveBuffers.begin(), m_primitiveBuffers.end(), []( const auto &buffer ) { return buffer && buffer->isValid(); } );
 }
 
-} // namespace asset_gpu_buffers
+} // namespace engine::gpu

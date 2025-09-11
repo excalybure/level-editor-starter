@@ -2,7 +2,7 @@ module engine.material_gpu;
 
 import runtime.console;
 
-namespace engine
+namespace engine::gpu
 {
 
 MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material )
@@ -111,4 +111,4 @@ void MaterialGPU::loadTextures()
 	console::info( "MaterialGPU: Loading textures" );
 }
 
-} // namespace engine
+} // namespace engine::gpu

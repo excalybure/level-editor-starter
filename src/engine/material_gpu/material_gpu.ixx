@@ -16,7 +16,7 @@ import platform.dx12;
 import engine.shader_manager;
 import runtime.console;
 
-export namespace engine
+export namespace engine::gpu
 {
 
 // MaterialConstants struct matching shader expectations for PBR materials
@@ -93,4 +93,4 @@ private:
 	void loadTextures();
 };
 
-} // namespace engine
+} // namespace engine::gpu
