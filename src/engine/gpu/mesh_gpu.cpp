@@ -28,19 +28,6 @@ PrimitiveGPU::PrimitiveGPU( dx12::Device &device, const assets::Primitive &primi
 	}
 }
 
-PrimitiveGPU::PrimitiveGPU( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<MaterialGPU> material )
-	: m_device( device ), m_vertexCount( primitive.getVertexCount() ), m_indexCount( primitive.getIndexCount() ), m_material( std::move( material ) )
-{
-	try
-	{
-		createVertexBuffer( primitive );
-		createIndexBuffer( primitive );
-	}
-	catch ( const std::exception &e )
-	{
-		console::error( "Failed to create GPU buffers for primitive: {}", e.what() );
-	}
-}
 
 void PrimitiveGPU::createVertexBuffer( const assets::Primitive &primitive )
 {
@@ -185,15 +172,15 @@ MeshGPU::MeshGPU( dx12::Device &device, const assets::Mesh &mesh )
 {
 	// Create GPU buffers for each primitive in the mesh
 	const auto &primitives = mesh.getPrimitives();
-	m_primitiveBuffers.reserve( primitives.size() );
+	m_primitives.reserve( primitives.size() );
 
-	for ( const auto &primitive : primitives )
+	for ( const auto &srcPrimitive : primitives )
 	{
 		// For now, create without material - this will be enhanced when GPU resource manager is integrated
-		auto gpuBuffer = std::make_unique<PrimitiveGPU>( device, primitive );
-		if ( gpuBuffer->isValid() )
+		auto primitive = std::make_unique<PrimitiveGPU>( device, srcPrimitive );
+		if ( primitive->isValid() )
 		{
-			m_primitiveBuffers.push_back( std::move( gpuBuffer ) );
+			m_primitives.push_back( std::move( primitive ) );
 		}
 		else
 		{
@@ -201,73 +188,82 @@ MeshGPU::MeshGPU( dx12::Device &device, const assets::Mesh &mesh )
 		}
 	}
 
-	if ( m_primitiveBuffers.size() != primitives.size() )
+	if ( m_primitives.size() != primitives.size() )
 	{
 		console::error( "Some primitive buffers failed to create. Expected: {}, Created: {}",
 			primitives.size(),
-			m_primitiveBuffers.size() );
+			m_primitives.size() );
 	}
 }
-
-MeshGPU::MeshGPU( dx12::Device &device, const assets::Mesh &mesh, engine::GPUResourceManager &resourceManager )
-	: m_device( device )
+void MeshGPU::configureMaterials( MaterialProvider &materialProvider, const assets::Scene &scene, const assets::Mesh &mesh )
 {
-	// Create GPU buffers for each primitive in the mesh with material handling
+	// Get the primitives from the original mesh to match with existing GPU buffers
 	const auto &primitives = mesh.getPrimitives();
-	m_primitiveBuffers.reserve( primitives.size() );
 
-	for ( const auto &primitive : primitives )
+	if ( primitives.size() != m_primitives.size() )
 	{
-		// TODO: Implement material loading via resourceManager
-		// For now, check if primitive has material and log it for future implementation
-		if ( primitive.hasMaterial() )
+		console::error( "Primitive count mismatch - mesh has {} primitives but MeshGPU has {} primitive buffers",
+			primitives.size(),
+			m_primitives.size() );
+		return;
+	}
+
+	// Configure materials for each primitive buffer
+	for ( std::size_t i = 0; i < primitives.size(); ++i )
+	{
+		const auto &srcPrimitive = primitives[i];
+		auto &gpuPrimitive = m_primitives[i];
+
+		// Skip if primitive already has a material or doesn't specify one
+		if ( gpuPrimitive->hasMaterial() || !srcPrimitive.hasMaterial() )
 		{
-			const assets::MaterialHandle materialHandle = primitive.getMaterialHandle();
-			console::error( "Material loading from handle '{}' not yet implemented - creating primitive without material", materialHandle );
+			continue;
 		}
 
-		// Create primitive GPU buffer without material for now
-		auto gpuBuffer = std::make_unique<PrimitiveGPU>( device, primitive );
-		if ( gpuBuffer->isValid() )
+		// Resolve material from scene
+		const assets::MaterialHandle materialHandle = srcPrimitive.getMaterialHandle();
+		if ( const auto material = scene.getMaterial( materialHandle ) )
 		{
-			m_primitiveBuffers.push_back( std::move( gpuBuffer ) );
+			const auto gpuMaterial = materialProvider.getMaterialGPU( material );
+			if ( gpuMaterial )
+			{
+				gpuPrimitive->setMaterial( gpuMaterial );
+				console::info( "Successfully configured material for primitive {} with handle '{}'", i, materialHandle );
+			}
+			else
+			{
+				console::error( "Failed to create MaterialGPU for material handle '{}'", materialHandle );
+			}
 		}
 		else
 		{
-			console::error( "Failed to create GPU buffers for a primitive in mesh" );
+			console::error( "Invalid material handle '{}' in primitive {} - material not found in scene", materialHandle, i );
 		}
 	}
-
-	if ( m_primitiveBuffers.size() != primitives.size() )
-	{
-		console::error( "Some primitive buffers failed to create. Expected: {}, Created: {}",
-			primitives.size(),
-			m_primitiveBuffers.size() );
-	}
 }
 
-const PrimitiveGPU &MeshGPU::getPrimitiveGPU( std::uint32_t index ) const
+const PrimitiveGPU &MeshGPU::getPrimitive( std::uint32_t index ) const
 {
-	if ( index >= m_primitiveBuffers.size() )
+	if ( index >= m_primitives.size() )
 	{
-		console::fatal( "Primitive buffer index {} out of range [0, {})", index, m_primitiveBuffers.size() );
+		console::fatal( "Primitive buffer index {} out of range [0, {})", index, m_primitives.size() );
 	}
-	return *m_primitiveBuffers[index];
+	return *m_primitives[index];
 }
 
-PrimitiveGPU &MeshGPU::getPrimitiveGPU( std::uint32_t index )
+PrimitiveGPU &MeshGPU::getPrimitive( std::uint32_t index )
 {
-	if ( index >= m_primitiveBuffers.size() )
+	if ( index >= m_primitives.size() )
 	{
-		console::fatal( "Primitive buffer index {} out of range [0, {})", index, m_primitiveBuffers.size() );
+		console::fatal( "Primitive buffer index {} out of range [0, {})", index, m_primitives.size() );
 	}
-	return *m_primitiveBuffers[index];
+	return *m_primitives[index];
 }
 
 bool MeshGPU::isValid() const noexcept
 {
-	return !m_primitiveBuffers.empty() &&
-		std::all_of( m_primitiveBuffers.begin(), m_primitiveBuffers.end(), []( const auto &buffer ) { return buffer && buffer->isValid(); } );
+	return !m_primitives.empty() &&
+		std::all_of( m_primitives.begin(), m_primitives.end(), []( const auto &buffer ) { return buffer && buffer->isValid(); } );
 }
 
 } // namespace engine::gpu

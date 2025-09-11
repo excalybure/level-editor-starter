@@ -17,7 +17,7 @@ export namespace engine
 {
 
 // GPU resource manager with caching support
-class GPUResourceManager
+class GPUResourceManager : public gpu::MaterialProvider
 {
 public:
 	// Constructor
@@ -36,7 +36,7 @@ public:
 	std::shared_ptr<engine::gpu::MeshGPU> getMeshGPU( std::shared_ptr<assets::Mesh> mesh );
 
 	// Material resource caching
-	std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material );
+	std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) override;
 
 	// Cache management
 	void clearCache();

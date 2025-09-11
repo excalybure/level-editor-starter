@@ -104,11 +104,11 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
 
 	// Each primitive should have its own GPU resources
-	const auto &buffers1 = meshBuffers.getPrimitiveGPU( 0 );
-	const auto &buffers2 = meshBuffers.getPrimitiveGPU( 1 );
+	const auto &prim1 = meshBuffers.getPrimitive( 0 );
+	const auto &prim2 = meshBuffers.getPrimitive( 1 );
 
-	REQUIRE( buffers1.getVertexBufferView().BufferLocation != buffers2.getVertexBufferView().BufferLocation );
-	REQUIRE( buffers1.getIndexBufferView().BufferLocation != buffers2.getIndexBufferView().BufferLocation );
+	REQUIRE( prim1.getVertexBufferView().BufferLocation != prim2.getVertexBufferView().BufferLocation );
+	REQUIRE( prim1.getIndexBufferView().BufferLocation != prim2.getIndexBufferView().BufferLocation );
 }
 
 TEST_CASE( "PrimitiveGPU handles empty primitive gracefully", "[gpu][primitive][error][unit]" )
@@ -234,14 +234,15 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	// Create MaterialGPU
 	std::shared_ptr<MaterialGPU> materialGPU = std::make_shared<MaterialGPU>( material );
 
-	// Create primitive GPU buffer with material
-	PrimitiveGPU gpuBuffer( device, primitive, materialGPU );
+	// Create primitive GPU buffer and set material
+	PrimitiveGPU primGPU( device, primitive );
+	primGPU.setMaterial( materialGPU );
 
 	// Verify the buffer was created successfully
-	REQUIRE( gpuBuffer.isValid() );
-	REQUIRE( gpuBuffer.hasMaterial() );
-	REQUIRE( gpuBuffer.getMaterial() != nullptr );
-	REQUIRE( gpuBuffer.getMaterial()->getSourceMaterial() == material );
+	REQUIRE( primGPU.isValid() );
+	REQUIRE( primGPU.hasMaterial() );
+	REQUIRE( primGPU.getMaterial() != nullptr );
+	REQUIRE( primGPU.getMaterial()->getSourceMaterial() == material );
 }
 
 
@@ -285,17 +286,17 @@ TEST_CASE( "PrimitiveGPU bindForRendering sets vertex and index buffers", "[gpu]
 	primitive.addIndex( 2 );
 
 	// Create primitive GPU buffer
-	PrimitiveGPU gpuBuffer( device, primitive );
-	REQUIRE( gpuBuffer.isValid() );
+	PrimitiveGPU primGPU( device, primitive );
+	REQUIRE( primGPU.isValid() );
 
 	// Create command list for testing (note: this is a stub test - actual command list binding would require more setup)
 	// In a real scenario, we would need a proper command list and verify the bindings
 	// For this test, we're mainly checking that the method can be called without crashing
 	// bindForRendering with nullptr should handle gracefully
-	gpuBuffer.bindForRendering( nullptr ); // Should log error but not crash
+	primGPU.bindForRendering( nullptr ); // Should log error but not crash
 }
 
-TEST_CASE( "MeshGPU constructor with GPU resource manager handles materials", "[gpu][mesh][material][unit]" )
+TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via GPUResourceManager", "[gpu][mesh][material][unit]" )
 {
 	// Create a headless D3D12 device for testing
 	dx12::Device device;
@@ -305,7 +306,17 @@ TEST_CASE( "MeshGPU constructor with GPU resource manager handles materials", "[
 	engine::GPUResourceManager resourceManager( device );
 	REQUIRE( resourceManager.isValid() );
 
-	// Create a test mesh with primitives that have material paths
+	// Create a test material
+	const auto material = std::make_shared<assets::Material>();
+	material->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
+	material->setMetallicFactor( 0.5f );
+	material->setRoughnessFactor( 0.3f );
+
+	// Create a scene with the material
+	assets::Scene scene;
+	const assets::MaterialHandle materialHandle = scene.addMaterial( material );
+
+	// Create a test mesh with primitives that have material handles
 	assets::Mesh mesh;
 
 	// Add first primitive with material
@@ -316,7 +327,7 @@ TEST_CASE( "MeshGPU constructor with GPU resource manager handles materials", "[
 	primitive1.addIndex( 0 );
 	primitive1.addIndex( 1 );
 	primitive1.addIndex( 2 );
-	primitive1.setMaterialHandle( 0 );
+	primitive1.setMaterialHandle( materialHandle );
 
 	// Add second primitive without material
 	assets::Primitive primitive2;
@@ -326,29 +337,33 @@ TEST_CASE( "MeshGPU constructor with GPU resource manager handles materials", "[
 	primitive2.addIndex( 0 );
 	primitive2.addIndex( 1 );
 	primitive2.addIndex( 2 );
-	// No material path set for primitive2
+	// No material handle set for primitive2
 
 	mesh.addPrimitive( std::move( primitive1 ) );
 	mesh.addPrimitive( std::move( primitive2 ) );
 
-	// Create MeshGPU with resource manager
-	MeshGPU meshBuffers( device, mesh, resourceManager );
+	// Create MeshGPU first (without materials)
+	MeshGPU gpuMesh( device, mesh );
+	REQUIRE( gpuMesh.isValid() );
+	REQUIRE( gpuMesh.getPrimitiveCount() == 2 );
 
-	// Verify mesh buffers were created correctly
-	REQUIRE( meshBuffers.isValid() );
-	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
+	// Initially, primitives should have no materials
+	const auto &primGPU1Before = gpuMesh.getPrimitive( 0 );
+	const auto &primGPU2Before = gpuMesh.getPrimitive( 1 );
+	REQUIRE_FALSE( primGPU1Before.hasMaterial() );
+	REQUIRE_FALSE( primGPU2Before.hasMaterial() );
 
-	// Verify both primitives were created (material loading will be stubbed for now)
-	// The test verifies that primitives with material paths are handled gracefully
-	// even when material loading is not yet implemented
-	const auto &buffer1 = meshBuffers.getPrimitiveGPU( 0 );
-	const auto &buffer2 = meshBuffers.getPrimitiveGPU( 1 );
+	// Configure materials using GPUResourceManager and Scene
+	gpuMesh.configureMaterials( resourceManager, scene, mesh );
 
-	REQUIRE( buffer1.isValid() );
-	REQUIRE( buffer2.isValid() );
+	// After configuration, first primitive should have material, second should not
+	const auto &primGPU1After = gpuMesh.getPrimitive( 0 );
+	const auto &primGPU2After = gpuMesh.getPrimitive( 1 );
 
-	// Currently materials won't be loaded (stubbed), so both should have no material
-	// This will change when full material integration is implemented
-	REQUIRE_FALSE( buffer1.hasMaterial() );
-	REQUIRE_FALSE( buffer2.hasMaterial() );
+	REQUIRE( primGPU1After.hasMaterial() );
+	REQUIRE( primGPU1After.getMaterial() != nullptr );
+	REQUIRE( primGPU1After.getMaterial()->getSourceMaterial() == material );
+
+	REQUIRE_FALSE( primGPU2After.hasMaterial() );
+	REQUIRE( primGPU2After.getMaterial() == nullptr );
 }

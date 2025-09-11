@@ -9,30 +9,29 @@ module;
 #include <winerror.h>
 #include <comdef.h>
 
-export module engine.gpu.mesh_gpu;
+export module engine.asset_gpu_buffers;
 
 import std;
 import platform.dx12;
 import engine.assets;
-import engine.gpu.material_gpu;
+import engine.material_gpu;
 import runtime.console;
+
+// Forward declaration to avoid circular dependency
+export namespace engine
+{
+class GPUResourceManager;
+}
 
 export namespace engine::gpu
 {
-
-// Interface for providing MaterialGPU objects from MaterialHandles
-export class MaterialProvider
-{
-public:
-	virtual ~MaterialProvider() = default;
-	virtual std::shared_ptr<MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) = 0;
-};
 
 // Individual primitive GPU buffer management
 export class PrimitiveGPU
 {
 public:
 	PrimitiveGPU( dx12::Device &device, const assets::Primitive &primitive );
+	PrimitiveGPU( dx12::Device &device, const assets::Primitive &primitive, std::shared_ptr<MaterialGPU> material );
 	~PrimitiveGPU() = default;
 
 	// No copy/move for now to keep resource management simple
@@ -54,7 +53,6 @@ public:
 	// Material access
 	std::shared_ptr<MaterialGPU> getMaterial() const noexcept { return m_material; }
 	bool hasMaterial() const noexcept { return static_cast<bool>( m_material ); }
-	void setMaterial( std::shared_ptr<MaterialGPU> material ) noexcept { m_material = std::move( material ); }
 
 	// Complete resource binding for rendering (geometry + material)
 	void bindForRendering( ID3D12GraphicsCommandList *commandList ) const;
@@ -90,6 +88,9 @@ export class MeshGPU
 public:
 	MeshGPU( dx12::Device &device, const assets::Mesh &mesh );
 
+	// Constructor with GPU resource manager for material handling
+	MeshGPU( dx12::Device &device, const assets::Mesh &mesh, engine::GPUResourceManager &resourceManager );
+
 	~MeshGPU() = default;
 
 	// No copy/move for now
@@ -97,7 +98,7 @@ public:
 	MeshGPU &operator=( const MeshGPU & ) = delete;
 
 	// Access individual primitive buffers
-	std::uint32_t getPrimitiveCount() const noexcept { return static_cast<std::uint32_t>( m_primitives.size() ); }
+	std::uint32_t getPrimitiveCount() const noexcept { return static_cast<std::uint32_t>( m_primitiveBuffers.size() ); }
 
 	const PrimitiveGPU &getPrimitive( std::uint32_t index ) const;
 	PrimitiveGPU &getPrimitive( std::uint32_t index );
@@ -105,12 +106,8 @@ public:
 	// Check if all primitive buffers are valid
 	bool isValid() const noexcept;
 
-	// Configure materials for primitives using GPUResourceManager and Scene
-	// Material configuration using dependency injection
-	void configureMaterials( MaterialProvider &materialProvider, const assets::Scene &scene, const assets::Mesh &mesh );
-
 private:
-	std::vector<std::unique_ptr<PrimitiveGPU>> m_primitives;
+	std::vector<std::unique_ptr<PrimitiveGPU>> m_primitiveBuffers;
 	dx12::Device &m_device;
 };
 

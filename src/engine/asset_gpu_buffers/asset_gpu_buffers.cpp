@@ -246,7 +246,7 @@ MeshGPU::MeshGPU( dx12::Device &device, const assets::Mesh &mesh, engine::GPURes
 	}
 }
 
-const PrimitiveGPU &MeshGPU::getPrimitiveGPU( std::uint32_t index ) const
+const PrimitiveGPU &MeshGPU::getPrimitive( std::uint32_t index ) const
 {
 	if ( index >= m_primitiveBuffers.size() )
 	{
@@ -255,7 +255,7 @@ const PrimitiveGPU &MeshGPU::getPrimitiveGPU( std::uint32_t index ) const
 	return *m_primitiveBuffers[index];
 }
 
-PrimitiveGPU &MeshGPU::getPrimitiveGPU( std::uint32_t index )
+PrimitiveGPU &MeshGPU::getPrimitive( std::uint32_t index )
 {
 	if ( index >= m_primitiveBuffers.size() )
 	{
