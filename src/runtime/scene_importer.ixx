@@ -5,6 +5,7 @@ import runtime.ecs;
 import runtime.entity;
 import runtime.components;
 import engine.assets;
+import engine.gpu.gpu_resource_manager;
 
 export namespace runtime
 {
@@ -21,8 +22,9 @@ public:
 	/// @brief Import a scene using the GPU-enabled path
 	/// @param assetScene The asset scene to import
 	/// @param targetScene The ECS scene to populate
+	/// @param gpuResourceManager GPU resource manager for creating GPU resources
 	/// @return true if import was successful
-	static bool importSceneWithGPU( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene );
+	static bool importSceneWithGPU( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, engine::GPUResourceManager &gpuResourceManager );
 
 private:
 	/// @brief Recursively import a scene node and its children
@@ -33,6 +35,16 @@ private:
 	/// @param parent The parent entity (invalid for root nodes)
 	/// @return The created entity
 	static ecs::Entity importNode( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, ecs::Entity parent = {} );
+
+	/// @brief Recursively import a scene node and its children using GPU resources
+	/// @param assetScene The asset scene containing meshes and other data
+	/// @param node The scene node to import
+	/// @param targetScene The ECS scene to populate
+	/// @param parent The parent entity (invalid for root nodes)
+	/// @param sharedAssetScene Shared pointer to asset scene for GPU resource creation
+	/// @param gpuResourceManager GPU resource manager for creating GPU resources
+	/// @return The created entity
+	static ecs::Entity importNodeWithGPU( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, ecs::Entity parent, std::shared_ptr<assets::Scene> sharedAssetScene, engine::GPUResourceManager &gpuResourceManager );
 
 	/// @brief Setup Transform component from scene node transform
 	/// @param node The scene node with transform data
@@ -47,12 +59,13 @@ private:
 	/// @param assetScene The source asset scene for path resolution
 	static void setupMeshRendererPaths( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene );
 
-	/// @brief Setup MeshRenderer component using GPU resources (placeholder)
+	/// @brief Setup MeshRenderer component using GPU resources
 	/// @param node The scene node with mesh data
 	/// @param entity The entity to attach the component to
 	/// @param targetScene The ECS scene
 	/// @param assetScene The source asset scene for resource creation
-	static void setupMeshRendererWithGPU( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene );
+	/// @param gpuResourceManager GPU resource manager for creating GPU resources
+	static void setupMeshRendererWithGPU( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager &gpuResourceManager );
 };
 
 } // namespace runtime

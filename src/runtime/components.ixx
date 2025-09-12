@@ -4,16 +4,11 @@ import engine.math;
 import engine.matrix;
 import engine.vec;
 import engine.bounding_box_3d;
+import engine.gpu.mesh_gpu;
 import runtime.entity;
 import <string>;
 import <vector>;
 import <memory>;
-
-// Forward declaration for MeshGPU to avoid circular dependencies
-namespace engine::gpu
-{
-class MeshGPU;
-}
 
 export namespace components
 {

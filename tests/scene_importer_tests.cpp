@@ -8,6 +8,8 @@ import runtime.entity;
 import runtime.components;
 import runtime.scene_importer;
 import engine.assets;
+import engine.gpu.gpu_resource_manager;
+import platform.dx12;
 
 using namespace runtime;
 using namespace ecs;
@@ -199,7 +201,11 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 
 	// Import using GPU path
 	ecs::Scene gpuScene;
-	const bool gpuResult = SceneImporter::importSceneWithGPU( scene, gpuScene );
+	// Create a dummy device and manager for GPU path test
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+	engine::GPUResourceManager resourceManager( device );
+	const bool gpuResult = SceneImporter::importSceneWithGPU( scene, gpuScene, resourceManager );
 
 	// Both should succeed
 	REQUIRE( nonGpuResult );

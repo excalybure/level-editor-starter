@@ -4,6 +4,7 @@ import runtime.ecs;
 import runtime.entity;
 import runtime.components;
 import engine.assets;
+import engine.gpu.mesh_gpu;
 
 using namespace runtime;
 using namespace ecs;
@@ -26,11 +27,21 @@ bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs:
 	return true;
 }
 
-bool SceneImporter::importSceneWithGPU( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene )
+bool SceneImporter::importSceneWithGPU( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, engine::GPUResourceManager &gpuResourceManager )
 {
-	// For now, GPU path calls the non-GPU implementation
-	// Future implementation will use GPUResourceManager for mesh/material creation
-	return importScene( assetScene, targetScene );
+	// AF2: Import scene using GPU resource creation path
+	if ( !assetScene || !assetScene->isLoaded() )
+	{
+		return false;
+	}
+
+	// Import all root nodes recursively using GPU path
+	for ( const auto &rootNode : assetScene->getRootNodes() )
+	{
+		importNodeWithGPU( *assetScene, *rootNode, targetScene, Entity{}, assetScene, gpuResourceManager );
+	}
+
+	return true;
 }
 
 Entity SceneImporter::importNode( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent )
@@ -91,6 +102,55 @@ Entity SceneImporter::importNode( const assets::Scene &assetScene, const assets:
 	return entity;
 }
 
+Entity SceneImporter::importNodeWithGPU( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent, std::shared_ptr<assets::Scene> sharedAssetScene, engine::GPUResourceManager &gpuResourceManager )
+{
+	// Create entity with node name
+	Entity entity = targetScene.createEntity( node.getName() );
+
+	// Set parent relationship if provided
+	if ( parent.isValid() )
+	{
+		targetScene.setParent( entity, parent );
+	}
+
+	// Setup Transform component if node has transform data
+	if ( node.hasTransform() )
+	{
+		setupTransformComponent( node, entity, targetScene );
+	}
+
+	// Setup MeshRenderer component if node has meshes using GPU resources
+	if ( node.hasMeshHandles() )
+	{
+		// For this implementation, we'll create one MeshRenderer per mesh handle
+		// This matches the current test expectations but now uses GPU resources
+		node.foreachMeshHandle( [&]( MeshHandle meshHandle ) {
+			// Create a separate entity for each mesh if multiple meshes exist
+			// or use the same entity for the first mesh
+			Entity meshEntity = ( node.meshCount() == 1 ) ? entity : targetScene.createEntity( node.getName() + "_Mesh" );
+
+			if ( meshEntity != entity && parent.isValid() )
+			{
+				targetScene.setParent( meshEntity, parent );
+			}
+			else if ( meshEntity != entity )
+			{
+				targetScene.setParent( meshEntity, entity );
+			}
+
+			// Setup MeshRenderer with GPU resources
+			setupMeshRendererWithGPU( node, meshEntity, targetScene, sharedAssetScene, gpuResourceManager );
+		} );
+	}
+
+	// Recursively import children
+	node.foreachChild( [&]( const SceneNode &child ) {
+		importNodeWithGPU( assetScene, child, targetScene, entity, sharedAssetScene, gpuResourceManager );
+	} );
+
+	return entity;
+}
+
 void SceneImporter::setupTransformComponent( const assets::SceneNode &node, Entity entity, ecs::Scene &targetScene )
 {
 	const auto &nodeTransform = node.getTransform();
@@ -114,10 +174,42 @@ void SceneImporter::setupMeshRendererPaths( const assets::SceneNode &node, Entit
 	(void)assetScene;
 }
 
-void SceneImporter::setupMeshRendererWithGPU( const assets::SceneNode &node, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene )
+void SceneImporter::setupMeshRendererWithGPU( const assets::SceneNode &node, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager &gpuResourceManager )
 {
-	// Placeholder for GPU resource setup
-	// Future implementation will use GPUResourceManager to create MeshGPU resources
-	// For now, call the basic path-based setup
-	setupMeshRendererPaths( node, entity, targetScene, assetScene );
+	// AF2: Setup MeshRenderer with actual GPU resources via GPUResourceManager
+
+	// Create MeshRenderer component
+	MeshRenderer renderer;
+
+	// Get the mesh handle from the node (assume first handle for now)
+	if ( node.hasMeshHandles() )
+	{
+		// Process the first mesh handle (nodes with multiple meshes would create multiple entities)
+		const auto meshHandles = node.getMeshHandles();
+		if ( !meshHandles.empty() )
+		{
+			const MeshHandle meshHandle = meshHandles[0];
+
+			// Get the mesh from the asset scene
+			const auto mesh = assetScene->getMesh( meshHandle );
+			if ( mesh )
+			{
+				// Set bounds from mesh if available
+				if ( mesh->hasBounds() )
+				{
+					renderer.bounds = mesh->getBounds();
+				}
+
+				// Create GPU mesh using GPUResourceManager
+				auto gpuMesh = gpuResourceManager.getMeshGPU( mesh );
+				renderer.gpuMesh = std::move( gpuMesh );
+
+				// Note: MeshRenderer currently only supports gpuMesh, not materials
+				// Material handling would need to be added to MeshRenderer or handled separately
+			}
+		}
+	}
+
+	// Add the MeshRenderer component to the entity
+	targetScene.addComponent( entity, renderer );
 }

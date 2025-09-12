@@ -231,7 +231,7 @@ target_sources(runtime.components PUBLIC
     src/runtime/components.ixx
 )
 target_compile_features(runtime.components PUBLIC cxx_std_23)
-target_link_libraries(runtime.components PUBLIC runtime.entity engine.math engine.matrix engine.vec engine.bounding_box_3d)
+target_link_libraries(runtime.components PUBLIC runtime.entity engine.math engine.matrix engine.vec engine.bounding_box_3d engine.gpu.mesh_gpu)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -249,7 +249,7 @@ target_sources(runtime.scene_importer PUBLIC
     src/runtime/scene_importer.cpp
 )
 target_compile_features(runtime.scene_importer PUBLIC cxx_std_23)
-target_link_libraries(runtime.scene_importer PUBLIC runtime.ecs runtime.entity runtime.components engine.assets)
+target_link_libraries(runtime.scene_importer PUBLIC runtime.ecs runtime.entity runtime.components engine.assets engine.gpu.gpu_resource_manager)
 
 add_library(runtime.systems)
 target_sources(runtime.systems PUBLIC
@@ -440,6 +440,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/asset_manager_tests.cpp
     tests/ecs_import_tests.cpp
     tests/scene_importer_tests.cpp
+    tests/scene_importer_gpu_integration_tests.cpp
     tests/gltf_loader_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp
@@ -477,6 +478,9 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     editor.ui
     platform.win32
     engine.assets
+    engine.gpu.gpu_resource_manager
+    engine.gpu.mesh_gpu
+    engine.gpu.material_gpu
     engine.gpu.mesh_gpu
     engine.gpu.material_gpu
     engine.gpu.gpu_resource_manager
