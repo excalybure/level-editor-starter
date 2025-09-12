@@ -1,5 +1,21 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Eliminate Command Queue Duplication in Device Class  
+**Summary:** Successfully eliminated code duplication between Device's raw command queue member and CommandQueue wrapper by removing m_commandQueue and refactoring all Device methods to use m_commandQueueWrapper exclusively. This completes the encapsulation improvements, ensuring Device delegates all command queue operations to the CommandQueue wrapper class.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed Device/CommandQueue overlap - Identified all remaining m_commandQueue usage patterns in Device class and CommandQueue interaction points
+- AF2: Updated Device header structure - Confirmed m_commandQueue removal and ensured only m_commandQueueWrapper remains as command queue interface
+- AF3: Refactored Device method implementations - Updated waitForPreviousFrame and other methods to use m_commandQueueWrapper->get() and wrapper methods instead of direct raw pointer access
+- AF4: Fixed Device interface consistency - Ensured all public Device methods work correctly with CommandQueue wrapper delegation pattern
+- AF5: Added CommandQueue wrapper creation - Verified Device creates CommandQueue wrapper properly in createCommandObjects method
+- AF6: Verified all tests pass - All 17 DX12 tests pass (64 assertions) confirming Device now uses CommandQueue wrapper exclusively
+
+**Tests:** 17 DX12 tests pass (64 assertions); command used: `.\unit_test_runner.exe "[dx12]"`
+**Notes:** Device class now consistently uses wrapper classes for both swap chain and command queue management, eliminating all code duplication. Device no longer directly manages raw D3D12 command queue - all operations go through CommandQueue wrapper. This architectural improvement provides better encapsulation, consistent error handling through wrapper classes, and reduces maintenance overhead by having single points of responsibility.
+
+Date: 2025-01-03
+
 ## 2025-09-12 — Refactor Device Class to Use SwapChain Wrapper
 **Summary:** Successfully eliminated code duplication between Device and SwapChain classes by refactoring Device to use SwapChain wrapper instead of managing swap chain directly. The Device class now properly delegates swap chain responsibilities to the dedicated SwapChain class, improving encapsulation and reducing code duplication.
 

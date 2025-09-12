@@ -172,7 +172,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Debug> m_debugController;
 
 	// Command objects
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 

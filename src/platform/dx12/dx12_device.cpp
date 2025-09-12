@@ -129,7 +129,7 @@ void Device::shutdown()
 	m_textureManager.shutdown();
 
 	// Wait for GPU to finish
-	if ( m_commandQueue )
+	if ( m_commandQueueWrapper )
 	{
 		waitForPreviousFrame();
 	}
@@ -150,7 +150,6 @@ void Device::shutdown()
 	m_imguiDescriptorHeap.Reset();
 	m_commandList.Reset();
 	m_commandAllocator.Reset();
-	m_commandQueue.Reset();
 	m_fence.Reset();
 	m_device.Reset();
 	m_adapter.Reset();
@@ -225,7 +224,7 @@ void Device::endFrame()
 
 	// Execute command list
 	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
-	m_commandQueue->ExecuteCommandLists( _countof( ppCommandLists ), ppCommandLists );
+	m_commandQueueWrapper->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
 }
 
 void Device::present()
@@ -346,12 +345,8 @@ void Device::configureDebugBreaks()
 
 void Device::createCommandObjects()
 {
-	// Create command queue
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-	throwIfFailed( m_device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &m_commandQueue ) ) );
+	// Create command queue wrapper
+	m_commandQueueWrapper = std::make_unique<CommandQueue>( *this );
 
 	// Create command allocator
 	throwIfFailed( m_device->CreateCommandAllocator(
@@ -378,10 +373,7 @@ void Device::createSwapChain( HWND windowHandle )
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	// Create command queue wrapper first
-	m_commandQueueWrapper = std::make_unique<CommandQueue>( *this );
-
-	// Create swap chain wrapper using the command queue wrapper
+	// Create swap chain wrapper using the existing command queue wrapper
 	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueueWrapper, windowHandle, width, height );
 
 	// Create render target views for the swap chain buffers
@@ -440,7 +432,7 @@ void Device::waitForPreviousFrame()
 {
 	// Signal and increment fence value
 	const UINT64 fenceValueLocal = m_fenceValue;
-	throwIfFailed( m_commandQueue->Signal( m_fence.Get(), fenceValueLocal ) );
+	m_commandQueueWrapper->signal( m_fence.Get(), fenceValueLocal );
 	m_fenceValue++;
 
 	// Wait until frame is finished
