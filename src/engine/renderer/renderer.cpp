@@ -604,7 +604,7 @@ void Renderer::beginFrame()
 {
 	// Get CommandContext and SwapChain from the Device
 	m_currentContext = m_device.getCommandContext();
-	m_currentSwapChain = m_device.getSwapChainWrapper();
+	m_currentSwapChain = m_device.getSwapChain();
 
 	if ( !m_currentContext )
 	{

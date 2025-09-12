@@ -129,7 +129,7 @@ void Device::shutdown()
 	m_textureManager.shutdown();
 
 	// Wait for GPU to finish
-	if ( m_commandQueueWrapper )
+	if ( m_commandQueue )
 	{
 		waitForPreviousFrame();
 	}
@@ -143,7 +143,7 @@ void Device::shutdown()
 
 	// Release wrappers first (they hold references to Device resources)
 	m_swapChain.reset();
-	m_commandQueueWrapper.reset();
+	m_commandQueue.reset();
 	m_commandContext.reset();
 
 	// Release COM resources explicitly (safe if already null)
@@ -222,7 +222,7 @@ void Device::endFrame()
 
 	// Execute command list
 	ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
-	m_commandQueueWrapper->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
+	m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
 }
 
 void Device::present()
@@ -349,7 +349,7 @@ void Device::configureDebugBreaks()
 void Device::createCommandObjects()
 {
 	// Create command queue wrapper
-	m_commandQueueWrapper = std::make_unique<CommandQueue>( *this );
+	m_commandQueue = std::make_unique<CommandQueue>( *this );
 
 	// Create command context wrapper
 	m_commandContext = std::make_unique<CommandContext>( *this );
@@ -364,7 +364,7 @@ void Device::createSwapChain( HWND windowHandle )
 	UINT height = rect.bottom - rect.top;
 
 	// Create swap chain wrapper using the existing command queue wrapper
-	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueueWrapper, windowHandle, width, height );
+	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueue, windowHandle, width, height );
 
 	// Create render target views for the swap chain buffers
 	createRenderTargetViews();
@@ -422,7 +422,7 @@ void Device::waitForPreviousFrame()
 {
 	// Signal and increment fence value
 	const UINT64 fenceValueLocal = m_fenceValue;
-	m_commandQueueWrapper->signal( m_fence.Get(), fenceValueLocal );
+	m_commandQueue->signal( m_fence.Get(), fenceValueLocal );
 	m_fenceValue++;
 
 	// Wait until frame is finished

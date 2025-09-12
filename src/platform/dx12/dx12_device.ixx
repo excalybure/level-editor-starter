@@ -166,10 +166,8 @@ public:
 
 	// Wrapper accessors
 	CommandContext *getCommandContext() const { return m_commandContext.get(); }
-	SwapChain *getSwapChainWrapper() const { return m_swapChain.get(); }
-	CommandQueue *getCommandQueue() const { return m_commandQueueWrapper.get(); }
-
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> getSwapChain() const;
+	SwapChain *getSwapChain() const { return m_swapChain.get(); }
+	CommandQueue *getCommandQueue() const { return m_commandQueue.get(); }
 
 private:
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
@@ -179,7 +177,7 @@ private:
 
 	// Command and swap chain wrappers
 	std::unique_ptr<CommandContext> m_commandContext;
-	std::unique_ptr<CommandQueue> m_commandQueueWrapper;
+	std::unique_ptr<CommandQueue> m_commandQueue;
 	std::unique_ptr<SwapChain> m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 	UINT m_rtvDescriptorSize = 0;

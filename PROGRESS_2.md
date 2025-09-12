@@ -4,7 +4,7 @@
 **Summary:** Successfully refactored Renderer::beginFrame to get CommandContext and SwapChain directly from the Device instead of requiring them as parameters. This improves encapsulation by ensuring the Device manages its own resources and simplifies the Renderer API by eliminating the need for callers to create and manage these D3D12 wrappers independently.
 
 **Atomic functionalities completed:**
-- AF1: Added wrapper accessors to Device - Added getCommandContext(), getSwapChainWrapper(), and getCommandQueue() methods to Device class for accessing internal wrapper objects
+- AF1: Added wrapper accessors to Device - Added getCommandContext(), getSwapChain(), and getCommandQueue() methods to Device class for accessing internal wrapper objects
 - AF2: Updated Renderer interface - Simplified beginFrame() method to take no parameters and get wrappers from Device, updated beginHeadlessForTests() to not require CommandContext parameter  
 - AF3: Refactored Renderer implementation - Updated beginFrame() implementation to get m_currentContext and m_currentSwapChain from Device, added null checks for headless mode support
 - AF4: Updated test cases - Modified renderer tests to use simplified API, removing manual CommandContext creation in favor of Device-managed resources
@@ -32,12 +32,12 @@ Date: 2025-01-03
 Date: 2025-01-03
 
 ## 2025-01-03 — Eliminate Command Queue Duplication in Device Class  
-**Summary:** Successfully eliminated code duplication between Device's raw command queue member and CommandQueue wrapper by removing m_commandQueue and refactoring all Device methods to use m_commandQueueWrapper exclusively. This completes the encapsulation improvements, ensuring Device delegates all command queue operations to the CommandQueue wrapper class.
+**Summary:** Successfully eliminated code duplication between Device's raw command queue member and CommandQueue wrapper by removing m_commandQueue and refactoring all Device methods to use m_commandQueue exclusively. This completes the encapsulation improvements, ensuring Device delegates all command queue operations to the CommandQueue wrapper class.
 
 **Atomic functionalities completed:**
 - AF1: Analyzed Device/CommandQueue overlap - Identified all remaining m_commandQueue usage patterns in Device class and CommandQueue interaction points
-- AF2: Updated Device header structure - Confirmed m_commandQueue removal and ensured only m_commandQueueWrapper remains as command queue interface
-- AF3: Refactored Device method implementations - Updated waitForPreviousFrame and other methods to use m_commandQueueWrapper->get() and wrapper methods instead of direct raw pointer access
+- AF2: Updated Device header structure - Confirmed m_commandQueue removal and ensured only m_commandQueue remains as command queue interface
+- AF3: Refactored Device method implementations - Updated waitForPreviousFrame and other methods to use m_commandQueue->get() and wrapper methods instead of direct raw pointer access
 - AF4: Fixed Device interface consistency - Ensured all public Device methods work correctly with CommandQueue wrapper delegation pattern
 - AF5: Added CommandQueue wrapper creation - Verified Device creates CommandQueue wrapper properly in createCommandObjects method
 - AF6: Verified all tests pass - All 17 DX12 tests pass (64 assertions) confirming Device now uses CommandQueue wrapper exclusively
