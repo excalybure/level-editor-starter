@@ -91,12 +91,12 @@ struct Visible
 // Renderable mesh component
 struct MeshRenderer
 {
-	std::shared_ptr<engine::gpu::MeshGPU> gpuBuffers;
+	std::shared_ptr<engine::gpu::MeshGPU> gpuMesh;
 	math::BoundingBox3Df bounds; // Local space bounding box
 	float lodBias = 0.0f;		 // Level of detail bias for rendering
 
 	MeshRenderer() = default;
-	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPU> buffers ) : gpuBuffers( std::move( buffers ) ) {}
+	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPU> mesh ) : gpuMesh( std::move( mesh ) ) {}
 };
 
 // Selection state for editor
