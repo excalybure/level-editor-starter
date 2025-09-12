@@ -86,7 +86,7 @@ bool Device::initializeHeadless()
 	}
 }
 
-bool Device::initialize( HWND window_handle )
+bool Device::initialize( HWND windowHandle )
 {
 	try
 	{
@@ -94,7 +94,7 @@ bool Device::initialize( HWND window_handle )
 		{
 			return false; // already initialized
 		}
-		m_hwnd = window_handle;
+		m_hwnd = windowHandle;
 
 #ifdef _DEBUG
 		enableDebugLayer();
@@ -104,7 +104,7 @@ bool Device::initialize( HWND window_handle )
 		findAdapter();
 		createDevice();
 		createCommandObjects();
-		createSwapChain( window_handle );
+		createSwapChain( windowHandle );
 		createDescriptorHeaps();
 		createRenderTargetViews();
 		createSynchronizationObjects();
@@ -363,11 +363,11 @@ void Device::createCommandObjects()
 	throwIfFailed( m_commandList->Close() );
 }
 
-void Device::createSwapChain( HWND window_handle )
+void Device::createSwapChain( HWND windowHandle )
 {
 	// Get window dimensions
 	RECT rect;
-	GetClientRect( window_handle, &rect );
+	GetClientRect( windowHandle, &rect );
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
@@ -384,14 +384,14 @@ void Device::createSwapChain( HWND window_handle )
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
 	throwIfFailed( m_factory->CreateSwapChainForHwnd(
 		m_commandQueue.Get(),
-		window_handle,
+		windowHandle,
 		&swapChainDesc,
 		nullptr,
 		nullptr,
 		&swapChain ) );
 
 	// Disable Alt+Enter fullscreen toggle
-	throwIfFailed( m_factory->MakeWindowAssociation( window_handle, DXGI_MWA_NO_ALT_ENTER ) );
+	throwIfFailed( m_factory->MakeWindowAssociation( windowHandle, DXGI_MWA_NO_ALT_ENTER ) );
 
 	throwIfFailed( swapChain.As( &m_swapChain ) );
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
