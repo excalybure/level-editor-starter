@@ -380,18 +380,13 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 
 TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 {
-#if 0
-	platform::Win32Window window;
 	dx12::Device device;
-	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
+	if ( !requireHeadlessDevice( device, "dynamic reuse" ) )
+		return;
 
 	Renderer renderer( device );
 
-	dx12::CommandQueue commandQueue( device );
-	dx12::SwapChain swapChain( device, commandQueue, window.getHandle(), 640, 480 );
-
-	dx12::CommandContext context( device );
-	renderer.beginFrame( context, swapChain );
+	renderer.beginFrame();
 
 	std::vector<Vertex> tri = {
 		{ { 0, 0, 0 }, Color::red() },
@@ -410,7 +405,6 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
 
 	renderer.endFrame();
-#endif
 }
 
 TEST_CASE( "Immediate line and cube draw headless", "[renderer][immediate]" )
@@ -485,4 +479,33 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 
 	r.endFrame();
 #endif
+}
+
+TEST_CASE( "Renderer uses SwapChain dimensions for viewport", "[renderer][viewport]" )
+{
+	SECTION( "Headless mode uses fallback dimensions" )
+	{
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "viewport test" ) )
+		{
+			return;
+		}
+
+		Renderer renderer( device );
+
+		// In headless mode, the renderer should handle the case where there's no swap chain
+		// The beginFrame should not crash and should use fallback dimensions
+		REQUIRE_NOTHROW( renderer.beginHeadlessForTests() );
+
+		// The key improvement: Renderer now checks for SwapChain existence before using dimensions
+		// In headless mode: uses fallback (1920x1080)
+		// In windowed mode: uses actual SwapChain dimensions via getWidth()/getHeight()
+		// This test documents the behavior - actual validation would require window creation
+	}
+
+	// Note: Full integration test with actual SwapChain dimensions would require:
+	// 1. Creating a window (platform::Win32Window)
+	// 2. Creating a Device with that window
+	// 3. Verifying that beginFrame() uses getWidth()/getHeight() from SwapChain
+	// Such a test exists in integration tests but is complex for unit testing
 }

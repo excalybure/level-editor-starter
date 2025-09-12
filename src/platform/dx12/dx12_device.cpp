@@ -159,14 +159,22 @@ void Device::shutdown()
 
 void Device::beginFrame()
 {
-	// In headless mode (no swap chain/RTVs) or if not initialized, this is a no-op
-	if ( !m_device || !m_commandContext || !m_swapChain )
+	// Always reset command context if available
+	if ( !m_device || !m_commandContext )
 	{
 		return;
 	}
+
 	// Reset command context for new frame
 	m_commandContext->reset();
 
+	// In headless mode (no swap chain), we only need command context reset
+	if ( !m_swapChain )
+	{
+		return;
+	}
+
+	// Windowed mode: full frame setup with swap chain
 	// Get current back buffer from SwapChain wrapper
 	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
 	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
@@ -182,14 +190,21 @@ void Device::beginFrame()
 
 	m_commandContext->get()->ResourceBarrier( 1, &barrier );
 
-	// Set render target
+	// Set render target and depth stencil view
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
-	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap ? m_dsvHeap->GetCPUDescriptorHandleForHeapStart() : D3D12_CPU_DESCRIPTOR_HANDLE{};
+	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, m_dsvHeap ? &dsvHandle : nullptr );
 
 	// Clear render target
 	const float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	m_commandContext->get()->ClearRenderTargetView( rtvHandle, clearColor, 0, nullptr );
+
+	// Clear depth buffer if available
+	if ( m_dsvHeap && m_depthBuffer )
+	{
+		m_commandContext->get()->ClearDepthStencilView( dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr );
+	}
 
 	// Set descriptor heaps for ImGui
 	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
@@ -198,12 +213,22 @@ void Device::beginFrame()
 
 void Device::endFrame()
 {
-	if ( !m_device || !m_commandContext || !m_swapChain )
+	// Always close command context if available
+	if ( !m_device || !m_commandContext )
 	{
-		return; // headless/uninitialized no-op
+		return;
 	}
 
-	// Get current back buffer from SwapChain wrapper
+	// For headless mode, just close the command context and execute
+	if ( !m_swapChain )
+	{
+		m_commandContext->close();
+		ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
+		m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
+		return;
+	}
+
+	// Windowed mode: transition back buffer to present state
 	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
 
 	// Transition back to present state
@@ -361,6 +386,9 @@ void Device::createSwapChain( HWND windowHandle )
 	// Create swap chain wrapper using the existing command queue wrapper
 	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueue, windowHandle, width, height );
 
+	// Create depth buffer to match swap chain size
+	createDepthBuffer( width, height );
+
 	// Create render target views for the swap chain buffers
 	createRenderTargetViews();
 }
@@ -376,6 +404,15 @@ void Device::createDescriptorHeaps()
 
 	m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
+	// Create DSV descriptor heap for depth buffer
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	throwIfFailed( m_device->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS( &m_dsvHeap ) ) );
+
+	m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
+
 	// Create ImGui descriptor heap - reserve indices 16+ for viewport textures
 	// ImGui uses index 0 for font texture, we reserve 16-79 for 64 viewport textures
 	D3D12_DESCRIPTOR_HEAP_DESC imguiDesc = {};
@@ -383,6 +420,41 @@ void Device::createDescriptorHeaps()
 	imguiDesc.NumDescriptors = 80; // 16 reserved for ImGui + 64 for viewport textures
 	imguiDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	throwIfFailed( m_device->CreateDescriptorHeap( &imguiDesc, IID_PPV_ARGS( &m_imguiDescriptorHeap ) ) );
+}
+
+void Device::createDepthBuffer( UINT width, UINT height )
+{
+	// Create depth buffer resource
+	D3D12_HEAP_PROPERTIES depthHeapProps = {};
+	depthHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC depthDesc = {};
+	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthDesc.Width = width;
+	depthDesc.Height = height;
+	depthDesc.DepthOrArraySize = 1;
+	depthDesc.MipLevels = 1;
+	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE depthClearValue = {};
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthClearValue.DepthStencil.Depth = 1.0f;
+
+	throwIfFailed( m_device->CreateCommittedResource(
+		&depthHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&depthDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS( &m_depthBuffer ) ) );
+
+	// Create depth stencil view
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart() );
 }
 
 void Device::createRenderTargetViews()

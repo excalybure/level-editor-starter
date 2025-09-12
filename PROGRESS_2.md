@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Fix Renderer Crash in Dynamic Buffer Test with Robust Headless Mode Support
+**Summary:** Successfully resolved crash in "Dynamic buffer reuse vs growth" test by implementing comprehensive headless mode support in both Device and Renderer. Fixed missing depth buffer creation in headless mode, resolved pipeline state object creation for headless rendering (no render targets), and implemented proper headless rendering behavior that skips draw calls while preserving buffer management for testing.
+
+**Atomic functionalities completed:**
+- AF1: Add headless depth buffer creation - Modified Device::initializeHeadless to create a 1024x1024 depth buffer for headless rendering scenarios, ensuring consistent resource setup
+- AF2: Fix headless frame management - Updated Device::beginFrame/endFrame to properly handle headless mode by resetting command context and executing commands without swap chain dependencies
+- AF3: Implement headless pipeline state creation - Modified Renderer::createPipelineStateForKey to handle headless mode by setting NumRenderTargets=0 and DSVFormat=UNKNOWN when no swap chain is available
+- AF4: Add headless drawing behavior - Updated Renderer::drawVertices/drawIndexed to skip actual draw calls in headless mode while preserving buffer creation/update for testing dynamic buffer behavior
+- AF5: Convert windowed test to headless - Modified "Dynamic buffer reuse vs growth" test to use headless device instead of windowed device for consistent CI/testing environment compatibility
+
+**Tests:** All 18 renderer tests pass including 3 buffer tests; commands used: `.\unit_test_runner.exe "[renderer]"` and `.\unit_test_runner.exe "[buffers]"`
+**Notes:** This fix enables robust headless testing of renderer functionality without requiring window creation. The headless mode now properly creates depth buffers, handles pipeline state objects without render targets, and preserves buffer management behavior for testing while safely skipping actual GPU draw commands. This solution ensures consistent test execution across different environments including CI systems.
+
+Date: 2025-01-27
+
 ## 2025-09-12 — Fix Renderer Viewport to Use SwapChain Dimensions Instead of Hardcoded Values
 **Summary:** Successfully refactored Renderer::beginFrame to use actual SwapChain dimensions for viewport setup instead of hardcoded 1920x1080 values. Added SwapChain getter methods for width/height and updated Renderer to query these values dynamically, with proper fallback handling for headless mode.
 

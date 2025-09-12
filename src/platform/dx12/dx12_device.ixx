@@ -182,6 +182,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 	UINT m_rtvDescriptorSize = 0;
 
+	// Depth buffer
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
+	UINT m_dsvDescriptorSize = 0;
+
 	// ImGui descriptor heap
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_imguiDescriptorHeap;
 
@@ -206,6 +211,7 @@ private:
 	void createSwapChain( HWND window_handle );
 	void createDescriptorHeaps();
 	void createRenderTargetViews();
+	void createDepthBuffer( UINT width, UINT height );
 	void createSynchronizationObjects();
 
 	// Frame methods

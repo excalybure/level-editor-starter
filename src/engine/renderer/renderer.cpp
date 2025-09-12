@@ -498,9 +498,22 @@ void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
 	psoDesc.DepthStencilState = temp.getDepthStencilDesc();
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	
+	// In headless mode (no swap chain), we don't have render targets
+	if ( m_currentSwapChain )
+	{
+		// Windowed mode: use actual render target and depth formats
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	}
+	else
+	{
+		// Headless mode: no render targets
+		psoDesc.NumRenderTargets = 0;
+		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+	}
+	
 	psoDesc.SampleDesc.Count = 1;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
@@ -656,6 +669,9 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	if ( !m_currentContext || vertices.empty() )
 		return;
 
+	// In headless mode (no swap chain), skip actual drawing but still update buffers for testing
+	const bool isHeadless = !m_currentSwapChain;
+
 	// Update or create dynamic vertex buffer
 	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
@@ -664,6 +680,12 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	else
 	{
 		m_dynamicVertexBuffer->update( vertices );
+	}
+
+	// Skip drawing in headless mode (no render targets available)
+	if ( isHeadless )
+	{
+		return;
 	}
 
 	// Set pipeline state and root signature
@@ -686,6 +708,9 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	if ( !m_currentContext || vertices.empty() || indices.empty() )
 		return;
 
+	// In headless mode (no swap chain), skip actual drawing but still update buffers for testing
+	const bool isHeadless = !m_currentSwapChain;
+
 	// Update buffers
 	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
@@ -703,6 +728,12 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	else
 	{
 		m_dynamicIndexBuffer->update( indices );
+	}
+
+	// Skip drawing in headless mode (no render targets available)
+	if ( isHeadless )
+	{
+		return;
 	}
 
 	// Set pipeline state
