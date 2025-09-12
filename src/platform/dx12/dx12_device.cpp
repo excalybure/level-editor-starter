@@ -104,9 +104,8 @@ bool Device::initialize( HWND windowHandle )
 		findAdapter();
 		createDevice();
 		createCommandObjects();
-		createSwapChain( windowHandle );
 		createDescriptorHeaps();
-		createRenderTargetViews();
+		createSwapChain( windowHandle );
 		createSynchronizationObjects();
 
 		// Initialize texture manager for viewport render targets
@@ -142,12 +141,11 @@ void Device::shutdown()
 		m_fenceEvent = nullptr;
 	}
 
+	// Release wrappers first (they hold references to Device resources)
+	m_swapChain.reset();
+	m_commandQueueWrapper.reset();
+
 	// Release COM resources explicitly (safe if already null)
-	for ( UINT i = 0; i < kFrameCount; ++i )
-	{
-		m_renderTargets[i].Reset();
-	}
-	m_swapChain.Reset();
 	m_rtvHeap.Reset();
 	m_imguiDescriptorHeap.Reset();
 	m_commandList.Reset();
@@ -158,7 +156,6 @@ void Device::shutdown()
 	m_adapter.Reset();
 	m_factory.Reset();
 	m_debugController.Reset();
-	m_frameIndex = 0;
 	m_hwnd = nullptr;
 }
 
@@ -173,14 +170,15 @@ void Device::beginFrame()
 	throwIfFailed( m_commandAllocator->Reset() );
 	throwIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
 
-	// Get current back buffer
-	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	// Get current back buffer from SwapChain wrapper
+	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
+	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
 
 	// Transition to render target state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = m_renderTargets[m_frameIndex].Get();
+	barrier.Transition.pResource = currentBackBuffer;
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -189,7 +187,7 @@ void Device::beginFrame()
 
 	// Set render target
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	rtvHandle.ptr += m_frameIndex * m_rtvDescriptorSize;
+	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
 	m_commandList->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
 
 	// Clear render target
@@ -208,11 +206,14 @@ void Device::endFrame()
 		return; // headless/uninitialized no-op
 	}
 
+	// Get current back buffer from SwapChain wrapper
+	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
+
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = m_renderTargets[m_frameIndex].Get();
+	barrier.Transition.pResource = currentBackBuffer;
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -234,8 +235,8 @@ void Device::present()
 		return; // headless/uninitialized no-op
 	}
 	// Command list already transitioned to PRESENT, closed and executed in endFrame().
-	// Simply present the swap chain.
-	throwIfFailed( m_swapChain->Present( 1, 0 ), m_device.Get() );
+	// Simply present the swap chain using the wrapper.
+	m_swapChain->present( 1 );
 
 	// Wait for frame to complete
 	waitForPreviousFrame();
@@ -249,13 +250,19 @@ void Device::setBackbufferRenderTarget()
 	}
 
 	// Set backbuffer render target for ImGui rendering
+	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	rtvHandle.ptr += m_frameIndex * m_rtvDescriptorSize;
+	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
 	m_commandList->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
 
 	// Set descriptor heap for ImGui (should already be set, but ensure consistency)
 	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
 	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+}
+
+Microsoft::WRL::ComPtr<IDXGISwapChain3> Device::getSwapChain() const
+{
+	return m_swapChain ? Microsoft::WRL::ComPtr<IDXGISwapChain3>( m_swapChain.get()->get() ) : nullptr;
 }
 
 void Device::enableDebugLayer()
@@ -371,37 +378,21 @@ void Device::createSwapChain( HWND windowHandle )
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	// Create swap chain
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = kFrameCount;
-	swapChainDesc.Width = width;
-	swapChainDesc.Height = height;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.SampleDesc.Count = 1;
+	// Create command queue wrapper first
+	m_commandQueueWrapper = std::make_unique<CommandQueue>( *this );
 
-	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
-	throwIfFailed( m_factory->CreateSwapChainForHwnd(
-		m_commandQueue.Get(),
-		windowHandle,
-		&swapChainDesc,
-		nullptr,
-		nullptr,
-		&swapChain ) );
+	// Create swap chain wrapper using the command queue wrapper
+	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueueWrapper, windowHandle, width, height );
 
-	// Disable Alt+Enter fullscreen toggle
-	throwIfFailed( m_factory->MakeWindowAssociation( windowHandle, DXGI_MWA_NO_ALT_ENTER ) );
-
-	throwIfFailed( swapChain.As( &m_swapChain ) );
-	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	// Create render target views for the swap chain buffers
+	createRenderTargetViews();
 }
 
 void Device::createDescriptorHeaps()
 {
-	// Create RTV descriptor heap
+	// Create RTV descriptor heap for swap chain buffers (2 buffers for double buffering)
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = kFrameCount;
+	rtvHeapDesc.NumDescriptors = 2; // SwapChain uses 2 buffers
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	throwIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
@@ -421,11 +412,13 @@ void Device::createRenderTargetViews()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-	// Create RTVs for each frame
-	for ( UINT n = 0; n < kFrameCount; n++ )
+	// Create RTVs for each frame using SwapChain wrapper (2 buffers)
+	for ( UINT n = 0; n < 2; n++ ) // SwapChain uses 2 buffers
 	{
-		throwIfFailed( m_swapChain->GetBuffer( n, IID_PPV_ARGS( &m_renderTargets[n] ) ) );
-		m_device->CreateRenderTargetView( m_renderTargets[n].Get(), nullptr, rtvHandle );
+		// Get buffer from swap chain using the native interface
+		Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
+		throwIfFailed( m_swapChain->get()->GetBuffer( n, IID_PPV_ARGS( &backBuffer ) ) );
+		m_device->CreateRenderTargetView( backBuffer.Get(), nullptr, rtvHandle );
 		rtvHandle.ptr += m_rtvDescriptorSize;
 	}
 }

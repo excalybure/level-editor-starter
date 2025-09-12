@@ -163,6 +163,8 @@ public:
 	// Texture management for viewport render targets
 	TextureManager *getTextureManager() { return &m_textureManager; }
 
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> getSwapChain() const;
+
 private:
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_factory;
 	Microsoft::WRL::ComPtr<IDXGIAdapter1> m_adapter;
@@ -174,13 +176,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
-	// Swap chain
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
-	static const UINT kFrameCount = 3;
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[kFrameCount];
+	// Swap chain and command queue wrappers
+	std::unique_ptr<CommandQueue> m_commandQueueWrapper;
+	std::unique_ptr<SwapChain> m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 	UINT m_rtvDescriptorSize = 0;
-	UINT m_frameIndex = 0;
 
 	// ImGui descriptor heap
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_imguiDescriptorHeap;

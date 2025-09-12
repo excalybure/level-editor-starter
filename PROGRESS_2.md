@@ -1,5 +1,19 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-12 — Refactor Device Class to Use SwapChain Wrapper
+**Summary:** Successfully eliminated code duplication between Device and SwapChain classes by refactoring Device to use SwapChain wrapper instead of managing swap chain directly. The Device class now properly delegates swap chain responsibilities to the dedicated SwapChain class, improving encapsulation and reducing code duplication.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed current Device swap chain usage - Documented methods that directly access m_swapChain and understood interface requirements
+- AF2: Updated Device header to use SwapChain - Replaced m_swapChain and related members (m_renderTargets, m_frameIndex) with std::unique_ptr<SwapChain> and CommandQueue wrappers
+- AF3: Refactored Device implementation methods - Updated beginFrame, endFrame, present, and createSwapChain to use SwapChain class instead of direct swap chain management
+- AF4: Fixed Device getSwapChain method - Updated method to return wrapped SwapChain's native interface, moved implementation to .cpp to avoid forward declaration issues
+- AF5: Added CommandQueue wrapper to Device - Created CommandQueue wrapper since SwapChain constructor requires CommandQueue reference
+- AF6: Verified tests pass - All 17 DX12 tests pass (64 assertions) confirming refactoring preserved functionality
+
+**Tests:** 17 DX12 tests pass; commands used: `.\unit_test_runner.exe "[dx12]"`
+**Notes:** The refactoring eliminates duplication of duties between Device and SwapChain classes. Device now properly uses the SwapChain abstraction instead of managing IDXGISwapChain3 directly. Both classes now use consistent 2-buffer count (was inconsistent 3 vs 2). This improves code organization, reduces maintenance burden, and follows better encapsulation principles.
+
 Date: 2025-01-03
 
 ## 2025-01-03 — Scene Import Logic Unification Complete
