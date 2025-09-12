@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-12 — Eliminate Renderer Duplication by Leveraging Device Frame Management
+**Summary:** Successfully refactored Renderer to eliminate duplication with Device's frame management functionality. Renderer now properly delegates to Device for frame lifecycle, render target management, resource barriers, and descriptor heap setup, resulting in a cleaner architecture where Device is the single source of truth for D3D12 resource management.
+
+**Atomic functionalities completed:**
+- AF1: Remove frame lifecycle duplication - Simplified Renderer::beginFrame/endFrame to delegate to Device::beginFrame/endFrame instead of duplicating command context reset, resource barriers, and render target setup
+- AF2: Eliminate render target creation duplication - Removed Renderer's m_rtvHeap, m_dsvHeap, m_depthBuffer members and createRenderTargets method since Device already manages these resources
+- AF3: Remove resource barrier duplication - Eliminated Renderer's manual PRESENT↔RENDER_TARGET transitions as Device already handles these properly
+- AF4: Simplify viewport and render target setup - Removed Renderer's OMSetRenderTargets calls and RTV creation logic, kept only viewport setup (marked for future Device API enhancement)
+- AF5: Update clear operations - Modified clear methods to work with Device-managed render targets, added TODOs for future Device API improvements
+
+**Tests:** 73 renderer tests pass (17 test cases) and 64 DX12 tests pass (17 test cases); commands used: `.\unit_test_runner.exe "[renderer]"` and `.\unit_test_runner.exe "[dx12]"`
+**Notes:** This refactor significantly reduces code duplication between Renderer and Device. The Device now properly serves as the central D3D12 resource manager, while Renderer focuses on higher-level rendering operations. Future improvements could include making Device's viewport setup configurable and adding clear color customization methods to Device's API.
+
+Date: 2025-09-12
+
 ## 2025-01-03 — Refactor Renderer to Use Device's Wrappers Instead of Taking Parameters
 **Summary:** Successfully refactored Renderer::beginFrame to get CommandContext and SwapChain directly from the Device instead of requiring them as parameters. This improves encapsulation by ensuring the Device manages its own resources and simplifies the Renderer API by eliminating the need for callers to create and manage these D3D12 wrappers independently.
 

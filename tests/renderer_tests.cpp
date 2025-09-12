@@ -420,8 +420,7 @@ TEST_CASE( "Immediate line and cube draw headless", "[renderer][immediate]" )
 	if ( !requireHeadlessDevice( device, "immediate" ) )
 		return;
 	Renderer renderer( device );
-	dx12::CommandContext context( device );
-	renderer.beginHeadlessForTests( context );
+	renderer.beginHeadlessForTests();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 2 );
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
@@ -438,8 +437,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	if ( !requireHeadlessDevice( device, "pso cache" ) )
 		return;
 	Renderer r( device );
-	dx12::CommandContext ctx( device );
-	r.beginHeadlessForTests( ctx );
+	r.beginHeadlessForTests();
 
 	std::vector<Vertex> tri = { { { 0, 0, 0 }, Color::red() }, { { 1, 0, 0 }, Color::green() }, { { 0, 1, 0 }, Color::blue() } };
 	r.drawVertices( tri );

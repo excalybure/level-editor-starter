@@ -271,10 +271,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_activePipelineState;
 	std::unordered_map<PipelineStateKey, Microsoft::WRL::ComPtr<ID3D12PipelineState>, PipelineStateKeyHash> m_psoCache;
 
-	// Render targets
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
+	// NOTE: Render targets are managed by Device, no duplication needed
 
 	// Constant buffer for view-projection matrix
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
@@ -292,13 +289,12 @@ private:
 	void createRootSignature();
 	void compileDefaultShaders();
 	void createPipelineStateForKey( const PipelineStateKey &key );
-	void createRenderTargets( UINT width, UINT height );
+
 	void createConstantBuffer();
 
 	// Helper methods
 	void updateConstantBuffer();
-	D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRTV() const;
-	D3D12_CPU_DESCRIPTOR_HANDLE getDSV() const;
+
 	PipelineStateKey makeKeyFromState( const RenderState &state ) const noexcept;
 	void ensurePipelineForCurrentState();
 

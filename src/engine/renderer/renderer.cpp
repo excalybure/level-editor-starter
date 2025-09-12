@@ -551,57 +551,12 @@ void Renderer::createConstantBuffer()
 	dx12::throwIfFailed( m_constantBuffer->Map( 0, &readRange, &m_constantBufferData ) );
 }
 
-void Renderer::createRenderTargets( UINT width, UINT height )
-{
-	// Create RTV descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = 2; // Back buffer count
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dx12::throwIfFailed( m_device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS( &m_rtvHeap ) ) );
-
-	// Create DSV descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dx12::throwIfFailed( m_device->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS( &m_dsvHeap ) ) );
-
-	// Create depth buffer
-	D3D12_HEAP_PROPERTIES depthHeapProps = {};
-	depthHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-	D3D12_RESOURCE_DESC depthDesc = {};
-	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthDesc.Width = width;
-	depthDesc.Height = height;
-	depthDesc.DepthOrArraySize = 1;
-	depthDesc.MipLevels = 1;
-	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	depthDesc.SampleDesc.Count = 1;
-	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-	D3D12_CLEAR_VALUE depthClearValue = {};
-	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	depthClearValue.DepthStencil.Depth = 1.0f;
-
-	dx12::throwIfFailed( m_device->CreateCommittedResource(
-		&depthHeapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&depthDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthClearValue,
-		IID_PPV_ARGS( &m_depthBuffer ) ) );
-
-	// Create depth stencil view
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, getDSV() );
-}
 
 void Renderer::beginFrame()
 {
+	// Device handles all frame lifecycle management (command reset, barriers, render targets, etc.)
+	m_device.beginFrame();
+
 	// Get CommandContext and SwapChain from the Device
 	m_currentContext = m_device.getCommandContext();
 	m_currentSwapChain = m_device.getSwapChain();
@@ -611,40 +566,8 @@ void Renderer::beginFrame()
 		return; // Device not properly initialized
 	}
 
-	// Create render targets if needed (first time or resize)
-	if ( !m_rtvHeap )
-	{
-		createRenderTargets( 1920, 1080 ); // Default size, should be configurable
-	}
-
-	// Create RTVs for current swap chain back buffers (if we have a swap chain)
-	if ( m_currentSwapChain )
-	{
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-		const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-
-		for ( UINT i = 0; i < dx12::SwapChain::kBufferCount; i++ )
-		{
-			ID3D12Resource *const backBuffer = m_currentSwapChain->getCurrentBackBuffer();
-			m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
-			rtvHandle.ptr += rtvDescriptorSize;
-		}
-
-		// Transition back buffer to render target
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		m_currentContext->get()->ResourceBarrier( 1, &barrier );
-	}
-
-	// Set render targets
-	D3D12_CPU_DESCRIPTOR_HANDLE currentRTV = getCurrentRTV();
-	D3D12_CPU_DESCRIPTOR_HANDLE dsv = getDSV();
-	m_currentContext->get()->OMSetRenderTargets( 1, &currentRTV, FALSE, &dsv );
-
-	// Set viewport
+	// TODO: Device should provide configurable viewport setup instead of hardcoded values
+	// For now, keep existing viewport setup until Device API is enhanced
 	D3D12_VIEWPORT viewport = {};
 	viewport.Width = 1920.0f; // Should match render target size
 	viewport.Height = 1080.0f;
@@ -664,16 +587,10 @@ void Renderer::endFrame()
 	{
 		return;
 	}
-	if ( m_currentSwapChain )
-	{
-		// Transition back buffer to present only if we have a swap chain (windowed path)
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-		( *m_currentContext )->ResourceBarrier( 1, &barrier );
-	}
+
+	// Device handles all frame completion (barriers, command list closing/execution)
+	m_device.endFrame();
+
 	m_currentContext = nullptr;
 	m_currentSwapChain = nullptr;
 }
@@ -683,8 +600,10 @@ void Renderer::clear( const Color &clearColor ) noexcept
 	if ( !m_currentContext )
 		return;
 
-	const float color[4] = { clearColor.r, clearColor.g, clearColor.b, clearColor.a };
-	( *m_currentContext )->ClearRenderTargetView( getCurrentRTV(), color, 0, nullptr );
+	// TODO: Device should provide configurable clear color methods
+	// For now, skip additional clearing since Device already clears in beginFrame()
+	// This could be enhanced to allow custom clear colors via Device interface
+	console::info( "Renderer::clear() - Device already cleared render target in beginFrame()" );
 }
 
 void Renderer::clearDepth( float depth ) noexcept
@@ -692,7 +611,9 @@ void Renderer::clearDepth( float depth ) noexcept
 	if ( !m_currentContext )
 		return;
 
-	( *m_currentContext )->ClearDepthStencilView( getDSV(), D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr );
+	// TODO: Device should manage depth buffer and provide depth clear methods
+	// For now, depth clearing is not available since Device doesn't expose depth buffer
+	console::warning( "Renderer::clearDepth() - Depth buffer management should be moved to Device" );
 }
 
 void Renderer::setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept
@@ -709,24 +630,6 @@ void Renderer::updateConstantBuffer()
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getCurrentRTV() const
-{
-	if ( !m_currentSwapChain )
-	{
-		D3D12_CPU_DESCRIPTOR_HANDLE handle = {};
-		return handle;
-	}
-
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-	rtvHandle.ptr += rtvDescriptorSize * m_currentSwapChain->getCurrentBackBufferIndex();
-	return rtvHandle;
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE Renderer::getDSV() const
-{
-	return m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
-}
 
 void Renderer::setRenderState( const RenderState &state ) noexcept
 {

@@ -262,11 +262,6 @@ ID3D12GraphicsCommandList *Device::getCommandList() const
 	return m_commandContext ? m_commandContext->get() : nullptr;
 }
 
-Microsoft::WRL::ComPtr<IDXGISwapChain3> Device::getSwapChain() const
-{
-	return m_swapChain ? Microsoft::WRL::ComPtr<IDXGISwapChain3>( m_swapChain.get()->get() ) : nullptr;
-}
-
 void Device::enableDebugLayer()
 {
 	// Enable the D3D12 debug layer
@@ -360,8 +355,8 @@ void Device::createSwapChain( HWND windowHandle )
 	// Get window dimensions
 	RECT rect;
 	GetClientRect( windowHandle, &rect );
-	UINT width = rect.right - rect.left;
-	UINT height = rect.bottom - rect.top;
+	const UINT width = rect.right - rect.left;
+	const UINT height = rect.bottom - rect.top;
 
 	// Create swap chain wrapper using the existing command queue wrapper
 	m_swapChain = std::make_unique<SwapChain>( *this, *m_commandQueue, windowHandle, width, height );
