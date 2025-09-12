@@ -44,12 +44,12 @@ private:
 	static void setupTransformComponent( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene );
 
 	/// @brief Setup MeshRenderer component with optional GPU resources
-	/// @param node The scene node with mesh data
+	/// @param meshHandle The mesh handle to create renderer for
 	/// @param entity The entity to attach the component to
 	/// @param targetScene The ECS scene
 	/// @param assetScene The source asset scene for resource creation
 	/// @param gpuResourceManager Optional GPU resource manager for creating GPU resources
-	static void setupMeshRenderer( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager *gpuResourceManager = nullptr );
+	static void setupMeshRenderer( assets::MeshHandle meshHandle, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager *gpuResourceManager = nullptr );
 };
 
 } // namespace runtime

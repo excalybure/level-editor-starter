@@ -104,7 +104,7 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 			}
 
 			// Setup MeshRenderer with optional GPU resources
-			setupMeshRenderer( node, meshEntity, targetScene, assetScene, gpuResourceManager );
+			setupMeshRenderer( meshHandle, meshEntity, targetScene, assetScene, gpuResourceManager );
 		} );
 	}
 
@@ -129,37 +129,28 @@ void SceneImporter::setupTransformComponent( const assets::SceneNode &node, Enti
 	targetScene.addComponent( entity, ecsTransform );
 }
 
-void SceneImporter::setupMeshRenderer( const assets::SceneNode &node, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager *gpuResourceManager )
+void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager *gpuResourceManager )
 {
 	// Create MeshRenderer component
 	MeshRenderer renderer;
 
-	// Get the mesh handle from the node (assume first handle for now)
-	if ( node.hasMeshHandles() )
+	// Get the mesh from the asset scene
+	const auto mesh = assetScene->getMesh( meshHandle );
+	if ( mesh )
 	{
-		// Process the first mesh handle (nodes with multiple meshes would create multiple entities)
-		const auto meshHandles = node.getMeshHandles();
-		assert( !meshHandles.empty() );
-		const MeshHandle meshHandle = meshHandles[0];
-
-		// Get the mesh from the asset scene
-		const auto mesh = assetScene->getMesh( meshHandle );
-		if ( mesh )
+		// Set bounds from mesh if available
+		if ( mesh->hasBounds() )
 		{
-			// Set bounds from mesh if available
-			if ( mesh->hasBounds() )
-			{
-				renderer.bounds = mesh->getBounds();
-			}
-
-			// Create GPU mesh if GPUResourceManager is provided
-			if ( gpuResourceManager )
-			{
-				auto gpuMesh = gpuResourceManager->getMeshGPU( mesh );
-				renderer.gpuMesh = std::move( gpuMesh );
-			}
-			// If no GPU resource manager, leave gpuMesh as nullptr (CPU-only path)
+			renderer.bounds = mesh->getBounds();
 		}
+
+		// Create GPU mesh if GPUResourceManager is provided
+		if ( gpuResourceManager )
+		{
+			auto gpuMesh = gpuResourceManager->getMeshGPU( mesh );
+			renderer.gpuMesh = std::move( gpuMesh );
+		}
+		// If no GPU resource manager, leave gpuMesh as nullptr (CPU-only path)
 	}
 
 	// Add the MeshRenderer component to the entity
