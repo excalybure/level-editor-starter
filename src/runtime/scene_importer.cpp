@@ -121,21 +121,12 @@ void SceneImporter::setupTransformComponent( const assets::SceneNode &node, Enti
 
 void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene )
 {
-	// Create MeshRenderer component with the mesh handle (CPU-only)
-	MeshRenderer renderer( meshHandle );
-
-	// Get the mesh from the asset scene
 	const auto mesh = assetScene->getMesh( meshHandle );
 	if ( mesh )
 	{
-		// Set bounds from mesh if available
-		if ( mesh->hasBounds() )
-		{
-			renderer.bounds = mesh->getBounds();
-		}
-		// Note: gpuMesh is left as nullptr - use createGPUResources() to populate it
-	}
+		MeshRenderer renderer( meshHandle );
 
-	// Add the MeshRenderer component to the entity
-	targetScene.addComponent( entity, renderer );
+		renderer.bounds = mesh->getBounds();
+		targetScene.addComponent( entity, renderer );
+	}
 }

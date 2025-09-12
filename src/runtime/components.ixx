@@ -94,7 +94,6 @@ struct MeshRenderer
 
 	MeshRenderer() = default;
 	MeshRenderer( assets::MeshHandle handle ) : meshHandle( handle ) {}
-	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPU> mesh ) : gpuMesh( std::move( mesh ) ) {}
 };
 
 // Selection state for editor

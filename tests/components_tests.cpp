@@ -140,11 +140,10 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 		REQUIRE( renderer.lodBias == 0.0f );
 	}
 
-	SECTION( "GPU buffer constructor" )
+	SECTION( "Default GPU mesh state" )
 	{
-		// Note: We can't create a real MeshGPU without DirectX device,
-		// so this tests the constructor pattern with null shared_ptr
-		MeshRenderer renderer( nullptr );
+		// Test that default constructor creates MeshRenderer with no GPU mesh
+		MeshRenderer renderer;
 		REQUIRE( renderer.gpuMesh == nullptr );
 		REQUIRE( renderer.lodBias == 0.0f );
 	}
