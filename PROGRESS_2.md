@@ -1,5 +1,21 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Eliminate Command Allocator/List Duplication in Device Class  
+**Summary:** Successfully eliminated code duplication between Device's raw command allocator/list members and CommandContext wrapper by removing m_commandAllocator and m_commandList and refactoring all Device methods to use m_commandContext exclusively. Device now delegates all command list operations to the CommandContext wrapper class, completing the encapsulation improvements for D3D12 resource management.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed Device/CommandContext overlap - Identified all m_commandAllocator and m_commandList usage patterns in Device class and CommandContext interaction points  
+- AF2: Updated Device header structure - Removed m_commandAllocator and m_commandList members, added m_commandContext wrapper and CommandContext forward declaration
+- AF3: Refactored Device method implementations - Updated beginFrame, endFrame, present, setBackbufferRenderTarget to use m_commandContext->get() and wrapper methods instead of direct raw pointer access
+- AF4: Fixed Device interface consistency - Updated getCommandList() method to delegate to CommandContext, ensured all public Device methods work correctly with CommandContext wrapper delegation pattern
+- AF5: Added CommandContext wrapper creation - Updated createCommandObjects method to create CommandContext wrapper instead of raw command allocator/list objects
+- AF6: Verified all tests pass - All 17 DX12 tests pass (64 assertions) confirming Device now uses CommandContext wrapper exclusively for command list operations
+
+**Tests:** 17 DX12 tests pass (64 assertions); command used: `.\unit_test_runner.exe "[dx12]"`
+**Notes:** Device class now consistently uses wrapper classes for swap chain, command queue, and command context management, eliminating all code duplication with wrapper classes. Device no longer directly manages raw D3D12 command allocator/list - all operations go through CommandContext wrapper. This architectural improvement provides better encapsulation, consistent resource management through wrapper classes, and reduces maintenance overhead by having single points of responsibility for each D3D12 resource type.
+
+Date: 2025-01-03
+
 ## 2025-01-03 — Eliminate Command Queue Duplication in Device Class  
 **Summary:** Successfully eliminated code duplication between Device's raw command queue member and CommandQueue wrapper by removing m_commandQueue and refactoring all Device methods to use m_commandQueueWrapper exclusively. This completes the encapsulation improvements, ensuring Device delegates all command queue operations to the CommandQueue wrapper class.
 

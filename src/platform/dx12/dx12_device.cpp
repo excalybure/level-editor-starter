@@ -144,12 +144,11 @@ void Device::shutdown()
 	// Release wrappers first (they hold references to Device resources)
 	m_swapChain.reset();
 	m_commandQueueWrapper.reset();
+	m_commandContext.reset();
 
 	// Release COM resources explicitly (safe if already null)
 	m_rtvHeap.Reset();
 	m_imguiDescriptorHeap.Reset();
-	m_commandList.Reset();
-	m_commandAllocator.Reset();
 	m_fence.Reset();
 	m_device.Reset();
 	m_adapter.Reset();
@@ -161,13 +160,12 @@ void Device::shutdown()
 void Device::beginFrame()
 {
 	// In headless mode (no swap chain/RTVs) or if not initialized, this is a no-op
-	if ( !m_device || !m_commandAllocator || !m_commandList || !m_swapChain )
+	if ( !m_device || !m_commandContext || !m_swapChain )
 	{
 		return;
 	}
-	// Reset command allocator and list
-	throwIfFailed( m_commandAllocator->Reset() );
-	throwIfFailed( m_commandList->Reset( m_commandAllocator.Get(), nullptr ) );
+	// Reset command context for new frame
+	m_commandContext->reset();
 
 	// Get current back buffer from SwapChain wrapper
 	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
@@ -182,25 +180,25 @@ void Device::beginFrame()
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-	m_commandList->ResourceBarrier( 1, &barrier );
+	m_commandContext->get()->ResourceBarrier( 1, &barrier );
 
 	// Set render target
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
-	m_commandList->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
+	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
 
 	// Clear render target
 	const float clearColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	m_commandList->ClearRenderTargetView( rtvHandle, clearColor, 0, nullptr );
+	m_commandContext->get()->ClearRenderTargetView( rtvHandle, clearColor, 0, nullptr );
 
 	// Set descriptor heaps for ImGui
 	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
-	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+	m_commandContext->get()->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
 }
 
 void Device::endFrame()
 {
-	if ( !m_device || !m_commandList || !m_swapChain )
+	if ( !m_device || !m_commandContext || !m_swapChain )
 	{
 		return; // headless/uninitialized no-op
 	}
@@ -217,19 +215,19 @@ void Device::endFrame()
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-	m_commandList->ResourceBarrier( 1, &barrier );
+	m_commandContext->get()->ResourceBarrier( 1, &barrier );
 
 	// Close command list
-	throwIfFailed( m_commandList->Close() );
+	m_commandContext->close();
 
 	// Execute command list
-	ID3D12CommandList *ppCommandLists[] = { m_commandList.Get() };
+	ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
 	m_commandQueueWrapper->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
 }
 
 void Device::present()
 {
-	if ( !m_device || !m_commandList || !m_swapChain )
+	if ( !m_device || !m_commandContext || !m_swapChain )
 	{
 		return; // headless/uninitialized no-op
 	}
@@ -243,7 +241,7 @@ void Device::present()
 
 void Device::setBackbufferRenderTarget()
 {
-	if ( !m_device || !m_commandList || !m_swapChain )
+	if ( !m_device || !m_commandContext || !m_swapChain )
 	{
 		return; // headless/uninitialized no-op
 	}
@@ -252,11 +250,16 @@ void Device::setBackbufferRenderTarget()
 	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
-	m_commandList->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
+	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
 
 	// Set descriptor heap for ImGui (should already be set, but ensure consistency)
 	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
-	m_commandList->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+	m_commandContext->get()->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
+}
+
+ID3D12GraphicsCommandList *Device::getCommandList() const
+{
+	return m_commandContext ? m_commandContext->get() : nullptr;
 }
 
 Microsoft::WRL::ComPtr<IDXGISwapChain3> Device::getSwapChain() const
@@ -348,21 +351,8 @@ void Device::createCommandObjects()
 	// Create command queue wrapper
 	m_commandQueueWrapper = std::make_unique<CommandQueue>( *this );
 
-	// Create command allocator
-	throwIfFailed( m_device->CreateCommandAllocator(
-		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS( &m_commandAllocator ) ) );
-
-	// Create command list
-	throwIfFailed( m_device->CreateCommandList(
-		0,
-		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		m_commandAllocator.Get(),
-		nullptr,
-		IID_PPV_ARGS( &m_commandList ) ) );
-
-	// Close the command list initially
-	throwIfFailed( m_commandList->Close() );
+	// Create command context wrapper
+	m_commandContext = std::make_unique<CommandContext>( *this );
 }
 
 void Device::createSwapChain( HWND windowHandle )

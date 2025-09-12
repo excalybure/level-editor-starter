@@ -26,6 +26,7 @@ export namespace dx12
 class Device;
 class CommandQueue;
 class SwapChain;
+class CommandContext;
 class Texture;
 class TextureManager;
 
@@ -155,7 +156,7 @@ public:
 	ID3D12DescriptorHeap *getImguiDescriptorHeap() const { return m_imguiDescriptorHeap.Get(); }
 
 	// Command list for ImGui rendering
-	ID3D12GraphicsCommandList *getCommandList() const { return m_commandList.Get(); }
+	ID3D12GraphicsCommandList *getCommandList() const;
 
 	// Factory for creating other D3D12 objects
 	IDXGIFactory4 *getFactory() const { return m_factory.Get(); }
@@ -171,11 +172,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> m_device;
 	Microsoft::WRL::ComPtr<ID3D12Debug> m_debugController;
 
-	// Command objects
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
-
-	// Swap chain and command queue wrappers
+	// Command and swap chain wrappers
+	std::unique_ptr<CommandContext> m_commandContext;
 	std::unique_ptr<CommandQueue> m_commandQueueWrapper;
 	std::unique_ptr<SwapChain> m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
