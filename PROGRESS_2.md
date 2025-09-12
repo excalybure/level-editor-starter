@@ -2,6 +2,19 @@
 
 Date: 2025-01-03
 
+## 2025-01-03 — MeshRenderer Bounds Validation Tests via TDD
+**Summary:** Implemented comprehensive unit tests to validate that SceneImporter correctly sets MeshRenderer bounds from mesh data during scene import. The tests ensure that bounds are properly propagated from Mesh/Primitive/Vertex structures to MeshRenderer components for rendering correctness.
+
+**Atomic functionalities completed:**
+- AF1: Single primitive bounds test - Added test verifying bounds propagation for mesh with single primitive containing known vertex positions
+- AF2: Multiple primitive bounds test - Added test verifying combined bounds calculation for mesh with multiple primitives extending overall bounds
+- AF3: Empty mesh bounds test - Added test verifying graceful handling of meshes without primitives (invalid bounds expected)
+- AF4: Center/size bounds calculation test - Added test verifying that SceneImporter uses mesh getBoundsCenter/getBoundsSize methods correctly
+
+**Tests:** 4 new bounds validation test cases with 52 assertions; filtered commands: `unit_test_runner.exe "[scene_importer][bounds]"` and `unit_test_runner.exe "[bounds]"`; all 9 SceneImporter tests pass with 98 total assertions
+
+**Notes:** Tests validate that MeshRenderer.bounds accurately reflects the spatial extent of imported geometry. This ensures correct rendering culling, collision detection, and spatial queries. The bounds validation covers single/multiple primitives, empty meshes, and verifies the center/size calculation approach used by SceneImporter.
+
 ## 2025-09-11 — Scene Importer Module Implementation via TDD
 **Summary:** Successfully implemented the Scene Importer Module as a centralized, reusable abstraction for converting assets::Scene to ECS entities. This module provides both non-GPU and GPU-enabled import paths, establishing the foundation for Task 4 (MeshRenderer GPU integration) and replacing manual import logic with a standardized approach.
 

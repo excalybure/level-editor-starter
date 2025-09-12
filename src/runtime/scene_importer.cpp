@@ -20,7 +20,7 @@ bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs:
 	// Import all root nodes recursively
 	for ( const auto &rootNode : assetScene->getRootNodes() )
 	{
-		importNode( *rootNode, targetScene, Entity{} );
+		importNode( *assetScene, *rootNode, targetScene, Entity{} );
 	}
 
 	return true;
@@ -33,7 +33,7 @@ bool SceneImporter::importSceneWithGPU( std::shared_ptr<assets::Scene> assetScen
 	return importScene( assetScene, targetScene );
 }
 
-Entity SceneImporter::importNode( const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent )
+Entity SceneImporter::importNode( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent )
 {
 	// Create entity with node name
 	Entity entity = targetScene.createEntity( node.getName() );
@@ -69,16 +69,28 @@ Entity SceneImporter::importNode( const assets::SceneNode &node, ecs::Scene &tar
 				targetScene.setParent( meshEntity, entity );
 			}
 
-			// Create basic MeshRenderer (without GPU resources for now)
+			// Create MeshRenderer and set bounds from mesh if available
 			MeshRenderer renderer;
-			// Set bounds if available from mesh (to be implemented)
+			
+			// Get mesh from asset scene and set bounds if available
+			const auto mesh = assetScene.getMesh( meshHandle );
+			if ( mesh && mesh->hasBounds() )
+			{
+				const auto boundsCenter = mesh->getBoundsCenter();
+				const auto boundsSize = mesh->getBoundsSize();
+				
+				// Calculate min and max from center and size
+				renderer.bounds.min = boundsCenter - boundsSize * 0.5f;
+				renderer.bounds.max = boundsCenter + boundsSize * 0.5f;
+			}
+			
 			targetScene.addComponent( meshEntity, renderer );
 		} );
 	}
 
 	// Recursively import children
 	node.foreachChild( [&]( const SceneNode &child ) {
-		importNode( child, targetScene, entity );
+		importNode( assetScene, child, targetScene, entity );
 	} );
 
 	return entity;

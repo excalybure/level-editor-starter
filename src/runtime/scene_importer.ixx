@@ -27,10 +27,12 @@ public:
 private:
 	/// @brief Recursively import a scene node and its children
 	/// @param node The scene node to import
+	/// @param assetScene The asset scene containing meshes and other data
+	/// @param node The scene node to import
 	/// @param targetScene The ECS scene to populate
 	/// @param parent The parent entity (invalid for root nodes)
 	/// @return The created entity
-	static ecs::Entity importNode( const assets::SceneNode &node, ecs::Scene &targetScene, ecs::Entity parent = {} );
+	static ecs::Entity importNode( const assets::Scene &assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, ecs::Entity parent = {} );
 
 	/// @brief Setup Transform component from scene node transform
 	/// @param node The scene node with transform data
