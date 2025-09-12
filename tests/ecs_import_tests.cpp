@@ -5,9 +5,11 @@
 import std;
 import runtime.ecs;
 import runtime.components;
+import runtime.scene_importer;
 import engine.assets;
 import engine.asset_manager;
 
+using namespace runtime;
 using namespace components;
 using namespace assets;
 using namespace ecs;
@@ -66,60 +68,12 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	// Set up ECS scene
 	ecs::Scene ecsScene;
 
-	// Register a mock callback that should convert the asset scene to ECS
+	// Register a mock callback that uses SceneImporter
 	bool callbackCalled = false;
 	AssetManager::setImportSceneCallback( [&callbackCalled]( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		callbackCalled = true;
-
-		// Import each root node
-		for ( const auto &rootNode : assetScene->getRootNodes() )
-		{
-			Entity entity = targetScene.createEntity( rootNode->getName() );
-
-			// Add Transform component
-			if ( rootNode->hasTransform() )
-			{
-				const auto &nodeTransform = rootNode->getTransform();
-				components::Transform ecsTransform;
-				ecsTransform.position = { nodeTransform.position.x, nodeTransform.position.y, nodeTransform.position.z };
-				ecsTransform.rotation = { nodeTransform.rotation.x, nodeTransform.rotation.y, nodeTransform.rotation.z };
-				ecsTransform.scale = { nodeTransform.scale.x, nodeTransform.scale.y, nodeTransform.scale.z };
-				targetScene.addComponent( entity, ecsTransform );
-			}
-
-			// Add MeshRenderer for each mesh handle
-			rootNode->foreachMeshHandle( [&]( assets::MeshHandle meshHandle ) {
-				MeshRenderer renderer;
-				// TODO: Update for new GPU buffer-based MeshRenderer architecture
-				// renderer.meshPath = assetScene->getPath(); // Reference the scene asset
-
-				// Extract material paths from mesh primitives using the new API
-				const auto mesh = assetScene->getMesh( meshHandle );
-				if ( mesh )
-				{
-					// TODO: Update material handling for GPU-based approach
-					// for ( std::size_t i = 0; i < mesh->getPrimitiveCount(); ++i )
-					// {
-					// 	const auto &primitive = mesh->getPrimitive( i );
-					// 	if ( primitive.hasMaterial() )
-					// 	{
-					// 		renderer.materialPaths.push_back( primitive.getMaterialPath() );
-					// 	}
-					// }
-				}
-
-				// Set bounds from mesh
-				if ( mesh->hasBounds() )
-				{
-					const auto center = mesh->getBoundsCenter();
-					const auto size = mesh->getBoundsSize();
-					renderer.bounds.min = center - size * 0.5f;
-					renderer.bounds.max = center + size * 0.5f;
-				}
-
-				targetScene.addComponent( entity, renderer );
-			} );
-		}
+		// Use SceneImporter instead of manual import logic
+		SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Use AssetManager to import scene
@@ -184,41 +138,10 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	// Set up ECS scene
 	ecs::Scene ecsScene;
 
-	// Register callback that imports hierarchy
+	// Register callback that uses SceneImporter for hierarchy
 	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
-		std::function<Entity( const SceneNode &, Entity )> importNode = [&]( const SceneNode &node, Entity parent ) -> Entity {
-			Entity entity = targetScene.createEntity( node.getName() );
-
-			// Add Transform component
-			if ( node.hasTransform() )
-			{
-				const auto &nodeTransform = node.getTransform();
-				components::Transform ecsTransform;
-				ecsTransform.position = { nodeTransform.position.x, nodeTransform.position.y, nodeTransform.position.z };
-				ecsTransform.rotation = { nodeTransform.rotation.x, nodeTransform.rotation.y, nodeTransform.rotation.z };
-				ecsTransform.scale = { nodeTransform.scale.x, nodeTransform.scale.y, nodeTransform.scale.z };
-				targetScene.addComponent( entity, ecsTransform );
-			}
-
-			// Set parent relationship
-			if ( parent.isValid() )
-			{
-				targetScene.setParent( entity, parent );
-			}
-
-			// Import children recursively
-			node.foreachChild( [&]( const SceneNode &child ) {
-				importNode( child, entity );
-			} );
-
-			return entity;
-		};
-
-		// Import all root nodes
-		for ( const auto &rootNode : assetScene->getRootNodes() )
-		{
-			importNode( *rootNode, Entity{} );
-		}
+		// Use SceneImporter instead of manual import logic
+		SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Import scene
@@ -284,35 +207,10 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	// Set up ECS scene
 	ecs::Scene ecsScene;
 
-	// Register callback
+	// Register callback that uses SceneImporter
 	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
-		for ( const auto &rootNode : assetScene->getRootNodes() )
-		{
-			Entity entity = targetScene.createEntity( rootNode->getName() );
-
-			// Add Transform component
-			if ( rootNode->hasTransform() )
-			{
-				const auto &nodeTransform = rootNode->getTransform();
-				components::Transform ecsTransform;
-				ecsTransform.position = { nodeTransform.position.x, nodeTransform.position.y, nodeTransform.position.z };
-				ecsTransform.rotation = { nodeTransform.rotation.x, nodeTransform.rotation.y, nodeTransform.rotation.z };
-				ecsTransform.scale = { nodeTransform.scale.x, nodeTransform.scale.y, nodeTransform.scale.z };
-				targetScene.addComponent( entity, ecsTransform );
-			}
-
-			// Only add MeshRenderer if node has meshes
-			if ( rootNode->hasMeshHandles() )
-			{
-				rootNode->foreachMeshHandle( [&]( MeshHandle meshHandle ) {
-					MeshRenderer renderer;
-					// TODO: Will need to set the MeshRenderer with a MeshGPU
-					// For now, just mark meshHandle as used to avoid warning
-					(void)meshHandle;
-					targetScene.addComponent( entity, renderer );
-				} );
-			}
-		}
+		// Use SceneImporter instead of manual import logic
+		SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Import scene

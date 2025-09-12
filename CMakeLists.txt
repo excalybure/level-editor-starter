@@ -241,6 +241,16 @@ target_sources(runtime.ecs PUBLIC
 target_compile_features(runtime.ecs PUBLIC cxx_std_23)
 target_link_libraries(runtime.ecs PUBLIC runtime.entity runtime.components engine.math engine.matrix engine.vec engine.bounding_box_3d)
 
+add_library(runtime.scene_importer)
+target_sources(runtime.scene_importer PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/scene_importer.ixx
+  PRIVATE
+    src/runtime/scene_importer.cpp
+)
+target_compile_features(runtime.scene_importer PUBLIC cxx_std_23)
+target_link_libraries(runtime.scene_importer PUBLIC runtime.ecs runtime.entity runtime.components engine.assets)
+
 add_library(runtime.systems)
 target_sources(runtime.systems PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -429,6 +439,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/assets_tests.cpp
     tests/asset_manager_tests.cpp
     tests/ecs_import_tests.cpp
+    tests/scene_importer_tests.cpp
     tests/gltf_loader_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp
@@ -458,6 +469,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     editor.viewport
     runtime.entity
     runtime.ecs
+    runtime.scene_importer
     runtime.components
     runtime.systems
     runtime.app

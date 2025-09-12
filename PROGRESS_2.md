@@ -2,6 +2,20 @@
 
 Date: 2025-01-03
 
+## 2025-09-11 — Scene Importer Module Implementation via TDD
+**Summary:** Successfully implemented the Scene Importer Module as a centralized, reusable abstraction for converting assets::Scene to ECS entities. This module provides both non-GPU and GPU-enabled import paths, establishing the foundation for Task 4 (MeshRenderer GPU integration) and replacing manual import logic with a standardized approach.
+
+**Atomic functionalities completed:**
+- AF1: Created SceneImporter module structure - Created `src/runtime/scene_importer.ixx` module with both static interface and implementation, added to CMakeLists.txt runtime target with proper dependencies
+- AF2: Implemented core scene import functions - Implemented `importScene()`, `importNode()`, `setupTransformComponent()` for non-GPU path with recursive hierarchy handling and component creation
+- AF3: Added GPU-enabled path stubs - Implemented `importSceneWithGPU()` and `setupMeshRendererWithGPU()` as placeholders that delegate to non-GPU functions for future enhancement
+- AF4: Created comprehensive test suite - Added 5 test cases covering basic import, hierarchy preservation, empty nodes, GPU vs non-GPU comparison, and error handling with 46 assertions total
+- AF5: Updated existing ECS import tests - Migrated all ECS import tests to use SceneImporter instead of manual import logic, maintaining backward compatibility
+
+**Tests:** 5 new SceneImporter test cases with 46 assertions; all 3 existing ECS import tests with 24 assertions continue to pass using SceneImporter; filtered commands: `unit_test_runner.exe "[scene_importer]"` and `unit_test_runner.exe "[ecs][import]"`
+
+**Notes:** SceneImporter provides clean separation between asset loading and ECS scene creation. The GPU path (Task 3) is stubbed to call non-GPU implementation, ready for future enhancement with GPUResourceManager integration. Module design enables both headless/testing scenarios (non-GPU) and production rendering (GPU-enabled) use cases.
+
 ## 2025-09-11 — PBR Factor Validation Test Implementation via TDD
 **Summary:** Implemented comprehensive test case "Extract and validate PBR factor values" to verify that GPUResourceManager and MaterialGPU correctly extract and store PBR material factors from source assets::Material objects. The implementation was already present and working correctly.
 
