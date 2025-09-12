@@ -71,19 +71,19 @@ Entity SceneImporter::importNode( const assets::Scene &assetScene, const assets:
 
 			// Create MeshRenderer and set bounds from mesh if available
 			MeshRenderer renderer;
-			
+
 			// Get mesh from asset scene and set bounds if available
 			const auto mesh = assetScene.getMesh( meshHandle );
 			if ( mesh && mesh->hasBounds() )
 			{
 				const auto boundsCenter = mesh->getBoundsCenter();
 				const auto boundsSize = mesh->getBoundsSize();
-				
+
 				// Calculate min and max from center and size
 				renderer.bounds.min = boundsCenter - boundsSize * 0.5f;
 				renderer.bounds.max = boundsCenter + boundsSize * 0.5f;
 			}
-			
+
 			targetScene.addComponent( meshEntity, renderer );
 		} );
 	}

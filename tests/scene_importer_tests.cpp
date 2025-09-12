@@ -265,23 +265,23 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 
 	// Create a mesh with a primitive containing vertices
 	auto mesh = std::make_shared<Mesh>();
-	
+
 	// Create primitive with vertices that define a specific bounding box
 	Primitive primitive;
 	primitive.addVertex( { { -2.0f, -3.0f, -4.0f }, {}, {} } ); // Min corner
-	primitive.addVertex( { {  5.0f,  7.0f,  9.0f }, {}, {} } ); // Max corner  
-	primitive.addVertex( { {  1.0f,  2.0f,  3.0f }, {}, {} } ); // Interior point
-	
+	primitive.addVertex( { { 5.0f, 7.0f, 9.0f }, {}, {} } );	// Max corner
+	primitive.addVertex( { { 1.0f, 2.0f, 3.0f }, {}, {} } );	// Interior point
+
 	// Add primitive to mesh (this should trigger bounds calculation)
 	mesh->addPrimitive( std::move( primitive ) );
-	
+
 	// Verify mesh has bounds
 	REQUIRE( mesh->hasBounds() );
-	
+
 	// Add mesh to scene
 	const auto meshHandle = scene->addMesh( mesh );
 
-	// Create a node with this mesh  
+	// Create a node with this mesh
 	auto rootNode = std::make_unique<SceneNode>( "BoundsTestNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
@@ -300,10 +300,10 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 
 	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
-	
+
 	// Verify bounds were set and are valid
 	REQUIRE( rendererComp->bounds.isValid() );
-	
+
 	// Verify bounds encompass our test vertices
 	// Min should be <= (-2, -3, -4) and Max should be >= (5, 7, 9)
 	REQUIRE( rendererComp->bounds.min.x <= -2.0f );
@@ -312,7 +312,7 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 	REQUIRE( rendererComp->bounds.max.x >= 5.0f );
 	REQUIRE( rendererComp->bounds.max.y >= 7.0f );
 	REQUIRE( rendererComp->bounds.max.z >= 9.0f );
-	
+
 	// Verify the bounds match the mesh bounds
 	const auto meshBounds = mesh->getBounds();
 	REQUIRE( rendererComp->bounds.min.x == Approx( meshBounds.min.x ) );
@@ -331,22 +331,22 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 	scene->setLoaded( true );
 
 	auto mesh = std::make_shared<Mesh>();
-	
+
 	// First primitive - extends from (-10, -5, -1) to (0, 0, 0)
 	Primitive primitive1;
 	primitive1.addVertex( { { -10.0f, -5.0f, -1.0f }, {}, {} } );
-	primitive1.addVertex( { {   0.0f,  0.0f,  0.0f }, {}, {} } );
+	primitive1.addVertex( { { 0.0f, 0.0f, 0.0f }, {}, {} } );
 	mesh->addPrimitive( std::move( primitive1 ) );
-	
+
 	// Second primitive - extends from (0, 0, 0) to (8, 12, 6)
 	Primitive primitive2;
-	primitive2.addVertex( { { 0.0f,  0.0f, 0.0f }, {}, {} } );
+	primitive2.addVertex( { { 0.0f, 0.0f, 0.0f }, {}, {} } );
 	primitive2.addVertex( { { 8.0f, 12.0f, 6.0f }, {}, {} } );
 	mesh->addPrimitive( std::move( primitive2 ) );
-	
+
 	// Combined bounds should be (-10, -5, -1) to (8, 12, 6)
 	REQUIRE( mesh->hasBounds() );
-	
+
 	const auto meshHandle = scene->addMesh( mesh );
 	auto rootNode = std::make_unique<SceneNode>( "MultiPrimitiveNode" );
 	rootNode->addMeshHandle( meshHandle );
@@ -362,13 +362,13 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 
 	const Entity entity = entities[0];
 	REQUIRE( ecsScene.hasComponent<MeshRenderer>( entity ) );
-	
+
 	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
-	
+
 	// Verify bounds encompass all vertices
 	REQUIRE( rendererComp->bounds.isValid() );
-	
+
 	// Check all expected vertices are within bounds
 	REQUIRE( rendererComp->bounds.min.x <= -10.0f );
 	REQUIRE( rendererComp->bounds.min.y <= -5.0f );
@@ -389,7 +389,7 @@ TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_impor
 	auto mesh = std::make_shared<Mesh>();
 	// Don't add any primitives - mesh should have no bounds
 	REQUIRE_FALSE( mesh->hasBounds() );
-	
+
 	const auto meshHandle = scene->addMesh( mesh );
 	auto rootNode = std::make_unique<SceneNode>( "EmptyMeshNode" );
 	rootNode->addMeshHandle( meshHandle );
@@ -405,10 +405,10 @@ TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_impor
 
 	const Entity entity = entities[0];
 	REQUIRE( ecsScene.hasComponent<MeshRenderer>( entity ) );
-	
+
 	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
-	
+
 	// MeshRenderer should exist but bounds should be invalid (default state)
 	REQUIRE_FALSE( rendererComp->bounds.isValid() );
 }
@@ -421,32 +421,32 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	scene->setLoaded( true );
 
 	auto mesh = std::make_shared<Mesh>();
-	
+
 	// Create a primitive with vertices that form a known bounding box
 	// Center at (1, 2, 3) with size (4, 6, 8) means:
 	// Min = (1, 2, 3) - (2, 3, 4) = (-1, -1, -1)
 	// Max = (1, 2, 3) + (2, 3, 4) = (3, 5, 7)
 	Primitive primitive;
 	primitive.addVertex( { { -1.0f, -1.0f, -1.0f }, {}, {} } ); // Min corner
-	primitive.addVertex( { {  3.0f,  5.0f,  7.0f }, {}, {} } ); // Max corner
-	primitive.addVertex( { {  1.0f,  2.0f,  3.0f }, {}, {} } ); // Center point
+	primitive.addVertex( { { 3.0f, 5.0f, 7.0f }, {}, {} } );	// Max corner
+	primitive.addVertex( { { 1.0f, 2.0f, 3.0f }, {}, {} } );	// Center point
 	mesh->addPrimitive( std::move( primitive ) );
-	
+
 	// Verify mesh bounds center and size calculations
 	REQUIRE( mesh->hasBounds() );
 	const auto boundsCenter = mesh->getBoundsCenter();
 	const auto boundsSize = mesh->getBoundsSize();
-	
+
 	// Center should be (1, 2, 3)
 	REQUIRE( boundsCenter.x == Approx( 1.0f ) );
 	REQUIRE( boundsCenter.y == Approx( 2.0f ) );
 	REQUIRE( boundsCenter.z == Approx( 3.0f ) );
-	
+
 	// Size should be (4, 6, 8)
 	REQUIRE( boundsSize.x == Approx( 4.0f ) );
 	REQUIRE( boundsSize.y == Approx( 6.0f ) );
 	REQUIRE( boundsSize.z == Approx( 8.0f ) );
-	
+
 	const auto meshHandle = scene->addMesh( mesh );
 	auto rootNode = std::make_unique<SceneNode>( "CenterSizeNode" );
 	rootNode->addMeshHandle( meshHandle );
@@ -463,12 +463,12 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	const Entity entity = entities[0];
 	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
-	
+
 	// Verify MeshRenderer bounds match the center/size calculation
 	// rendererComp->bounds should be calculated as: center ± size/2
 	const auto expectedMin = boundsCenter - boundsSize * 0.5f;
 	const auto expectedMax = boundsCenter + boundsSize * 0.5f;
-	
+
 	REQUIRE( rendererComp->bounds.min.x == Approx( expectedMin.x ) );
 	REQUIRE( rendererComp->bounds.min.y == Approx( expectedMin.y ) );
 	REQUIRE( rendererComp->bounds.min.z == Approx( expectedMin.z ) );
