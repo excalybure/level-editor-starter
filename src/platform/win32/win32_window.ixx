@@ -82,8 +82,8 @@ public:
 	bool isFocused() const { return m_focused; }
 
 	// Native handles for graphics API integration
-	void *getHandle() const { return m_hwnd; }
-	void *getInstance() const { return m_hinstance; }
+	HWND getHandle() const { return m_hwnd; }
+	HINSTANCE getInstance() const { return m_hinstance; }
 
 private:
 	HWND m_hwnd = nullptr;
