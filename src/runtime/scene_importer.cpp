@@ -11,17 +11,17 @@ using namespace ecs;
 using namespace components;
 using namespace assets;
 
-bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, engine::GPUResourceManager *gpuResourceManager )
+bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene )
 {
 	if ( !assetScene || !assetScene->isLoaded() )
 	{
 		return false;
 	}
 
-	// Import all root nodes recursively
+	// Import all root nodes recursively (CPU-only)
 	for ( const auto &rootNode : assetScene->getRootNodes() )
 	{
-		importNode( assetScene, *rootNode, targetScene, Entity{}, gpuResourceManager );
+		importNode( assetScene, *rootNode, targetScene, Entity{} );
 	}
 
 	return true;
@@ -34,10 +34,6 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 		return false;
 	}
 
-	// This is a simplified implementation that works with the current test structure
-	// For a complete implementation, we would need to store asset metadata in components
-	// during import to properly match entities to their source asset data
-
 	// Traverse all entities and populate GPU resources for MeshRenderer components that don't have them
 	const auto entities = targetScene.getAllEntities();
 	for ( const Entity entity : entities )
@@ -49,25 +45,19 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 		if ( !meshRenderer || meshRenderer->gpuMesh != nullptr )
 			continue; // Skip if no MeshRenderer or already has GPU resources
 
-		// For this simplified approach, we try to find any mesh in the asset scene and create GPU resources
-		// This works for single-mesh test cases but would need refinement for complex scenes
-		const auto &meshes = assetScene->getMeshes();
-		if ( !meshes.empty() )
+		// Use the stored mesh handle to get the correct mesh
+		const auto mesh = assetScene->getMesh( meshRenderer->meshHandle );
+		if ( mesh )
 		{
-			// Use the first available mesh (simplified approach)
-			const auto mesh = meshes[0];
-			if ( mesh )
-			{
-				auto gpuMesh = gpuResourceManager.getMeshGPU( mesh );
-				meshRenderer->gpuMesh = std::move( gpuMesh );
-			}
+			auto gpuMesh = gpuResourceManager.getMeshGPU( mesh );
+			meshRenderer->gpuMesh = std::move( gpuMesh );
 		}
 	}
 
 	return true;
 }
 
-Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent, engine::GPUResourceManager *gpuResourceManager )
+Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent )
 {
 	// Create entity with node name
 	Entity entity = targetScene.createEntity( node.getName() );
@@ -84,7 +74,7 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 		setupTransformComponent( node, entity, targetScene );
 	}
 
-	// Setup MeshRenderer component if node has meshes
+	// Setup MeshRenderer component if node has meshes (CPU-only)
 	if ( node.hasMeshHandles() )
 	{
 		// For this implementation, we'll create one MeshRenderer per mesh handle
@@ -103,14 +93,14 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 				targetScene.setParent( meshEntity, entity );
 			}
 
-			// Setup MeshRenderer with optional GPU resources
-			setupMeshRenderer( meshHandle, meshEntity, targetScene, assetScene, gpuResourceManager );
+			// Setup MeshRenderer (CPU-only)
+			setupMeshRenderer( meshHandle, meshEntity, targetScene, assetScene );
 		} );
 	}
 
 	// Recursively import children
 	node.foreachChild( [&]( const SceneNode &child ) {
-		importNode( assetScene, child, targetScene, entity, gpuResourceManager );
+		importNode( assetScene, child, targetScene, entity );
 	} );
 
 	return entity;
@@ -129,10 +119,10 @@ void SceneImporter::setupTransformComponent( const assets::SceneNode &node, Enti
 	targetScene.addComponent( entity, ecsTransform );
 }
 
-void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene, engine::GPUResourceManager *gpuResourceManager )
+void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene )
 {
-	// Create MeshRenderer component
-	MeshRenderer renderer;
+	// Create MeshRenderer component with the mesh handle (CPU-only)
+	MeshRenderer renderer( meshHandle );
 
 	// Get the mesh from the asset scene
 	const auto mesh = assetScene->getMesh( meshHandle );
@@ -143,14 +133,7 @@ void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity ent
 		{
 			renderer.bounds = mesh->getBounds();
 		}
-
-		// Create GPU mesh if GPUResourceManager is provided
-		if ( gpuResourceManager )
-		{
-			auto gpuMesh = gpuResourceManager->getMeshGPU( mesh );
-			renderer.gpuMesh = std::move( gpuMesh );
-		}
-		// If no GPU resource manager, leave gpuMesh as nullptr (CPU-only path)
+		// Note: gpuMesh is left as nullptr - use createGPUResources() to populate it
 	}
 
 	// Add the MeshRenderer component to the entity

@@ -2,6 +2,22 @@
 
 Date: 2025-01-03
 
+## 2025-01-03 — Scene Import Logic Unification Complete
+**Summary:** Successfully refactored SceneImporter to unify CPU/GPU import paths and separate mesh import from GPU resource creation. Implemented single API for scene import (`importScene`/`importNode`) with separate GPU resource creation step (`createGPUResources`). MeshRenderer now stores MeshHandle and GPU resource creation is decoupled from scene import.
+
+**Atomic functionalities completed:**
+- AF1: Unified SceneImporter API - Merged `importNode` and `importNodeWithGPU` into single `importNode` method; merged `importScene` and `importSceneWithGPU` into single `importScene` method for CPU-only import
+- AF2: Separated GPU resource creation - Created dedicated `createGPUResources` method that accepts ECS Scene and GPUResourceManager to add GPU resources to existing scene
+- AF3: Updated MeshRenderer component - Modified MeshRenderer to store MeshHandle instead of string path, enabling direct mesh access via scene->getMesh(handle)
+- AF4: Refactored setupMeshRenderer - Updated method to store MeshHandle from mesh in MeshRenderer component for clean CPU import
+- AF5: Removed GPUResourceManager from import methods - Eliminated gpuResourceManager parameter from importScene and importNode, making GPU resource creation explicit and separate
+- AF6: Updated comprehensive test suite - Modified all scene importer tests to use new two-step workflow (importScene for CPU, createGPUResources for GPU) and verified compatibility
+
+**Tests:** All 13 scene importer tests pass (128 assertions) and 4 GPU integration tests pass (27 assertions); comprehensive coverage of unified API, GPU resource creation, error handling, and backward compatibility
+**Notes:** The refactoring provides clean separation of concerns: importScene handles pure asset-to-ECS conversion without GPU dependencies, while createGPUResources adds GPU resources to existing scenes. MeshRenderer now stores MeshHandle enabling direct mesh access. This architectural improvement simplifies testing, enables headless operation, and provides clearer GPU resource management patterns. All existing functionality preserved through the new unified API.
+
+Date: 2025-01-03
+
 ## 2025-09-11 — Remove Redundant getBoundsCenter/getBoundsSize Methods
 **Summary:** Removed redundant `getBoundsCenter()` and `getBoundsSize()` methods from `Primitive` and `Mesh` classes in `assets.ixx` since `BoundingBox3D` already provides equivalent `center()` and `size()` methods. Updated all call sites to use `getBounds().center()` and `getBounds().size()` instead, eliminating code duplication and improving consistency.
 

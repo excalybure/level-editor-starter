@@ -5,6 +5,7 @@ import engine.matrix;
 import engine.vec;
 import engine.bounding_box_3d;
 import engine.gpu.mesh_gpu;
+import engine.assets;
 import runtime.entity;
 import <string>;
 import <vector>;
@@ -86,11 +87,13 @@ struct Visible
 // Renderable mesh component
 struct MeshRenderer
 {
+	assets::MeshHandle meshHandle; // Handle to the source mesh asset
 	std::shared_ptr<engine::gpu::MeshGPU> gpuMesh;
 	math::BoundingBox3Df bounds; // Local space bounding box
 	float lodBias = 0.0f;		 // Level of detail bias for rendering
 
 	MeshRenderer() = default;
+	MeshRenderer( assets::MeshHandle handle ) : meshHandle( handle ) {}
 	MeshRenderer( std::shared_ptr<engine::gpu::MeshGPU> mesh ) : gpuMesh( std::move( mesh ) ) {}
 };
 

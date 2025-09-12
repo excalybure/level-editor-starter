@@ -72,10 +72,14 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool result = SceneImporter::importScene( scene, targetScene, &resourceManager );
+	const bool result = SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
 	REQUIRE( result );
+
+	// Create GPU resources separately
+	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	REQUIRE( gpuResult );
 
 	// Verify entity was created
 	const auto entities = targetScene.getAllEntities();
@@ -130,12 +134,16 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
-	// Import scene using GPU path with actual resource manager
+	// Import scene using CPU-only path first
 	ecs::Scene targetScene;
-	const bool result = SceneImporter::importScene( scene, targetScene, &resourceManager );
+	const bool result = SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
 	REQUIRE( result );
+
+	// Create GPU resources separately
+	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	REQUIRE( gpuResult );
 
 	// Verify entity was created
 	const auto entities = targetScene.getAllEntities();
