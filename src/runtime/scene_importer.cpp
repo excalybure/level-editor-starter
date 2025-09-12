@@ -76,8 +76,8 @@ Entity SceneImporter::importNode( const assets::Scene &assetScene, const assets:
 			const auto mesh = assetScene.getMesh( meshHandle );
 			if ( mesh && mesh->hasBounds() )
 			{
-				const auto boundsCenter = mesh->getBoundsCenter();
-				const auto boundsSize = mesh->getBoundsSize();
+				const auto boundsCenter = mesh->getBounds().center();
+				const auto boundsSize = mesh->getBounds().size();
 
 				// Calculate min and max from center and size
 				renderer.bounds.min = boundsCenter - boundsSize * 0.5f;

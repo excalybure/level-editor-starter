@@ -153,21 +153,6 @@ public:
 	void setMaterialHandle( MaterialHandle handle ) { m_materialHandle = handle; }
 	bool hasMaterial() const { return m_materialHandle != INVALID_MATERIAL_HANDLE; }
 
-	// Compute bounds center and size
-	math::Vec3f getBoundsCenter() const
-	{
-		if ( !m_bounds.isValid() )
-			return { 0.0f, 0.0f, 0.0f };
-		return m_bounds.center();
-	}
-
-	math::Vec3f getBoundsSize() const
-	{
-		if ( !m_bounds.isValid() )
-			return { 0.0f, 0.0f, 0.0f };
-		return m_bounds.size();
-	}
-
 private:
 	std::vector<Vertex> m_vertices;
 	std::vector<std::uint32_t> m_indices;
@@ -225,21 +210,6 @@ public:
 	// Bounding box accessors - aggregate from all primitives
 	const math::BoundingBox3Df &getBounds() const { return m_bounds; }
 	bool hasBounds() const { return m_bounds.isValid(); }
-
-	// Compute bounds center and size
-	math::Vec3f getBoundsCenter() const
-	{
-		if ( !m_bounds.isValid() )
-			return { 0.0f, 0.0f, 0.0f };
-		return m_bounds.center();
-	}
-
-	math::Vec3f getBoundsSize() const
-	{
-		if ( !m_bounds.isValid() )
-			return { 0.0f, 0.0f, 0.0f };
-		return m_bounds.size();
-	}
 
 	// Recalculate bounds from all primitives (call after modifying primitives directly)
 	void recalculateBounds()

@@ -208,8 +208,8 @@ TEST_CASE( "GLTFLoader File Loading", "[gltf][loader][file]" )
 		REQUIRE( bounds.max.z == 0.0f );
 
 		// Verify computed center and size
-		const auto center = meshPtr->getBoundsCenter();
-		const auto size = meshPtr->getBoundsSize();
+		const auto center = meshPtr->getBounds().center();
+		const auto size = meshPtr->getBounds().size();
 
 		REQUIRE( center.x == 0.5f );
 		REQUIRE( center.y == 0.5f );

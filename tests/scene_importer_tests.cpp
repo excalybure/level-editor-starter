@@ -434,8 +434,8 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 
 	// Verify mesh bounds center and size calculations
 	REQUIRE( mesh->hasBounds() );
-	const auto boundsCenter = mesh->getBoundsCenter();
-	const auto boundsSize = mesh->getBoundsSize();
+	const auto boundsCenter = mesh->getBounds().center();
+	const auto boundsSize = mesh->getBounds().size();
 
 	// Center should be (1, 2, 3)
 	REQUIRE( boundsCenter.x == Approx( 1.0f ) );

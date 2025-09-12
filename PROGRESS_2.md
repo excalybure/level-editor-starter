@@ -2,6 +2,23 @@
 
 Date: 2025-01-03
 
+## 2025-09-11 — Remove Redundant getBoundsCenter/getBoundsSize Methods
+**Summary:** Removed redundant `getBoundsCenter()` and `getBoundsSize()` methods from `Primitive` and `Mesh` classes in `assets.ixx` since `BoundingBox3D` already provides equivalent `center()` and `size()` methods. Updated all call sites to use `getBounds().center()` and `getBounds().size()` instead, eliminating code duplication and improving consistency.
+
+**Atomic functionalities completed:**
+- AF1: Remove getBoundsCenter from Primitive class - Deleted redundant method in favor of getBounds().center()
+- AF2: Remove getBoundsSize from Primitive class - Deleted redundant method in favor of getBounds().size()
+- AF3: Remove getBoundsCenter from Mesh class - Deleted redundant method in favor of getBounds().center()
+- AF4: Remove getBoundsSize from Mesh class - Deleted redundant method in favor of getBounds().size()
+- AF5: Update gltf_loader_tests.cpp call sites - Replaced method calls with getBounds().center()/size()
+- AF6: Update scene_importer.cpp call sites - Replaced method calls with getBounds().center()/size()
+- AF7: Update scene_importer_tests.cpp call sites - Replaced method calls with getBounds().center()/size()
+- AF8: Build and test verification - Confirmed all changes compile and pass tests
+
+**Tests:** All existing tests continue to pass; verified with bounds-related tests (`*bounds*`), scene importer tests (`[scene_importer]`), and gltf tests (`[gltf]`); 73 assertions in 5 bounds test cases, 98 assertions in 9 scene importer test cases, 521 assertions in 9 gltf test cases
+
+**Notes:** This refactoring eliminates 4 redundant methods (2 from Primitive, 2 from Mesh) and improves code consistency by using the standardized BoundingBox3D interface. The change maintains backward compatibility in functionality while reducing code duplication and improving maintainability.
+
 ## 2025-01-03 — MeshRenderer Bounds Validation Tests via TDD
 **Summary:** Implemented comprehensive unit tests to validate that SceneImporter correctly sets MeshRenderer bounds from mesh data during scene import. The tests ensure that bounds are properly propagated from Mesh/Primitive/Vertex structures to MeshRenderer components for rendering correctness.
 
