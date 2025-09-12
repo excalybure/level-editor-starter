@@ -205,7 +205,7 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool gpuResult = SceneImporter::importSceneWithGPU( scene, gpuScene, resourceManager );
+	const bool gpuResult = SceneImporter::importScene( scene, gpuScene, &resourceManager );
 
 	// Both should succeed
 	REQUIRE( nonGpuResult );

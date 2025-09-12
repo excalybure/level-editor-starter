@@ -66,13 +66,13 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
-	// Import scene using GPU path (currently stubbed to call basic path)
+	// Import scene using GPU path (now unified with optional GPU parameter)
 	ecs::Scene targetScene;
 	// Create a dummy device and manager for stubbed test
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool result = SceneImporter::importSceneWithGPU( scene, targetScene, resourceManager );
+	const bool result = SceneImporter::importScene( scene, targetScene, &resourceManager );
 
 	// Verify import succeeded
 	REQUIRE( result );
@@ -132,7 +132,7 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 
 	// Import scene using GPU path with actual resource manager
 	ecs::Scene targetScene;
-	const bool result = SceneImporter::importSceneWithGPU( scene, targetScene, resourceManager );
+	const bool result = SceneImporter::importScene( scene, targetScene, &resourceManager );
 
 	// Verify import succeeded
 	REQUIRE( result );
@@ -150,4 +150,66 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 
 	// This should now have actual GPU resources - will fail until implemented
 	REQUIRE( meshRenderer->gpuMesh != nullptr );
+}
+
+TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scene", "[scene_importer][gpu_integration][unit]" )
+{
+	// AF3: Test the new createGPUResources workflow: import CPU-only, then add GPU resources separately
+
+	// Create a scene with a mesh node
+	auto scene = std::make_shared<assets::Scene>();
+	scene->setPath( "gpu_separate_test.gltf" );
+	scene->setLoaded( true );
+
+	// Create mesh for testing with some primitive data
+	auto mesh = std::make_shared<assets::Mesh>();
+	mesh->setPath( "SeparateTestMesh" );
+
+	// Add a simple primitive to the mesh to make it valid
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.5f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	// Add indices to form a triangle
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+	mesh->getPrimitives().push_back( primitive );
+
+	const assets::MeshHandle meshHandle = scene->addMesh( mesh );
+
+	// Create a node with mesh handle
+	auto rootNode = std::make_unique<assets::SceneNode>( "SeparateGPUMeshNode" );
+	rootNode->addMeshHandle( meshHandle );
+	scene->addRootNode( std::move( rootNode ) );
+
+	// Step 1: Import scene without GPU resources (CPU-only)
+	ecs::Scene targetScene;
+	const bool importResult = SceneImporter::importScene( scene, targetScene );
+	REQUIRE( importResult );
+
+	// Verify entity was created with CPU-only MeshRenderer
+	const auto entities = targetScene.getAllEntities();
+	REQUIRE( entities.size() == 1 );
+
+	const Entity entity = entities[0];
+	REQUIRE( entity.isValid() );
+	REQUIRE( targetScene.hasComponent<MeshRenderer>( entity ) );
+
+	auto *meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	REQUIRE( meshRenderer != nullptr );
+	REQUIRE( meshRenderer->gpuMesh == nullptr ); // Should be null initially
+
+	// Step 2: Create GPU resources separately
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+	engine::GPUResourceManager resourceManager( device );
+	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	REQUIRE( gpuResult );
+
+	// Step 3: Verify GPU resources were added
+	// Refresh the pointer in case component was moved
+	meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	REQUIRE( meshRenderer != nullptr );
+	REQUIRE( meshRenderer->gpuMesh != nullptr ); // Should now have GPU resources
 }
