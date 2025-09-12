@@ -263,6 +263,10 @@ public:
 	// Get back buffer render target view
 	ID3D12Resource *getCurrentBackBuffer() const;
 
+	// Get swap chain dimensions
+	UINT getWidth() const { return m_width; }
+	UINT getHeight() const { return m_height; }
+
 	static constexpr UINT kBufferCount = 2;
 
 private:

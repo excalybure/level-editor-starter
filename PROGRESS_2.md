@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-12 — Fix Renderer Viewport to Use SwapChain Dimensions Instead of Hardcoded Values
+**Summary:** Successfully refactored Renderer::beginFrame to use actual SwapChain dimensions for viewport setup instead of hardcoded 1920x1080 values. Added SwapChain getter methods for width/height and updated Renderer to query these values dynamically, with proper fallback handling for headless mode.
+
+**Atomic functionalities completed:**
+- AF1: Add SwapChain dimension accessors - Added getWidth() and getHeight() methods to SwapChain class to expose actual swap chain dimensions
+- AF2: Update Renderer viewport logic - Modified beginFrame() to check for SwapChain existence and use actual dimensions via getWidth()/getHeight() calls
+- AF3: Implement fallback handling - Added proper fallback to 1920x1080 for headless mode when no SwapChain is available
+- AF4: Update scissor rect calculation - Modified scissor rect setup to use the same dynamic dimensions as viewport
+- AF5: Add test coverage - Created test case documenting the viewport behavior and verifying headless mode handling
+
+**Tests:** 73 renderer tests pass (17 test cases) with new viewport test added; commands used: `.\unit_test_runner.exe "[renderer]"`
+**Notes:** This improvement eliminates hardcoded viewport dimensions and ensures the Renderer always uses the correct render target size. The viewport now automatically adapts to different window sizes or swap chain configurations. Fallback behavior is preserved for headless scenarios, maintaining compatibility with existing test infrastructure.
+
+Date: 2025-09-12
+
 ## 2025-09-12 — Eliminate Renderer Duplication by Leveraging Device Frame Management
 **Summary:** Successfully refactored Renderer to eliminate duplication with Device's frame management functionality. Renderer now properly delegates to Device for frame lifecycle, render target management, resource barriers, and descriptor heap setup, resulting in a cleaner architecture where Device is the single source of truth for D3D12 resource management.
 

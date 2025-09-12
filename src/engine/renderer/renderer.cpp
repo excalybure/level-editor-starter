@@ -566,18 +566,31 @@ void Renderer::beginFrame()
 		return; // Device not properly initialized
 	}
 
-	// TODO: Device should provide configurable viewport setup instead of hardcoded values
-	// For now, keep existing viewport setup until Device API is enhanced
+	// Use actual SwapChain dimensions instead of hardcoded values
 	D3D12_VIEWPORT viewport = {};
-	viewport.Width = 1920.0f; // Should match render target size
-	viewport.Height = 1080.0f;
+	D3D12_RECT scissorRect = {};
+
+	if ( m_currentSwapChain )
+	{
+		// Use actual swap chain dimensions
+		viewport.Width = static_cast<float>( m_currentSwapChain->getWidth() );
+		viewport.Height = static_cast<float>( m_currentSwapChain->getHeight() );
+		scissorRect.right = m_currentSwapChain->getWidth();
+		scissorRect.bottom = m_currentSwapChain->getHeight();
+	}
+	else
+	{
+		// Fallback for headless mode - use reasonable defaults
+		viewport.Width = 1920.0f;
+		viewport.Height = 1080.0f;
+		scissorRect.right = 1920;
+		scissorRect.bottom = 1080;
+	}
+
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	m_currentContext->get()->RSSetViewports( 1, &viewport );
 
-	D3D12_RECT scissorRect = {};
-	scissorRect.right = 1920;
-	scissorRect.bottom = 1080;
 	m_currentContext->get()->RSSetScissorRects( 1, &scissorRect );
 }
 
