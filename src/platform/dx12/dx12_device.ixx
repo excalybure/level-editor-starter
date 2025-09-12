@@ -164,6 +164,11 @@ public:
 	// Texture management for viewport render targets
 	TextureManager *getTextureManager() { return &m_textureManager; }
 
+	// Wrapper accessors
+	CommandContext *getCommandContext() const { return m_commandContext.get(); }
+	SwapChain *getSwapChainWrapper() const { return m_swapChain.get(); }
+	CommandQueue *getCommandQueue() const { return m_commandQueueWrapper.get(); }
+
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> getSwapChain() const;
 
 private:

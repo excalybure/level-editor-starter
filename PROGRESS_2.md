@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Refactor Renderer to Use Device's Wrappers Instead of Taking Parameters
+**Summary:** Successfully refactored Renderer::beginFrame to get CommandContext and SwapChain directly from the Device instead of requiring them as parameters. This improves encapsulation by ensuring the Device manages its own resources and simplifies the Renderer API by eliminating the need for callers to create and manage these D3D12 wrappers independently.
+
+**Atomic functionalities completed:**
+- AF1: Added wrapper accessors to Device - Added getCommandContext(), getSwapChainWrapper(), and getCommandQueue() methods to Device class for accessing internal wrapper objects
+- AF2: Updated Renderer interface - Simplified beginFrame() method to take no parameters and get wrappers from Device, updated beginHeadlessForTests() to not require CommandContext parameter  
+- AF3: Refactored Renderer implementation - Updated beginFrame() implementation to get m_currentContext and m_currentSwapChain from Device, added null checks for headless mode support
+- AF4: Updated test cases - Modified renderer tests to use simplified API, removing manual CommandContext creation in favor of Device-managed resources
+- AF5: Verified functionality - All renderer tests pass (73 assertions, 17 test cases) and all DX12 tests pass (64 assertions, 17 test cases) confirming refactor preserves behavior
+
+**Tests:** 73 renderer tests pass (17 test cases) and 64 DX12 tests pass (17 test cases); commands used: `.\unit_test_runner.exe "[renderer]"` and `.\unit_test_runner.exe "[dx12]"`
+**Notes:** This refactor improves the architecture by ensuring Device is the single source of truth for its wrapper objects. The Renderer now properly delegates to Device for CommandContext and SwapChain access, eliminating duplication where multiple code paths were creating separate wrapper instances. The API is now simpler and more consistent with the Device's role as the central resource manager.
+
+Date: 2025-01-03
+
 ## 2025-01-03 — Eliminate Command Allocator/List Duplication in Device Class  
 **Summary:** Successfully eliminated code duplication between Device's raw command allocator/list members and CommandContext wrapper by removing m_commandAllocator and m_commandList and refactoring all Device methods to use m_commandContext exclusively. Device now delegates all command list operations to the CommandContext wrapper class, completing the encapsulation improvements for D3D12 resource management.
 

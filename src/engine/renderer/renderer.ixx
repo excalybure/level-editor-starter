@@ -193,7 +193,7 @@ public:
 	Renderer &operator=( const Renderer & ) = delete;
 
 	// Frame lifecycle
-	void beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain );
+	void beginFrame();
 	void endFrame();
 
 	// Clear operations
@@ -213,9 +213,9 @@ public:
 	ID3D12Resource *getDynamicIndexResource() const noexcept { return m_dynamicIndexBuffer ? m_dynamicIndexBuffer->getResource() : nullptr; }
 
 	// Begin a headless recording session for tests (no swap chain / RTV setup)
-	void beginHeadlessForTests( dx12::CommandContext &context ) noexcept
+	void beginHeadlessForTests() noexcept
 	{
-		m_currentContext = &context;
+		m_currentContext = m_device.getCommandContext();
 		m_currentSwapChain = nullptr;
 	}
 

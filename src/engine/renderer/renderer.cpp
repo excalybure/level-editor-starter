@@ -600,10 +600,16 @@ void Renderer::createRenderTargets( UINT width, UINT height )
 	m_device->CreateDepthStencilView( m_depthBuffer.Get(), &dsvDesc, getDSV() );
 }
 
-void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapChain )
+void Renderer::beginFrame()
 {
-	m_currentContext = &context;
-	m_currentSwapChain = &swapChain;
+	// Get CommandContext and SwapChain from the Device
+	m_currentContext = m_device.getCommandContext();
+	m_currentSwapChain = m_device.getSwapChainWrapper();
+
+	if ( !m_currentContext )
+	{
+		return; // Device not properly initialized
+	}
 
 	// Create render targets if needed (first time or resize)
 	if ( !m_rtvHeap )
@@ -611,29 +617,32 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 		createRenderTargets( 1920, 1080 ); // Default size, should be configurable
 	}
 
-	// Create RTVs for current swap chain back buffers
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-
-	for ( UINT i = 0; i < dx12::SwapChain::kBufferCount; i++ )
+	// Create RTVs for current swap chain back buffers (if we have a swap chain)
+	if ( m_currentSwapChain )
 	{
-		ID3D12Resource *const backBuffer = swapChain.getCurrentBackBuffer();
-		m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
-		rtvHandle.ptr += rtvDescriptorSize;
-	}
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+		const UINT rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 
-	// Transition back buffer to render target
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = swapChain.getCurrentBackBuffer();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	context->ResourceBarrier( 1, &barrier );
+		for ( UINT i = 0; i < dx12::SwapChain::kBufferCount; i++ )
+		{
+			ID3D12Resource *const backBuffer = m_currentSwapChain->getCurrentBackBuffer();
+			m_device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
+			rtvHandle.ptr += rtvDescriptorSize;
+		}
+
+		// Transition back buffer to render target
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Transition.pResource = m_currentSwapChain->getCurrentBackBuffer();
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		m_currentContext->get()->ResourceBarrier( 1, &barrier );
+	}
 
 	// Set render targets
 	D3D12_CPU_DESCRIPTOR_HANDLE currentRTV = getCurrentRTV();
 	D3D12_CPU_DESCRIPTOR_HANDLE dsv = getDSV();
-	context->OMSetRenderTargets( 1, &currentRTV, FALSE, &dsv );
+	m_currentContext->get()->OMSetRenderTargets( 1, &currentRTV, FALSE, &dsv );
 
 	// Set viewport
 	D3D12_VIEWPORT viewport = {};
@@ -641,12 +650,12 @@ void Renderer::beginFrame( dx12::CommandContext &context, dx12::SwapChain &swapC
 	viewport.Height = 1080.0f;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-	context->RSSetViewports( 1, &viewport );
+	m_currentContext->get()->RSSetViewports( 1, &viewport );
 
 	D3D12_RECT scissorRect = {};
 	scissorRect.right = 1920;
 	scissorRect.bottom = 1080;
-	context->RSSetScissorRects( 1, &scissorRect );
+	m_currentContext->get()->RSSetScissorRects( 1, &scissorRect );
 }
 
 void Renderer::endFrame()
