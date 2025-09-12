@@ -48,8 +48,11 @@ struct MaterialConstants
 class MaterialGPU
 {
 public:
-	// Constructor taking assets::Material reference
+	// Constructor taking assets::Material reference (material-only mode)
 	explicit MaterialGPU( const std::shared_ptr<assets::Material> &material );
+
+	// Constructor taking assets::Material and device for GPU resource creation
+	MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device );
 
 	// Move constructor and assignment
 	MaterialGPU( MaterialGPU &&other ) noexcept;
@@ -78,6 +81,7 @@ public:
 private:
 	std::shared_ptr<assets::Material> m_material;
 	MaterialConstants m_materialConstants;
+	dx12::Device *m_device = nullptr; // Optional device for GPU resource creation
 
 	// D3D12 GPU resources
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;

@@ -78,7 +78,7 @@ std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( st
 
 	// Cache miss - create new MaterialGPU
 	++m_statistics.cacheMisses;
-	const auto materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material );
+	const auto materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material, *m_device );
 	if ( !materialGPU->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create MaterialGPU" );
