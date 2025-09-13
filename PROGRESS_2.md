@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Implement ECS Mesh Rendering System via TDD
+**Summary:** Successfully implemented a complete ECS-based mesh rendering system that bridges the gap between entity components and GPU resources. Created runtime.mesh_rendering_system module with MeshRenderingSystem class that queries entities with MeshRenderer and Transform components, calculates MVP matrices, and handles primitive rendering. The system provides foundation for scene-based mesh rendering in the editor.
+
+**Atomic functionalities completed:**
+- AF1: Create MeshRenderingSystem module structure - Established module file with class declaration, proper inheritance from System base class, and all required imports
+- AF2: Implement basic system lifecycle - Added constructor taking renderer reference, update method stub, and proper ECS system integration
+- AF3: Add entity querying capability - Implemented render method that iterates all entities and queries for both MeshRenderer and Transform components
+- AF4: Implement MVP matrix calculation - Created calculateMVPMatrix method combining transform local matrix with camera view and projection matrices
+- AF5: Implement render method for single entity - Added renderEntity method handling GPU mesh validation and primitive iteration with proper error handling
+- AF6: Implement complete render system - Verified main render method correctly integrates entity querying with MVP calculation and renderEntity calls
+- AF7: Add CMake integration - Updated CMakeLists.txt to include mesh rendering system module and proper dependency linking
+
+**Tests:** 6 comprehensive tests covering system creation, update, entity querying, MVP matrix calculation, renderEntity handling, and complete integration; all tests pass
+**Notes:** The implementation provides a solid foundation for ECS-based mesh rendering while gracefully handling cases where entities lack GPU resources. MVP matrix calculation uses proper transformation order (Projection * View * Model) and the system is designed to integrate with future GPU rendering pipeline enhancements. The modular design allows for easy extension with additional rendering features.
+
 ## 2025-12-12 — Add Material Configuration to GPUResourceManager::getMeshGPU via TDD
 **Summary:** Successfully resolved the issue where GPUResourceManager::getMeshGPU created MeshGPU instances without configuring materials, resulting in meshes with missing material data. Implemented a new overload getMeshGPU(mesh, scene) that automatically configures materials when creating or retrieving mesh GPU resources. Updated SceneImporter to use the new overload, ensuring complete material setup during asset loading.
 

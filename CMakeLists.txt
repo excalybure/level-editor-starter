@@ -259,6 +259,16 @@ target_sources(runtime.systems PUBLIC
 target_compile_features(runtime.systems PUBLIC cxx_std_23)
 target_link_libraries(runtime.systems PUBLIC runtime.entity runtime.ecs runtime.components engine.matrix)
 
+add_library(runtime.mesh_rendering_system)
+target_sources(runtime.mesh_rendering_system PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/mesh_rendering_system.ixx
+  PRIVATE
+    src/runtime/mesh_rendering_system.cpp
+)
+target_compile_features(runtime.mesh_rendering_system PUBLIC cxx_std_23)
+target_link_libraries(runtime.mesh_rendering_system PUBLIC runtime.systems runtime.ecs runtime.components engine.renderer engine.camera engine.gpu.mesh_gpu engine.matrix)
+
 add_library(runtime.app)
 target_sources(runtime.app PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -448,6 +458,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gpu_buffer_tests.cpp
     tests/material_gpu_tests.cpp
     tests/gpu_resource_manager_tests.cpp
+    tests/mesh_rendering_system_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -473,6 +484,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     runtime.scene_importer
     runtime.components
     runtime.systems
+    runtime.mesh_rendering_system
     runtime.app
     runtime.console
     editor.ui
