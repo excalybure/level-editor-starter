@@ -304,7 +304,12 @@ target_link_libraries(editor.ui PRIVATE
 )
 target_link_libraries(editor.ui PUBLIC 
   editor.viewport
-  editor.scene_editor
+  runtime.ecs
+  runtime.systems
+  engine.assets
+  engine.gpu.gpu_resource_manager
+  runtime.scene_importer
+  runtime.console
 )
 
 add_library(platform.dx12)
@@ -380,21 +385,10 @@ target_sources(editor.viewport PUBLIC
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
 target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console runtime.ecs runtime.systems runtime.mesh_rendering_system platform.pix)
 
-add_library(editor.scene_editor)
-target_sources(editor.scene_editor PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/scene_editor.ixx
-  PRIVATE
-    src/editor/scene_editor.cpp
-)
-target_compile_features(editor.scene_editor PUBLIC cxx_std_23)
-target_link_libraries(editor.scene_editor PUBLIC runtime.ecs runtime.systems engine.assets engine.gpu.gpu_resource_manager runtime.scene_importer runtime.console)
-target_link_libraries(editor.scene_editor PRIVATE imgui::imgui)
-
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix engine.asset_manager engine.gpu.gpu_resource_manager runtime.ecs runtime.app runtime.console runtime.systems runtime.mesh_rendering_system engine.renderer platform.win32 platform.dx12 editor.ui platform.pix
+  engine.vec engine.matrix engine.assets engine.gpu.gpu_resource_manager runtime.ecs runtime.app runtime.console runtime.systems runtime.mesh_rendering_system engine.renderer platform.win32 platform.dx12 editor.ui platform.pix
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 
@@ -453,6 +447,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/renderer_integration_tests.cpp
     tests/integration_tests.cpp
     tests/ui_tests.cpp
+    tests/ui_scene_operations_tests.cpp
     tests/win32_window_tests.cpp
     tests/console_tests.cpp
     tests/shader_manager_tests.cpp
@@ -471,7 +466,6 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_gpu_tests.cpp
     tests/gpu_resource_manager_tests.cpp
     tests/mesh_rendering_system_tests.cpp
-    tests/scene_editor_tests.cpp
     tests/asset_rendering_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
@@ -502,7 +496,6 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     runtime.app
     runtime.console
     editor.ui
-    editor.scene_editor
     platform.win32
     engine.assets
     engine.gpu.gpu_resource_manager

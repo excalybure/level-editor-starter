@@ -2,7 +2,6 @@ export module editor.ui;
 
 import std;
 import editor.viewport;
-import editor.scene_editor;
 import runtime.ecs;
 import runtime.systems;
 import engine.asset_manager;
@@ -88,16 +87,25 @@ public:
 	void showCameraSettingsWindow( bool show = true );
 	bool isCameraSettingsWindowOpen() const;
 
-	// Scene Editor management
-	void showSceneEditorWindow( bool show = true );
-	bool isSceneEditorWindowOpen() const;
-	SceneEditor &getSceneEditor();
-
-	// Initialize SceneEditor with scene and managers
-	void initializeSceneEditor( ecs::Scene &scene,
+	// Scene Operations (unified interface)
+	void initializeSceneOperations( ecs::Scene &scene,
 		systems::SystemManager &systemManager,
 		assets::AssetManager &assetManager,
 		engine::GPUResourceManager &gpuManager );
+
+	// File operations
+	bool loadScene( const std::string &filePath );
+	void clearScene();
+
+	// File dialog operations
+	void openFileDialog();
+	bool isFileDialogOpen() const;
+	void processFileDialog();
+
+	// Scene state queries
+	const std::string &getCurrentScenePath() const;
+	size_t getEntityCount() const;
+	const std::string &getLastError() const;
 
 	// Get viewport manager for input handling
 	ViewportManager &getViewportManager();

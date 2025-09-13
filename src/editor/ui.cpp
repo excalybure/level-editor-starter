@@ -11,7 +11,8 @@ module editor.ui;
 
 import std;
 import engine.grid;
-import editor.scene_editor;
+import runtime.scene_importer;
+import runtime.console;
 
 namespace editor
 {
@@ -41,9 +42,15 @@ struct UI::Impl
 	// Camera settings window state
 	bool showCameraSettingsWindow = false;
 
-	// Scene Editor window state
-	bool showSceneEditorWindow = true; // Show by default
-	std::unique_ptr<editor::SceneEditor> sceneEditor;
+	// Scene Operations state
+	ecs::Scene *scene = nullptr;
+	systems::SystemManager *systemManager = nullptr;
+	assets::AssetManager *assetManager = nullptr;
+	engine::GPUResourceManager *gpuManager = nullptr;
+
+	std::string currentScenePath;
+	bool showFileDialog = false;
+	std::string lastError;
 
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
@@ -63,9 +70,6 @@ struct UI::Impl
 	// Render camera settings window
 	void renderCameraSettingsWindow();
 
-	// Render scene editor window
-	void renderSceneEditorWindow();
-
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdownViewports();
@@ -77,7 +81,6 @@ struct UI::Impl
 UI::UI() : m_impl( std::make_unique<Impl>() )
 {
 	// Viewport initialization will happen in initialize() once we have the D3D12 device
-	// SceneEditor initialization will happen in initialize() as well
 }
 
 UI::~UI()
@@ -100,9 +103,6 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	{
 		return false;
 	}
-
-	// Initialize SceneEditor
-	m_impl->sceneEditor = std::make_unique<editor::SceneEditor>();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -152,9 +152,6 @@ void UI::shutdown()
 	// Shutdown viewports first
 	m_impl->shutdownViewports();
 
-	// Shutdown SceneEditor
-	m_impl->sceneEditor.reset();
-
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -184,9 +181,6 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
-
-	// Render scene editor window if open
-	m_impl->renderSceneEditorWindow();
 }
 
 void UI::endFrame()
@@ -284,13 +278,23 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 		if ( ImGui::BeginMenu( "File" ) )
 		{
 			if ( ImGui::MenuItem( "New" ) )
-			{ /* TODO: Implement */
+			{
+				// Clear current scene
+				ui.clearScene();
 			}
-			if ( ImGui::MenuItem( "Open" ) )
-			{ /* TODO: Implement */
+			if ( ImGui::MenuItem( "Open Scene..." ) )
+			{
+				// Open file dialog for scene loading
+				ui.openFileDialog();
 			}
 			if ( ImGui::MenuItem( "Save" ) )
-			{ /* TODO: Implement */
+			{ /* TODO: Implement scene saving */
+			}
+			ImGui::Separator();
+			if ( ImGui::MenuItem( "Clear Scene" ) )
+			{
+				// Clear current scene
+				ui.clearScene();
 			}
 			ImGui::Separator();
 			if ( ImGui::MenuItem( "Exit" ) )
@@ -312,10 +316,6 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		if ( ImGui::BeginMenu( "Tools" ) )
 		{
-			if ( ImGui::MenuItem( "Scene Editor" ) )
-			{
-				showSceneEditorWindow = true;
-			}
 			if ( ImGui::MenuItem( "Grid Settings" ) )
 			{
 				showGridSettingsWindow = true;
@@ -327,8 +327,48 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			ImGui::EndMenu();
 		}
 
+		// Scene status bar integrated into menu bar
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		// Current scene file
+		if ( !ui.getCurrentScenePath().empty() )
+		{
+			ImGui::Text( "Scene: %s", ui.getCurrentScenePath().c_str() );
+		}
+		else
+		{
+			ImGui::Text( "No scene loaded" );
+		}
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Entity count
+		const size_t entityCount = ui.getEntityCount();
+		ImGui::Text( "Entities: %zu", entityCount );
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Error status
+		const std::string &lastError = ui.getLastError();
+		if ( !lastError.empty() )
+		{
+			ImGui::TextColored( ImVec4( 1.0f, 0.4f, 0.4f, 1.0f ), "Error: %s", lastError.c_str() );
+		}
+		else
+		{
+			ImGui::Text( "Ready" );
+		}
+
 		ImGui::EndMenuBar();
 	}
+
+	// Process file dialog if active
+	ui.processFileDialog();
 }
 
 void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
@@ -992,50 +1032,144 @@ void UI::updateViewports( const float deltaTime )
 	m_impl->viewportManager.update( deltaTime );
 }
 
-void UI::Impl::renderSceneEditorWindow()
-{
-	if ( !showSceneEditorWindow || !sceneEditor )
-		return;
-
-	if ( ImGui::Begin( "Scene Editor", &showSceneEditorWindow ) )
-	{
-		sceneEditor->renderMenuBar();
-		ImGui::Separator();
-		sceneEditor->renderStatusBar();
-
-		// Process file dialog if active
-		if ( sceneEditor->isFileDialogActive() )
-		{
-			sceneEditor->processFileDialog();
-		}
-	}
-	ImGui::End();
-}
-
-// Scene Editor window management
-void UI::showSceneEditorWindow( bool show )
-{
-	m_impl->showSceneEditorWindow = show;
-}
-
-bool UI::isSceneEditorWindowOpen() const
-{
-	return m_impl->showSceneEditorWindow;
-}
-
-void UI::initializeSceneEditor( ecs::Scene &scene,
+// Scene Operations Implementation
+// Scene Operations Implementation
+void UI::initializeSceneOperations( ecs::Scene &scene,
 	systems::SystemManager &systemManager,
 	assets::AssetManager &assetManager,
 	engine::GPUResourceManager &gpuManager )
 {
-	// Replace the default-constructed SceneEditor with a fully-initialized one
-	m_impl->sceneEditor = std::make_unique<editor::SceneEditor>(
-		scene, systemManager, assetManager, gpuManager );
+	m_impl->scene = &scene;
+	m_impl->systemManager = &systemManager;
+	m_impl->assetManager = &assetManager;
+	m_impl->gpuManager = &gpuManager;
 }
 
-editor::SceneEditor &UI::getSceneEditor()
+bool UI::loadScene( const std::string &filePath )
 {
-	return *m_impl->sceneEditor;
+	if ( filePath.empty() )
+	{
+		m_impl->lastError = "File path is empty";
+		console::error( "UI: Cannot load scene - file path is empty" );
+		return false;
+	}
+
+	// Check if dependencies are available
+	if ( !m_impl->assetManager || !m_impl->scene || !m_impl->gpuManager )
+	{
+		m_impl->lastError = "Scene operation dependencies not available";
+		console::error( "UI: Cannot load scene - dependencies not initialized" );
+		return false;
+	}
+
+	// Clear existing scene first
+	clearScene();
+
+	// Load scene via AssetManager
+	auto assetScene = m_impl->assetManager->load<assets::Scene>( filePath );
+	if ( !assetScene )
+	{
+		m_impl->lastError = "Failed to load scene from file: " + filePath;
+		console::error( "UI: Failed to load scene from file: {}", filePath );
+		return false;
+	}
+
+	// Import scene into ECS
+	if ( !runtime::SceneImporter::importScene( assetScene, *m_impl->scene ) )
+	{
+		m_impl->lastError = "Failed to import scene into ECS";
+		console::error( "UI: Failed to import scene into ECS" );
+		return false;
+	}
+
+	// Create GPU resources
+	if ( !runtime::SceneImporter::createGPUResources( assetScene, *m_impl->scene, *m_impl->gpuManager ) )
+	{
+		m_impl->lastError = "Failed to create GPU resources for scene";
+		console::error( "UI: Failed to create GPU resources for scene" );
+		return false;
+	}
+
+	// Update current path
+	m_impl->currentScenePath = filePath;
+	m_impl->lastError.clear();
+
+	console::info( "UI: Successfully loaded scene: {}", filePath );
+	return true;
+}
+
+void UI::clearScene()
+{
+	if ( !m_impl->scene )
+	{
+		console::warning( "UI: Cannot clear scene - scene not available" );
+		return;
+	}
+
+	// Get all entities and destroy them
+	const auto entities = m_impl->scene->getAllEntities();
+	for ( const auto &entity : entities )
+	{
+		if ( entity.isValid() )
+		{
+			m_impl->scene->destroyEntity( entity );
+		}
+	}
+
+	m_impl->currentScenePath.clear();
+	m_impl->lastError.clear();
+
+	console::info( "UI: Scene cleared" );
+}
+
+void UI::openFileDialog()
+{
+	m_impl->showFileDialog = true;
+}
+
+bool UI::isFileDialogOpen() const
+{
+	return m_impl->showFileDialog;
+}
+
+void UI::processFileDialog()
+{
+	if ( m_impl->showFileDialog )
+	{
+		// For now, just simulate closing the dialog
+		// TODO: Implement actual file dialog using ImGui or native Windows dialog
+		console::info( "UI: File dialog processed (closed without selection)" );
+		m_impl->showFileDialog = false;
+	}
+}
+
+const std::string &UI::getCurrentScenePath() const
+{
+	return m_impl->currentScenePath;
+}
+
+size_t UI::getEntityCount() const
+{
+	if ( !m_impl->scene )
+	{
+		return 0;
+	}
+
+	const auto entities = m_impl->scene->getAllEntities();
+	size_t count = 0;
+	for ( const auto &entity : entities )
+	{
+		if ( entity.isValid() )
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
+const std::string &UI::getLastError() const
+{
+	return m_impl->lastError;
 }
 
 } // namespace editor

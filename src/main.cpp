@@ -10,7 +10,6 @@ import platform.win32.win32_window;
 import platform.dx12;
 import platform.pix;
 import editor.ui;
-import editor.scene_editor;
 import engine.shader_manager;
 
 #include <iostream>
@@ -118,8 +117,8 @@ int main()
 		return 1;
 	}
 
-	// Initialize SceneEditor with required managers
-	ui.initializeSceneEditor( scene, systemManager, assetManager, gpuResourceManager );
+	// Initialize Scene Operations with required managers
+	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager );
 
 	// Connect scene and systems to viewport manager for 3D rendering
 	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager );
