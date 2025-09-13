@@ -1137,7 +1137,7 @@ bool UI::loadScene( const std::string &filePath )
 	}
 
 	// Create GPU resources
-	if ( !runtime::SceneImporter::createGPUResources( assetScene, *m_impl->scene, *m_impl->gpuManager ) )
+	main.cpp if ( !runtime::SceneImporter::createGPUResources( assetScene, *m_impl->scene, *m_impl->gpuManager ) )
 	{
 		m_impl->lastError = "Failed to create GPU resources for scene";
 		console::error( "UI: Failed to create GPU resources for scene" );

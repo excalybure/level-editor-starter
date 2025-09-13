@@ -218,6 +218,14 @@ target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
 target_link_libraries(engine.gltf_loader PUBLIC engine.assets engine.vec engine.quat engine.matrix runtime.console)
 target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
 
+add_library(engine.integration.asset_gltf)
+target_sources(engine.integration.asset_gltf PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/integration/asset_gltf_integration.ixx
+)
+target_compile_features(engine.integration.asset_gltf PUBLIC cxx_std_23)
+target_link_libraries(engine.integration.asset_gltf PUBLIC engine.assets engine.gltf_loader)
+
 add_library(runtime.entity)
 target_sources(runtime.entity PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -388,7 +396,7 @@ target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.cam
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix engine.assets engine.gpu.gpu_resource_manager runtime.ecs runtime.app runtime.console runtime.systems runtime.mesh_rendering_system engine.renderer platform.win32 platform.dx12 editor.ui platform.pix
+  engine.vec engine.matrix engine.assets engine.integration.asset_gltf engine.gpu.gpu_resource_manager runtime.ecs runtime.app runtime.console runtime.systems runtime.mesh_rendering_system engine.renderer platform.win32 platform.dx12 editor.ui platform.pix
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 

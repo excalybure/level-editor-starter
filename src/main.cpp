@@ -5,6 +5,7 @@ import runtime.systems;
 import runtime.mesh_rendering_system;
 import engine.renderer;
 import engine.asset_manager;
+import engine.integration.asset_gltf;
 import engine.gpu.gpu_resource_manager;
 import platform.win32.win32_window;
 import platform.dx12;
@@ -68,7 +69,7 @@ int main()
 
 	// Create the window
 	platform::Win32Window window;
-	if ( !window.create( "Level Editor - Multi-Viewport", 600, 900 ) )
+	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )
 	{
 		console::fatal( "Failed to create window" );
 		return 1;
@@ -90,6 +91,10 @@ int main()
 
 	// Create asset manager for loading 3D assets
 	assets::AssetManager assetManager;
+
+	// Initialize GLTFLoader integration with AssetManager
+	// This enables AssetManager::loadScene to delegate to GLTFLoader for glTF files
+	engine::integration::initializeAssetGLTFIntegration();
 
 	// Create GPU resource manager for GPU resource creation and management
 	engine::GPUResourceManager gpuResourceManager( device );
