@@ -50,8 +50,11 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 		if ( mesh )
 		{
 			auto gpuMesh = gpuResourceManager.getMeshGPU( mesh );
-			gpuMesh->configureMaterials( gpuResourceManager, *assetScene, *mesh );
-			meshRenderer->gpuMesh = std::move( gpuMesh );
+			if ( gpuMesh )
+			{
+				gpuMesh->configureMaterials( gpuResourceManager, *assetScene, *mesh );
+				meshRenderer->gpuMesh = std::move( gpuMesh );
+			}
 		}
 	}
 

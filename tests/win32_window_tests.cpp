@@ -221,6 +221,8 @@ TEST_CASE( "Win32Window focus and lost focus events", "[win32][window]" )
 	{
 		types.push_back( ev.type );
 	}
+	// TODO: I think this could fail due to other tests running at the same time. When that happens,
+	// see which assertion actually failed and modify to handle the situation
 	REQUIRE( types.size() == 2 );
 	REQUIRE( types[0] == platform::WindowEvent::Type::LostFocus );
 	REQUIRE( types[1] == platform::WindowEvent::Type::Focus );

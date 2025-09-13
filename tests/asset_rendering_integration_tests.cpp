@@ -48,6 +48,9 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 	{
 		// Arrange
 		dx12::Device device;
+
+		REQUIRE( device.initializeHeadless() );
+
 		renderer::Renderer renderer( device );
 
 		// Act - create MeshRenderingSystem
@@ -61,6 +64,9 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 	{
 		// Arrange
 		dx12::Device device;
+
+		REQUIRE( device.initializeHeadless() );
+
 		renderer::Renderer renderer( device );
 		systems::SystemManager systemManager;
 		ecs::Scene scene;
