@@ -379,6 +379,17 @@ target_sources(editor.viewport PUBLIC
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
 target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console platform.pix)
 
+add_library(editor.scene_editor)
+target_sources(editor.scene_editor PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/editor/scene_editor.ixx
+  PRIVATE
+    src/editor/scene_editor.cpp
+)
+target_compile_features(editor.scene_editor PUBLIC cxx_std_23)
+target_link_libraries(editor.scene_editor PUBLIC runtime.ecs runtime.systems engine.assets engine.gpu.gpu_resource_manager runtime.scene_importer runtime.console)
+target_link_libraries(editor.scene_editor PRIVATE imgui::imgui)
+
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
@@ -459,6 +470,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_gpu_tests.cpp
     tests/gpu_resource_manager_tests.cpp
     tests/mesh_rendering_system_tests.cpp
+    tests/scene_editor_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -488,6 +500,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     runtime.app
     runtime.console
     editor.ui
+    editor.scene_editor
     platform.win32
     engine.assets
     engine.gpu.gpu_resource_manager
