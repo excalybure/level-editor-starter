@@ -6,6 +6,7 @@ module; // start global module fragment so we can include headers before the mod
 #include "imgui_impl_dx12.h"
 #include <d3d12.h>
 #include <windows.h>
+#include <commdlg.h> // For GetOpenFileName
 
 module editor.ui;
 
@@ -55,7 +56,6 @@ struct UI::Impl
 	engine::GPUResourceManager *gpuManager = nullptr;
 
 	std::string currentScenePath;
-	bool showFileDialog = false;
 	std::string lastError;
 
 	// Setup the main dockspace
@@ -344,9 +344,6 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		ImGui::EndMenuBar();
 	}
-
-	// Process file dialog if active
-	ui.processFileDialog();
 }
 
 void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
@@ -1181,24 +1178,40 @@ void UI::clearScene()
 
 void UI::openFileDialog()
 {
-	m_impl->showFileDialog = true;
-}
-
-bool UI::isFileDialogOpen() const
-{
-	return m_impl->showFileDialog;
-}
-
-void UI::processFileDialog()
-{
-	if ( m_impl->showFileDialog )
+	// Check if we're in test mode (no ImGui context or headless environment)
+	if ( !ImGui::GetCurrentContext() )
 	{
-		// For now, just simulate closing the dialog
-		// TODO: Implement actual file dialog using ImGui or native Windows dialog
-		console::info( "UI: File dialog processed (closed without selection)" );
-		m_impl->showFileDialog = false;
+		// In test mode, don't show actual dialog to avoid blocking tests
+		console::info( "UI: File dialog skipped (test mode)" );
+		return;
 	}
+
+	// Use native Windows file dialog
+	OPENFILENAMEA ofn;
+	char szFile[260] = { 0 };
+
+	// Initialize OPENFILENAME
+	ZeroMemory( &ofn, sizeof( ofn ) );
+	ofn.lStructSize = sizeof( ofn );
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof( szFile );
+	ofn.lpstrFilter = "glTF Files\0*.gltf;*.glb\0All Files\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+	// Display the modal dialog box (blocks until user interaction)
+	if ( GetOpenFileNameA( &ofn ) == TRUE )
+	{
+		// User selected a file - immediately load it
+		const std::string selectedFile( szFile );
+		loadScene( selectedFile );
+	}
+	// If GetOpenFileNameA returns FALSE, user cancelled - no action needed
 }
+
 
 const std::string &UI::getCurrentScenePath() const
 {

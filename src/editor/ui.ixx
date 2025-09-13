@@ -99,8 +99,6 @@ public:
 
 	// File dialog operations
 	void openFileDialog();
-	bool isFileDialogOpen() const;
-	void processFileDialog();
 
 	// Scene state queries
 	const std::string &getCurrentScenePath() const;
