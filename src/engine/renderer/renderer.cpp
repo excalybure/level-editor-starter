@@ -596,6 +596,10 @@ void Renderer::beginFrame()
 		return; // Device not properly initialized
 	}
 
+	// Now it's safe to delete any pending buffers since the command list has been executed
+	m_pendingVertexBufferDeletions.clear();
+	m_pendingIndexBufferDeletions.clear();
+
 	// Use actual SwapChain dimensions instead of hardcoded values
 	D3D12_VIEWPORT viewport = {};
 	D3D12_RECT scissorRect = {};
@@ -620,7 +624,6 @@ void Renderer::beginFrame()
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	m_currentContext->get()->RSSetViewports( 1, &viewport );
-
 	m_currentContext->get()->RSSetScissorRects( 1, &scissorRect );
 }
 
@@ -633,10 +636,6 @@ void Renderer::endFrame()
 
 	// Device handles all frame completion (barriers, command list closing/execution)
 	m_device.endFrame();
-
-	// Now it's safe to delete any pending buffers since the command list has been executed
-	m_pendingVertexBufferDeletions.clear();
-	m_pendingIndexBufferDeletions.clear();
 
 	m_currentContext = nullptr;
 	m_currentSwapChain = nullptr;

@@ -399,10 +399,10 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	tri[1].position.y = 0.2f;
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexResource() == firstVB );
-	// tri.push_back( { { 0, 0, 1 }, Color::white() } );
+	tri.push_back( { { 0, 0, 1 }, Color::white() } );
 	renderer.drawVertices( tri );
-	REQUIRE( renderer.getDynamicVertexCapacity() == 3 );
-	// REQUIRE( renderer.getDynamicVertexResource() != firstVB );
+	REQUIRE( renderer.getDynamicVertexCapacity() == 4 );
+	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
 
 	renderer.endFrame();
 	device.present();
