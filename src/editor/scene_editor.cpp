@@ -11,11 +11,16 @@ import runtime.scene_importer;
 namespace editor
 {
 
+SceneEditor::SceneEditor()
+	: m_scene( nullptr ), m_systemManager( nullptr ), m_assetManager( nullptr ), m_gpuManager( nullptr )
+{
+}
+
 SceneEditor::SceneEditor( ecs::Scene &scene,
 	systems::SystemManager &systemManager,
 	assets::AssetManager &assetManager,
 	engine::GPUResourceManager &gpuManager )
-	: m_scene( scene ), m_systemManager( systemManager ), m_assetManager( assetManager ), m_gpuManager( gpuManager )
+	: m_scene( &scene ), m_systemManager( &systemManager ), m_assetManager( &assetManager ), m_gpuManager( &gpuManager )
 {
 }
 
@@ -28,11 +33,19 @@ bool SceneEditor::loadScene( const std::string &filePath )
 		return false;
 	}
 
+	// Check if dependencies are available
+	if ( !m_assetManager || !m_scene || !m_gpuManager )
+	{
+		m_lastError = "SceneEditor dependencies not available";
+		console::error( "SceneEditor: Cannot load scene - dependencies not initialized" );
+		return false;
+	}
+
 	// Clear existing scene first
 	clearScene();
 
 	// Load scene via AssetManager
-	auto assetScene = m_assetManager.load<assets::Scene>( filePath );
+	auto assetScene = m_assetManager->load<assets::Scene>( filePath );
 	if ( !assetScene )
 	{
 		m_lastError = "Failed to load scene from file: " + filePath;
@@ -41,7 +54,7 @@ bool SceneEditor::loadScene( const std::string &filePath )
 	}
 
 	// Import scene into ECS
-	if ( !runtime::SceneImporter::importScene( assetScene, m_scene ) )
+	if ( !runtime::SceneImporter::importScene( assetScene, *m_scene ) )
 	{
 		m_lastError = "Failed to import scene into ECS";
 		console::error( "SceneEditor: Failed to import scene into ECS" );
@@ -49,7 +62,7 @@ bool SceneEditor::loadScene( const std::string &filePath )
 	}
 
 	// Create GPU resources
-	if ( !runtime::SceneImporter::createGPUResources( assetScene, m_scene, m_gpuManager ) )
+	if ( !runtime::SceneImporter::createGPUResources( assetScene, *m_scene, *m_gpuManager ) )
 	{
 		m_lastError = "Failed to create GPU resources for scene";
 		console::error( "SceneEditor: Failed to create GPU resources for scene" );
@@ -66,13 +79,19 @@ bool SceneEditor::loadScene( const std::string &filePath )
 
 void SceneEditor::clearScene()
 {
+	if ( !m_scene )
+	{
+		console::warning( "SceneEditor: Cannot clear scene - scene not available" );
+		return;
+	}
+
 	// Get all entities and destroy them
-	const auto entities = m_scene.getAllEntities();
+	const auto entities = m_scene->getAllEntities();
 	for ( const auto &entity : entities )
 	{
 		if ( entity.isValid() )
 		{
-			m_scene.destroyEntity( entity );
+			m_scene->destroyEntity( entity );
 		}
 	}
 
@@ -151,7 +170,12 @@ void SceneEditor::renderStatusBar()
 
 size_t SceneEditor::getEntityCount() const
 {
-	const auto entities = m_scene.getAllEntities();
+	if ( !m_scene )
+	{
+		return 0;
+	}
+
+	const auto entities = m_scene->getAllEntities();
 	size_t count = 0;
 	for ( const auto &entity : entities )
 	{

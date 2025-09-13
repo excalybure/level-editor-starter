@@ -527,6 +527,12 @@ void ViewportManager::shutdown()
 	m_shaderManager.reset(); // Properly release the shared_ptr
 }
 
+void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager )
+{
+	m_scene = scene;
+	m_systemManager = systemManager;
+}
+
 Viewport *ViewportManager::createViewport( ViewportType type )
 {
 	if ( !m_device )
@@ -657,7 +663,21 @@ void ViewportManager::render()
 			activeViewports++;
 			const char *viewportName = ViewportUtils::getViewportTypeName( viewport->getType() );
 			pix::ScopedEvent pixIndividualViewport( commandList, pix::MarkerColor::LightBlue, std::format( "Viewport {} Render", viewportName ) );
+
+			// Render the viewport (clears render target and renders grid)
 			viewport->render( m_device );
+
+			// Render 3D scene content if we have scene and systems
+			if ( m_scene && m_systemManager && viewport->getCamera() )
+			{
+				pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
+
+				// Get the MeshRenderingSystem and call its render method
+				if ( auto *meshRenderingSystem = m_systemManager->getSystem<runtime::systems::MeshRenderingSystem>() )
+				{
+					meshRenderingSystem->render( *m_scene, *viewport->getCamera() );
+				}
+			}
 		}
 	}
 

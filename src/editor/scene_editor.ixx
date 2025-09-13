@@ -16,6 +16,9 @@ export namespace editor
 export class SceneEditor
 {
 public:
+	// Default constructor for integration testing
+	SceneEditor();
+
 	SceneEditor( ecs::Scene &scene,
 		systems::SystemManager &systemManager,
 		assets::AssetManager &assetManager,
@@ -39,10 +42,10 @@ public:
 	size_t getEntityCount() const;
 
 private:
-	ecs::Scene &m_scene;
-	systems::SystemManager &m_systemManager;
-	assets::AssetManager &m_assetManager;
-	engine::GPUResourceManager &m_gpuManager;
+	ecs::Scene *m_scene;
+	systems::SystemManager *m_systemManager;
+	assets::AssetManager *m_assetManager;
+	engine::GPUResourceManager *m_gpuManager;
 
 	std::string m_currentPath;
 	bool m_showFileDialog = false;

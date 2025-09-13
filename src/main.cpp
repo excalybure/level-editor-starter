@@ -1,9 +1,16 @@
 import runtime.app;
 import runtime.console;
+import runtime.ecs;
+import runtime.systems;
+import runtime.mesh_rendering_system;
+import engine.renderer;
+import engine.asset_manager;
+import engine.gpu.gpu_resource_manager;
 import platform.win32.win32_window;
 import platform.dx12;
 import platform.pix;
 import editor.ui;
+import editor.scene_editor;
 import engine.shader_manager;
 
 #include <iostream>
@@ -79,6 +86,27 @@ int main()
 	// Create shader manager for automatic shader reloading
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
+	// Create ECS Scene for runtime entities
+	ecs::Scene scene;
+
+	// Create asset manager for loading 3D assets
+	assets::AssetManager assetManager;
+
+	// Create GPU resource manager for GPU resource creation and management
+	engine::GPUResourceManager gpuResourceManager( device );
+
+	// Create renderer for 3D graphics
+	renderer::Renderer renderer( device );
+
+	// Create system manager and add systems
+	systems::SystemManager systemManager;
+
+	// Add MeshRenderingSystem to handle 3D mesh rendering
+	auto *meshRenderingSystem = systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer );
+
+	// Initialize all systems with the scene
+	systemManager.initialize( scene );
+
 	// Initialize UI system with D3D12 device
 	editor::UI ui;
 	if ( !ui.initialize(
@@ -89,6 +117,12 @@ int main()
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;
 	}
+
+	// Initialize SceneEditor with required managers
+	ui.initializeSceneEditor( scene, systemManager, assetManager, gpuResourceManager );
+
+	// Connect scene and systems to viewport manager for 3D rendering
+	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager );
 
 	// Create application
 	app::App app;
@@ -124,6 +158,12 @@ int main()
 				{
 					pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
 					shaderManager->update();
+				}
+
+				// Update systems (including MeshRenderingSystem)
+				{
+					pix::ScopedEvent pixSystemUpdate( commandList, pix::MarkerColor::Orange, "System Update" );
+					systemManager.update( scene, deltaTime );
 				}
 
 				// Update viewports with timing (for camera controllers)

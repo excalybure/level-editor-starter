@@ -2,6 +2,11 @@ export module editor.ui;
 
 import std;
 import editor.viewport;
+import editor.scene_editor;
+import runtime.ecs;
+import runtime.systems;
+import engine.asset_manager;
+import engine.gpu.gpu_resource_manager;
 import platform.dx12;
 import platform.win32.win32_window;
 import engine.shader_manager;
@@ -82,6 +87,17 @@ public:
 	// Camera settings management
 	void showCameraSettingsWindow( bool show = true );
 	bool isCameraSettingsWindowOpen() const;
+
+	// Scene Editor management
+	void showSceneEditorWindow( bool show = true );
+	bool isSceneEditorWindowOpen() const;
+	SceneEditor &getSceneEditor();
+
+	// Initialize SceneEditor with scene and managers
+	void initializeSceneEditor( ecs::Scene &scene,
+		systems::SystemManager &systemManager,
+		assets::AssetManager &assetManager,
+		engine::GPUResourceManager &gpuManager );
 
 	// Get viewport manager for input handling
 	ViewportManager &getViewportManager();

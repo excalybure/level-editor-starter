@@ -11,6 +11,7 @@ module editor.ui;
 
 import std;
 import engine.grid;
+import editor.scene_editor;
 
 namespace editor
 {
@@ -40,6 +41,10 @@ struct UI::Impl
 	// Camera settings window state
 	bool showCameraSettingsWindow = false;
 
+	// Scene Editor window state
+	bool showSceneEditorWindow = true; // Show by default
+	std::unique_ptr<editor::SceneEditor> sceneEditor;
+
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -58,6 +63,9 @@ struct UI::Impl
 	// Render camera settings window
 	void renderCameraSettingsWindow();
 
+	// Render scene editor window
+	void renderSceneEditorWindow();
+
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdownViewports();
@@ -69,6 +77,7 @@ struct UI::Impl
 UI::UI() : m_impl( std::make_unique<Impl>() )
 {
 	// Viewport initialization will happen in initialize() once we have the D3D12 device
+	// SceneEditor initialization will happen in initialize() as well
 }
 
 UI::~UI()
@@ -91,6 +100,9 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	{
 		return false;
 	}
+
+	// Initialize SceneEditor
+	m_impl->sceneEditor = std::make_unique<editor::SceneEditor>();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -140,6 +152,9 @@ void UI::shutdown()
 	// Shutdown viewports first
 	m_impl->shutdownViewports();
 
+	// Shutdown SceneEditor
+	m_impl->sceneEditor.reset();
+
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -169,6 +184,9 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
+
+	// Render scene editor window if open
+	m_impl->renderSceneEditorWindow();
 }
 
 void UI::endFrame()
@@ -294,6 +312,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		if ( ImGui::BeginMenu( "Tools" ) )
 		{
+			if ( ImGui::MenuItem( "Scene Editor" ) )
+			{
+				showSceneEditorWindow = true;
+			}
 			if ( ImGui::MenuItem( "Grid Settings" ) )
 			{
 				showGridSettingsWindow = true;
@@ -968,6 +990,52 @@ void UI::processInputEvents( platform::Win32Window &window )
 void UI::updateViewports( const float deltaTime )
 {
 	m_impl->viewportManager.update( deltaTime );
+}
+
+void UI::Impl::renderSceneEditorWindow()
+{
+	if ( !showSceneEditorWindow || !sceneEditor )
+		return;
+
+	if ( ImGui::Begin( "Scene Editor", &showSceneEditorWindow ) )
+	{
+		sceneEditor->renderMenuBar();
+		ImGui::Separator();
+		sceneEditor->renderStatusBar();
+
+		// Process file dialog if active
+		if ( sceneEditor->isFileDialogActive() )
+		{
+			sceneEditor->processFileDialog();
+		}
+	}
+	ImGui::End();
+}
+
+// Scene Editor window management
+void UI::showSceneEditorWindow( bool show )
+{
+	m_impl->showSceneEditorWindow = show;
+}
+
+bool UI::isSceneEditorWindowOpen() const
+{
+	return m_impl->showSceneEditorWindow;
+}
+
+void UI::initializeSceneEditor( ecs::Scene &scene,
+	systems::SystemManager &systemManager,
+	assets::AssetManager &assetManager,
+	engine::GPUResourceManager &gpuManager )
+{
+	// Replace the default-constructed SceneEditor with a fully-initialized one
+	m_impl->sceneEditor = std::make_unique<editor::SceneEditor>(
+		scene, systemManager, assetManager, gpuManager );
+}
+
+editor::SceneEditor &UI::getSceneEditor()
+{
+	return *m_impl->sceneEditor;
 }
 
 } // namespace editor

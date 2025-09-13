@@ -7,6 +7,9 @@ import engine.vec;
 import engine.matrix;
 import engine.camera;
 import engine.camera.controller;
+import runtime.ecs;
+import runtime.systems;
+import runtime.mesh_rendering_system;
 import platform.dx12;
 import engine.grid;
 import engine.shader_manager;
@@ -197,6 +200,9 @@ public:
 	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdown();
 
+	// Set scene and system manager for 3D content rendering
+	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager );
+
 	// Viewport management
 	Viewport *createViewport( ViewportType type );
 	void destroyViewport( Viewport *viewport );
@@ -239,6 +245,10 @@ private:
 
 	// Shader manager for hot reloading
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
+
+	// Scene and system manager for 3D content rendering
+	ecs::Scene *m_scene = nullptr;
+	systems::SystemManager *m_systemManager = nullptr;
 
 	// Find viewport by pointer
 	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );
