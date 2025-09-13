@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-13 — Status Bar Repositioning
+**Summary:** Successfully moved the status bar from the main menu area to the bottom of the window, improving UI layout and providing better visual separation between navigation and status information.
+
+**Atomic functionalities completed:**
+- AF1: Remove status from menu bar - Removed scene status display (current file, entity count, error status) from the main menu bar area in setupDockspace function
+- AF2: Create separate status bar rendering - Added new renderStatusBar() method to UI::Impl that creates a bottom-positioned status bar window with fixed positioning at 25px height
+- AF3: Integrate status bar in beginFrame - Called renderStatusBar() method in beginFrame() after setupDockspace but before other window operations
+- AF4: Test and verify positioning - Built project successfully, verified all UI tests pass (384 assertions in 22 test cases), and confirmed status bar appears at bottom of window
+
+**Tests:** All UI tests passing (384 assertions in 22 test cases); filtered command: `unit_test_runner.exe "[ui]"`
+**Notes:** Status bar now positioned at bottom of main viewport window with ImGuiWindowFlags_NoTitleBar | NoResize | NoMove for fixed positioning; preserves all original functionality (scene file path, entity count, error status with color coding); UI layout improved with better visual separation.
+
 ## 2025-09-13 — Complete SceneEditor → UI Migration
 **Summary:** Successfully completed the full migration of SceneEditor functionality into the unified UI system. Removed the SceneEditor module entirely, integrated status bar functionality into the main menu bar, and updated the main application to use the new unified scene operations. All scene editing functionality is now part of the UI class with improved error handling and console logging.
 

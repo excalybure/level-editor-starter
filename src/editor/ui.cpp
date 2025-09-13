@@ -70,6 +70,9 @@ struct UI::Impl
 	// Render camera settings window
 	void renderCameraSettingsWindow();
 
+	// Render status bar
+	void renderStatusBar( UI &ui );
+
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdownViewports();
@@ -181,6 +184,9 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
+
+	// Render status bar at the bottom
+	m_impl->renderStatusBar( *this );
 }
 
 void UI::endFrame()
@@ -325,43 +331,6 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 				showCameraSettingsWindow = true;
 			}
 			ImGui::EndMenu();
-		}
-
-		// Scene status bar integrated into menu bar
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		// Current scene file
-		if ( !ui.getCurrentScenePath().empty() )
-		{
-			ImGui::Text( "Scene: %s", ui.getCurrentScenePath().c_str() );
-		}
-		else
-		{
-			ImGui::Text( "No scene loaded" );
-		}
-
-		ImGui::SameLine();
-		ImGui::Separator();
-		ImGui::SameLine();
-
-		// Entity count
-		const size_t entityCount = ui.getEntityCount();
-		ImGui::Text( "Entities: %zu", entityCount );
-
-		ImGui::SameLine();
-		ImGui::Separator();
-		ImGui::SameLine();
-
-		// Error status
-		const std::string &lastError = ui.getLastError();
-		if ( !lastError.empty() )
-		{
-			ImGui::TextColored( ImVec4( 1.0f, 0.4f, 0.4f, 1.0f ), "Error: %s", lastError.c_str() );
-		}
-		else
-		{
-			ImGui::Text( "Ready" );
 		}
 
 		ImGui::EndMenuBar();
@@ -866,6 +835,64 @@ void UI::Impl::renderCameraSettingsWindow()
 		else
 		{
 			ImGui::TextUnformatted( "No viewport available for camera settings" );
+		}
+	}
+	ImGui::End();
+}
+
+void UI::Impl::renderStatusBar( UI &ui )
+{
+	// Create a status bar window at the bottom of the main viewport
+	const ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+	// Position the status bar at the bottom of the screen
+	ImVec2 statusBarPos = ImVec2( viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - 25.0f );
+	ImVec2 statusBarSize = ImVec2( viewport->WorkSize.x, 25.0f );
+
+	ImGui::SetNextWindowPos( statusBarPos );
+	ImGui::SetNextWindowSize( statusBarSize );
+
+	ImGuiWindowFlags statusFlags =
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoSavedSettings |
+		ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+	if ( ImGui::Begin( "StatusBar", nullptr, statusFlags ) )
+	{
+		// Current scene file
+		if ( !ui.getCurrentScenePath().empty() )
+		{
+			ImGui::Text( "Scene: %s", ui.getCurrentScenePath().c_str() );
+		}
+		else
+		{
+			ImGui::Text( "No scene loaded" );
+		}
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Entity count
+		const size_t entityCount = ui.getEntityCount();
+		ImGui::Text( "Entities: %zu", entityCount );
+
+		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		// Error status
+		const std::string &lastError = ui.getLastError();
+		if ( !lastError.empty() )
+		{
+			ImGui::TextColored( ImVec4( 1.0f, 0.4f, 0.4f, 1.0f ), "Error: %s", lastError.c_str() );
+		}
+		else
+		{
+			ImGui::Text( "Ready" );
 		}
 	}
 	ImGui::End();
