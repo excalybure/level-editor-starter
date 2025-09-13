@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-12-12 — Add Material Configuration to GPUResourceManager::getMeshGPU via TDD
+**Summary:** Successfully resolved the issue where GPUResourceManager::getMeshGPU created MeshGPU instances without configuring materials, resulting in meshes with missing material data. Implemented a new overload getMeshGPU(mesh, scene) that automatically configures materials when creating or retrieving mesh GPU resources. Updated SceneImporter to use the new overload, ensuring complete material setup during asset loading.
+
+**Atomic functionalities completed:**
+- AF1: Investigate current issue - Analyzed GPUResourceManager::getMeshGPU implementation and confirmed it creates MeshGPU but doesn't call configureMaterials
+- AF2: Write failing test - Created test demonstrating that getMeshGPU without scene parameter doesn't configure materials, requiring manual configureMaterials call  
+- AF3: Add getMeshGPU overload - Implemented getMeshGPU(mesh, scene) overload that automatically calls configureMaterials after getting MeshGPU
+- AF4: Implement material configuration - New overload first calls existing getMeshGPU(mesh) then configureMaterials with MaterialProvider, scene, and mesh parameters
+- AF5: Update SceneImporter integration - Modified SceneImporter::createGPUResources to use new getMeshGPU(mesh, *assetScene) overload for automatic material configuration
+
+**Tests:** 2 new tests added: one demonstrating current behavior (manual configuration required), one verifying new overload automatically configures materials; all existing GPU resource manager and scene importer tests continue to pass
+**Notes:** The solution preserves backward compatibility by keeping the original getMeshGPU(mesh) method while adding the enhanced overload. The new method ensures complete mesh preparation in a single call, reducing user error and simplifying the API. SceneImporter now produces fully-configured MeshGPU objects with materials automatically set up during asset import.
+
 ## 2025-01-27 — Integrate D3D12 Debug Output with Custom Console System
 **Summary:** Successfully integrated D3D12 debug layer messages with the existing custom console output system to ensure all D3D12 errors, warnings, and info messages appear with the rest of the application output. Implemented a polling-based approach that processes debug messages from the InfoQueue during frame updates and routes them to the appropriate console functions (error, warning, info, debug) with proper formatting.
 

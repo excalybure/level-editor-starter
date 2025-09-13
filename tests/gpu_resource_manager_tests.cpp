@@ -196,3 +196,56 @@ TEST_CASE( "Extract and validate PBR factor values", "[gpu_resource_manager][uni
 	REQUIRE( constants.emissiveFactor.y == 0.05f );
 	REQUIRE( constants.emissiveFactor.z == 0.02f );
 }
+
+TEST_CASE( "configureMaterials properly setup materials", "[gpu_resource_manager][mesh][material][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+	engine::GPUResourceManager manager( device );
+
+	// Create a test material
+	const auto material = std::make_shared<assets::Material>();
+	material->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
+	material->setMetallicFactor( 0.5f );
+	material->setRoughnessFactor( 0.3f );
+
+	// Create a scene with the material
+	assets::Scene scene;
+	const assets::MaterialHandle materialHandle = scene.addMaterial( material );
+
+	// Create a test mesh with a primitive that has a material handle
+	auto mesh = std::make_shared<assets::Mesh>();
+	mesh->setPath( "test_mesh_with_material.gltf" );
+
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+	primitive.setMaterialHandle( materialHandle );
+
+	mesh->addPrimitive( std::move( primitive ) );
+
+	// Act - get MeshGPU from GPUResourceManager (without scene - materials won't be configured)
+	const auto meshGPU = manager.getMeshGPU( mesh );
+
+	// Assert - MeshGPU should be valid but materials should NOT be configured initially
+	REQUIRE( meshGPU != nullptr );
+	REQUIRE( meshGPU->isValid() );
+	REQUIRE( meshGPU->getPrimitiveCount() == 1 );
+
+	const auto &primitiveGPU = meshGPU->getPrimitive( 0 );
+	REQUIRE_FALSE( primitiveGPU.hasMaterial() ); // This demonstrates the current problem!
+	REQUIRE( primitiveGPU.getMaterial() == nullptr );
+
+	// Now manually configure materials (simulating what the fixed getMeshGPU should do)
+	meshGPU->configureMaterials( manager, scene, *mesh );
+
+	// After manual configuration, material should be available
+	REQUIRE( primitiveGPU.hasMaterial() );
+	REQUIRE( primitiveGPU.getMaterial() != nullptr );
+	REQUIRE( primitiveGPU.getMaterial()->getSourceMaterial() == material );
+}

@@ -384,7 +384,7 @@ void Device::processDebugMessages()
 		SIZE_T messageLength = 0;
 
 		// Get the size of the message
-		const HRESULT hr = m_infoQueue->GetMessage( i, nullptr, &messageLength );
+		HRESULT hr = m_infoQueue->GetMessage( i, nullptr, &messageLength );
 		if ( FAILED( hr ) )
 			continue;
 
