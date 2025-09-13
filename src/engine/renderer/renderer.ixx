@@ -213,6 +213,9 @@ public:
 	ID3D12Resource *getDynamicVertexResource() const noexcept { return m_dynamicVertexBuffer ? m_dynamicVertexBuffer->getResource() : nullptr; }
 	ID3D12Resource *getDynamicIndexResource() const noexcept { return m_dynamicIndexBuffer ? m_dynamicIndexBuffer->getResource() : nullptr; }
 
+	// Access to command context for external rendering systems
+	dx12::CommandContext *getCommandContext() const noexcept { return m_currentContext; }
+
 	// Begin a headless recording session for tests (no swap chain / RTV setup)
 	void beginHeadlessForTests() noexcept
 	{

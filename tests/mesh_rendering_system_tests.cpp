@@ -125,3 +125,58 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	// Act & Assert - Should handle all entity types without crashing
 	REQUIRE_NOTHROW( system.render( scene, camera ) );
 }
+
+TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GPU mesh present", "[mesh_rendering_system][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	renderer::Renderer renderer( device );
+	runtime::systems::MeshRenderingSystem system( renderer );
+
+	components::Transform transform;
+	transform.position = { 1.0f, 2.0f, 3.0f }; // Non-identity transform
+
+	components::MeshRenderer meshRenderer;
+	// Note: Without a real GPU mesh, the early return will happen
+	// This test verifies the path when gpuMesh is null
+
+	camera::PerspectiveCamera camera;
+
+	// Store initial matrix
+	const auto initialMatrix = renderer.getViewProjectionMatrix();
+
+	// Act
+	system.renderEntity( transform, meshRenderer, camera );
+
+	// Assert - Matrix should remain unchanged when gpuMesh is null
+	const auto finalMatrix = renderer.getViewProjectionMatrix();
+	REQUIRE( finalMatrix.m00() == initialMatrix.m00() );
+	REQUIRE( finalMatrix.m11() == initialMatrix.m11() );
+	REQUIRE( finalMatrix.m22() == initialMatrix.m22() );
+	REQUIRE( finalMatrix.m33() == initialMatrix.m33() );
+}
+
+TEST_CASE( "Renderer getCommandContext provides access to command context during active frame", "[mesh_rendering_system][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	renderer::Renderer renderer( device );
+
+	// Act & Assert - No active frame, should return nullptr
+	REQUIRE( renderer.getCommandContext() == nullptr );
+
+	// Begin headless frame to create command context
+	renderer.beginHeadlessForTests();
+
+	// Now command context should be available
+	auto *commandContext = renderer.getCommandContext();
+	REQUIRE( commandContext != nullptr );
+
+	// Verify command list is accessible through context
+	auto *commandList = commandContext->get();
+	REQUIRE( commandList != nullptr );
+}

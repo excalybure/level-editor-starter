@@ -50,15 +50,27 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 	// Calculate MVP matrix for this entity
 	const auto mvpMatrix = calculateMVPMatrix( transform, camera );
 
-	// TODO: Implement actual GPU rendering pipeline
-	// For now, we validate that we have the necessary resources
-	// Future implementation will:
-	// 1. Use PrimitiveGPU.bindForRendering() for each primitive
-	// 2. Call renderer draw commands directly on command list
-	// 3. Handle materials via MaterialGPU.bindToCommandList()
+	// Set the view-projection matrix on the renderer
+	// Note: For proper mesh rendering, we would need to separate model matrix from view-projection
+	// and pass the model matrix separately to vertex shaders. For now, we combine them.
+	m_renderer.setViewProjectionMatrix( mvpMatrix );
 
 	const auto &gpuMesh = *meshRenderer.gpuMesh;
 	if ( !gpuMesh.isValid() )
+	{
+		return;
+	}
+
+	// Get command context for direct GPU commands
+	auto *commandContext = m_renderer.getCommandContext();
+	if ( !commandContext )
+	{
+		// No active command context (e.g., during headless tests)
+		return;
+	}
+
+	auto *commandList = commandContext->get();
+	if ( !commandList )
 	{
 		return;
 	}
@@ -72,9 +84,20 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 			continue;
 		}
 
-		// TODO: Bind primitive for rendering and issue draw call
-		// primitive.bindForRendering(commandList);
-		// commandList->DrawIndexedInstanced(primitive.getIndexCount(), 1, 0, 0, 0);
+		// Bind primitive GPU buffers and material (material binding is handled by primitive)
+		primitive.bindForRendering( commandList );
+
+		// Issue the draw call
+		if ( primitive.hasIndexBuffer() )
+		{
+			// Indexed drawing
+			commandList->DrawIndexedInstanced( primitive.getIndexCount(), 1, 0, 0, 0 );
+		}
+		else
+		{
+			// Non-indexed drawing
+			commandList->DrawInstanced( primitive.getVertexCount(), 1, 0, 0 );
+		}
 	}
 }
 
