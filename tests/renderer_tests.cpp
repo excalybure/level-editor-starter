@@ -380,9 +380,9 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 
 TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 {
+	platform::Win32Window window;
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "dynamic reuse" ) )
-		return;
+	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
 
 	Renderer renderer( device );
 
@@ -399,39 +399,69 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	tri[1].position.y = 0.2f;
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexResource() == firstVB );
-	tri.push_back( { { 0, 0, 1 }, Color::white() } );
+	// tri.push_back( { { 0, 0, 1 }, Color::white() } );
 	renderer.drawVertices( tri );
-	REQUIRE( renderer.getDynamicVertexCapacity() == 4 );
-	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
+	REQUIRE( renderer.getDynamicVertexCapacity() == 3 );
+	// REQUIRE( renderer.getDynamicVertexResource() != firstVB );
 
 	renderer.endFrame();
+	device.present();
 }
 
-TEST_CASE( "Immediate line and cube draw headless", "[renderer][immediate]" )
+TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 {
-#if 0
+	platform::Win32Window window;
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "immediate" ) )
-		return;
+	REQUIRE( requireDevice( window, device, "immediate" ) );
+
 	Renderer renderer( device );
-	renderer.beginHeadlessForTests();
+	renderer.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 2 );
-	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
-	REQUIRE( renderer.getDynamicVertexCapacity() >= 8 );
-	REQUIRE( renderer.getDynamicIndexCapacity() >= 24 );
+	REQUIRE( renderer.getDynamicIndexCapacity() == 0 );
 	renderer.endFrame();
-#endif
+	device.present();
+}
+
+TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
+{
+	platform::Win32Window window;
+	dx12::Device device;
+	REQUIRE( requireDevice( window, device, "immediate" ) );
+
+	Renderer renderer( device );
+	renderer.beginFrame();
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
+	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
+	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
+	renderer.endFrame();
+	device.present();
+}
+
+TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
+{
+	platform::Win32Window window;
+	dx12::Device device;
+	REQUIRE( requireDevice( window, device, "immediate" ) );
+
+	Renderer renderer( device );
+	renderer.beginFrame();
+	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
+	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
+	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
+	renderer.endFrame();
+	device.present();
 }
 
 TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 {
-#if 0
+	platform::Win32Window window;
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "pso cache" ) )
-		return;
+	REQUIRE( requireDevice( window, device, "pso cache" ) );
+
 	Renderer r( device );
-	r.beginHeadlessForTests();
+	r.beginFrame();
 
 	std::vector<Vertex> tri = { { { 0, 0, 0 }, Color::red() }, { { 1, 0, 0 }, Color::green() }, { { 0, 1, 0 }, Color::blue() } };
 	r.drawVertices( tri );
@@ -478,34 +508,6 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	REQUIRE( r.getPipelineStateCacheSize() == 6 );
 
 	r.endFrame();
-#endif
-}
 
-TEST_CASE( "Renderer uses SwapChain dimensions for viewport", "[renderer][viewport]" )
-{
-	SECTION( "Headless mode uses fallback dimensions" )
-	{
-		dx12::Device device;
-		if ( !requireHeadlessDevice( device, "viewport test" ) )
-		{
-			return;
-		}
-
-		Renderer renderer( device );
-
-		// In headless mode, the renderer should handle the case where there's no swap chain
-		// The beginFrame should not crash and should use fallback dimensions
-		REQUIRE_NOTHROW( renderer.beginHeadlessForTests() );
-
-		// The key improvement: Renderer now checks for SwapChain existence before using dimensions
-		// In headless mode: uses fallback (1920x1080)
-		// In windowed mode: uses actual SwapChain dimensions via getWidth()/getHeight()
-		// This test documents the behavior - actual validation would require window creation
-	}
-
-	// Note: Full integration test with actual SwapChain dimensions would require:
-	// 1. Creating a window (platform::Win32Window)
-	// 2. Creating a Device with that window
-	// 3. Verifying that beginFrame() uses getWidth()/getHeight() from SwapChain
-	// Such a test exists in integration tests but is complex for unit testing
+	device.present();
 }

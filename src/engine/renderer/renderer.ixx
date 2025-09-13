@@ -7,6 +7,7 @@ module;
 #include <DirectXMath.h>
 #include <wrl.h>
 #include <windows.h>
+#include <vector>
 
 export module engine.renderer;
 
@@ -239,9 +240,10 @@ private:
 		bool wireframe;
 		bool blend;
 		D3D12_CULL_MODE cullMode;
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType;
 		bool operator==( const PipelineStateKey &o ) const noexcept
 		{
-			return depthTest == o.depthTest && depthWrite == o.depthWrite && wireframe == o.wireframe && blend == o.blend && cullMode == o.cullMode;
+			return depthTest == o.depthTest && depthWrite == o.depthWrite && wireframe == o.wireframe && blend == o.blend && cullMode == o.cullMode && topologyType == o.topologyType;
 		}
 	};
 	struct PipelineStateKeyHash
@@ -253,7 +255,8 @@ private:
 				( ( k.depthWrite ? 1u : 0u ) << 1 ) |
 				( ( k.wireframe ? 1u : 0u ) << 2 ) |
 				( ( k.blend ? 1u : 0u ) << 3 ) |
-				( ( static_cast<uint32_t>( k.cullMode ) & 0x3u ) << 4 );
+				( ( static_cast<uint32_t>( k.cullMode ) & 0x3u ) << 4 ) |
+				( ( static_cast<uint32_t>( k.topologyType ) & 0x7u ) << 6 );
 			return std::hash<uint32_t>{}( bits );
 		}
 	};
@@ -285,6 +288,10 @@ private:
 	std::unique_ptr<VertexBuffer> m_dynamicVertexBuffer;
 	std::unique_ptr<IndexBuffer> m_dynamicIndexBuffer;
 
+	// Pending deletion queue to defer destruction until frame end
+	std::vector<std::unique_ptr<VertexBuffer>> m_pendingVertexBufferDeletions;
+	std::vector<std::unique_ptr<IndexBuffer>> m_pendingIndexBufferDeletions;
+
 	// Initialization
 	void createRootSignature();
 	void compileDefaultShaders();
@@ -295,8 +302,11 @@ private:
 	// Helper methods
 	void updateConstantBuffer();
 
-	PipelineStateKey makeKeyFromState( const RenderState &state ) const noexcept;
-	void ensurePipelineForCurrentState();
+	PipelineStateKey makeKeyFromState( const RenderState &state, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology ) const noexcept;
+	void ensurePipelineForCurrentState( D3D12_PRIMITIVE_TOPOLOGY_TYPE topology );
+
+	// Helper to convert D3D_PRIMITIVE_TOPOLOGY to D3D12_PRIMITIVE_TOPOLOGY_TYPE
+	static D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyToTopologyType( D3D_PRIMITIVE_TOPOLOGY topology ) noexcept;
 
 public:
 	// Test instrumentation: get current PSO cache size

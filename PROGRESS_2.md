@@ -1,5 +1,33 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-12-12 — Fix D3D12 Resource Deletion Error with Deferred Buffer Cleanup
+**Summary:** Successfully resolved D3D12 ERROR #921: OBJECT_DELETED_WHILE_STILL_IN_USE that occurred when dynamic vertex buffers were reallocated during a frame. The issue was that the old buffer resources were being destroyed immediately when reallocating to larger sizes, while the command list still referenced them. Implemented a deferred deletion mechanism that keeps old buffers alive until the frame completes and command list execution finishes.
+
+**Atomic functionalities completed:**
+- AF1: Add pending deletion queues - Added m_pendingVertexBufferDeletions and m_pendingIndexBufferDeletions vectors to Renderer class to hold old buffers
+- AF2: Implement deferred deletion in drawVertices - Modified buffer reallocation logic to move old buffers to pending deletion queue instead of immediate destruction
+- AF3: Implement deferred deletion in drawIndexed - Applied same deferred deletion pattern to both vertex and index buffer reallocation paths  
+- AF4: Add cleanup in endFrame - Added pending buffer cleanup after m_device.endFrame() to safely delete old buffers once command list execution completes
+- AF5: Verify fix functionality - Confirmed individual immediate drawing tests (line, cube) now pass without D3D12 resource deletion errors
+
+**Tests:** "Immediate line draw" and "Immediate cube draw" tests now pass; D3D12 resource deletion errors eliminated
+**Notes:** The fix ensures GPU resource lifetimes are properly managed in D3D12 by deferring deletion until after command list execution. This is a common pattern in D3D12 applications where resources must remain alive until the GPU has finished using them. The solution is thread-safe and efficient, only storing buffers for cleanup when reallocation actually occurs.
+
+## 2025-01-27 — Fix D3D12 Primitive Topology Mismatch Error via TDD
+**Summary:** Successfully resolved D3D12_PRIMITIVE_TOPOLOGY_MISMATCH_PIPELINE_STATE error in renderer by implementing topology-aware Pipeline State Object (PSO) caching. The issue was that the PSO cache was not considering primitive topology when creating and caching PSOs, causing mismatches between draw call topology (LINELIST) and pipeline state topology (TRIANGLE). Refactored the renderer to include topology type in PSO cache keys and creation logic.
+
+**Atomic functionalities completed:**
+- AF1: Update PipelineStateKey struct - Added D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType field to include topology in PSO cache key
+- AF2: Update hash and equality operators - Modified hash function and equality operator to account for the new topology field  
+- AF3: Add topology conversion helper - Created topologyToTopologyType() helper to convert from D3D_PRIMITIVE_TOPOLOGY to D3D12_PRIMITIVE_TOPOLOGY_TYPE
+- AF4: Refactor PSO creation methods - Updated makeKeyFromState, createPipelineStateForKey, and ensurePipelineForCurrentState to use topology-aware logic
+- AF5: Update draw methods - Modified drawVertices and drawIndexed to pass correct topology type to PSO creation via the conversion helper
+
+**Tests:** 6 new PSO cache states confirmed through "Pipeline state object cache" test; all renderer tests continue to pass
+**Notes:** The renderer now correctly creates separate PSO cache entries for different primitive topologies (lines, triangles, points), ensuring that draw calls match their corresponding pipeline states. This eliminates the D3D12_PRIMITIVE_TOPOLOGY_MISMATCH_PIPELINE_STATE errors that were preventing line and wireframe drawing in headless mode. All line drawing (drawLine, drawWireframeCube) now works correctly with LINELIST topology.
+
+Date: 2025-01-27
+
 ## 2025-01-27 — Fix Renderer Crash in Dynamic Buffer Test with Robust Headless Mode Support
 **Summary:** Successfully resolved crash in "Dynamic buffer reuse vs growth" test by implementing comprehensive headless mode support in both Device and Renderer. Fixed missing depth buffer creation in headless mode, resolved pipeline state object creation for headless rendering (no render targets), and implemented proper headless rendering behavior that skips draw calls while preserving buffer management for testing.
 

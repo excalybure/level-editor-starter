@@ -468,9 +468,9 @@ void Renderer::compileDefaultShaders()
 	}
 }
 
-Renderer::PipelineStateKey Renderer::makeKeyFromState( const RenderState &state ) const noexcept
+Renderer::PipelineStateKey Renderer::makeKeyFromState( const RenderState &state, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology ) const noexcept
 {
-	return PipelineStateKey{ state.isDepthTestEnabled(), state.isDepthWriteEnabled(), state.isWireframeEnabled(), state.isBlendEnabled(), state.getCullMode() };
+	return PipelineStateKey{ state.isDepthTestEnabled(), state.isDepthWriteEnabled(), state.isWireframeEnabled(), state.isBlendEnabled(), state.getCullMode(), topology };
 }
 
 void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
@@ -497,8 +497,8 @@ void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
 	psoDesc.BlendState = temp.getBlendDesc();
 	psoDesc.DepthStencilState = temp.getDepthStencilDesc();
 	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	
+	psoDesc.PrimitiveTopologyType = key.topologyType;
+
 	// In headless mode (no swap chain), we don't have render targets
 	if ( m_currentSwapChain )
 	{
@@ -513,7 +513,7 @@ void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
 		psoDesc.NumRenderTargets = 0;
 		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	}
-	
+
 	psoDesc.SampleDesc.Count = 1;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
@@ -521,10 +521,27 @@ void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
 	m_psoCache.emplace( key, pso );
 }
 
-void Renderer::ensurePipelineForCurrentState()
+D3D12_PRIMITIVE_TOPOLOGY_TYPE Renderer::topologyToTopologyType( D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+{
+	switch ( topology )
+	{
+	case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+	case D3D_PRIMITIVE_TOPOLOGY_LINESTRIP:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+	case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+	case D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	default:
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // Safe fallback
+	}
+}
+
+void Renderer::ensurePipelineForCurrentState( D3D12_PRIMITIVE_TOPOLOGY_TYPE topology )
 {
 	compileDefaultShaders();
-	const auto key = makeKeyFromState( m_currentRenderState );
+	const auto key = makeKeyFromState( m_currentRenderState, topology );
 	auto it = m_psoCache.find( key );
 	if ( it == m_psoCache.end() )
 	{
@@ -617,6 +634,10 @@ void Renderer::endFrame()
 	// Device handles all frame completion (barriers, command list closing/execution)
 	m_device.endFrame();
 
+	// Now it's safe to delete any pending buffers since the command list has been executed
+	m_pendingVertexBufferDeletions.clear();
+	m_pendingIndexBufferDeletions.clear();
+
 	m_currentContext = nullptr;
 	m_currentSwapChain = nullptr;
 }
@@ -675,6 +696,11 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	// Update or create dynamic vertex buffer
 	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
+		// If we have an existing buffer, defer its deletion until frame end
+		if ( m_dynamicVertexBuffer )
+		{
+			m_pendingVertexBufferDeletions.push_back( std::move( m_dynamicVertexBuffer ) );
+		}
 		m_dynamicVertexBuffer = std::make_unique<VertexBuffer>( m_device, vertices );
 	}
 	else
@@ -689,7 +715,7 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	}
 
 	// Set pipeline state and root signature
-	ensurePipelineForCurrentState();
+	ensurePipelineForCurrentState( topologyToTopologyType( topology ) );
 	( *m_currentContext )->SetPipelineState( m_activePipelineState.Get() );
 	( *m_currentContext )->SetGraphicsRootSignature( m_rootSignature.Get() );
 	( *m_currentContext )->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
@@ -714,6 +740,11 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	// Update buffers
 	if ( !m_dynamicVertexBuffer || m_dynamicVertexBuffer->getVertexCount() < vertices.size() )
 	{
+		// If we have an existing buffer, defer its deletion until frame end
+		if ( m_dynamicVertexBuffer )
+		{
+			m_pendingVertexBufferDeletions.push_back( std::move( m_dynamicVertexBuffer ) );
+		}
 		m_dynamicVertexBuffer = std::make_unique<VertexBuffer>( m_device, vertices );
 	}
 	else
@@ -723,6 +754,11 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 
 	if ( !m_dynamicIndexBuffer || m_dynamicIndexBuffer->getIndexCount() < indices.size() )
 	{
+		// If we have an existing buffer, defer its deletion until frame end
+		if ( m_dynamicIndexBuffer )
+		{
+			m_pendingIndexBufferDeletions.push_back( std::move( m_dynamicIndexBuffer ) );
+		}
 		m_dynamicIndexBuffer = std::make_unique<IndexBuffer>( m_device, indices );
 	}
 	else
@@ -737,7 +773,7 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	}
 
 	// Set pipeline state
-	ensurePipelineForCurrentState();
+	ensurePipelineForCurrentState( topologyToTopologyType( topology ) );
 	( *m_currentContext )->SetPipelineState( m_activePipelineState.Get() );
 	( *m_currentContext )->SetGraphicsRootSignature( m_rootSignature.Get() );
 	( *m_currentContext )->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
