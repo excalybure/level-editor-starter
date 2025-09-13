@@ -10,6 +10,10 @@ module;
 #include <cstdio>
 #include <stdexcept>
 
+#ifdef _DEBUG
+#include <d3d12sdklayers.h>
+#endif
+
 export module platform.dx12;
 
 import std;
@@ -145,6 +149,9 @@ public:
 	void endFrame();
 	void present();
 
+	// Debug layer integration - process accumulated debug messages
+	void processDebugMessages();
+
 	// Render target management - restore backbuffer for ImGui after viewport rendering
 	void setBackbufferRenderTarget();
 
@@ -174,6 +181,12 @@ private:
 	Microsoft::WRL::ComPtr<IDXGIAdapter1> m_adapter;
 	Microsoft::WRL::ComPtr<ID3D12Device> m_device;
 	Microsoft::WRL::ComPtr<ID3D12Debug> m_debugController;
+
+#ifdef _DEBUG
+	// Debug layer message polling
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> m_infoQueue;
+	UINT64 m_lastMessageIndex = 0;
+#endif
 
 	// Command and swap chain wrappers
 	std::unique_ptr<CommandContext> m_commandContext;

@@ -29,7 +29,7 @@ void throwIfFailed( HRESULT hr, ID3D12Device *device )
 		// Check if it's a device removed error and get more info
 		if ( hr == DXGI_ERROR_DEVICE_REMOVED && device )
 		{
-			HRESULT removedReason = device->GetDeviceRemovedReason();
+			const HRESULT removedReason = device->GetDeviceRemovedReason();
 			console::fatal( "D3D12 DEVICE REMOVED! HRESULT: {:#x}, Removal Reason: {:#x}",
 				static_cast<unsigned int>( hr ),
 				static_cast<unsigned int>( removedReason ) );
@@ -159,6 +159,9 @@ void Device::shutdown()
 
 void Device::beginFrame()
 {
+	// Process any new D3D12 debug messages first
+	processDebugMessages();
+
 	// Always reset command context if available
 	if ( !m_device || !m_commandContext )
 	{
@@ -177,7 +180,7 @@ void Device::beginFrame()
 	// Windowed mode: full frame setup with swap chain
 	// Get current back buffer from SwapChain wrapper
 	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
-	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
+	ID3D12Resource *const currentBackBuffer = m_swapChain->getCurrentBackBuffer();
 
 	// Transition to render target state
 	D3D12_RESOURCE_BARRIER barrier = {};
@@ -193,7 +196,7 @@ void Device::beginFrame()
 	// Set render target and depth stencil view
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap ? m_dsvHeap->GetCPUDescriptorHandleForHeapStart() : D3D12_CPU_DESCRIPTOR_HANDLE{};
+	const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap ? m_dsvHeap->GetCPUDescriptorHandleForHeapStart() : D3D12_CPU_DESCRIPTOR_HANDLE{};
 	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, m_dsvHeap ? &dsvHandle : nullptr );
 
 	// Clear render target
@@ -207,7 +210,7 @@ void Device::beginFrame()
 	}
 
 	// Set descriptor heaps for ImGui
-	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
+	ID3D12DescriptorHeap *const ppHeaps[] = { m_imguiDescriptorHeap.Get() };
 	m_commandContext->get()->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
 }
 
@@ -229,7 +232,7 @@ void Device::endFrame()
 	}
 
 	// Windowed mode: transition back buffer to present state
-	ID3D12Resource *currentBackBuffer = m_swapChain->getCurrentBackBuffer();
+	ID3D12Resource *const currentBackBuffer = m_swapChain->getCurrentBackBuffer();
 
 	// Transition back to present state
 	D3D12_RESOURCE_BARRIER barrier = {};
@@ -246,7 +249,7 @@ void Device::endFrame()
 	m_commandContext->close();
 
 	// Execute command list
-	ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
+	ID3D12CommandList *const ppCommandLists[] = { m_commandContext->get() };
 	m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
 }
 
@@ -278,7 +281,7 @@ void Device::setBackbufferRenderTarget()
 	m_commandContext->get()->OMSetRenderTargets( 1, &rtvHandle, FALSE, nullptr );
 
 	// Set descriptor heap for ImGui (should already be set, but ensure consistency)
-	ID3D12DescriptorHeap *ppHeaps[] = { m_imguiDescriptorHeap.Get() };
+	ID3D12DescriptorHeap *const ppHeaps[] = { m_imguiDescriptorHeap.Get() };
 	m_commandContext->get()->SetDescriptorHeaps( _countof( ppHeaps ), ppHeaps );
 }
 
@@ -351,18 +354,71 @@ void Device::createDevice()
 void Device::configureDebugBreaks()
 {
 #ifdef _DEBUG
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
-	if ( SUCCEEDED( m_device->QueryInterface( IID_PPV_ARGS( infoQueue.GetAddressOf() ) ) ) )
+	if ( SUCCEEDED( m_device->QueryInterface( IID_PPV_ARGS( m_infoQueue.GetAddressOf() ) ) ) )
 	{
 		// Break on D3D12 errors
-		infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_ERROR, TRUE );
+		m_infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_ERROR, TRUE );
 
 		// Break on D3D12 warnings (optional - comment out if too noisy)
-		infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_WARNING, TRUE );
+		m_infoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_WARNING, TRUE );
 
 		// Optionally break on info messages (usually too noisy)
-		// infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, TRUE);
+		// m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, TRUE);
+
+		console::info( "D3D12 debug layer configured with console output integration" );
 	}
+#endif
+}
+
+void Device::processDebugMessages()
+{
+#ifdef _DEBUG
+	if ( !m_infoQueue )
+		return;
+
+	const UINT64 messageCount = m_infoQueue->GetNumStoredMessages();
+
+	// Process any new messages since last time
+	for ( UINT64 i = m_lastMessageIndex; i < messageCount; ++i )
+	{
+		SIZE_T messageLength = 0;
+
+		// Get the size of the message
+		const HRESULT hr = m_infoQueue->GetMessage( i, nullptr, &messageLength );
+		if ( FAILED( hr ) )
+			continue;
+
+		// Allocate memory for the message
+		std::vector<BYTE> messageBytes( messageLength );
+		D3D12_MESSAGE *pMessage = reinterpret_cast<D3D12_MESSAGE *>( messageBytes.data() );
+
+		// Get the actual message
+		hr = m_infoQueue->GetMessage( i, pMessage, &messageLength );
+		if ( FAILED( hr ) )
+			continue;
+
+		// Format and route to console based on severity
+		const std::string message = std::format( "[D3D12] {}", pMessage->pDescription );
+
+		switch ( pMessage->Severity )
+		{
+		case D3D12_MESSAGE_SEVERITY_ERROR:
+			console::error( message );
+			break;
+		case D3D12_MESSAGE_SEVERITY_WARNING:
+			console::warning( message );
+			break;
+		case D3D12_MESSAGE_SEVERITY_INFO:
+			console::info( message );
+			break;
+		case D3D12_MESSAGE_SEVERITY_MESSAGE:
+			console::debug( message );
+			break;
+		}
+	}
+
+	// Update the last processed message index
+	m_lastMessageIndex = messageCount;
 #endif
 }
 

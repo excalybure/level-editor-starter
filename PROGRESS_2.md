@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Integrate D3D12 Debug Output with Custom Console System
+**Summary:** Successfully integrated D3D12 debug layer messages with the existing custom console output system to ensure all D3D12 errors, warnings, and info messages appear with the rest of the application output. Implemented a polling-based approach that processes debug messages from the InfoQueue during frame updates and routes them to the appropriate console functions (error, warning, info, debug) with proper formatting.
+
+**Atomic functionalities completed:**
+- AF1: Add debug message polling support - Added processDebugMessages() method to Device class public interface and m_lastMessageIndex tracking member
+- AF2: Implement message processing logic - Created processDebugMessages() implementation that polls InfoQueue, extracts messages, and routes to console based on severity
+- AF3: Integrate with frame lifecycle - Added processDebugMessages() call to Device::beginFrame() to process messages each frame
+- AF4: Remove callback approach - Cleaned up unused callback-based approach that wasn't compatible with the Windows SDK version
+- AF5: Verify integration works - Confirmed D3D12 debug messages appear in test output with proper console formatting and colors
+
+**Tests:** D3D12 debug integration confirmed through renderer and device tests showing "[INFO] D3D12 debug layer configured with console output integration" messages; all tests continue to pass
+**Notes:** The polling approach is more compatible across Windows SDK versions than callbacks. Debug messages are processed at the start of each frame, providing timely feedback without impacting performance. The integration ensures unified error visibility for both application and D3D12 debug output, improving developer experience and debugging workflow.
+
 ## 2025-12-12 — Fix D3D12 Resource Deletion Error with Deferred Buffer Cleanup
 **Summary:** Successfully resolved D3D12 ERROR #921: OBJECT_DELETED_WHILE_STILL_IN_USE that occurred when dynamic vertex buffers were reallocated during a frame. The issue was that the old buffer resources were being destroyed immediately when reallocating to larger sizes, while the command list still referenced them. Implemented a deferred deletion mechanism that keeps old buffers alive until the frame completes and command list execution finishes.
 
