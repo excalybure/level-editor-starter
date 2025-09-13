@@ -733,4 +733,28 @@ void Fence::waitForCurrentValue()
 	waitForValue( m_currentValue );
 }
 
+void Device::resize( UINT width, UINT height )
+{
+	if ( !m_swapChain )
+	{
+		// No swap chain to resize (headless mode)
+		return;
+	}
+
+	// Wait for all GPU work to complete before resizing resources
+	waitForPreviousFrame();
+
+	// Release current depth buffer and render target views
+	m_depthBuffer.Reset();
+
+	// Resize the swap chain (this recreates the back buffers)
+	m_swapChain->resize( width, height );
+
+	// Recreate depth buffer with new dimensions
+	createDepthBuffer( width, height );
+
+	// Recreate render target views for the new swap chain buffers
+	createRenderTargetViews();
+}
+
 } // namespace dx12

@@ -68,7 +68,7 @@ int main()
 
 	// Create the window
 	platform::Win32Window window;
-	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )
+	if ( !window.create( "Level Editor - Multi-Viewport", 600, 900 ) )
 	{
 		console::fatal( "Failed to create window" );
 		return 1;
@@ -139,6 +139,8 @@ int main()
 		{
 			frameCount++;
 
+			ui.processInputEvents( window );
+
 			// Begin D3D12 frame - this opens the command list
 			device.beginFrame();
 			ID3D12GraphicsCommandList *commandList = device.getCommandList();
@@ -146,12 +148,6 @@ int main()
 			// All command list PIX events must be between beginFrame() and endFrame()
 			{
 				pix::ScopedEvent pixFrame( commandList, pix::MarkerColor::White, std::format( "Frame {}", frameCount ) );
-
-				// Process window input events and forward to viewports (before UI to allow ImGui priority)
-				{
-					pix::ScopedEvent pixInputForward( commandList, pix::MarkerColor::Yellow, "Input Processing" );
-					ui.processInputEvents( window );
-				}
 
 				// Update shader manager (check for shader file changes and hot-reload)
 				{

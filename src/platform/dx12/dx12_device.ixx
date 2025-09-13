@@ -155,6 +155,9 @@ public:
 	// Render target management - restore backbuffer for ImGui after viewport rendering
 	void setBackbufferRenderTarget();
 
+	// Resize the swap chain and associated resources (depth buffer, render target views)
+	void resize( UINT width, UINT height );
+
 	ID3D12Device *get() const { return m_device.Get(); }
 	ID3D12Device *operator->() const { return m_device.Get(); }
 

@@ -17,43 +17,6 @@ import runtime.console;
 namespace editor
 {
 
-// Helper function to get DPI scale factor for a window
-static float getDpiScale( HWND hwnd )
-{
-#if defined( _WIN32 )
-	if ( !hwnd )
-		return 1.0f;
-
-	// Try GetDpiForWindow first (Windows 10 1607+)
-	HMODULE user32 = GetModuleHandleW( L"user32.dll" );
-	if ( user32 )
-	{
-		using GetDpiForWindowProc = UINT( WINAPI * )( HWND );
-		auto GetDpiForWindowFunc = reinterpret_cast<GetDpiForWindowProc>(
-			GetProcAddress( user32, "GetDpiForWindow" ) );
-
-		if ( GetDpiForWindowFunc )
-		{
-			UINT dpi = GetDpiForWindowFunc( hwnd );
-			return static_cast<float>( dpi ) / 96.0f; // 96 DPI is 100% scale
-		}
-	}
-
-	// Fall back to getting DPI from DC
-	HDC hdc = GetDC( hwnd );
-	if ( hdc )
-	{
-		int dpi = GetDeviceCaps( hdc, LOGPIXELSX );
-		ReleaseDC( hwnd, hdc );
-		return static_cast<float>( dpi ) / 96.0f;
-	}
-
-	return 1.0f;
-#else
-	return 1.0f;
-#endif
-}
-
 // Helper functions to convert between our Vec2 and ImVec2
 ImVec2 to_imgui_vec2( const Vec2 &v )
 {
@@ -72,6 +35,12 @@ struct UI::Impl
 
 	// Viewport manager for coordinated viewport management
 	ViewportManager viewportManager;
+
+	// Store device reference for swap chain resize operations
+	dx12::Device *device = nullptr;
+
+	// Store shader manager reference for viewport reinitialization during resize
+	std::shared_ptr<shader_manager::ShaderManager> shaderManager = nullptr;
 
 	// Grid settings window state
 	bool showGridSettingsWindow = false;
@@ -138,6 +107,9 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 		return false;
 	}
 
+	// Store device reference for later use (e.g., swap chain resizing)
+	m_impl->device = device;
+
 	// Initialize viewports with D3D12 device and shader manager first
 	if ( !m_impl->initializeViewports( device, shaderManager ) )
 	{
@@ -153,35 +125,9 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	// Get DPI scale factor for proper font scaling
-	const float dpiScale = getDpiScale( hwnd );
-
-	// Apply DPI scaling to font and display
-	if ( dpiScale > 1.0f )
-	{
-		// Rebuild font atlas with proper size
-		io.Fonts->Clear();
-		const float fontSize = 13.0f * dpiScale; // Default ImGui font size scaled by DPI
-
-		// Create font config for scaled font
-		ImFontConfig fontConfig = ImFontConfig{};
-		fontConfig.SizePixels = fontSize;
-		io.Fonts->AddFontDefault( &fontConfig );
-		io.Fonts->Build();
-
-		// Set display framebuffer scale
-		io.DisplayFramebufferScale = ImVec2( dpiScale, dpiScale );
-	}
-
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
-
-	// Scale UI elements with DPI
 	ImGuiStyle &style = ImGui::GetStyle();
-	if ( dpiScale > 1.0f )
-	{
-		style.ScaleAllSizes( dpiScale );
-	}
 
 	// When viewports are enabled, adjust window rounding to be compatible with OS decorations
 	if ( io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
@@ -1098,6 +1044,27 @@ void UI::processInputEvents( platform::Win32Window &window )
 			viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
 			viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
 			hasValidEvent = true;
+			break;
+
+		case platform::WindowEvent::Type::Resize:
+			// Handle window resize - update ImGui display size and resize DirectX 12 resources
+			{
+				ImGuiIO &io = ImGui::GetIO();
+				io.DisplaySize = ImVec2( static_cast<float>( windowEvent.resize.width ), static_cast<float>( windowEvent.resize.height ) );
+
+				// Resize the DirectX 12 device resources (swap chain, depth buffer, render target views)
+				// This prevents font stretching and rendering artifacts
+				if ( m_impl->device )
+				{
+					// Reinitialize the device (this is a brute force approach)
+					m_impl->device->resize(
+						static_cast<UINT>( windowEvent.resize.width ),
+						static_cast<UINT>( windowEvent.resize.height ) );
+				}
+
+				// Note: We don't forward resize events to viewports as ViewportInputEvent,
+				// they handle their own resize through the viewport manager
+			}
 			break;
 
 		default:

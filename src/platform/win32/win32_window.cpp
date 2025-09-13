@@ -6,7 +6,6 @@ module;
 #include <windows.h>
 #include <windowsx.h>
 #include <string>
-#include <shellscalingapi.h>
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #endif
@@ -33,9 +32,6 @@ Win32Window::~Win32Window()
 bool Win32Window::create( const char *title, int width, int height )
 {
 #if defined( _WIN32 )
-	// Enable DPI awareness before creating window
-	enableDpiAwareness();
-
 	// Prevent double creation on the same instance (would otherwise leak the old HWND)
 	if ( m_hwnd )
 		return false;
@@ -51,7 +47,7 @@ bool Win32Window::create( const char *title, int width, int height )
 	wc.hInstance = m_hinstance;
 	wc.hCursor = LoadCursor( nullptr, IDC_ARROW );
 	wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
-	wc.lpszClassName = L"LevelEditorWindow";
+	wc.lpszClassName = L"WorldEditorWindow";
 
 	// RegisterClassExW returns 0 on failure, but attempting to register the same class
 	// multiple times across tests or multiple windows is benign. Accept ERROR_CLASS_ALREADY_EXISTS.
@@ -74,7 +70,7 @@ bool Win32Window::create( const char *title, int width, int height )
 	// Create window
 	m_hwnd = CreateWindowExW(
 		0,
-		L"LevelEditorWindow",
+		L"WorldEditorWindow",
 		wide_title.c_str(),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
@@ -284,80 +280,6 @@ LRESULT CALLBACK Win32Window::windowProc( HWND hwnd, UINT msg, WPARAM wparam, LP
 	}
 
 	return DefWindowProcW( hwnd, msg, wparam, lparam );
-}
-
-bool Win32Window::enableDpiAwareness()
-{
-	// Try per-monitor DPI awareness v2 first (Windows 10 1703+)
-	HMODULE user32 = GetModuleHandleW( L"user32.dll" );
-	if ( user32 )
-	{
-		using SetProcessDpiAwarenessContextProc = BOOL( WINAPI * )( DPI_AWARENESS_CONTEXT );
-		auto SetProcessDpiAwarenessContextFunc = reinterpret_cast<SetProcessDpiAwarenessContextProc>(
-			GetProcAddress( user32, "SetProcessDpiAwarenessContext" ) );
-
-		if ( SetProcessDpiAwarenessContextFunc )
-		{
-			// Per-monitor DPI awareness v2
-			return SetProcessDpiAwarenessContextFunc( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ) != FALSE;
-		}
-	}
-
-	// Fall back to SetProcessDpiAwareness (Windows 8.1+)
-	HMODULE shcore = LoadLibraryW( L"shcore.dll" );
-	if ( shcore )
-	{
-		using SetProcessDpiAwarenessProc = HRESULT( WINAPI * )( PROCESS_DPI_AWARENESS );
-		auto SetProcessDpiAwarenessFunc = reinterpret_cast<SetProcessDpiAwarenessProc>(
-			GetProcAddress( shcore, "SetProcessDpiAwareness" ) );
-
-		if ( SetProcessDpiAwarenessFunc )
-		{
-			HRESULT hr = SetProcessDpiAwarenessFunc( PROCESS_PER_MONITOR_DPI_AWARE );
-			FreeLibrary( shcore );
-			return SUCCEEDED( hr );
-		}
-		FreeLibrary( shcore );
-	}
-
-	// Fall back to SetProcessDPIAware (Windows Vista+)
-	return SetProcessDPIAware() != FALSE;
-}
-
-float Win32Window::getDpiScale() const
-{
-#if defined( _WIN32 )
-	if ( !m_hwnd )
-		return 1.0f;
-
-	// Try GetDpiForWindow first (Windows 10 1607+)
-	HMODULE user32 = GetModuleHandleW( L"user32.dll" );
-	if ( user32 )
-	{
-		using GetDpiForWindowProc = UINT( WINAPI * )( HWND );
-		auto GetDpiForWindowFunc = reinterpret_cast<GetDpiForWindowProc>(
-			GetProcAddress( user32, "GetDpiForWindow" ) );
-
-		if ( GetDpiForWindowFunc )
-		{
-			UINT dpi = GetDpiForWindowFunc( m_hwnd );
-			return static_cast<float>( dpi ) / 96.0f; // 96 DPI is 100% scale
-		}
-	}
-
-	// Fall back to getting DPI from DC
-	HDC hdc = GetDC( m_hwnd );
-	if ( hdc )
-	{
-		int dpi = GetDeviceCaps( hdc, LOGPIXELSX );
-		ReleaseDC( m_hwnd, hdc );
-		return static_cast<float>( dpi ) / 96.0f;
-	}
-
-	return 1.0f;
-#else
-	return 1.0f;
-#endif
 }
 #endif
 
