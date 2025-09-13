@@ -17,6 +17,43 @@ import runtime.console;
 namespace editor
 {
 
+// Helper function to get DPI scale factor for a window
+static float getDpiScale( HWND hwnd )
+{
+#if defined( _WIN32 )
+	if ( !hwnd )
+		return 1.0f;
+
+	// Try GetDpiForWindow first (Windows 10 1607+)
+	HMODULE user32 = GetModuleHandleW( L"user32.dll" );
+	if ( user32 )
+	{
+		using GetDpiForWindowProc = UINT( WINAPI * )( HWND );
+		auto GetDpiForWindowFunc = reinterpret_cast<GetDpiForWindowProc>(
+			GetProcAddress( user32, "GetDpiForWindow" ) );
+
+		if ( GetDpiForWindowFunc )
+		{
+			UINT dpi = GetDpiForWindowFunc( hwnd );
+			return static_cast<float>( dpi ) / 96.0f; // 96 DPI is 100% scale
+		}
+	}
+
+	// Fall back to getting DPI from DC
+	HDC hdc = GetDC( hwnd );
+	if ( hdc )
+	{
+		int dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+		ReleaseDC( hwnd, hdc );
+		return static_cast<float>( dpi ) / 96.0f;
+	}
+
+	return 1.0f;
+#else
+	return 1.0f;
+#endif
+}
+
 // Helper functions to convert between our Vec2 and ImVec2
 ImVec2 to_imgui_vec2( const Vec2 &v )
 {
@@ -116,11 +153,37 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+	// Get DPI scale factor for proper font scaling
+	const float dpiScale = getDpiScale( hwnd );
+
+	// Apply DPI scaling to font and display
+	if ( dpiScale > 1.0f )
+	{
+		// Rebuild font atlas with proper size
+		io.Fonts->Clear();
+		const float fontSize = 13.0f * dpiScale; // Default ImGui font size scaled by DPI
+
+		// Create font config for scaled font
+		ImFontConfig fontConfig = ImFontConfig{};
+		fontConfig.SizePixels = fontSize;
+		io.Fonts->AddFontDefault( &fontConfig );
+		io.Fonts->Build();
+
+		// Set display framebuffer scale
+		io.DisplayFramebufferScale = ImVec2( dpiScale, dpiScale );
+	}
+
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
 
-	// When viewports are enabled, adjust window rounding to be compatible with OS decorations
+	// Scale UI elements with DPI
 	ImGuiStyle &style = ImGui::GetStyle();
+	if ( dpiScale > 1.0f )
+	{
+		style.ScaleAllSizes( dpiScale );
+	}
+
+	// When viewports are enabled, adjust window rounding to be compatible with OS decorations
 	if ( io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
 	{
 		style.WindowRounding = 0.0f;
@@ -846,8 +909,8 @@ void UI::Impl::renderStatusBar( UI &ui )
 	const ImGuiViewport *viewport = ImGui::GetMainViewport();
 
 	// Position the status bar at the bottom of the screen
-	ImVec2 statusBarPos = ImVec2( viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - 25.0f );
-	ImVec2 statusBarSize = ImVec2( viewport->WorkSize.x, 25.0f );
+	const ImVec2 statusBarPos = ImVec2( viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - 25.0f );
+	const ImVec2 statusBarSize = ImVec2( viewport->WorkSize.x, 25.0f );
 
 	ImGui::SetNextWindowPos( statusBarPos );
 	ImGui::SetNextWindowSize( statusBarSize );

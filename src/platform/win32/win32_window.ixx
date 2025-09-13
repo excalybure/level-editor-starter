@@ -85,6 +85,10 @@ public:
 	HWND getHandle() const { return m_hwnd; }
 	HINSTANCE getInstance() const { return m_hinstance; }
 
+	// DPI awareness
+	float getDpiScale() const;
+	static bool enableDpiAwareness();
+
 private:
 	HWND m_hwnd = nullptr;
 	HINSTANCE m_hinstance = nullptr;

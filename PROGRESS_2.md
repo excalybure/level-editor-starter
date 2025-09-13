@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-13 — DPI-Aware Font Scaling Fix
+**Summary:** Fixed font stretching issue when resizing the application by implementing proper DPI awareness and font scaling. The application now detects DPI scale factors and applies appropriate font scaling, preventing fonts from stretching when the window is resized or moved between monitors with different DPI settings.
+
+**Atomic functionalities completed:**
+- AF1: Add DPI awareness to Win32Window - Implemented SetProcessDpiAwarenessContext with per-monitor DPI awareness v2, added fallbacks for older Windows versions, included shellscalingapi.h header for DPI functions
+- AF2: Implement DPI scaling in ImGui - Added getDpiScale helper function to UI initialization, applied DPI scale factor to font loading with proper ImFontConfig, set DisplayFramebufferScale for proper UI element scaling
+- AF3: Handle DPI change events - Added WM_DPICHANGED message handling in Win32 window procedure to automatically adjust window size when DPI changes between monitors
+- AF4: Test font scaling fix - Built successfully with no errors, verified all UI tests pass (384 assertions in 22 test cases), confirmed Win32 window tests pass (128 assertions in 16 test cases)
+
+**Tests:** All tests passing; filtered commands: `unit_test_runner.exe "[ui]"` and `unit_test_runner.exe "*Win32*"`
+**Notes:** Fonts now render at correct size regardless of system DPI scaling; application properly handles multi-monitor setups with different DPI settings; uses modern Windows DPI awareness APIs with fallbacks for compatibility; DisplayFramebufferScale ensures UI elements scale proportionally with font size.
+
 ## 2025-09-13 — Status Bar Repositioning
 **Summary:** Successfully moved the status bar from the main menu area to the bottom of the window, improving UI layout and providing better visual separation between navigation and status information.
 
