@@ -34,8 +34,8 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 		engine::GPUResourceManager gpuResourceManager( device );
 		editor::UI ui;
 
-		// Act - test initializeSceneEditor method exists and can be called
-		REQUIRE_NOTHROW( ui.initializeSceneEditor( scene, systemManager, assetManager, gpuResourceManager ) );
+		// Act - test initializeSceneOperations method exists and can be called
+		REQUIRE_NOTHROW( ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager ) );
 
 		// Assert
 		REQUIRE( true ); // If we get here without exceptions, the wiring is correct
