@@ -24,8 +24,8 @@
   ],
   "buffers": [
     {
-      "byteLength": 72,
-      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAABAAIA"
+      "byteLength": 42,
+      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAPwAAgD8AAAAAAAABAAIA"
     }
   ],
   "bufferViews": [

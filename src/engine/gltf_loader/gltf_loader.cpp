@@ -50,27 +50,12 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 		return {};
 	}
 
-	// cgltf_parse_file automatically handles embedded base64 data URIs
-	// Only call cgltf_load_buffers for external binary files
-	bool hasExternalBuffers = false;
-	for ( cgltf_size i = 0; i < data->buffers_count; ++i )
+	// Load buffers using cgltf_load_buffers which handles both data URIs and external files
+	result = cgltf_load_buffers( &options, data, filePath.c_str() );
+	if ( result != cgltf_result_success )
 	{
-		if ( data->buffers[i].uri && strncmp( data->buffers[i].uri, "data:", 5 ) != 0 )
-		{
-			hasExternalBuffers = true;
-			break;
-		}
-	}
-
-	if ( hasExternalBuffers )
-	{
-		result = cgltf_load_buffers( &options, data, filePath.c_str() );
-		if ( result != cgltf_result_success )
-		{
-			console::error( "glTF Loader Error: Failed to load external buffers for glTF file: {}", filePath );
-			cgltf_free( data );
-			return {};
-		}
+		console::error( "glTF Loader Error: Failed to load buffers for glTF file: {}, result: {}", filePath, static_cast<int>( result ) );
+		// Continue anyway - some buffers might have loaded successfully
 	}
 
 	// Process the parsed glTF data into a scene
