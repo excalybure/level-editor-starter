@@ -356,7 +356,7 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	// Configure materials using GPUResourceManager and Scene
 	gpuMesh.configureMaterials( resourceManager, scene, mesh );
 
-	// After configuration, first primitive should have material, second should not
+	// After configuration, first primitive should have material, second should get default material
 	const auto &primGPU1After = gpuMesh.getPrimitive( 0 );
 	const auto &primGPU2After = gpuMesh.getPrimitive( 1 );
 
@@ -364,6 +364,12 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	REQUIRE( primGPU1After.getMaterial() != nullptr );
 	REQUIRE( primGPU1After.getMaterial()->getSourceMaterial() == material );
 
-	REQUIRE_FALSE( primGPU2After.hasMaterial() );
-	REQUIRE( primGPU2After.getMaterial() == nullptr );
+	// Second primitive should now have the default material instead of no material
+	REQUIRE( primGPU2After.hasMaterial() );
+	REQUIRE( primGPU2After.getMaterial() != nullptr );
+
+	// Verify it's the default material (different from the assigned material)
+	const auto defaultMaterial = primGPU2After.getMaterial();
+	REQUIRE( defaultMaterial->getSourceMaterial() != material );
+	REQUIRE( defaultMaterial->getSourceMaterial()->getName() == "DefaultMaterial" );
 }

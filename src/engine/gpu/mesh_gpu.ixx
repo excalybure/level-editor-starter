@@ -26,6 +26,7 @@ export class MaterialProvider
 public:
 	virtual ~MaterialProvider() = default;
 	virtual std::shared_ptr<MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) = 0;
+	virtual std::shared_ptr<MaterialGPU> getDefaultMaterialGPU() = 0;
 };
 
 // Individual primitive GPU buffer management

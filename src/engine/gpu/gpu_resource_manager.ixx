@@ -37,6 +37,7 @@ public:
 
 	// Material resource caching
 	std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) override;
+	std::shared_ptr<engine::gpu::MaterialGPU> getDefaultMaterialGPU() override;
 
 	// Cache management
 	void clearCache();
@@ -61,6 +62,9 @@ public:
 
 private:
 	dx12::Device *m_device = nullptr;
+
+	// Default material for primitives without materials
+	std::shared_ptr<engine::gpu::MaterialGPU> m_defaultMaterialGPU;
 
 	// Cache maps using weak_ptr for automatic cleanup
 	std::unordered_map<assets::Mesh *, std::weak_ptr<engine::gpu::MeshGPU>> m_meshCache;

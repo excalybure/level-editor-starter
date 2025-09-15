@@ -91,6 +91,30 @@ std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( st
 	return materialGPU;
 }
 
+std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getDefaultMaterialGPU()
+{
+	// Create default material if not cached
+	if ( !m_defaultMaterialGPU )
+	{
+		// Create a pink default material
+		auto defaultMaterial = std::make_shared<assets::Material>();
+		defaultMaterial->setName( "DefaultMaterial" );
+		defaultMaterial->setBaseColorFactor( 1.0f, 0.0f, 1.0f, 1.0f ); // Pink color
+		defaultMaterial->setMetallicFactor( 0.0f );
+		defaultMaterial->setRoughnessFactor( 1.0f );
+
+		m_defaultMaterialGPU = std::make_shared<engine::gpu::MaterialGPU>( defaultMaterial, *m_device );
+		if ( !m_defaultMaterialGPU->isValid() )
+		{
+			console::error( "GPUResourceManager: failed to create default MaterialGPU" );
+			m_defaultMaterialGPU = nullptr;
+			return nullptr;
+		}
+	}
+
+	return m_defaultMaterialGPU;
+}
+
 
 void GPUResourceManager::clearCache()
 {

@@ -249,3 +249,60 @@ TEST_CASE( "configureMaterials properly setup materials", "[gpu_resource_manager
 	REQUIRE( primitiveGPU.getMaterial() != nullptr );
 	REQUIRE( primitiveGPU.getMaterial()->getSourceMaterial() == material );
 }
+
+TEST_CASE( "configureMaterials assigns default material when primitive has no material", "[gpu_resource_manager][mesh][default_material][unit]" )
+{
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+	engine::GPUResourceManager manager( device );
+
+	// Create a simple mesh with a primitive that has NO material assigned
+	auto mesh = std::make_shared<assets::Mesh>();
+
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addIndex( 0 );
+	primitive.addIndex( 1 );
+	primitive.addIndex( 2 );
+	// Deliberately NOT setting a material on the primitive
+
+	mesh->addPrimitive( primitive );
+
+	assets::Scene scene;
+	// No materials added to scene
+
+	// Create GPU mesh
+	const auto meshGPU = manager.getMeshGPU( mesh );
+	REQUIRE( meshGPU != nullptr );
+	REQUIRE( meshGPU->isValid() );
+
+	// Initially, primitive should have no material
+	const auto &primitiveGPU = meshGPU->getPrimitive( 0 );
+	REQUIRE_FALSE( primitiveGPU.hasMaterial() );
+	REQUIRE( primitiveGPU.getMaterial() == nullptr );
+
+	// Configure materials - should assign default material for primitives without materials
+	meshGPU->configureMaterials( manager, scene, *mesh );
+
+	// After configuration, primitive should have the default material
+	REQUIRE( primitiveGPU.hasMaterial() );
+	REQUIRE( primitiveGPU.getMaterial() != nullptr );
+
+	// The default material should be identifiable (pink color or other marker)
+	const auto defaultMaterial = primitiveGPU.getMaterial();
+	REQUIRE( defaultMaterial->isValid() );
+
+	// Verify it's the default material by checking if it has the expected name
+	const auto sourceMaterial = defaultMaterial->getSourceMaterial();
+	REQUIRE( sourceMaterial != nullptr );
+	REQUIRE( sourceMaterial->getName() == "DefaultMaterial" );
+
+	// Verify it's pink (magenta color: 1.0, 0.0, 1.0, 1.0)
+	const auto &pbrMaterial = sourceMaterial->getPBRMaterial();
+	REQUIRE( pbrMaterial.baseColorFactor.x == 1.0f ); // Red
+	REQUIRE( pbrMaterial.baseColorFactor.y == 0.0f ); // Green
+	REQUIRE( pbrMaterial.baseColorFactor.z == 1.0f ); // Blue
+	REQUIRE( pbrMaterial.baseColorFactor.w == 1.0f ); // Alpha
+}

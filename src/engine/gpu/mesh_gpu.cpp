@@ -214,30 +214,51 @@ void MeshGPU::configureMaterials( MaterialProvider &materialProvider, const asse
 		const auto &srcPrimitive = primitives[i];
 		auto &gpuPrimitive = m_primitives[i];
 
-		// Skip if primitive already has a material or doesn't specify one
-		if ( gpuPrimitive->hasMaterial() || !srcPrimitive.hasMaterial() )
+		// Skip if primitive already has a material
+		if ( gpuPrimitive->hasMaterial() )
 		{
 			continue;
 		}
 
-		// Resolve material from scene
-		const assets::MaterialHandle materialHandle = srcPrimitive.getMaterialHandle();
-		if ( const auto material = scene.getMaterial( materialHandle ) )
+		std::shared_ptr<engine::gpu::MaterialGPU> materialToAssign;
+
+		// Check if primitive has a material assigned
+		if ( srcPrimitive.hasMaterial() )
 		{
-			const auto gpuMaterial = materialProvider.getMaterialGPU( material );
-			if ( gpuMaterial )
+			// Resolve material from scene
+			const assets::MaterialHandle materialHandle = srcPrimitive.getMaterialHandle();
+			if ( const auto material = scene.getMaterial( materialHandle ) )
 			{
-				gpuPrimitive->setMaterial( gpuMaterial );
-				console::info( "Successfully configured material for primitive {} with handle '{}'", i, materialHandle );
+				materialToAssign = materialProvider.getMaterialGPU( material );
+				if ( !materialToAssign )
+				{
+					console::error( "Failed to create MaterialGPU for material handle '{}'", materialHandle );
+					// Fall back to default material
+					materialToAssign = materialProvider.getDefaultMaterialGPU();
+				}
 			}
 			else
 			{
-				console::error( "Failed to create MaterialGPU for material handle '{}'", materialHandle );
+				console::error( "Invalid material handle '{}' in primitive {} - material not found in scene", materialHandle, i );
+				// Fall back to default material
+				materialToAssign = materialProvider.getDefaultMaterialGPU();
 			}
 		}
 		else
 		{
-			console::error( "Invalid material handle '{}' in primitive {} - material not found in scene", materialHandle, i );
+			// No material assigned, use default
+			materialToAssign = materialProvider.getDefaultMaterialGPU();
+			console::info( "Primitive {} has no material - assigned default material", i );
+		}
+
+		// Assign the material (either specified or default)
+		if ( materialToAssign )
+		{
+			gpuPrimitive->setMaterial( materialToAssign );
+		}
+		else
+		{
+			console::error( "Failed to get any material (including default) for primitive {}", i );
 		}
 	}
 }
