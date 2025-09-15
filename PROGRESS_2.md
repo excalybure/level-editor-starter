@@ -1,5 +1,43 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Complete Device Frame State Validation via TDD
+**Summary:** Successfully implemented robust frame state validation in Device class using m_inFrame boolean with assertions to prevent incorrect beginFrame/endFrame sequences. Added isInFrame() getter to enable Renderer validation. Updated Renderer to assert Device is in frame before beginning its own frame, ensuring proper frame lifecycle separation between Device and Renderer.
+
+**Atomic functionalities completed:**
+- AF1: Add m_inFrame boolean to Device - Added private member to track Device frame state for validation and safety
+- AF2: Implement Device beginFrame validation - Added assertion to prevent calling beginFrame when already in frame (double initialization)
+- AF3: Implement Device endFrame validation - Added assertion to prevent calling endFrame when not in frame
+- AF4: Add Device isInFrame getter - Added public method to allow external frame state validation (used by Renderer)
+- AF5: Update Renderer frame validation - Added assertion in Renderer::beginFrame to ensure Device is in frame before starting renderer frame
+- AF6: Test frame validation system - Verified build, test, and application execution work correctly with validation in place
+
+**Tests:** All integration tests pass (565 assertions in 19 test cases); device tests pass (64 assertions in 17 test cases); renderer tests correctly show validation errors when frame state is incorrect; application starts successfully without validation errors; filtered commands: `unit_test_runner.exe "[integration]"`, `unit_test_runner.exe "[dx12]"`, `unit_test_runner.exe "[renderer]"`
+**Notes:** The validation system ensures proper frame lifecycle management between Device and Renderer. Device frame state is tracked with m_inFrame boolean, preventing double beginFrame calls or endFrame without beginFrame. Renderer now validates that Device is in frame before beginning its own frame, ensuring correct calling sequence from main loop. Error logging via console::error provides clear feedback when frame lifecycle is violated. All validation works correctly in both test and production environments.
+
+## 2025-09-15 — Fix MeshRenderingSystem Command Context Access
+**Summary:** Fixed the issue where MeshRenderingSystem::renderEntity returned early due to null command context by adding missing renderer.beginFrame() and renderer.endFrame() calls to the main loop. The renderer now properly initializes its command context from the device during frame setup, enabling mesh rendering to work correctly.
+
+**Atomic functionalities completed:**
+- AF1: Add renderer.beginFrame() call - Updated main loop to call renderer.beginFrame() after device.beginFrame() to ensure command context is properly established for rendering operations
+- AF2: Add renderer.endFrame() call - Updated main loop to call renderer.endFrame() before device.endFrame() to ensure proper renderer cleanup and state management
+- AF3: Verify mesh rendering works - Ran integration tests and application to confirm MeshRenderingSystem can now access command context and perform rendering operations without null pointer issues
+
+**Tests:** All existing MeshRenderingSystem tests pass (19 assertions in 8 test cases); integration tests pass (417 assertions in 19 test cases); application starts successfully without command context errors; filtered commands: `unit_test_runner.exe "*MeshRenderingSystem*"` and `unit_test_runner.exe "*integration*"`
+**Notes:** The issue was caused by the recent refactoring where Renderer::beginFrame was simplified to get resources from Device, but the main loop wasn't updated to call renderer frame methods. The fix maintains proper separation between device-level and renderer-level frame management while ensuring the renderer has access to the active command context for rendering operations.
+
+## 2025-09-14 — Default Material System for Primitives
+**Summary:** Implemented a default pink material system that automatically assigns a fallback material to primitives that don't have materials, ensuring all rendered objects have proper material configuration and eliminating invisible/broken primitives.
+
+**Atomic functionalities completed:**
+- AF1: Examine current material configuration code - Analyzed MeshGPU::configureMaterials implementation and identified skip logic for primitives without materials (line 218: `!srcPrimitive.hasMaterial()`)
+- AF2: Examine GPUResourceManager material system - Understood MaterialProvider interface pattern and GPUResourceManager's material caching mechanism 
+- AF3: Create default material in GPUResourceManager - Added getDefaultMaterialGPU() method to MaterialProvider interface and implemented in GPUResourceManager to create cached pink default material (RGBA: 1.0, 0.0, 1.0, 1.0)
+- AF4: Update material configuration logic - Modified MeshGPU::configureMaterials to use default material instead of skipping when no material is found, added fallback logic for material creation failures
+- AF5: Add tests for default material behavior - Created comprehensive test case with 14 assertions verifying primitives without materials receive default pink material with correct name "DefaultMaterial"
+
+**Tests:** 1 new test case with 14 assertions; all material tests pass (110 assertions in 7 test cases); updated existing test to expect default material assignment; filtered commands: `unit_test_runner.exe "configureMaterials assigns default material when primitive has no material"` and `unit_test_runner.exe "[material]"`
+**Notes:** Default material provides visual indication (pink color) for missing materials; MaterialProvider interface extended cleanly without breaking existing code; fallback system handles both missing material handles and material creation failures; scene importer integration works seamlessly with new default material system.
+
 ## 2025-09-13 — DPI-Aware Font Scaling Fix
 **Summary:** Fixed font stretching issue when resizing the application by implementing proper DPI awareness and font scaling. The application now detects DPI scale factors and applies appropriate font scaling, preventing fonts from stretching when the window is resized or moved between monitors with different DPI settings.
 

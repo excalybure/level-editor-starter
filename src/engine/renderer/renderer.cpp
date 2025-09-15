@@ -584,17 +584,32 @@ void Renderer::createConstantBuffer()
 
 void Renderer::beginFrame()
 {
-	// Device handles all frame lifecycle management (command reset, barriers, render targets, etc.)
-	m_device.beginFrame();
+	// Validate that beginFrame hasn't already been called
+	if ( m_inFrame )
+	{
+		console::error( "Renderer::beginFrame called when already in frame. Call endFrame() first." );
+		return;
+	}
 
-	// Get CommandContext and SwapChain from the Device
+	// Validate that Device is in frame (Device::beginFrame should be called first)
+	if ( !m_device.isInFrame() )
+	{
+		console::error( "Renderer::beginFrame called but Device is not in frame. Call Device::beginFrame() first." );
+		return;
+	}
+
+	// Get CommandContext and SwapChain from the Device (Device::beginFrame should be called by caller)
 	m_currentContext = m_device.getCommandContext();
 	m_currentSwapChain = m_device.getSwapChain();
 
 	if ( !m_currentContext )
 	{
-		return; // Device not properly initialized
+		console::error( "Renderer::beginFrame failed - no command context. Ensure Device::beginFrame() was called first." );
+		return;
 	}
+
+	// Mark that we're now in a frame
+	m_inFrame = true;
 
 	// Now it's safe to delete any pending buffers since the command list has been executed
 	m_pendingVertexBufferDeletions.clear();
@@ -629,16 +644,24 @@ void Renderer::beginFrame()
 
 void Renderer::endFrame()
 {
-	if ( !m_currentContext )
+	// Validate that we're actually in a frame
+	if ( !m_inFrame )
 	{
+		console::error( "Renderer::endFrame called when not in frame. Call beginFrame() first." );
 		return;
 	}
 
-	// Device handles all frame completion (barriers, command list closing/execution)
-	m_device.endFrame();
+	if ( !m_currentContext )
+	{
+		console::error( "Renderer::endFrame called but no command context available." );
+		m_inFrame = false;
+		return;
+	}
 
+	// Reset renderer state (Device::endFrame should be called by caller)
 	m_currentContext = nullptr;
 	m_currentSwapChain = nullptr;
+	m_inFrame = false;
 }
 
 void Renderer::clear( const Color &clearColor ) noexcept

@@ -148,6 +148,10 @@ int main()
 
 			// Begin D3D12 frame - this opens the command list
 			device.beginFrame();
+
+			// Begin renderer frame - this gets command context from device
+			renderer.beginFrame();
+
 			ID3D12GraphicsCommandList *commandList = device.getCommandList();
 
 			// All command list PIX events must be between beginFrame() and endFrame()
@@ -192,6 +196,9 @@ int main()
 					ui.renderDrawData( static_cast<void *>( commandList ) );
 				}
 			} // Frame PIX event ends here, before endFrame() closes the command list
+
+			// End renderer frame - this cleans up renderer state
+			renderer.endFrame();
 
 			// End D3D12 frame - this closes the command list
 			device.endFrame();

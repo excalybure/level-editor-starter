@@ -149,6 +149,9 @@ public:
 	void endFrame();
 	void present();
 
+	// Frame state query
+	bool isInFrame() const noexcept { return m_inFrame; }
+
 	// Debug layer integration - process accumulated debug messages
 	void processDebugMessages();
 
@@ -216,6 +219,9 @@ private:
 
 	// Texture manager for viewport render targets
 	TextureManager m_textureManager;
+
+	// Frame state tracking
+	bool m_inFrame = false;
 
 	// Initialization methods
 	void enableDebugLayer();

@@ -159,6 +159,13 @@ void Device::shutdown()
 
 void Device::beginFrame()
 {
+	// Validate that beginFrame hasn't already been called
+	if ( m_inFrame )
+	{
+		console::error( "Device::beginFrame called when already in frame. Call endFrame() first." );
+		return;
+	}
+
 	// Process any new D3D12 debug messages first
 	processDebugMessages();
 
@@ -167,6 +174,9 @@ void Device::beginFrame()
 	{
 		return;
 	}
+
+	// Mark that we're now in a frame
+	m_inFrame = true;
 
 	// Reset command context for new frame
 	m_commandContext->reset();
@@ -216,9 +226,18 @@ void Device::beginFrame()
 
 void Device::endFrame()
 {
+	// Validate that we're actually in a frame
+	if ( !m_inFrame )
+	{
+		console::error( "Device::endFrame called when not in frame. Call beginFrame() first." );
+		return;
+	}
+
 	// Always close command context if available
 	if ( !m_device || !m_commandContext )
 	{
+		console::error( "Device::endFrame called but device or command context not available." );
+		m_inFrame = false;
 		return;
 	}
 
@@ -228,6 +247,7 @@ void Device::endFrame()
 		m_commandContext->close();
 		ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
 		m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
+		m_inFrame = false;
 		return;
 	}
 
@@ -251,6 +271,9 @@ void Device::endFrame()
 	// Execute command list
 	ID3D12CommandList *const ppCommandLists[] = { m_commandContext->get() };
 	m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
+
+	// Mark that we're no longer in a frame
+	m_inFrame = false;
 }
 
 void Device::present()

@@ -219,8 +219,11 @@ public:
 	// Begin a headless recording session for tests (no swap chain / RTV setup)
 	void beginHeadlessForTests() noexcept
 	{
+		// For tests, reset frame state
+		m_inFrame = false;
 		m_currentContext = m_device.getCommandContext();
 		m_currentSwapChain = nullptr;
+		m_inFrame = true;
 	}
 
 	// Immediate drawing commands
@@ -294,6 +297,9 @@ private:
 	// Pending deletion queue to defer destruction until frame end
 	std::vector<std::unique_ptr<VertexBuffer>> m_pendingVertexBufferDeletions;
 	std::vector<std::unique_ptr<IndexBuffer>> m_pendingIndexBufferDeletions;
+
+	// Frame state tracking
+	bool m_inFrame = false;
 
 	// Initialization
 	void createRootSignature();
