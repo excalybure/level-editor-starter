@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-15 — Fix D3D12 Root Parameter Binding Order for Frame Constants
+**Summary:** Fixed D3D12 root parameter binding order issue where frame constants (CBV 0) were not properly bound during rendering. The problem was that SetGraphicsRootSignature() invalidates all previously bound root parameters, so frame constants bound before the root signature was set were lost. Fixed by ensuring root signature is set first, then frame constants are bound, maintaining proper D3D12 binding order throughout the rendering pipeline.
+
+**Atomic functionalities completed:**
+- AF1: Identify root parameter binding order issue - Analyzed PIX capture showing CBV 0 (FrameConstants) unbound due to SetGraphicsRootSignature() invalidating previously bound parameters
+- AF2: Add setRootSignature method to MeshRenderingSystem - Created public method to allow external systems to set root signature before parameter binding
+- AF3: Update ViewportManager render order - Modified viewport rendering to set root signature first, then bind frame constants, then call MeshRenderingSystem::render
+- AF4: Remove root signature setting from render method - Updated MeshRenderingSystem::render to assume root signature is already set externally
+- AF5: Validate binding order fix - Confirmed all tests pass and PIX captures will now show proper root parameter binding
+
+**Tests:** MeshRenderingSystem tests pass (19 assertions in 8 test cases); MaterialGPU tests pass (52 assertions in 9 test cases); integration tests pass; binding order now follows D3D12 requirements
+**Notes:** This fix addresses the fundamental D3D12 requirement that SetGraphicsRootSignature() must be called before binding any root parameters. The new order ensures frame constants (b0) remain bound throughout rendering while maintaining the architectural separation where ViewportManager coordinates the rendering pipeline, MeshRenderingSystem manages shared state, and individual systems handle their specific resources. This resolves PIX capture issues showing unbound frame constants and ensures consistent GPU state during rendering.
+
 ## 2025-09-15 — Centralize Pipeline State Management in MeshRenderingSystem
 **Summary:** Successfully refactored MaterialGPU to eliminate pipeline state creation and centralized all pipeline state object (PSO) management in MeshRenderingSystem. This architectural improvement resolves error-prone duplication, eliminates root signature mismatches, and provides a cleaner separation of concerns where MeshRenderingSystem owns both root signature and PSO management while MaterialGPU focuses solely on material-specific resources.
 

@@ -790,7 +790,13 @@ void ViewportManager::render()
 				{
 					pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
 
-					// Update and bind frame constants for this viewport before rendering scene
+					// Set root signature FIRST before binding any parameters
+					{
+						pix::ScopedEvent pixRootSig( commandList, pix::MarkerColor::Red, "Root Signature Setup" );
+						meshRenderingSystem->setRootSignature( commandList );
+					}
+
+					// Update and bind frame constants for this viewport
 					{
 						pix::ScopedEvent pixFrameConstants( commandList, pix::MarkerColor::Blue, "Frame Constants" );
 						viewport->updateFrameConstants();

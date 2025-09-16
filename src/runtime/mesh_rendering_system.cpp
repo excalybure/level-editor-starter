@@ -40,15 +40,6 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 		return;
 	}
 
-	// Set the root signature that all materials will use
-	if ( m_rootSignature )
-	{
-		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
-	}
-
-	// Note: Frame constants (b0) are expected to be already bound by the viewport
-	// before calling this method. We only handle object constants (b1) and materials handle (b2).
-
 	// Iterate through all entities to find those with both MeshRenderer and Transform components
 	const auto allEntities = scene.getAllEntities();
 	for ( const auto entity : allEntities )
@@ -315,6 +306,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 	{
 		console::error( "MeshRenderingSystem: Failed to create pipeline state for material" );
 		return nullptr;
+	}
+}
+
+void MeshRenderingSystem::setRootSignature( ID3D12GraphicsCommandList *commandList )
+{
+	if ( m_rootSignature && commandList )
+	{
+		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
 	}
 }
 

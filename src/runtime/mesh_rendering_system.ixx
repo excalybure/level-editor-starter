@@ -56,6 +56,9 @@ public:
 	// Pipeline state management for materials
 	ID3D12PipelineState *getMaterialPipelineState( const engine::gpu::MaterialGPU &material );
 
+	// Root signature management - must be called before binding any parameters
+	void setRootSignature( ID3D12GraphicsCommandList *commandList );
+
 private:
 	renderer::Renderer &m_renderer;
 
