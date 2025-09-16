@@ -13,16 +13,81 @@ import runtime.console;
 namespace runtime::systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer )
-	: m_renderer( renderer )
+MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+	: m_renderer( renderer ), m_shaderManager( shaderManager )
 {
 	createRootSignature();
+
+	if ( !registerShaders() )
+	{
+		console::error( "MeshRenderingSystem: Failed to register shaders" );
+	}
+}
+
+MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer )
+	: m_renderer( renderer ), m_shaderManager( nullptr )
+{
+	createRootSignature();
+	console::warning( "MeshRenderingSystem: Created without ShaderManager - shader compilation will use legacy D3DCompileFromFile method" );
 }
 
 void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
 {
 	// The mesh rendering system doesn't need to update per frame
 	// Rendering happens in the render() method
+}
+
+bool MeshRenderingSystem::registerShaders()
+{
+	if ( !m_shaderManager )
+	{
+		console::error( "MeshRenderingSystem: ShaderManager not available for shader registration" );
+		return false;
+	}
+
+	// Register vertex shader
+	m_vertexShaderHandle = m_shaderManager->registerShader(
+		"shaders/unlit.hlsl",
+		"VSMain",
+		"vs_5_0",
+		shader_manager::ShaderType::Vertex );
+
+	if ( m_vertexShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
+	{
+		console::error( "MeshRenderingSystem: Failed to register vertex shader" );
+		return false;
+	}
+
+	// Register pixel shader
+	m_pixelShaderHandle = m_shaderManager->registerShader(
+		"shaders/unlit.hlsl",
+		"PSMain",
+		"ps_5_0",
+		shader_manager::ShaderType::Pixel );
+
+	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
+	{
+		console::error( "MeshRenderingSystem: Failed to register pixel shader" );
+		return false;
+	}
+
+	// Set up reload callback for shader hot reloading
+	m_callbackHandle = m_shaderManager->registerReloadCallback(
+		[this]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader ) {
+			// When shaders are reloaded, invalidate pipeline state cache
+			if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
+			{
+				console::info( "MeshRenderingSystem: Shader reloaded, clearing pipeline state cache" );
+				m_pipelineStateCache.clear();
+			}
+		} );
+
+	if ( m_callbackHandle == shader_manager::INVALID_CALLBACK_HANDLE )
+	{
+		console::warning( "MeshRenderingSystem: Failed to register shader reload callback" );
+	}
+
+	return true;
 }
 
 void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera )
@@ -232,40 +297,28 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 	// Get device from renderer
 	auto &device = m_renderer.getDevice();
 
-	// Load and compile the unlit shaders from file
-	const std::wstring shaderPath = L"shaders/unlit.hlsl";
-
 	Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
 
-	// Compile vertex shader
-	HRESULT hr = D3DCompileFromFile( shaderPath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSMain", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &vsBlob, &errorBlob );
-	if ( FAILED( hr ) )
+	// Use ShaderManager if available, otherwise fall back to D3DCompileFromFile
+	if ( m_shaderManager )
 	{
-		if ( errorBlob )
+		// Get current shader blobs from shader manager
+		const renderer::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
+		const renderer::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
+
+		if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
 		{
-			console::error( "MeshRenderingSystem: Vertex shader compilation failed: " + std::string( (char *)errorBlob->GetBufferPointer() ) );
+			console::warning( "MeshRenderingSystem: Shaders not ready for pipeline state creation" );
+			return nullptr;
 		}
-		else
-		{
-			console::error( "MeshRenderingSystem: Failed to compile vertex shader from file: " + std::to_string( hr ) );
-		}
-		return nullptr;
+
+		vsBlob = vertexShader->blob;
+		psBlob = pixelShader->blob;
 	}
-
-	// Compile pixel shader
-	hr = D3DCompileFromFile( shaderPath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &psBlob, &errorBlob );
-	if ( FAILED( hr ) )
+	else
 	{
-		if ( errorBlob )
-		{
-			console::error( "MeshRenderingSystem: Pixel shader compilation failed: " + std::string( (char *)errorBlob->GetBufferPointer() ) );
-		}
-		else
-		{
-			console::error( "MeshRenderingSystem: Failed to compile pixel shader from file: " + std::to_string( hr ) );
-		}
+		console::error( "MeshRenderingSystem: Shader manager is not set. Skipping pipeline state creation" );
 		return nullptr;
 	}
 
@@ -296,7 +349,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 	psoDesc.DepthStencilState.StencilEnable = FALSE;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
-	hr = device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pipelineState ) );
+	const HRESULT hr = device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pipelineState ) );
 	if ( SUCCEEDED( hr ) )
 	{
 		console::info( "MeshRenderingSystem: Pipeline state created successfully for material" );

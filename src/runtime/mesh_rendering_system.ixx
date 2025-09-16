@@ -15,6 +15,7 @@ import engine.gpu.mesh_gpu;
 import engine.matrix;
 import engine.vec;
 import platform.dx12;
+import engine.shader_manager;
 import std;
 
 // Forward declarations
@@ -38,6 +39,10 @@ struct ObjectConstants
 export class MeshRenderingSystem : public ::systems::System
 {
 public:
+	// New constructor with ShaderManager (preferred)
+	MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+
+	// Legacy constructor for backward compatibility (deprecated)
 	MeshRenderingSystem( renderer::Renderer &renderer );
 
 	void update( ecs::Scene &scene, float deltaTime ) override;
@@ -61,6 +66,12 @@ public:
 
 private:
 	renderer::Renderer &m_renderer;
+	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
+
+	// Shader handles for the unlit shader
+	shader_manager::ShaderHandle m_vertexShaderHandle = shader_manager::INVALID_SHADER_HANDLE;
+	shader_manager::ShaderHandle m_pixelShaderHandle = shader_manager::INVALID_SHADER_HANDLE;
+	shader_manager::CallbackHandle m_callbackHandle = shader_manager::INVALID_CALLBACK_HANDLE;
 
 	// Root signature for mesh rendering (shared by all materials)
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
@@ -70,6 +81,7 @@ private:
 
 	// Helper methods for root signature and pipeline state management
 	void createRootSignature();
+	bool registerShaders();
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> createMaterialPipelineState( const engine::gpu::MaterialGPU &material );
 };
 

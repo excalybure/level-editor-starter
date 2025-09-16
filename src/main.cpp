@@ -106,7 +106,7 @@ int main()
 	systems::SystemManager systemManager;
 
 	// Add MeshRenderingSystem to handle 3D mesh rendering
-	systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer );
+	systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer, shaderManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );

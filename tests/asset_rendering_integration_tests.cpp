@@ -8,6 +8,7 @@ import engine.asset_manager;
 import engine.gpu.gpu_resource_manager;
 import editor.ui;
 import platform.dx12;
+import engine.shader_manager;
 
 TEST_CASE( "Asset loading to rendering integration initializes correctly", "[integration][asset-rendering]" )
 {
@@ -54,7 +55,8 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		renderer::Renderer renderer( device );
 
 		// Act - create MeshRenderingSystem
-		auto meshRenderingSystem = std::make_unique<runtime::systems::MeshRenderingSystem>( renderer );
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		auto meshRenderingSystem = std::make_unique<runtime::systems::MeshRenderingSystem>( renderer, shaderManager );
 
 		// Assert
 		REQUIRE( meshRenderingSystem != nullptr );
