@@ -41,11 +41,11 @@ TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 		} );
 
 		// Load first
-		const auto scene1 = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene1 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene1 != nullptr );
 
 		// Get from cache without loading
-		const auto scene2 = manager.get<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene2 = manager.get<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene2 != nullptr );
 		REQUIRE( scene1.get() == scene2.get() );
 
@@ -133,17 +133,17 @@ TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 
 	// Load several assets
 	const auto material = manager.load<Material>( "clear_test1.mtl" );
-	const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+	const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 
 	REQUIRE( manager.isCached( "clear_test1.mtl" ) );
-	REQUIRE( manager.isCached( "tests/test_assets/simple_triangle.gltf" ) );
+	REQUIRE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 
 	// Clear cache
 	manager.clearCache();
 
 	// Verify cache is empty
 	REQUIRE_FALSE( manager.isCached( "clear_test1.mtl" ) );
-	REQUIRE_FALSE( manager.isCached( "tests/test_assets/simple_triangle.gltf" ) );
+	REQUIRE_FALSE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 
 	// Original references should still be valid
 	REQUIRE( material != nullptr );
@@ -215,12 +215,12 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 		} );
 
 		// The static cast here is a bit of a hack for testing, but it demonstrates the callback mechanism
-		const bool result = manager.importScene( "tests/test_assets/simple_triangle.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
+		const bool result = manager.importScene( "assets/test/triangle_no_mat.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
 
 		REQUIRE( result == true );
 		REQUIRE( mockEcsScene.wasImported == true );
 		REQUIRE( mockEcsScene.importedScene != nullptr );
-		REQUIRE( mockEcsScene.importedScene->getPath() == "tests/test_assets/simple_triangle.gltf" );
+		REQUIRE( mockEcsScene.importedScene->getPath() == "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( mockEcsScene.importedScene->isLoaded() == true );
 
 		// Clean up scene loader callback
@@ -231,7 +231,7 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	{
 		AssetManager::clearImportSceneCallback();
 
-		const bool result = manager.importScene( "tests/test_assets/simple_triangle.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
+		const bool result = manager.importScene( "assets/test/triangle_no_mat.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
 
 		REQUIRE( result == false );
 		REQUIRE( mockEcsScene.wasImported == false );
@@ -251,11 +251,11 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		AssetManager::clearSceneLoaderCallback();
 
 		// Load the test triangle scene
-		const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 
 		// Without callback, should return nullptr
 		REQUIRE( scene == nullptr );
-		REQUIRE_FALSE( manager.isCached( "tests/test_assets/simple_triangle.gltf" ) );
+		REQUIRE_FALSE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 	}
 
 	SECTION( "loadScene handles invalid file path gracefully" )
@@ -277,12 +277,12 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		} );
 
 		// Load scene first time
-		const auto scene1 = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene1 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene1 != nullptr );
-		REQUIRE( manager.isCached( "tests/test_assets/simple_triangle.gltf" ) );
+		REQUIRE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 
 		// Load same scene second time - should return cached instance
-		const auto scene2 = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene2 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene2 != nullptr );
 		REQUIRE( scene1.get() == scene2.get() ); // Same object
 
@@ -305,7 +305,7 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 			return scene;
 		} );
 
-		const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene != nullptr );
 		REQUIRE( callbackCalled );
 		REQUIRE( scene->getRootNodes().size() == 1 );
@@ -320,8 +320,8 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 		// Ensure no callback is set
 		AssetManager::clearSceneLoaderCallback();
 
-		const auto scene = manager.load<Scene>( "tests/test_assets/simple_triangle.gltf" );
+		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene == nullptr ); // No callback means no loading
-		REQUIRE_FALSE( manager.isCached( "tests/test_assets/simple_triangle.gltf" ) );
+		REQUIRE_FALSE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 	}
 }

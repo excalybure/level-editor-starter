@@ -386,6 +386,7 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 
 	Renderer renderer( device );
 
+	device.beginFrame();
 	renderer.beginFrame();
 
 	std::vector<Vertex> tri = {
@@ -405,6 +406,7 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
 
 	renderer.endFrame();
+	device.endFrame();
 	device.present();
 }
 
@@ -415,11 +417,13 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	Renderer renderer( device );
+	device.beginFrame();
 	renderer.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 2 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 0 );
 	renderer.endFrame();
+	device.endFrame();
 	device.present();
 }
 
@@ -431,10 +435,12 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 
 	Renderer renderer( device );
 	renderer.beginFrame();
+	device.beginFrame();
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
+	device.endFrame();
 	device.present();
 }
 
@@ -446,11 +452,13 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 
 	Renderer renderer( device );
 	renderer.beginFrame();
+	device.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
+	device.endFrame();
 	device.present();
 }
 
@@ -461,6 +469,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	REQUIRE( requireDevice( window, device, "pso cache" ) );
 
 	Renderer r( device );
+	device.beginFrame();
 	r.beginFrame();
 
 	std::vector<Vertex> tri = { { { 0, 0, 0 }, Color::red() }, { { 1, 0, 0 }, Color::green() }, { { 0, 1, 0 }, Color::blue() } };
@@ -508,6 +517,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	REQUIRE( r.getPipelineStateCacheSize() == 6 );
 
 	r.endFrame();
+	device.endFrame();
 
 	device.present();
 }

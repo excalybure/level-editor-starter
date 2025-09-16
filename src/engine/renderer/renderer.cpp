@@ -709,7 +709,7 @@ void Renderer::setRenderState( const RenderState &state ) noexcept
 
 void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
-	if ( !m_currentContext || vertices.empty() )
+	if ( vertices.empty() )
 		return;
 
 	// In headless mode (no swap chain), skip actual drawing but still update buffers for testing
@@ -753,7 +753,7 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 
 void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
-	if ( !m_currentContext || vertices.empty() || indices.empty() )
+	if ( vertices.empty() || indices.empty() )
 		return;
 
 	// In headless mode (no swap chain), skip actual drawing but still update buffers for testing

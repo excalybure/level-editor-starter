@@ -248,7 +248,7 @@ void MeshGPU::configureMaterials( MaterialProvider &materialProvider, const asse
 		{
 			// No material assigned, use default
 			materialToAssign = materialProvider.getDefaultMaterialGPU();
-			console::info( "Primitive {} has no material - assigned default material", i );
+			console::warning( "Primitive {} has no material - assigned default material", i );
 		}
 
 		// Assign the material (either specified or default)

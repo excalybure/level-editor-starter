@@ -335,7 +335,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
 	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -350,16 +350,12 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
 	const HRESULT hr = device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pipelineState ) );
-	if ( SUCCEEDED( hr ) )
-	{
-		console::info( "MeshRenderingSystem: Pipeline state created successfully for material" );
-		return pipelineState;
-	}
-	else
+	if ( FAILED( hr ) )
 	{
 		console::error( "MeshRenderingSystem: Failed to create pipeline state for material" );
 		return nullptr;
 	}
+	return pipelineState;
 }
 
 void MeshRenderingSystem::setRootSignature( ID3D12GraphicsCommandList *commandList )

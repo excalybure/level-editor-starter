@@ -1,12 +1,17 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <memory>
 #include <string>
 #include <fstream>
 #include <cstdio>
 #include <cgltf.h>
 
-import engine.gltf_loader;
 import engine.assets;
+import engine.asset_manager;
+import engine.gltf_loader;
+import std;
+
+using Catch::Approx;
 
 TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 {
@@ -45,6 +50,63 @@ TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 		REQUIRE( !loader.loadScene( "scene1.gltf" ) );
 		REQUIRE( !loader.loadScene( "scene2.gltf" ) );
 	}
+}
+
+// Task 4: Added external asset validation tests
+TEST_CASE( "triangle_yellow.gltf loads with yellow material", "[gltf][materials][triangle_yellow]" )
+{
+	gltf_loader::GLTFLoader loader;
+	const std::string path = "assets/test/triangle_yellow.gltf";
+	auto scene = loader.loadScene( path );
+	REQUIRE( scene );
+	REQUIRE( scene->getMaterialCount() == 1 );
+	const auto materialPtr = scene->getMaterial( 0 );
+	REQUIRE( materialPtr );
+	const auto &pbr = materialPtr->getPBRMaterial();
+	CHECK( pbr.baseColorFactor.x == Approx( 1.0f ) );
+	CHECK( pbr.baseColorFactor.y == Approx( 1.0f ) );
+	CHECK( pbr.baseColorFactor.z == Approx( 0.0f ) );
+	CHECK( pbr.baseColorFactor.w == Approx( 1.0f ) );
+}
+
+TEST_CASE( "cube.gltf loads six colored materials", "[gltf][materials][cube]" )
+{
+	gltf_loader::GLTFLoader loader;
+	const std::string path = "assets/test/cube.gltf";
+	auto scene = loader.loadScene( path );
+	REQUIRE( scene );
+	REQUIRE( scene->getMaterialCount() == 6 );
+	// Validate each material color
+	struct Expected
+	{
+		float r, g, b, a;
+	};
+	const Expected expected[6] = {
+		{ 1, 0, 0, 1 },	   // +X Red
+		{ 0, 1, 0, 1 },	   // +Y Green
+		{ 0, 0, 1, 1 },	   // +Z Blue
+		{ 1, 0.5f, 0, 1 }, // -X Orange
+		{ 1, 1, 0, 1 },	   // -Y Yellow
+		{ 0, 1, 1, 1 }	   // -Z Cyan
+	};
+	for ( size_t i = 0; i < 6; ++i )
+	{
+		const auto matPtr = scene->getMaterial( static_cast<assets::MaterialHandle>( i ) );
+		REQUIRE( matPtr );
+		const auto &pbr = matPtr->getPBRMaterial();
+		CHECK( pbr.baseColorFactor.x == Approx( expected[i].r ) );
+		CHECK( pbr.baseColorFactor.y == Approx( expected[i].g ) );
+		CHECK( pbr.baseColorFactor.z == Approx( expected[i].b ) );
+		CHECK( pbr.baseColorFactor.w == Approx( expected[i].a ) );
+	}
+}
+
+TEST_CASE( "invalid.gltf fails to load scene", "[gltf][invalid]" )
+{
+	gltf_loader::GLTFLoader loader;
+	// Pre-created invalid file in test_assets
+	auto scene = loader.loadScene( "tests/test_assets/invalid.gltf" );
+	REQUIRE_FALSE( scene );
 }
 
 // RED Phase: Tests for actual glTF file loading that should fail initially
@@ -1380,7 +1442,7 @@ TEST_CASE( "GLTFLoader File-based Loading", "[gltf][loader][file-loading]" )
 	SECTION( "Load glTF file with external binary buffer" )
 	{
 		const gltf_loader::GLTFLoader loader;
-		const std::string testPath = "tests/test_assets/simple_triangle.gltf";
+		const std::string testPath = "assets/test/triangle_no_mat.gltf";
 
 		auto scene = loader.loadScene( testPath );
 
