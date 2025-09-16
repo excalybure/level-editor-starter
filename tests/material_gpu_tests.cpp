@@ -3,6 +3,7 @@
 import engine.gpu.material_gpu;
 import engine.assets;
 import platform.dx12;
+import std;
 
 TEST_CASE( "MaterialGPU can be created from assets::Material", "[MaterialGPU][unit]" )
 {
@@ -28,6 +29,35 @@ TEST_CASE( "MaterialGPU can be created from assets::Material", "[MaterialGPU][un
 	REQUIRE( constants.baseColorFactor.w == 1.0f );
 	REQUIRE( constants.metallicFactor == 0.8f );
 	REQUIRE( constants.roughnessFactor == 0.3f );
+}
+
+TEST_CASE( "MaterialGPU with device creates valid constant buffer", "[MaterialGPU][gpu][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	auto material = std::make_shared<assets::Material>();
+	material->getPBRMaterial().baseColorFactor = { 0.8f, 0.6f, 0.4f, 1.0f };
+	material->getPBRMaterial().metallicFactor = 0.5f;
+	material->getPBRMaterial().roughnessFactor = 0.7f;
+	material->setPath( "gpu_test_material" );
+	material->setLoaded( true );
+
+	// Act
+	engine::gpu::MaterialGPU materialGPU{ material, device };
+
+	// Assert
+	REQUIRE( materialGPU.isValid() );
+	REQUIRE( materialGPU.getSourceMaterial() == material );
+
+	const auto &constants = materialGPU.getMaterialConstants();
+	REQUIRE( constants.baseColorFactor.x == 0.8f );
+	REQUIRE( constants.baseColorFactor.y == 0.6f );
+	REQUIRE( constants.baseColorFactor.z == 0.4f );
+	REQUIRE( constants.baseColorFactor.w == 1.0f );
+	REQUIRE( constants.metallicFactor == 0.5f );
+	REQUIRE( constants.roughnessFactor == 0.7f );
 }
 
 TEST_CASE( "MaterialGPU sets texture flags correctly based on material textures", "[MaterialGPU][unit]" )

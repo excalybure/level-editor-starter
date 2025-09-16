@@ -2,9 +2,38 @@
 // Implements viewport instances with cameras, render targets, and input handling
 module;
 
+#include <d3d12.h>
+#include <wrl.h>
+#include <cstring>
+
 module editor.viewport;
 
 import std;
+import engine.vec;
+import engine.matrix;
+import engine.camera;
+import engine.camera.controller;
+import platform.dx12;
+import platform.pix;
+import engine.grid;
+import runtime.console;
+
+namespace editor
+{
+
+// Frame constants structure matching unlit.hlsl shader expectations
+struct FrameConstants
+{
+	math::Mat4<> viewMatrix;
+	math::Mat4<> projMatrix;
+	math::Mat4<> viewProjMatrix;
+	math::Vec3f cameraPosition;
+	float padding0 = 0.0f;
+
+	FrameConstants() = default;
+};
+
+} // namespace editor
 import engine.vec;
 import engine.matrix;
 import engine.camera;
@@ -100,6 +129,85 @@ bool Viewport::clearRenderTarget( dx12::Device *device, const float clearColor[4
 void *Viewport::getImGuiTextureId() const noexcept
 {
 	return m_renderTarget ? m_renderTarget->getImGuiTextureId() : nullptr;
+}
+
+bool Viewport::createFrameConstantBuffer( dx12::Device *device )
+{
+	if ( !device || !device->get() )
+	{
+		return false;
+	}
+
+	// Create an upload heap for the frame constant buffer
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	D3D12_RESOURCE_DESC desc = {};
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Alignment = 0;
+	desc.Width = ( sizeof( FrameConstants ) + 255 ) & ~255; // Align to 256 bytes for constant buffer
+	desc.Height = 1;
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	HRESULT hr = device->get()->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&desc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS( &m_frameConstantBuffer ) );
+
+	if ( FAILED( hr ) )
+	{
+		m_frameConstantBuffer = nullptr;
+		m_frameConstantBufferData = nullptr;
+		return false;
+	}
+
+	// Map the constant buffer so we can update it
+	D3D12_RANGE readRange = { 0, 0 }; // We don't intend to read from this resource
+	hr = m_frameConstantBuffer->Map( 0, &readRange, reinterpret_cast<void **>( &m_frameConstantBufferData ) );
+
+	if ( FAILED( hr ) )
+	{
+		m_frameConstantBuffer = nullptr;
+		m_frameConstantBufferData = nullptr;
+		return false;
+	}
+
+	return true;
+}
+
+void Viewport::updateFrameConstants()
+{
+	if ( !m_frameConstantBufferData || !m_camera )
+	{
+		return;
+	}
+
+	FrameConstants frameConstants;
+	frameConstants.viewMatrix = m_camera->getViewMatrix();
+	frameConstants.projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
+	frameConstants.viewProjMatrix = frameConstants.projMatrix * frameConstants.viewMatrix;
+	frameConstants.cameraPosition = m_camera->getPosition();
+
+	memcpy( m_frameConstantBufferData, &frameConstants, sizeof( FrameConstants ) );
+}
+
+void Viewport::bindFrameConstants( ID3D12GraphicsCommandList *commandList ) const
+{
+	if ( m_frameConstantBuffer && commandList )
+	{
+		commandList->SetGraphicsRootConstantBufferView( 0, m_frameConstantBuffer->GetGPUVirtualAddress() );
+	}
 }
 
 void Viewport::update( float deltaTime )
@@ -547,6 +655,13 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 		return nullptr; // Failed to create render target
 	}
 
+	// Create frame constant buffer for this viewport
+	if ( !ptr->createFrameConstantBuffer( m_device ) )
+	{
+		console::warning( "Failed to create frame constant buffer for viewport" );
+		return nullptr;
+	}
+
 	// Initialize grid renderer for this viewport
 	if ( !ptr->initializeGrid( m_device, m_shaderManager ) )
 	{
@@ -670,11 +785,18 @@ void ViewportManager::render()
 			// Render 3D scene content if we have scene and systems
 			if ( m_scene && m_systemManager && viewport->getCamera() )
 			{
-				pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
-
 				// Get the MeshRenderingSystem and call its render method
 				if ( auto *meshRenderingSystem = m_systemManager->getSystem<runtime::systems::MeshRenderingSystem>() )
 				{
+					pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
+
+					// Update and bind frame constants for this viewport before rendering scene
+					{
+						pix::ScopedEvent pixFrameConstants( commandList, pix::MarkerColor::Blue, "Frame Constants" );
+						viewport->updateFrameConstants();
+						viewport->bindFrameConstants( commandList );
+					}
+
 					meshRenderingSystem->render( *m_scene, *viewport->getCamera() );
 				}
 			}

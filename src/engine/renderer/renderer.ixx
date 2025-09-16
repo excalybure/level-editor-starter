@@ -216,6 +216,10 @@ public:
 	// Access to command context for external rendering systems
 	dx12::CommandContext *getCommandContext() const noexcept { return m_currentContext; }
 
+	// Access to device for external systems that need to create resources
+	dx12::Device &getDevice() noexcept { return m_device; }
+	const dx12::Device &getDevice() const noexcept { return m_device; }
+
 	// Begin a headless recording session for tests (no swap chain / RTV setup)
 	void beginHeadlessForTests() noexcept
 	{

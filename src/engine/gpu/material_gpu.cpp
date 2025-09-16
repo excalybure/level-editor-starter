@@ -12,9 +12,20 @@ module;
 module engine.gpu.material_gpu;
 
 import runtime.console;
+import engine.matrix;
+import engine.vec;
 
 namespace engine::gpu
 {
+
+// ObjectConstants definition to match MeshRenderingSystem's root signature
+struct ObjectConstants
+{
+	math::Mat4<> worldMatrix;
+	math::Mat4<> normalMatrix;
+
+	ObjectConstants() = default;
+};
 
 MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material )
 	: m_material( material ), m_device( nullptr )
@@ -42,14 +53,12 @@ MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx1
 
 	updateMaterialConstants();
 	createConstantBuffer();
-	createPipelineState();
 	loadTextures();
-
 	m_isValid = true;
 }
 
 MaterialGPU::MaterialGPU( MaterialGPU &&other ) noexcept
-	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_pipelineState( std::move( other.m_pipelineState ) ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_isValid( other.m_isValid )
+	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_isValid( other.m_isValid )
 {
 	other.m_isValid = false;
 	other.m_device = nullptr;
@@ -62,7 +71,6 @@ MaterialGPU &MaterialGPU::operator=( MaterialGPU &&other ) noexcept
 		m_material = std::move( other.m_material );
 		m_materialConstants = other.m_materialConstants;
 		m_device = other.m_device;
-		m_pipelineState = std::move( other.m_pipelineState );
 		m_constantBuffer = std::move( other.m_constantBuffer );
 		m_isValid = other.m_isValid;
 
@@ -88,146 +96,15 @@ void MaterialGPU::bindToCommandList( ID3D12GraphicsCommandList *commandList ) co
 		return;
 	}
 
-	// Set the pipeline state if available
-	if ( m_pipelineState )
-	{
-		commandList->SetPipelineState( m_pipelineState.Get() );
-	}
-
-	// Bind constant buffer if available
+	// Bind material constant buffer if available to root parameter 2 (b2)
 	if ( m_constantBuffer )
 	{
 		D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = m_constantBuffer->GetGPUVirtualAddress();
-		commandList->SetGraphicsRootConstantBufferView( 0, cbvAddress ); // Assuming root parameter 0 is CBV
+		commandList->SetGraphicsRootConstantBufferView( 2, cbvAddress );
 	}
 
 	// TODO: Bind textures when texture loading is implemented
 	// This would involve setting descriptor tables or root descriptors for textures
-
-	console::info( "MaterialGPU: Material resources bound to command list" );
-}
-
-void MaterialGPU::createPipelineState()
-{
-	if ( !m_device )
-	{
-		console::info( "MaterialGPU: Creating pipeline state (stub - no device)" );
-		return;
-	}
-
-	// For now, create a basic pipeline state for material rendering
-	// TODO: Implement proper material-specific pipeline state with shaders
-
-	// Create a simple root signature for materials
-	// This is a placeholder - should be shared or more sophisticated
-	D3D12_ROOT_PARAMETER rootParam = {};
-	rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam.Descriptor.ShaderRegister = 0; // b0
-	rootParam.Descriptor.RegisterSpace = 0;
-	rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-	rootSigDesc.NumParameters = 1;
-	rootSigDesc.pParameters = &rootParam;
-	rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-	HRESULT hr = D3D12SerializeRootSignature( &rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &serializedRootSig, &errorBlob );
-	if ( FAILED( hr ) )
-	{
-		console::error( "MaterialGPU: Failed to serialize root signature" );
-		return;
-	}
-
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-	hr = m_device->get()->CreateRootSignature( 0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS( &rootSignature ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "MaterialGPU: Failed to create root signature" );
-		return;
-	}
-
-	// Create basic shaders (placeholders for now)
-	// TODO: Use proper material shaders from shader manager
-	const char *vsSource = R"(
-		struct VSInput {
-			float3 position : POSITION;
-			float3 normal : NORMAL;
-			float2 texcoord : TEXCOORD0;
-		};
-		struct VSOutput {
-			float4 position : SV_POSITION;
-			float3 normal : NORMAL;
-			float2 texcoord : TEXCOORD0;
-		};
-		VSOutput main(VSInput input) {
-			VSOutput output;
-			output.position = float4(input.position, 1.0);
-			output.normal = input.normal;
-			output.texcoord = input.texcoord;
-			return output;
-		}
-	)";
-
-	const char *psSource = R"(
-		struct PSInput {
-			float4 position : SV_POSITION;
-			float3 normal : NORMAL;
-			float2 texcoord : TEXCOORD0;
-		};
-		float4 main(PSInput input) : SV_TARGET {
-			return float4(1.0, 0.0, 1.0, 1.0); // Magenta placeholder
-		}
-	)";
-
-	Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-	Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-
-	hr = D3DCompile( vsSource, strlen( vsSource ), nullptr, nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, &errorBlob );
-	if ( FAILED( hr ) )
-	{
-		console::error( "MaterialGPU: Failed to compile vertex shader" );
-		return;
-	}
-
-	hr = D3DCompile( psSource, strlen( psSource ), nullptr, nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, &errorBlob );
-	if ( FAILED( hr ) )
-	{
-		console::error( "MaterialGPU: Failed to compile pixel shader" );
-		return;
-	}
-
-	// Create pipeline state
-	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.InputLayout = { inputLayout, _countof( inputLayout ) };
-	psoDesc.pRootSignature = rootSignature.Get();
-	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
-	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
-	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.SampleDesc.Count = 1;
-
-	hr = m_device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) );
-	if ( SUCCEEDED( hr ) )
-	{
-		console::info( "MaterialGPU: Pipeline state created successfully" );
-	}
-	else
-	{
-		console::error( "MaterialGPU: Failed to create pipeline state" );
-	}
 }
 
 void MaterialGPU::createConstantBuffer()

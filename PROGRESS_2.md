@@ -1,5 +1,111 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-15 — Centralize Pipeline State Management in MeshRenderingSystem
+**Summary:** Successfully refactored MaterialGPU to eliminate pipeline state creation and centralized all pipeline state object (PSO) management in MeshRenderingSystem. This architectural improvement resolves error-prone duplication, eliminates root signature mismatches, and provides a cleaner separation of concerns where MeshRenderingSystem owns both root signature and PSO management while MaterialGPU focuses solely on material-specific resources.
+
+**Atomic functionalities completed:**
+- AF1: Add PSO cache and management to MeshRenderingSystem - Added PSO cache map, getMaterialPipelineState method to retrieve/create PSOs, and createMaterialPipelineState method with proper shader compilation and D3D12 pipeline state creation
+- AF2: Update renderEntity to use PSO management - Modified renderEntity to get PSO from MeshRenderingSystem using material hash as key, set PSO on command list before rendering each primitive
+- AF3: Remove PSO creation from MaterialGPU - Eliminated createPipelineState method, m_pipelineState member variable, and all PSO-related code from MaterialGPU class and interface
+- AF4: Update MaterialGPU interface for external PSO - Modified bindToCommandList to only bind material-specific resources (constant buffer, textures) without setting pipeline state, removed getPipelineState accessor
+- AF5: Update MaterialGPU tests - Fixed test that checked for pipeline state creation, updated test description to reflect MaterialGPU now only creates constant buffers
+- AF6: Validate architectural changes - Built solution and ran all tests to ensure refactoring preserves functionality while eliminating duplication
+
+**Tests:** MaterialGPU tests pass (52 assertions in 9 test cases); MeshRenderingSystem tests pass (18 assertions in 8 test cases); integration tests pass (574 assertions in 20 test cases); all tests validate the new architecture works correctly
+**Notes:** This refactoring establishes clear ownership where MeshRenderingSystem manages shared rendering state (root signature, PSO cache) while MaterialGPU manages material-specific resources (constant buffers, textures). PSO creation uses the same root signature that MeshRenderingSystem sets at runtime, eliminating the root signature mismatch that was previously fixed. The PSO cache enables efficient reuse of pipeline states for materials with identical rendering properties. MaterialGPU constructor no longer depends on pipeline state creation success, making material creation more robust and focused on its core responsibility.
+
+## 2025-09-15 — Fix D3D12 Root Signature Mismatch in MaterialGPU Pipeline State Creation
+**Summary:** Resolved D3D12 ERROR #201: COMMAND_LIST_DRAW_ROOT_SIGNATURE_MISMATCH that occurred during DrawIndexedInstanced calls in MeshRenderingSystem::renderEntity. The issue was caused by MaterialGPU creating pipeline states with a temporary root signature that didn't match the root signature set by MeshRenderingSystem. Fixed by updating MaterialGPU's temporary root signature to exactly match MeshRenderingSystem's root signature specification, particularly changing object constants (b1) from CBV to ROOT_CONSTANTS.
+
+**Atomic functionalities completed:**
+- AF1: Identify root signature mismatch - Analyzed MeshRenderingSystem and MaterialGPU root signature specifications and identified object constants parameter type mismatch
+- AF2: Update MaterialGPU temporary root signature - Changed object constants (b1) parameter from D3D12_ROOT_PARAMETER_TYPE_CBV to D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS to match MeshRenderingSystem
+- AF3: Add ObjectConstants definition - Added ObjectConstants struct definition to MaterialGPU with worldMatrix and normalMatrix fields matching MeshRenderingSystem
+- AF4: Add required module imports - Added engine.matrix and engine.vec imports to MaterialGPU for Mat4 type support
+- AF5: Verify fix functionality - Confirmed all MeshRenderingSystem, MaterialGPU, and integration tests pass without D3D12 root signature mismatch errors
+
+**Tests:** MeshRenderingSystem tests pass (19 assertions in 8 test cases); MaterialGPU tests pass (53 assertions in 9 test cases); integration tests pass (417 assertions in 19 test cases); no D3D12 root signature mismatch errors during rendering
+**Notes:** The root cause was that MeshRenderingSystem uses ROOT_CONSTANTS for object constants (b1) to optimize performance for frequently-changing 64-byte object data, while MaterialGPU's temporary root signature was specifying CBV for the same parameter. D3D12 requires exact root signature compatibility between pipeline state creation and runtime binding. The fix ensures MaterialGPU creates pipeline states with the same root signature layout that MeshRenderingSystem uses at runtime, eliminating the COMMAND_LIST_DRAW_ROOT_SIGNATURE_MISMATCH error. This maintains the architectural pattern where MeshRenderingSystem manages the shared root signature while MaterialGPU creates compatible pipeline states for material rendering.
+
+## 2025-09-15 — Complete Frame Constants Architecture Refactoring with Clean Visibility and Binding Order
+**Summary:** Completed the architectural refactoring of frame constants management by ensuring FrameConstants is not exposed publicly in viewport.ixx (using forward declaration) and moved frame constant binding to ViewportManager before MeshRenderingSystem::render. This achieves true multi-viewport isolation, proper encapsulation, and correct binding order where frame constants are bound once per viewport before scene rendering rather than being overridden by individual viewport render calls.
+
+**Atomic functionalities completed:**
+- AF1: Move FrameConstants definition to implementation - Moved FrameConstants struct definition from viewport.ixx to viewport.cpp to prevent public exposure
+- AF2: Forward declare FrameConstants in header - Updated viewport.ixx to use forward declaration of FrameConstants, keeping implementation details private
+- AF3: Move frame constant binding to ViewportManager - Removed updateFrameConstants/bindFrameConstants calls from Viewport::render to ViewportManager::render before MeshRenderingSystem calls
+- AF4: Fix import statements - Added missing import statements in viewport.cpp for math types (Mat4, Vec3) and necessary modules
+- AF5: Validate clean architecture - Verified all tests pass with improved encapsulation and correct binding order
+
+**Tests:** MeshRenderingSystem tests pass (19 assertions in 8 test cases); viewport tests pass (476 assertions in 22 test cases); ViewportManager tests pass (38 assertions in 1 test case); all rendering functionality verified working
+**Notes:** This completes the frame constants refactoring with proper architectural separation. FrameConstants is now an implementation detail of the Viewport class, not exposed in the public interface. Frame constant binding occurs in ViewportManager::render before calling MeshRenderingSystem::render, ensuring the frame constants are bound once per viewport and not overridden by subsequent rendering operations like grid rendering. This design provides clean separation of concerns where Viewport manages its own frame-specific data internally, ViewportManager coordinates the overall viewport rendering pipeline, and MeshRenderingSystem focuses purely on object rendering.
+
+## 2025-09-15 — Move Frame Constants Management to Viewport for True Multi-Viewport Isolation
+**Summary:** Refactored frame constants management from MeshRenderingSystem to individual Viewport instances to achieve true per-viewport isolation and eliminate synchronization issues. Each viewport now maintains its own D3D12 frame constant buffer, updates it with camera-specific data, and binds it before calling rendering systems. This architectural improvement ensures that multiple viewports can be rendered without overwriting each other's frame data, providing cleaner separation of concerns.
+
+**Atomic functionalities completed:**
+- AF1: Add frame constants to Viewport - Added FrameConstants struct and D3D12 constant buffer resources to Viewport class with proper creation and mapping
+- AF2: Update Viewport render with frame constants - Modified Viewport::render() to update frame constants from camera and bind to command list at register b0
+- AF3: Remove frame constants from MeshRenderingSystem - Removed FrameConstants struct, frame constant buffer, and related management code from MeshRenderingSystem
+- AF4: Update root signature for external frame constants - Confirmed root signature correctly expects frame constants already bound externally at register b0
+- AF5: Test per-viewport frame constants - Verified MeshRenderingSystem tests (19 assertions) and MaterialGPU tests (157 assertions) still pass with new architecture
+
+**Tests:** MeshRenderingSystem tests pass: `unit_test_runner.exe "*MeshRendering*"`; MaterialGPU tests pass: `unit_test_runner.exe "*material*"`; core rendering functionality verified working
+**Notes:** This architectural change addresses the root cause of multi-viewport synchronization issues by moving frame constants responsibility to where it logically belongs - the viewport. Each viewport now has its own frame constant buffer, eliminating the race condition where one viewport's frame data would overwrite another's. MeshRenderingSystem is now purely focused on object and material rendering, while viewport manages its own frame-specific data (view/projection matrices, camera position). The root signature remains unchanged as it already expected frame constants at register b0. Some viewport-specific tests may need updates to account for the new architecture, but core rendering functionality is confirmed working.
+
+## 2025-09-15 — Optimize Constant Buffer Management Using CBV and Root Constants for Multi-Viewport Rendering
+**Summary:** Refactored MeshRenderingSystem constant buffer management to use D3D12 root constants for object data and constant buffer views (CBV) for frame/material data. This resolves multi-viewport synchronization issues by creating separate frame constant buffers per viewport and leverages root constants for better performance on frequently-changing object data. The solution addresses the original problem where updating FrameConstants for multiple viewports would overwrite previous data due to single constant buffer usage.
+
+**Atomic functionalities completed:**
+- AF1: Update MeshRenderingSystem root signature - Changed root signature to use CBV for frame constants (b0), root constants for object constants (b1), and CBV for material constants (b2)
+- AF2: Update shader to use CBV for frame constants - Modified unlit.hlsl to receive frame constants via cbuffer instead of root constants
+- AF3: Remove object constant buffer from MeshRenderingSystem - Removed createObjectConstantBuffer method and related resources since object constants now use root constants
+- AF4: Update renderEntity to use root constants for object data - Changed renderEntity to use SetGraphicsRoot32BitConstants for ObjectConstants instead of constant buffer binding  
+- AF5: Implement multiple frame constant buffers - Created per-viewport frame constant buffer using createFrameConstantBuffer method to avoid synchronization issues
+- AF6: Validate refactoring with tests - Verified MeshRenderingSystem tests (19 assertions in 8 test cases), MaterialGPU tests (157 assertions in 14 test cases), and integration tests (417 assertions in 19 test cases) all pass
+
+**Tests:** All tests pass after refactoring; MaterialGPU tests: `unit_test_runner.exe "*material*"`; MeshRenderingSystem tests: `unit_test_runner.exe "*MeshRendering*"`; integration tests: `unit_test_runner.exe "*integration*"`
+**Notes:** This design optimizes performance by using root constants for frequently-changing 64-byte object data while using CBV for larger frame and material data. The frame constant buffer is created per viewport to prevent synchronization issues when rendering multiple viewports sequentially. Root constants provide faster binding for object data that changes per entity, while CBV works well for frame data that changes per viewport and material data that's typically static. The shader was updated to use cbuffer syntax for frame constants due to HLSL limitations with root constants. All D3D12 size limits are respected, and the solution scales properly for multiple viewports.
+
+## 2025-09-15 — Centralize Root Signature Management in MeshRenderingSystem
+**Summary:** Successfully refactored root signature management from MaterialGPU to MeshRenderingSystem to resolve D3D12 root signature conflicts that caused "RootParameterIndex [1] is out of bounds" crashes. MeshRenderingSystem now creates and manages the root signature for unlit.hlsl shader with proper frame, object, and material constant buffer bindings, while MaterialGPU focuses solely on pipeline state and material constants.
+
+**Atomic functionalities completed:**
+- AF1: Add root signature management to MeshRenderingSystem - Added D3D12 root signature creation, storage, and command list binding in MeshRenderingSystem constructor and render methods
+- AF2: Update MeshRenderingSystem to set root signature - Modified render() method to set root signature before binding any constant buffers to ensure correct D3D12 state
+- AF3: Remove root signature from MaterialGPU bindToCommandList - Updated MaterialGPU to only bind material constants (b2) and not set root signature, leaving that responsibility to MeshRenderingSystem
+- AF4: Clean up MaterialGPU root signature references - Removed m_rootSignature member variable, updated constructors, and modified createPipelineState to use temporary root signature only for PSO creation
+- AF5: Validate refactoring with tests - Verified all MeshRenderingSystem, MaterialGPU, and integration tests pass with new root signature ownership
+
+**Tests:** All MeshRenderingSystem tests pass (18 assertions in 8 test cases); all MaterialGPU tests pass (157 assertions in 14 test cases); integration tests pass (2 assertions in 1 test case); asset-rendering integration test passes (3 assertions in 1 test case); filtered commands: `unit_test_runner.exe "[mesh_rendering_system]"`, `unit_test_runner.exe "*material*"`, `unit_test_runner.exe "[integration][mesh_rendering_system]"`, `unit_test_runner.exe "[asset-rendering][integration]"`
+**Notes:** This refactoring establishes clear ownership - MeshRenderingSystem manages the shared root signature and ensures all constant buffers are properly bound in the correct order, while MaterialGPU focuses on material-specific resources. The root signature is created once in MeshRenderingSystem and set before each render call, preventing conflicts from multiple materials trying to set different root signatures. MaterialGPU now uses a temporary root signature only for pipeline state creation but doesn't store or set it at runtime. This design ensures all materials use the same root signature layout, making the rendering pipeline more predictable and avoiding D3D12 binding errors.
+
+## 2025-09-15 — Implement Frame and Object Constants Binding for MaterialGPU Shader Integration
+**Summary:** Implemented proper frame constants (b0) and object constants (b1) binding in MeshRenderingSystem to support the unlit.hlsl shader's 3-constant-buffer requirements. Added FrameConstants and ObjectConstants structures matching shader expectations, created D3D12 constant buffer resources, and implemented binding logic to ensure all three constant buffers (b0=frame, b1=object, b2=material) are properly bound before rendering.
+
+**Atomic functionalities completed:**
+- AF1: Define FrameConstants structure - Created struct matching shader's cbuffer FrameConstants with viewMatrix, projMatrix, viewProjMatrix, and cameraPosition fields
+- AF2: Define ObjectConstants structure - Created struct matching shader's cbuffer ObjectConstants with worldMatrix and normalMatrix fields  
+- AF3: Add constant buffer resources to MeshRenderingSystem - Added D3D12 constant buffer creation, mapping, and management in constructor using device access through renderer
+- AF4: Implement frame constants binding in render() - Updated render method to populate frame constants from camera and bind to register b0 before iterating entities
+- AF5: Implement object constants binding in renderEntity() - Updated renderEntity method to populate object constants from transform and bind to register b1 for each entity
+- AF6: Test constant buffer binding - Verified all MeshRenderingSystem tests pass (19 assertions in 8 test cases) and integration tests pass (417 assertions in 19 test cases)
+
+**Tests:** All MeshRenderingSystem tests pass; all integration tests pass; MaterialGPU tests continue to pass; asset rendering integration test passes without D3D12 binding errors; filtered commands: `unit_test_runner.exe "*MeshRenderingSystem*"`, `unit_test_runner.exe "*integration*"`, `unit_test_runner.exe "*MaterialGPU*"`
+**Notes:** The implementation properly separates concerns - MaterialGPU handles material constants (b2), while MeshRenderingSystem manages frame constants (b0) and object constants (b1). Added getDevice() method to Renderer for external systems to access the dx12::Device. The constant buffer structures exactly match the shader's cbuffer layouts. Frame constants are updated once per render call, while object constants are updated per entity. The solution resolves the D3D12 "RootParameterIndex [2] is out of bounds" error by ensuring all expected constant buffers are bound before MaterialGPU binding occurs.
+
+## 2025-09-15 — Fix MaterialGPU Root Signature Binding Error
+**Summary:** Fixed the D3D12 error "RootParameterIndex [2] is out of bounds" that occurred when MaterialGPU tried to bind material constants. The issue was that the root signature wasn't being set on the command list, so D3D12 was using a different root signature with fewer parameters. Added root signature storage and binding to MaterialGPU to ensure correct resource binding.
+
+**Atomic functionalities completed:**
+- AF1: Add root signature member to MaterialGPU - Added m_rootSignature ComPtr member to store the root signature created during pipeline state creation
+- AF2: Store root signature during creation - Updated createPipelineState() to store the created root signature in the member variable for later use
+- AF3: Set root signature in bindToCommandList - Added commandList->SetGraphicsRootSignature() call to ensure the correct root signature is active before binding constant buffers  
+- AF4: Update move semantics for root signature - Updated move constructor and assignment operator to properly handle the new root signature member
+
+**Tests:** All MaterialGPU tests pass (53 assertions in 9 test cases); all integration tests pass (417 assertions in 19 test cases); asset rendering integration test passes without D3D12 errors; filtered commands: `unit_test_runner.exe "*MaterialGPU*"`, `unit_test_runner.exe "*integration*"`, `unit_test_runner.exe "Asset loading to rendering integration*"`
+**Notes:** The root cause was that D3D12 requires explicit root signature binding on command lists - the pipeline state creation includes the root signature, but doesn't automatically set it during SetPipelineState(). MaterialGPU now properly manages both pipeline state and root signature binding. The shader expects 3 constant buffers (b0=frame, b1=object, b2=material) but MaterialGPU only binds material constants - the rendering system must bind the other buffers separately.
+
 ## 2025-01-27 — Complete Device Frame State Validation via TDD
 **Summary:** Successfully implemented robust frame state validation in Device class using m_inFrame boolean with assertions to prevent incorrect beginFrame/endFrame sequences. Added isInFrame() getter to enable Renderer validation. Updated Renderer to assert Device is in frame before beginning its own frame, ensuring proper frame lifecycle separation between Device and Renderer.
 

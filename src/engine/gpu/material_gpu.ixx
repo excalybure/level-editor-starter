@@ -69,7 +69,6 @@ public:
 	void bindToCommandList( ID3D12GraphicsCommandList *commandList ) const;
 
 	// Resource accessor methods
-	ID3D12PipelineState *getPipelineState() const { return m_pipelineState.Get(); }
 	const MaterialConstants &getMaterialConstants() const { return m_materialConstants; }
 
 	// Validation methods
@@ -84,14 +83,12 @@ private:
 	dx12::Device *m_device = nullptr; // Optional device for GPU resource creation
 
 	// D3D12 GPU resources
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
 
 	// Resource state
 	bool m_isValid = false;
 
 	// Helper methods
-	void createPipelineState();
 	void createConstantBuffer();
 	void updateMaterialConstants();
 	void loadTextures();

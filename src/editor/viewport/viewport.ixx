@@ -1,5 +1,10 @@
 // Viewport Management module for multi-viewport 3D editor
 // Manages individual viewport instances with cameras, render targets, and input handling
+module;
+
+#include <d3d12.h>
+#include <wrl.h>
+
 export module editor.viewport;
 
 import std;
@@ -16,6 +21,9 @@ import engine.shader_manager;
 
 export namespace editor
 {
+
+// Forward declarations
+struct FrameConstants;
 
 // Viewport types corresponding to different camera views
 enum class ViewportType
@@ -109,6 +117,11 @@ public:
 	bool clearRenderTarget( dx12::Device *device, const float clearColor[4] );
 	void *getImGuiTextureId() const noexcept;
 
+	// Frame constants management
+	bool createFrameConstantBuffer( dx12::Device *device );
+	void updateFrameConstants();
+	void bindFrameConstants( ID3D12GraphicsCommandList *commandList ) const;
+
 	// Frame update and rendering
 	void update( float deltaTime );
 	void render( dx12::Device *device );
@@ -164,6 +177,10 @@ private:
 	// D3D12 render target for this viewport
 	std::shared_ptr<dx12::Texture> m_renderTarget;
 	void *m_renderTargetHandle = nullptr; // For backward compatibility
+
+	// Frame constants buffer for this viewport
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_frameConstantBuffer;
+	FrameConstants *m_frameConstantBufferData = nullptr;
 
 	// Grid rendering system
 	std::unique_ptr<grid::GridRenderer> m_gridRenderer;
