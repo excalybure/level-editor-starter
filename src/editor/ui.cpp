@@ -17,6 +17,8 @@ import runtime.console;
 
 namespace editor
 {
+const float kStatusBarHeight = 23.0f;
+const float kStatusBarHeightPadding = 2.0f; // ImGui seems to be adding th
 
 // Helper functions to convert between our Vec2 and ImVec2
 ImVec2 to_imgui_vec2( const Vec2 &v )
@@ -39,9 +41,6 @@ struct UI::Impl
 
 	// Store device reference for swap chain resize operations
 	dx12::Device *device = nullptr;
-
-	// Store shader manager reference for viewport reinitialization during resize
-	std::shared_ptr<shader_manager::ShaderManager> shaderManager = nullptr;
 
 	// Grid settings window state
 	bool showGridSettingsWindow = false;
@@ -80,7 +79,7 @@ struct UI::Impl
 	void renderStatusBar( UI &ui );
 
 	// Initialize viewports with D3D12 device
-	bool initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void shutdownViewports();
 
 	// Get viewport by type
@@ -111,7 +110,7 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	m_impl->device = device;
 
 	// Initialize viewports with D3D12 device and shader manager first
-	if ( !m_impl->initializeViewports( device, shaderManager ) )
+	if ( !m_impl->initializeViewports( shaderManager ) )
 	{
 		return false;
 	}
@@ -193,9 +192,6 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
-
-	// Render status bar at the bottom
-	m_impl->renderStatusBar( *this );
 }
 
 void UI::endFrame()
@@ -275,10 +271,12 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	ImGui::Begin( "Level Editor Dockspace", nullptr, window_flags );
 	ImGui::PopStyleVar( 3 );
 
-	// Create the dockspace
-	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
+	// Create the dockspace with space reserved for status bar
+	const ImVec2 availableRegion = ImGui::GetContentRegionAvail();
+	const ImVec2 dockspaceSize = ImVec2( availableRegion.x, availableRegion.y - ( kStatusBarHeight + 2 * kStatusBarHeightPadding ) );
 
-	ImGui::DockSpace( dockspaceId, ImVec2( 0.0f, 0.0f ), ImGuiDockNodeFlags_None );
+	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
+	ImGui::DockSpace( dockspaceId, dockspaceSize, ImGuiDockNodeFlags_None );
 
 	// Setup initial layout on first run
 	if ( firstLayout )
@@ -344,6 +342,9 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		ImGui::EndMenuBar();
 	}
+
+	// Render status bar at the bottom of the dockspace
+	renderStatusBar( ui );
 }
 
 void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
@@ -848,26 +849,19 @@ void UI::Impl::renderCameraSettingsWindow()
 
 void UI::Impl::renderStatusBar( UI &ui )
 {
-	// Create a status bar window at the bottom of the main viewport
-	const ImGuiViewport *viewport = ImGui::GetMainViewport();
+	// Create a child region for the status bar with styling
+	ImGui::PushStyleVar( ImGuiStyleVar_ChildRounding, 0.0f );
+	ImGui::PushStyleVar( ImGuiStyleVar_ChildBorderSize, 0.0f );
+	ImGui::PushStyleColor( ImGuiCol_ChildBg, ImVec4( 0.2f, 0.2f, 0.2f, 1.0f ) );
+	ImGui::PushStyleColor( ImGuiCol_Border, ImVec4( 0.4f, 0.4f, 0.4f, 1.0f ) );
 
-	// Position the status bar at the bottom of the screen
-	const ImVec2 statusBarPos = ImVec2( viewport->WorkPos.x, viewport->WorkPos.y + viewport->WorkSize.y - 25.0f );
-	const ImVec2 statusBarSize = ImVec2( viewport->WorkSize.x, 25.0f );
-
-	ImGui::SetNextWindowPos( statusBarPos );
-	ImGui::SetNextWindowSize( statusBarSize );
-
-	ImGuiWindowFlags statusFlags =
-		ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoScrollbar |
-		ImGuiWindowFlags_NoSavedSettings |
-		ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-	if ( ImGui::Begin( "StatusBar", nullptr, statusFlags ) )
+	if ( ImGui::BeginChild( "StatusBarRegion", ImVec2( -1, kStatusBarHeight ), true, ImGuiWindowFlags_NoScrollbar ) )
 	{
+		// Align content vertically with some padding from the top to prevent clipping
+		const float verticalPadding = 2.0f;
+		const float centeredY = ( kStatusBarHeight - ImGui::GetTextLineHeight() ) * 0.5f;
+		ImGui::SetCursorPosY( ImGui::GetCursorPosY() + centeredY - verticalPadding );
+
 		// Current scene file
 		if ( !ui.getCurrentScenePath().empty() )
 		{
@@ -879,7 +873,7 @@ void UI::Impl::renderStatusBar( UI &ui )
 		}
 
 		ImGui::SameLine();
-		ImGui::Separator();
+		ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
 		ImGui::SameLine();
 
 		// Entity count
@@ -887,11 +881,10 @@ void UI::Impl::renderStatusBar( UI &ui )
 		ImGui::Text( "Entities: %zu", entityCount );
 
 		ImGui::SameLine();
-		ImGui::Separator();
+		ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
 		ImGui::SameLine();
 
 		// Error status
-		const std::string &lastError = ui.getLastError();
 		if ( !lastError.empty() )
 		{
 			ImGui::TextColored( ImVec4( 1.0f, 0.4f, 0.4f, 1.0f ), "Error: %s", lastError.c_str() );
@@ -901,11 +894,14 @@ void UI::Impl::renderStatusBar( UI &ui )
 			ImGui::Text( "Ready" );
 		}
 	}
-	ImGui::End();
+	ImGui::EndChild();
+
+	ImGui::PopStyleColor( 2 );
+	ImGui::PopStyleVar( 2 );
 }
 
 // UI::Impl viewport management methods
-bool UI::Impl::initializeViewports( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool UI::Impl::initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
 	if ( !device )
 		return false;

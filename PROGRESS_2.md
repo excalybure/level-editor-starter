@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Status Bar Docking and Layout Fix
+**Summary:** Fixed status bar rendering to dock properly within the main window instead of appearing as a separate floating window. Resolved scroll bar issues by ensuring reserved space for status bar matches actual rendered height including border pixels. Status bar now properly renders at the bottom of the main window with correct vertical alignment and no unwanted scroll bars.
+
+**Atomic functionalities completed:**
+- AF1: Move status bar from floating window to dockspace - Relocated status bar rendering from separate window to bottom child region within main dockspace using ImGui child regions
+- AF2: Fix vertical text alignment - Adjusted text vertical positioning by 2 pixels to prevent clipping and improve readability  
+- AF3: Reserve space for status bar in dockspace - Modified setupDockspace to reserve statusBarHeight space at bottom for status bar child region
+- AF4: Match reserved height to rendered height - Increased statusBarHeight from 25.0f to 27.0f to account for 1.0f child border size, ensuring no scroll bars appear
+- AF5: Synchronize status bar styling - Applied consistent border size (1.0f) and height values in both dockspace reservation and status bar rendering
+
+**Tests:** All UI tests pass (377 assertions in 23 test cases); application starts successfully with status bar properly docked; no unwanted scroll bars; filtered command: `unit_test_runner.exe "*ui*"`
+**Notes:** Status bar is now rendered as ImGui child region at bottom of dockspace with proper space reservation. The fix ensures consistent height values between dockspace setup (27.0f reserved) and status bar rendering (27.0f total including 1.0f border). Text vertical alignment improved with 2-pixel offset. No more floating window behavior; status bar is now part of main window layout with proper docking integration.
+
 ## 2025-09-15 — Fix D3D12 Root Parameter Binding Order for Frame Constants
 **Summary:** Fixed D3D12 root parameter binding order issue where frame constants (CBV 0) were not properly bound during rendering. The problem was that SetGraphicsRootSignature() invalidates all previously bound root parameters, so frame constants bound before the root signature was set were lost. Fixed by ensuring root signature is set first, then frame constants are bound, maintaining proper D3D12 binding order throughout the rendering pipeline.
 
