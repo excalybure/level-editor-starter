@@ -194,9 +194,10 @@ void Viewport::updateFrameConstants()
 	}
 
 	FrameConstants frameConstants;
-	frameConstants.viewMatrix = m_camera->getViewMatrix();
-	frameConstants.projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
-	frameConstants.viewProjMatrix = frameConstants.projMatrix * frameConstants.viewMatrix;
+	frameConstants.viewMatrix = m_camera->getViewMatrix().transpose(); // HLSL expects column-major matrices, so transpose
+	frameConstants.projMatrix = m_camera->getProjectionMatrix( getAspectRatio() ).transpose();
+	// Because matrices are transposed, we multiply left to right: (A * B)ᵀ = Bᵀ * Aᵀ
+	frameConstants.viewProjMatrix = frameConstants.viewMatrix * frameConstants.projMatrix;
 	frameConstants.cameraPosition = m_camera->getPosition();
 
 	memcpy( m_frameConstantBufferData, &frameConstants, sizeof( FrameConstants ) );

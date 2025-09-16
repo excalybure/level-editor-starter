@@ -27,59 +27,30 @@ using namespace Microsoft::WRL;
 
 namespace
 {
-// Helper to convert math::Mat4<> to DirectX::XMFLOAT4X4
-DirectX::XMFLOAT4X4 toXMFloat4x4( const math::Mat4<> &mat )
-{
-	DirectX::XMFLOAT4X4 result;
-	// Access matrix elements using m## accessors
-	result._11 = mat.m00();
-	result._12 = mat.m01();
-	result._13 = mat.m02();
-	result._14 = mat.m03();
-	result._21 = mat.m10();
-	result._22 = mat.m11();
-	result._23 = mat.m12();
-	result._24 = mat.m13();
-	result._31 = mat.m20();
-	result._32 = mat.m21();
-	result._33 = mat.m22();
-	result._34 = mat.m23();
-	result._41 = mat.m30();
-	result._42 = mat.m31();
-	result._43 = mat.m32();
-	result._44 = mat.m33();
-	return result;
-}
-
-// Helper to convert math::Vec3<> to DirectX::XMFLOAT3
-DirectX::XMFLOAT3 toXMFloat3( const math::Vec3<> &vec )
-{
-	return DirectX::XMFLOAT3( vec.x, vec.y, vec.z );
-}
 
 // Constant buffer structure for grid shader
 struct GridConstants
 {
-	DirectX::XMFLOAT4X4 viewMatrix;
-	DirectX::XMFLOAT4X4 projMatrix;
-	DirectX::XMFLOAT4X4 invViewProjMatrix;
+	math::Mat4<> viewMatrix;
+	math::Mat4<> projMatrix;
+	math::Mat4<> invViewProjMatrix;
 
-	DirectX::XMFLOAT3 cameraPosition;
+	math::Vec3f cameraPosition;
 	float gridScale;
 
-	DirectX::XMFLOAT3 majorGridColor;
+	math::Vec3f majorGridColor;
 	float majorGridAlpha;
 
-	DirectX::XMFLOAT3 minorGridColor;
+	math::Vec3f minorGridColor;
 	float minorGridAlpha;
 
-	DirectX::XMFLOAT3 axisXColor;
+	math::Vec3f axisXColor;
 	float axisXAlpha;
 
-	DirectX::XMFLOAT3 axisYColor;
+	math::Vec3f axisYColor;
 	float axisYAlpha;
 
-	DirectX::XMFLOAT3 axisZColor;
+	math::Vec3f axisZColor;
 	float axisZAlpha;
 
 	float fadeDistance;
@@ -535,29 +506,36 @@ void GridRenderer::updateConstantBuffer( const camera::Camera &camera,
 		math::Vec4<>{ viewMatrix.m30(), viewMatrix.m31(), viewMatrix.m32(), viewMatrix.m33() } // Clear translation, keep homogeneous scaling
 	};
 
+	// For forward transformation: HLSL needs transpose(M)
+	// For inverse transformation: HLSL gets inverse(M) but interprets it
+	// as transpose(inverse(M)) = inverse(transpose(M))
+	// Since transpose(M) is what HLSL needs for the forward case,
+	// inverse(transpose(M)) is the correct inverse for the HLSL coordinate system.
+	// This explains why viewMatrix & projMatrix are transposed, but not invViewProjMatrix.
+
 	// Transform matrices
-	constants.viewMatrix = toXMFloat4x4( cameraRelativeViewMatrix );
-	constants.projMatrix = toXMFloat4x4( projMatrix );
-	constants.invViewProjMatrix = toXMFloat4x4( calculateInverseViewProjMatrix( cameraRelativeViewMatrix, projMatrix ) );
+	constants.viewMatrix = cameraRelativeViewMatrix.transpose(); // HLSL expects column-major matrices, so transpose
+	constants.projMatrix = projMatrix.transpose();
+	constants.invViewProjMatrix = calculateInverseViewProjMatrix( cameraRelativeViewMatrix, projMatrix );
 
 	// Camera data
-	constants.cameraPosition = toXMFloat3( camera.getPosition() );
+	constants.cameraPosition = camera.getPosition();
 	constants.gridScale = 1.0f;
 	constants.nearPlane = camera.getNearPlane();
 	constants.farPlane = camera.getFarPlane();
 
 	// Grid colors
-	constants.majorGridColor = toXMFloat3( m_settings.majorGridColor );
+	constants.majorGridColor = m_settings.majorGridColor;
 	constants.majorGridAlpha = m_settings.majorGridAlpha;
-	constants.minorGridColor = toXMFloat3( m_settings.minorGridColor );
+	constants.minorGridColor = m_settings.minorGridColor;
 	constants.minorGridAlpha = m_settings.minorGridAlpha;
 
 	// Axis colors
-	constants.axisXColor = toXMFloat3( m_settings.axisXColor );
+	constants.axisXColor = m_settings.axisXColor;
 	constants.axisXAlpha = m_settings.axisXAlpha;
-	constants.axisYColor = toXMFloat3( m_settings.axisYColor );
+	constants.axisYColor = m_settings.axisYColor;
 	constants.axisYAlpha = m_settings.axisYAlpha;
-	constants.axisZColor = toXMFloat3( m_settings.axisZColor );
+	constants.axisZColor = m_settings.axisZColor;
 	constants.axisZAlpha = m_settings.axisZAlpha;
 
 	// Grid properties - calculate fade distance dynamically based on camera distance
