@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-16 — Fix Triangle Winding Order in Test Assets
+**Summary:** Corrected the triangle winding order in both `triangle_no_mat.gltf` and `triangle_yellow.gltf` test assets from clockwise to counter-clockwise to match standard graphics conventions. The original files used indices `[0,1,2]` which creates clockwise winding, but for proper front-facing triangles in DirectX/OpenGL coordinate systems, counter-clockwise winding with indices `[0,2,1]` is expected.
+
+**Atomic functionalities completed:**
+- AF1: Analyze current triangle winding - Decoded base64 buffer data to identify indices were `[0,1,2]` creating clockwise winding order
+- AF2: Generate corrected buffer data - Created Python script to generate new base64-encoded buffer with indices `[0,2,1]` for counter-clockwise winding
+- AF3: Update triangle_yellow.gltf - Replaced buffer URI with corrected data maintaining same vertex positions but proper winding order  
+- AF4: Update triangle_no_mat.gltf - Applied same winding order correction to material-less triangle test asset
+- AF5: Verify functionality - Ran glTF tests to ensure triangle assets still load correctly with proper geometry
+
+**Tests:** All glTF tests pass (578 assertions in 14 test cases); triangle-specific tests pass (25 assertions in 2 test cases); filtered commands: `unit_test_runner.exe "*gltf*"` and `unit_test_runner.exe "*triangle*"`
+**Notes:** The triangle vertices remain at positions (0,0,0), (1,0,0), and (0.5,1,0) but the index order changed from [0,1,2] to [0,2,1] to create proper counter-clockwise winding. This ensures triangles are rendered as front-facing in standard graphics pipelines and prevents potential culling issues. Both test assets now follow consistent winding conventions for reliable rendering behavior.
+
 ## 2025-01-27 — Complete Vertex Color Support Implementation via TDD
 **Summary:** Successfully implemented comprehensive vertex color support throughout the engine pipeline, from Python test asset generation to shader rendering. Fixed critical shader/struct mismatch where the tangent field was missing from the unlit.hlsl VertexInput, causing color data to be interpreted as tangent data. The implementation now supports both per-face material-based coloring and vertex color-based rendering with proper buffer packing and GPU pipeline integration.
 
