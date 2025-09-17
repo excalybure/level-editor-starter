@@ -22,11 +22,9 @@ struct Transform
 	math::Vec3<> rotation{ 0.0f, 0.0f, 0.0f }; // Euler angles (radians)
 	math::Vec3<> scale{ 1.0f, 1.0f, 1.0f };
 
-	// Cached matrices (marked mutable for lazy evaluation)
+	// Cached local matrix (marked mutable for lazy evaluation)
 	mutable math::Mat4<> localMatrix;
-	mutable math::Mat4<> worldMatrix;
 	mutable bool localMatrixDirty = true;
-	mutable bool worldMatrixDirty = true;
 
 	// Get local transformation matrix
 	const math::Mat4<> &getLocalMatrix() const
@@ -54,17 +52,11 @@ struct Transform
 		return localMatrix;
 	}
 
-	// Get world transformation matrix
-	const math::Mat4<> &getWorldMatrix() const
-	{
-		return worldMatrix;
-	}
-
-	// Mark matrices as dirty
+	// Mark local matrix as dirty
+	// Note: World matrices are managed by TransformSystem
 	void markDirty() const
 	{
 		localMatrixDirty = true;
-		worldMatrixDirty = true;
 	}
 };
 

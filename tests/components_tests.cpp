@@ -25,9 +25,8 @@ TEST_CASE( "Transform component basic functionality", "[components][transform]" 
 	REQUIRE( transform.rotation.y == Catch::Approx( 0.0f ) );
 	REQUIRE( transform.rotation.z == Catch::Approx( 0.0f ) );
 
-	// Test that matrices are marked as dirty initially
+	// Test that matrix is marked as dirty initially
 	REQUIRE( transform.localMatrixDirty );
-	REQUIRE( transform.worldMatrixDirty );
 }
 
 TEST_CASE( "Transform component local matrix calculation", "[components][transform][matrix]" )
@@ -79,15 +78,13 @@ TEST_CASE( "Transform component markDirty", "[components][transform][dirty]" )
 {
 	Transform transform;
 
-	// Get matrix to clear dirty flags
+	// Get matrix to clear dirty flag
 	transform.getLocalMatrix();
 	REQUIRE_FALSE( transform.localMatrixDirty );
-	REQUIRE( transform.worldMatrixDirty ); // This should still be true initially
 
 	// Mark as dirty
 	transform.markDirty();
 	REQUIRE( transform.localMatrixDirty );
-	REQUIRE( transform.worldMatrixDirty );
 }
 
 TEST_CASE( "Name component functionality", "[components][name]" )
@@ -278,7 +275,6 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 	// Verify component data
 	const auto *storedName = scene.getComponent<Name>( entity );
 	const auto *storedVisible = scene.getComponent<Visible>( entity );
-	const auto *storedRenderer = scene.getComponent<MeshRenderer>( entity );
 	const auto *storedSelected = scene.getComponent<Selected>( entity );
 
 	REQUIRE( storedName->name == "TestEntity" );
@@ -318,7 +314,7 @@ TEST_CASE( "Selected Component - ECS integration", "[components][selection][ecs]
 		// Count selected entities
 		int selectedCount = 0;
 		int primaryCount = 0;
-		scene.forEach<Selected>( [&]( Entity e, const Selected &sel ) {
+		scene.forEach<Selected>( [&]( Entity, const Selected &sel ) {
 			selectedCount++;
 			if ( sel.isPrimary )
 				primaryCount++;

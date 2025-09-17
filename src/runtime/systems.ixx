@@ -81,14 +81,14 @@ public:
 
 		// Calculate and cache if not found
 		updateWorldMatrix( scene, entity );
-		
+
 		// Check again if matrix was successfully created
 		auto it2 = m_worldMatrices.find( entity );
 		if ( it2 != m_worldMatrices.end() )
 		{
 			return it2->second;
 		}
-		
+
 		// Fallback to identity if something went wrong
 		return math::Mat4<>::identity();
 	}
@@ -147,10 +147,6 @@ private:
 		math::Mat4<> worldMatrix = parentMatrix * localMatrix;
 
 		m_worldMatrices[entity] = worldMatrix;
-
-		// Update the transform's cached world matrix
-		transform->worldMatrix = worldMatrix;
-		transform->worldMatrixDirty = false;
 	}
 
 	void markChildrenDirty( ecs::Entity entity )
