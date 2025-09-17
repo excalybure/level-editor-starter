@@ -123,6 +123,46 @@ export std::vector<Vec4f> extractFloat4Tangents( const float *buffer, std::size_
 	return tangents;
 }
 
+export std::vector<Vec4f> extractFloat4Colors( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+{
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 4 * sizeof( float ) );
+
+	std::vector<Vec4f> colors;
+	colors.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( std::size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *colorBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *color = reinterpret_cast<const float *>( colorBytes );
+		colors.push_back( { color[0], color[1], color[2], color[3] } );
+	}
+
+	return colors;
+}
+
+export std::vector<Vec4f> extractFloat3ColorsAsVec4( const float *buffer, std::size_t count, std::size_t byteOffset, std::size_t byteStride )
+{
+	const std::size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
+
+	std::vector<Vec4f> colors;
+	colors.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( std::size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *colorBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *color = reinterpret_cast<const float *>( colorBytes );
+		colors.push_back( { color[0], color[1], color[2], 1.0f } ); // Default alpha = 1.0
+	}
+
+	return colors;
+}
+
 export std::vector<std::uint32_t> extractIndicesAsUint32( const std::uint8_t *buffer, std::size_t count, ComponentType componentType, std::size_t byteOffset, std::size_t byteStride )
 {
 	std::vector<std::uint32_t> indices;

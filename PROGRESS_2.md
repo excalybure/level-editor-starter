@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-27 — Complete Vertex Color Support Implementation via TDD
+**Summary:** Successfully implemented comprehensive vertex color support throughout the engine pipeline, from Python test asset generation to shader rendering. Fixed critical shader/struct mismatch where the tangent field was missing from the unlit.hlsl VertexInput, causing color data to be interpreted as tangent data. The implementation now supports both per-face material-based coloring and vertex color-based rendering with proper buffer packing and GPU pipeline integration.
+
+**Atomic functionalities completed:**
+- AF1: Update Python generator scripts - Fixed buffer packing order in test scripts to properly interleave position and color data instead of packing all positions followed by all colors
+- AF2: Add vertex color support to asset system - Extended assets::Vertex struct to include color field (Vec4f) maintaining compatibility with existing position, normal, texCoord, and tangent fields
+- AF3: Implement glTF loader color extraction - Added color attribute extraction logic to gltf_loader with helper functions for VEC3/VEC4 color formats, fallback to white when color data is missing
+- AF4: Fix shader/struct field mismatch - Updated unlit.hlsl VertexInput/Output structs to include tangent field matching assets::Vertex layout, preventing color data from being misinterpreted as tangent
+- AF5: Update mesh rendering input layout - Modified MeshRenderingSystem input layout to match complete Vertex struct including position, normal, texCoord, tangent, and color fields
+- AF6: Enhance shader color processing - Updated vertex shader to pass through both tangent and color data, pixel shader to multiply material color by vertex color for combined rendering
+- AF7: Verify complete pipeline - Generated test assets, ran comprehensive test suite, confirmed all vertex color rendering components work correctly together
+
+**Tests:** All 321 test cases pass (20,993 assertions) including glTF loader tests for color extraction, mesh rendering system tests for input layout, and comprehensive integration tests; Python scripts generate valid colored assets; filtered commands: `unit_test_runner.exe "*gltf*"` and full test suite execution
+**Notes:** The critical fix was adding the missing tangent field to the shader VertexInput struct - the assets::Vertex struct includes tangent but the shader was missing it, causing a field alignment mismatch where color data was being read as tangent values. The implementation now supports both traditional material-based coloring and modern vertex color workflows. Buffer packing in test scripts was corrected to use interleaved position/color data as expected by the glTF format. This enables rich per-vertex coloring for procedural geometry, imported models with vertex colors, and hybrid material/vertex color rendering workflows.
+
+## 2025-09-16 — Task 4: GLTF Testing & Validation Assets
+**Summary:** Added new validation assets and updated tests to support extended GLTF material and error handling scenarios. Renamed existing `simple_triangle.gltf` to `triangle_no_mat.gltf` (no material) and updated all references. Added `triangle_yellow.gltf` (single yellow material), `cube.gltf` (cube mesh referencing six distinct colored materials: +X red, +Y green, +Z blue, -X orange, -Y yellow, -Z cyan), and `invalid.gltf` (malformed JSON) for negative path testing. Implemented new test cases verifying correct material parsing for triangle and cube assets and graceful failure for invalid input. All glTF-related tests pass (538 assertions in 11 test cases filtered with `*gltf*`).
+**Atomic functionalities completed:**
+- AF1: Rename asset `simple_triangle.gltf` → `triangle_no_mat.gltf` and update references
+- AF2: Add `triangle_yellow.gltf` with yellow PBR baseColorFactor
+- AF3: Add `cube.gltf` with 6 primitives each mapped to unique colored material
+- AF4: Add malformed `invalid.gltf` for failure path coverage
+- AF5: Extend `gltf_loader_tests.cpp` with material color and invalid file load tests
+- AF6: Run focused glTF test suite confirming all new tests pass
+**Tests:** 3 new test cases added (triangle_yellow, cube materials, invalid file). Filter command: `unit_test_runner.exe "*gltf*"` produced 538 assertions across 11 test cases, all passing.
+**Notes:** `invalid.gltf` stored permanently (tests no longer create/delete temporary invalid file). Future improvement: add UV/normal/material texture validation for cube faces if textures are introduced.
+
 ## 2025-09-16 — Integrate ShaderManager into MeshRenderingSystem Pipeline State Creation
 **Summary:** Successfully refactored MeshRenderingSystem's `createMaterialPipelineState` method to use ShaderManager for shader compilation instead of direct D3DCompileFromFile calls. This integration enables hot-reloading of shaders, better shader management, and eliminates redundant shader compilation. The system now registers unlit.hlsl shaders with ShaderManager on initialization and retrieves pre-compiled blobs for pipeline state creation, with automatic pipeline cache invalidation when shaders are reloaded.
 

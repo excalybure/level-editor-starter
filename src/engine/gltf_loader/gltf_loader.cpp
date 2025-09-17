@@ -284,6 +284,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 	cgltf_accessor *normalAccessor = nullptr;
 	cgltf_accessor *texCoordAccessor = nullptr;
 	cgltf_accessor *tangentAccessor = nullptr;
+	cgltf_accessor *colorAccessor = nullptr;
 
 	for ( cgltf_size i = 0; i < primitive->attributes_count; ++i )
 	{
@@ -311,6 +312,11 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 			tangentAccessor = primitive->attributes[i].data;
 			if ( verbose )
 				console::info( "extractPrimitive: Found TANGENT attribute" );
+			break;
+		case cgltf_attribute_type_color:
+			colorAccessor = primitive->attributes[i].data;
+			if ( verbose )
+				console::info( "extractPrimitive: Found COLOR attribute" );
 			break;
 		default:
 			if ( verbose )
@@ -408,6 +414,39 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						}
 					}
 
+					// Extract colors if available
+					std::vector<Vec4f> colors;
+					if ( colorAccessor && colorAccessor->component_type == cgltf_component_type_r_32f )
+					{
+						cgltf_buffer_view *colorBufferView = colorAccessor->buffer_view;
+						cgltf_buffer *colorBuffer = colorBufferView->buffer;
+
+						if ( colorBuffer && colorBuffer->data )
+						{
+							const float *colorBufferData = reinterpret_cast<const float *>( colorBuffer->data );
+
+							if ( colorAccessor->type == cgltf_type_vec3 )
+							{
+								colors = extractFloat3ColorsAsVec4(
+									colorBufferData,
+									colorAccessor->count,
+									colorBufferView->offset + colorAccessor->offset,
+									colorBufferView->stride );
+							}
+							else if ( colorAccessor->type == cgltf_type_vec4 )
+							{
+								colors = extractFloat4Colors(
+									colorBufferData,
+									colorAccessor->count,
+									colorBufferView->offset + colorAccessor->offset,
+									colorBufferView->stride );
+							}
+
+							if ( verbose )
+								console::info( "extractPrimitive: Extracted {} colors", colors.size() );
+						}
+					}
+
 					// Create vertices with extracted data
 					for ( std::size_t i = 0; i < positions.size(); ++i )
 					{
@@ -442,6 +481,16 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						else
 						{
 							vertex.tangent = Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f };
+						}
+
+						// Use extracted colors or default (white)
+						if ( i < colors.size() )
+						{
+							vertex.color = colors[i];
+						}
+						else
+						{
+							vertex.color = Vec4f{ 1.0f, 1.0f, 1.0f, 1.0f };
 						}
 
 						primitiveObj->addVertex( vertex );

@@ -9,6 +9,8 @@ struct VertexInput
     float3 position : POSITION;
     float3 normal : NORMAL;
     float2 texcoord : TEXCOORD0;
+    float4 tangent : TANGENT;
+    float4 color : COLOR0;
 };
 
 // Vertex output / Pixel input structure
@@ -18,6 +20,8 @@ struct VertexOutput
     float3 worldPos : WORLD_POSITION;
     float3 normal : NORMAL;
     float2 texcoord : TEXCOORD0;
+    float4 tangent : TANGENT;
+    float4 color : COLOR0;
 };
 
 // Per-frame constants (camera and view data) - using root constants for better performance
@@ -85,14 +89,20 @@ VertexOutput VSMain(VertexInput input)
     // Pass through texture coordinates
     output.texcoord = input.texcoord;
     
+    // Pass through tangent (for future use)
+    output.tangent = input.tangent;
+    
+    // Pass through vertex color
+    output.color = input.color;
+    
     return output;
 }
 
 // Pixel Shader
 float4 PSMain(VertexOutput input) : SV_TARGET
 {
-    // Sample base color
-    float4 baseColor = baseColorFactor;
+    // Sample base color and multiply with vertex color
+    float4 baseColor = baseColorFactor * input.color;
     
     // Apply base color texture if available
     if (textureFlags & TEXTURE_FLAG_BASE_COLOR)

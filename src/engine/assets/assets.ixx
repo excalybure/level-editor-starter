@@ -63,6 +63,7 @@ export struct Vertex
 	math::Vec3f normal = { 0.0f, 1.0f, 0.0f };
 	math::Vec2f texCoord = { 0.0f, 0.0f };
 	math::Vec4f tangent = { 1.0f, 0.0f, 0.0f, 1.0f };
+	math::Vec4f color = { 1.0f, 1.0f, 1.0f, 1.0f }; // RGBA vertex color
 };
 
 // Material representation
