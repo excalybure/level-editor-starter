@@ -89,10 +89,11 @@ TEST_CASE( "PickingSystem - Multiple entities distance sorting", "[picking][mult
 	scene.addComponent( nearCube, nearRenderer );
 
 	auto farCube = scene.createEntity( "FarCube" );
-	scene.addComponent( farCube, Transform{} );
-	auto *farTransform = scene.getComponent<Transform>( farCube );
-	REQUIRE( farTransform != nullptr );
-	farTransform->position = Vec3<>{ 0.0f, 0.0f, 5.0f }; // Further away
+
+	Transform farTransform;
+	farTransform.position = Vec3<>{ 0.0f, 0.0f, 5.0f }; // Further away
+	scene.addComponent( farCube, farTransform );
+
 	MeshRenderer farRenderer;
 	farRenderer.bounds = BoundingBox3D<float>{
 		Vec3<>{ -0.5f, -0.5f, -0.5f },
