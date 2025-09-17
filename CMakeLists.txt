@@ -165,6 +165,16 @@ target_sources(engine.math_3d PUBLIC
 target_compile_features(engine.math_3d PUBLIC cxx_std_23)
 target_link_libraries(engine.math_3d PUBLIC engine.math engine.vec engine.bounding_volumes)
 
+add_library(engine.picking)
+target_sources(engine.picking PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/engine/picking.ixx
+  PRIVATE
+    src/engine/picking.cpp
+)
+target_compile_features(engine.picking PUBLIC cxx_std_23)
+target_link_libraries(engine.picking PUBLIC engine.math_3d engine.bounding_volumes engine.vec engine.matrix runtime.ecs runtime.components runtime.entity editor.viewport)
+
 add_library(engine.assets)
 target_sources(engine.assets PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -451,6 +461,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/curves_tests.cpp
     tests/math_2d_tests.cpp
     tests/math_3d_tests.cpp
+    tests/picking_tests.cpp
     tests/dx12_tests.cpp
     tests/renderer_tests.cpp
     tests/camera_tests.cpp
@@ -498,6 +509,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.bounding_box_2d
     engine.math_2d
     engine.math_3d
+    engine.picking
     platform.dx12
     engine.renderer
     engine.shader_manager
