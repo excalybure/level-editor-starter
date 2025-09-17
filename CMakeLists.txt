@@ -412,6 +412,16 @@ target_sources(editor.viewport PUBLIC
 target_compile_features(editor.viewport PUBLIC cxx_std_23)
 target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console runtime.ecs runtime.systems runtime.mesh_rendering_system platform.pix)
 
+add_library(editor.selection)
+target_sources(editor.selection PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/editor/selection.ixx
+  PRIVATE
+    src/editor/selection.cpp
+)
+target_compile_features(editor.selection PUBLIC cxx_std_23)
+target_link_libraries(editor.selection PUBLIC runtime.ecs runtime.entity runtime.components engine.bounding_box_3d engine.vec engine.math runtime.time)
+
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
@@ -471,6 +481,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/ecs_tests.cpp
     tests/systems_tests.cpp
     tests/components_tests.cpp
+    tests/selection_tests.cpp
     tests/app_tests.cpp
     tests/renderer_integration_tests.cpp
     tests/integration_tests.cpp
@@ -516,6 +527,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.camera
     engine.grid
     editor.viewport
+    editor.selection
     runtime.entity
     runtime.time
     runtime.ecs
