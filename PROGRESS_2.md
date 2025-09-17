@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-16 — Fix Orthographic Camera Viewport Focus Issue
+**Summary:** Fixed the root cause of orthographic camera panning issues where viewport focus was not properly updated when users clicked on different viewports. The issue was that `setFocusedViewport` was not being called in the UI when a viewport gained focus, causing input to be routed to the wrong viewport. Fixed by adding the missing `setFocusedViewport` call in the UI viewport rendering code.
+
+**Atomic functionalities completed:**
+- AF1: Investigated user report of orthographic panning issues - Found that the panning logic `input.mouse.leftButton || input.mouse.middleButton` was mathematically correct
+- AF2: Traced the root cause to viewport focus management - Discovered that `setFocusedViewport` was not called when users clicked on different viewports in the UI
+- AF3: Fixed UI viewport focus handling - Added missing `viewportManager.setFocusedViewport(viewport.getId())` call in `UI::Impl::renderViewportPane` when a viewport is focused
+- AF4: Verified orthographic camera usage in application - Confirmed Top, Front, and Side viewports do use OrthographicCameraController and should receive input when focused
+- AF5: Validated test coverage - Confirmed existing tests demonstrate both translation and zoom functionality working correctly (48 assertions passing) and all camera controller tests pass (87 assertions)
+
+**Tests:** All existing orthographic camera tests continue to pass (48 assertions in 2 test cases); all camera controller tests pass (87 assertions in 4 test cases); filtered commands: `unit_test_runner.exe "*orthographic*"` and `unit_test_runner.exe "[camera][controller]"`
+**Notes:** The issue was not with the orthographic camera controller logic itself, but with the UI not properly updating the focused viewport when users interacted with different viewport panes. This caused input events to be routed to the wrong camera controller. The fix ensures that when a user clicks on a viewport pane (making it focused with ImGui), the ViewportManager is notified so input can be properly routed to that viewport's camera controller. This resolves the user's issue with orthographic views not responding to translation and zoom input.
+
 ## 2025-09-16 — Fix Triangle Winding Order in Test Assets
 **Summary:** Corrected the triangle winding order in both `triangle_no_mat.gltf` and `triangle_yellow.gltf` test assets from clockwise to counter-clockwise to match standard graphics conventions. The original files used indices `[0,1,2]` which creates clockwise winding, but for proper front-facing triangles in DirectX/OpenGL coordinate systems, counter-clockwise winding with indices `[0,2,1]` is expected.
 

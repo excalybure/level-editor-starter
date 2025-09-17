@@ -436,7 +436,12 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 
 			// Focus is separate from active state - only one viewport can have focus
 			const bool hasFocus = ImGui::IsWindowFocused();
-			viewport->setFocused( hasFocus );
+
+			// Update focused viewport through ViewportManager for proper input routing
+			if ( hasFocus && viewportManager.getFocusedViewport() != viewport )
+			{
+				viewportManager.setFocusedViewport( viewport );
+			}
 
 			// Get render target texture for ImGui rendering
 			void *textureHandle = viewport->getImGuiTextureId();
