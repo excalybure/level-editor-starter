@@ -1,5 +1,16 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-16 — Implement M2-P3 Selected Component Foundation
+**Summary:** Successfully implemented the foundational Selected component and ECS integration requirements from M2_P3.md section 3.1. Updated the Selected component structure to include primary selection tracking, timestamp functionality, and proper color handling. Added comprehensive TDD tests following the Red-Green-Refactor approach to ensure robust component behavior and ECS integration.
+
+**Atomic functionalities completed:**
+- AF1.1: Selected component definition with selection metadata - Added `isPrimary` bool for gizmo operations, `selectionTime` float timestamp for animations, and `math::Vec4<>` color with default orange highlight (1.0f, 0.6f, 0.0f, 1.0f)
+- AF1.2: ECS component lifecycle integration - Implemented default constructor with `getCurrentTime()` timestamp and parameterized constructor accepting `bool primary` for flexible creation
+- AF1.3: Selection component queries and iteration helpers - Added comprehensive TDD tests covering component lifecycle (add/remove), primary selection tracking with `forEach<Selected>` iteration, and component data validation
+
+**Tests:** 2 new test cases added with 14 assertions total; "Selected Component - Basic functionality" validates default construction, timestamp setting, and primary selection constructor; "Selected Component - ECS integration" tests add/remove lifecycle and primary selection counting via `forEach` iteration; filtered commands: `unit_test_runner.exe "[selection]"` 
+**Notes:** Implemented `getCurrentTime()` utility function using `std::chrono::high_resolution_clock` for accurate timestamp tracking. The Selected component now fully matches the M2_P3.md specification requirements for AF1.1-AF1.3, providing the foundation for the complete object picking and selection system. All new tests pass and validate both component behavior and ECS integration patterns. Ready for Phase 3.2 (Ray-Casting Infrastructure) implementation.
+
 ## 2025-09-16 — Fix Orthographic Camera Viewport Focus Issue
 **Summary:** Fixed the root cause of orthographic camera panning issues where viewport focus was not properly updated when users clicked on different viewports. The issue was that `setFocusedViewport` was not being called in the UI when a viewport gained focus, causing input to be routed to the wrong viewport. Fixed by adding the missing `setFocusedViewport` call in the UI viewport rendering code.
 

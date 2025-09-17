@@ -192,24 +192,25 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 	}
 }
 
-TEST_CASE( "Selected component functionality", "[components][selected]" )
+TEST_CASE( "Selected Component - Basic functionality", "[components][selection]" )
 {
-	Selected selected;
+	SECTION( "Default construction sets timestamp" )
+	{
+		Selected selected;
+		REQUIRE( selected.isPrimary == false );
+		REQUIRE( selected.selectionTime > 0.0f );
+		REQUIRE( selected.highlightColor.x == 1.0f ); // Orange highlight
+		REQUIRE( selected.highlightColor.y == Catch::Approx( 0.6f ) );
+		REQUIRE( selected.highlightColor.z == Catch::Approx( 0.0f ) );
+		REQUIRE( selected.highlightColor.w == 1.0f );
+	}
 
-	// Test default values
-	REQUIRE_FALSE( selected.selected );
-	REQUIRE( selected.highlightColor.x == Catch::Approx( 1.0f ) );
-	REQUIRE( selected.highlightColor.y == Catch::Approx( 0.8f ) );
-	REQUIRE( selected.highlightColor.z == Catch::Approx( 0.2f ) );
-
-	// Test modifications
-	selected.selected = true;
-	selected.highlightColor = math::Vec3<float>( 0.5f, 1.0f, 0.5f );
-
-	REQUIRE( selected.selected );
-	REQUIRE( selected.highlightColor.x == Catch::Approx( 0.5f ) );
-	REQUIRE( selected.highlightColor.y == Catch::Approx( 1.0f ) );
-	REQUIRE( selected.highlightColor.z == Catch::Approx( 0.5f ) );
+	SECTION( "Primary selection constructor" )
+	{
+		Selected primary( true );
+		REQUIRE( primary.isPrimary == true );
+		REQUIRE( primary.selectionTime > 0.0f );
+	}
 }
 
 TEST_CASE( "Component concept validation", "[components][concepts]" )
@@ -259,8 +260,7 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 	visible.castShadows = false;
 
 	MeshRenderer renderer;
-	Selected selected;
-	selected.selected = true;
+	Selected selected{ true }; // Primary selection
 
 	REQUIRE( scene.addComponent( entity, transform ) );
 	REQUIRE( scene.addComponent( entity, name ) );
@@ -283,5 +283,48 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 
 	REQUIRE( storedName->name == "TestEntity" );
 	REQUIRE_FALSE( storedVisible->castShadows );
-	REQUIRE( storedSelected->selected );
+	REQUIRE( storedSelected->isPrimary == true );
+}
+
+TEST_CASE( "Selected Component - ECS integration", "[components][selection][ecs]" )
+{
+	Scene scene;
+
+	SECTION( "Add and remove Selected component" )
+	{
+		auto entity = scene.createEntity( "TestObject" );
+
+		// Add Selected component
+		scene.addComponent( entity, Selected{} );
+		REQUIRE( scene.hasComponent<Selected>( entity ) );
+
+		auto *selected = scene.getComponent<Selected>( entity );
+		REQUIRE( selected != nullptr );
+		REQUIRE( selected->isPrimary == false );
+
+		// Remove Selected component
+		scene.removeComponent<Selected>( entity );
+		REQUIRE_FALSE( scene.hasComponent<Selected>( entity ) );
+	}
+
+	SECTION( "Primary selection tracking" )
+	{
+		auto entity1 = scene.createEntity( "Object1" );
+		auto entity2 = scene.createEntity( "Object2" );
+
+		scene.addComponent( entity1, Selected{ true } );  // Primary
+		scene.addComponent( entity2, Selected{ false } ); // Secondary
+
+		// Count selected entities
+		int selectedCount = 0;
+		int primaryCount = 0;
+		scene.forEach<Selected>( [&]( Entity e, const Selected &sel ) {
+			selectedCount++;
+			if ( sel.isPrimary )
+				primaryCount++;
+		} );
+
+		REQUIRE( selectedCount == 2 );
+		REQUIRE( primaryCount == 1 );
+	}
 }

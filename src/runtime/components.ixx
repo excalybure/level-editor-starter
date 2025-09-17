@@ -7,6 +7,7 @@ import engine.bounding_box_3d;
 import engine.gpu.mesh_gpu;
 import engine.assets;
 import runtime.entity;
+import runtime.time;
 import <string>;
 import <vector>;
 import <memory>;
@@ -99,8 +100,12 @@ struct MeshRenderer
 // Selection state for editor
 struct Selected
 {
-	bool selected = false;
-	math::Vec3<> highlightColor{ 1.0f, 0.8f, 0.2f };
+	bool isPrimary = false;									  // Primary selection for gizmo operations
+	float selectionTime = 0.0f;								  // When selected (for animation/UI effects)
+	math::Vec4<> highlightColor = { 1.0f, 0.6f, 0.0f, 1.0f }; // Selection outline color
+
+	Selected() : selectionTime( runtime::time::getCurrentTime() ) {}
+	Selected( bool primary ) : isPrimary( primary ), selectionTime( runtime::time::getCurrentTime() ) {}
 };
 
 // Component concept - relaxed to allow more practical component types

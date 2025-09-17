@@ -233,13 +233,22 @@ target_sources(runtime.entity PUBLIC
 )
 target_compile_features(runtime.entity PUBLIC cxx_std_23)
 
+add_library(runtime.time)
+target_sources(runtime.time PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/runtime/time.ixx
+  PRIVATE
+    src/runtime/time.cpp
+)
+target_compile_features(runtime.time PUBLIC cxx_std_23)
+
 add_library(runtime.components)
 target_sources(runtime.components PUBLIC
   FILE_SET CXX_MODULES FILES
     src/runtime/components.ixx
 )
 target_compile_features(runtime.components PUBLIC cxx_std_23)
-target_link_libraries(runtime.components PUBLIC runtime.entity engine.math engine.matrix engine.vec engine.bounding_box_3d engine.gpu.mesh_gpu)
+target_link_libraries(runtime.components PUBLIC runtime.entity runtime.time engine.math engine.matrix engine.vec engine.bounding_box_3d engine.gpu.mesh_gpu)
 
 add_library(runtime.ecs)
 target_sources(runtime.ecs PUBLIC
@@ -496,6 +505,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.grid
     editor.viewport
     runtime.entity
+    runtime.time
     runtime.ecs
     runtime.scene_importer
     runtime.components
