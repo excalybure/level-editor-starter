@@ -44,6 +44,13 @@ public:
 	void unloadUnusedResources();
 	void cleanupExpiredReferences();
 
+	// Frame management for deferred resource cleanup
+	void processPendingDeletes();
+
+	// Queue resources for deferred deletion
+	void queueForDeletion( std::shared_ptr<engine::gpu::MeshGPU> meshGPU );
+	void queueForDeletion( std::shared_ptr<engine::gpu::MaterialGPU> materialGPU );
+
 	// Statistics and monitoring
 	struct Statistics
 	{
@@ -72,6 +79,10 @@ private:
 
 	// Statistics tracking
 	mutable Statistics m_statistics;
+
+	// Deferred deletion queues
+	std::vector<std::shared_ptr<engine::gpu::MeshGPU>> m_pendingMeshDeletions;
+	std::vector<std::shared_ptr<engine::gpu::MaterialGPU>> m_pendingMaterialDeletions;
 
 	// Helper methods for statistics
 	void updateStatistics() const;

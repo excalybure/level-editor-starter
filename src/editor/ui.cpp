@@ -1156,6 +1156,24 @@ void UI::clearScene()
 		return;
 	}
 
+	// Queue GPU resources for deferred deletion before destroying entities
+	if ( m_impl->gpuManager )
+	{
+		const auto entities = m_impl->scene->getAllEntities();
+		for ( const auto &entity : entities )
+		{
+			if ( entity.isValid() && m_impl->scene->hasComponent<components::MeshRenderer>( entity ) )
+			{
+				const auto *meshRenderer = m_impl->scene->getComponent<components::MeshRenderer>( entity );
+				if ( meshRenderer && meshRenderer->gpuMesh )
+				{
+					// Queue the GPU mesh for deferred deletion
+					m_impl->gpuManager->queueForDeletion( meshRenderer->gpuMesh );
+				}
+			}
+		}
+	}
+
 	// Get all entities and destroy them
 	const auto entities = m_impl->scene->getAllEntities();
 	for ( const auto &entity : entities )

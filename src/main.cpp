@@ -206,6 +206,9 @@ int main()
 			// Present D3D12 frame - command list is closed at this point
 			device.present();
 
+			// End GPU resource manager frame - this cleans up deferred deletions
+			gpuResourceManager.processPendingDeletes();
+
 			// App tick
 			app.tick();
 

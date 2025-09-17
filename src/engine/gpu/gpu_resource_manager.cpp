@@ -197,4 +197,27 @@ void GPUResourceManager::updateStatistics() const
 		( m_statistics.materialCacheSize * 1024 );	   // Assume 1KB per material on average
 }
 
+void GPUResourceManager::processPendingDeletes()
+{
+	// Clear pending deletions now that the command list has been executed
+	m_pendingMeshDeletions.clear();
+	m_pendingMaterialDeletions.clear();
+}
+
+void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::MeshGPU> meshGPU )
+{
+	if ( meshGPU )
+	{
+		m_pendingMeshDeletions.push_back( std::move( meshGPU ) );
+	}
+}
+
+void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::MaterialGPU> materialGPU )
+{
+	if ( materialGPU )
+	{
+		m_pendingMaterialDeletions.push_back( std::move( materialGPU ) );
+	}
+}
+
 } // namespace engine
