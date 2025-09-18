@@ -430,7 +430,7 @@ target_sources(editor.selection_renderer PUBLIC
     src/editor/selection_renderer.cpp
 )
 target_compile_features(editor.selection_renderer PUBLIC cxx_std_23)
-target_link_libraries(editor.selection_renderer PUBLIC runtime.ecs runtime.entity runtime.components platform.dx12 engine.math engine.vec engine.matrix engine.renderer runtime.console runtime.time)
+target_link_libraries(editor.selection_renderer PUBLIC runtime.ecs runtime.entity runtime.components platform.dx12 engine.math engine.vec engine.matrix engine.renderer engine.shader_manager runtime.console runtime.time)
 
 add_library(editor.viewport_input)
 target_sources(editor.viewport_input PUBLIC

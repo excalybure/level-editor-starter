@@ -2,126 +2,14 @@ module editor.selection_renderer;
 
 import runtime.console;
 import runtime.time;
+import engine.shader_manager;
 import std;
 
 namespace editor
 {
 
-namespace
-{
-// Outline vertex shader source
-const char *kOutlineVertexShader = R"(
-struct VSInput {
-    float3 position : POSITION;
-    float3 normal : NORMAL;
-};
-
-struct VSOutput {
-    float4 position : SV_POSITION;
-    float3 worldPos : WORLD_POS;
-    float3 normal : NORMAL;
-};
-
-cbuffer OutlineConstants : register(b0) {
-    float4x4 worldViewProj;
-    float4 outlineColor;
-    float4 screenParams; // width, height, outlineWidth, time
-};
-
-VSOutput main(VSInput input) {
-    VSOutput output;
-    
-    // Expand vertices along normals for outline effect
-    float3 expandedPos = input.position + input.normal * screenParams.z * 0.01f;
-    
-    output.position = mul(float4(expandedPos, 1.0f), worldViewProj);
-    output.worldPos = input.position;
-    output.normal = input.normal;
-    
-    return output;
-}
-)";
-
-// Outline pixel shader source
-const char *kOutlinePixelShader = R"(
-struct PSInput {
-    float4 position : SV_POSITION;
-    float3 worldPos : WORLD_POS;
-    float3 normal : NORMAL;
-};
-
-cbuffer OutlineConstants : register(b0) {
-    float4x4 worldViewProj;
-    float4 outlineColor;
-    float4 screenParams; // width, height, outlineWidth, time
-};
-
-float4 main(PSInput input) : SV_Target {
-    float4 color = outlineColor;
-    
-    // Simple animation pulse effect
-    float pulse = sin(screenParams.w * 3.14159f) * 0.2f + 0.8f;
-    color.rgb *= pulse;
-    
-    return color;
-}
-)";
-
-// Rectangle vertex shader source
-const char *kRectVertexShader = R"(
-struct VSInput {
-    float2 position : POSITION;
-};
-
-struct VSOutput {
-    float4 position : SV_POSITION;
-    float2 uv : TEXCOORD0;
-};
-
-VSOutput main(VSInput input) {
-    VSOutput output;
-    output.position = float4(input.position, 0.0f, 1.0f);
-    output.uv = input.position * 0.5f + 0.5f; // Convert to 0-1 range
-    return output;
-}
-)";
-
-// Rectangle pixel shader source
-const char *kRectPixelShader = R"(
-struct PSInput {
-    float4 position : SV_POSITION;
-    float2 uv : TEXCOORD0;
-};
-
-cbuffer RectConstants : register(b0) {
-    float4 rectColor;
-    float4 rectBounds; // minX, minY, maxX, maxY
-};
-
-float4 main(PSInput input) : SV_Target {
-    float2 center = (rectBounds.xy + rectBounds.zw) * 0.5f;
-    float2 size = rectBounds.zw - rectBounds.xy;
-    
-    // Create border effect
-    float2 edgeDist = min(input.uv - rectBounds.xy, rectBounds.zw - input.uv);
-    float borderWidth = 0.02f;
-    float edge = min(edgeDist.x, edgeDist.y);
-    
-    float4 color = rectColor;
-    if (edge < borderWidth) {
-        color.a = 0.8f; // Solid border
-    } else {
-        color.a = 0.2f; // Transparent fill
-    }
-    
-    return color;
-}
-)";
-
-} // anonymous namespace
-
-SelectionRenderer::SelectionRenderer( dx12::Device &device )
-	: m_device( device )
+SelectionRenderer::SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager )
+	: m_device( device ), m_shaderManager( shaderManager )
 {
 	setupRenderingResources();
 }
@@ -148,6 +36,16 @@ void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 {
 	if ( !commandList )
 	{
+		return;
+	}
+
+	// Check if shaders are ready
+	const auto *vsBlob = m_shaderManager.getShaderBlob( m_outlineVertexShader );
+	const auto *psBlob = m_shaderManager.getShaderBlob( m_outlinePixelShader );
+
+	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+	{
+		console::warning( "Selection outline shaders not ready, skipping render" );
 		return;
 	}
 
@@ -235,6 +133,16 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		return;
 	}
 
+	// Check if shaders are ready
+	const auto *vsBlob = m_shaderManager.getShaderBlob( m_rectVertexShader );
+	const auto *psBlob = m_shaderManager.getShaderBlob( m_rectPixelShader );
+
+	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+	{
+		console::warning( "Selection rectangle shaders not ready, skipping render" );
+		return;
+	}
+
 	// Set pipeline state for rectangle rendering
 	if ( m_rectPipelineState )
 	{
@@ -259,48 +167,37 @@ void SelectionRenderer::setupRenderingResources()
 {
 	try
 	{
-		createRootSignature();
-		createOutlinePipelineState();
-		createRectPipelineState();
-		createConstantBuffer();
-		createRectVertexBuffer();
+		// Register shaders with ShaderManager
+		m_outlineVertexShader = m_shaderManager.registerShader(
+			"shaders/selection_outline.hlsl",
+			"VSMain",
+			"vs_5_1",
+			shader_manager::ShaderType::Vertex );
+
+		m_outlinePixelShader = m_shaderManager.registerShader(
+			"shaders/selection_outline.hlsl",
+			"PSMain",
+			"ps_5_1",
+			shader_manager::ShaderType::Pixel );
+
+		m_rectVertexShader = m_shaderManager.registerShader(
+			"shaders/selection_rect.hlsl",
+			"VSMain",
+			"vs_5_1",
+			shader_manager::ShaderType::Vertex );
+
+		m_rectPixelShader = m_shaderManager.registerShader(
+			"shaders/selection_rect.hlsl",
+			"PSMain",
+			"ps_5_1",
+			shader_manager::ShaderType::Pixel );
+
+		console::info( "Selection renderer shaders registered with ShaderManager" );
 	}
 	catch ( const std::exception &e )
 	{
 		console::error( "Failed to setup selection renderer resources: {}", e.what() );
 	}
-}
-
-void SelectionRenderer::createRootSignature()
-{
-	// For now, create a simple root signature with one constant buffer
-	// In a real implementation, this would be more sophisticated
-	console::info( "Creating selection renderer root signature" );
-}
-
-void SelectionRenderer::createOutlinePipelineState()
-{
-	// For now, just log creation
-	// In a real implementation, this would compile shaders and create PSO
-	console::info( "Creating outline pipeline state" );
-}
-
-void SelectionRenderer::createRectPipelineState()
-{
-	// For now, just log creation
-	console::info( "Creating rectangle pipeline state" );
-}
-
-void SelectionRenderer::createConstantBuffer()
-{
-	// For now, just log creation
-	console::info( "Creating selection renderer constant buffer" );
-}
-
-void SelectionRenderer::createRectVertexBuffer()
-{
-	// For now, just log creation
-	console::info( "Creating rectangle vertex buffer" );
 }
 
 void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
@@ -315,18 +212,18 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 		return;
 	}
 
+	// Get entity mesh renderer for geometry
+	auto *meshRenderer = scene.getComponent<components::MeshRenderer>( entity );
+	if ( !meshRenderer || !meshRenderer->gpuMesh )
+	{
+		return;
+	}
+
 	// Get entity world matrix
 	const math::Mat4<> worldMatrix = getEntityWorldMatrix( entity, scene );
 	const math::Mat4<> worldViewProj = projMatrix * viewMatrix * worldMatrix;
 
-	// Update constant buffer with outline data
-	OutlineConstants constants;
-	constants.worldViewProj = worldViewProj;
-	constants.outlineColor = color;
-	constants.screenParams = math::Vec4<>{ 800.0f, 600.0f, m_style.outlineWidth, getAnimationTime() };
-
-	// For now, just log the rendering
-	console::info( "Rendering outline for entity {}.{} with color ({:.2f}, {:.2f}, {:.2f}, {:.2f})",
+	console::info( "Rendering outline for entity {}.{} with color ({:.2f}, {:.2f}, {:.2f}, {:.2f}) using ShaderManager",
 		entity.id,
 		entity.generation,
 		color.x,

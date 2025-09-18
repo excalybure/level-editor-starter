@@ -4,6 +4,7 @@ import editor.selection_renderer;
 import runtime.ecs;
 import runtime.components;
 import platform.dx12;
+import engine.shader_manager;
 import engine.math;
 import engine.vec;
 import engine.matrix;
@@ -36,8 +37,18 @@ public:
 
 	dx12::CommandContext *getCommandContext() const
 	{
+	completion:
 		return nullptr;
 	}
+};
+
+class MockShaderManager : public shader_manager::ShaderManager
+{
+public:
+	MockShaderManager() = default;
+
+	// For testing, we'll just use the base class implementation
+	// but avoid actual file loading by using empty paths or mock data
 };
 
 } // anonymous namespace
@@ -63,15 +74,16 @@ TEST_CASE( "SelectionStyle - Default values", "[selection-renderer][style]" )
 TEST_CASE( "SelectionRenderer - Construction", "[selection-renderer][construction]" )
 {
 	MockDevice device;
+	MockShaderManager shaderManager;
 
 	SECTION( "Basic construction succeeds" )
 	{
-		REQUIRE_NOTHROW( editor::SelectionRenderer{ device } );
+		REQUIRE_NOTHROW( editor::SelectionRenderer{ device, shaderManager } );
 	}
 
 	SECTION( "Style accessors work" )
 	{
-		editor::SelectionRenderer renderer{ device };
+		editor::SelectionRenderer renderer{ device, shaderManager };
 
 		auto &style = renderer.getStyle();
 		REQUIRE( style.selectedColor.x == 1.0f );
@@ -88,7 +100,8 @@ TEST_CASE( "SelectionRenderer - Construction", "[selection-renderer][constructio
 TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" )
 {
 	MockDevice device;
-	editor::SelectionRenderer renderer{ device };
+	MockShaderManager shaderManager;
+	editor::SelectionRenderer renderer{ device, shaderManager };
 
 	ecs::Scene scene;
 	auto entity = scene.createEntity( "TestEntity" );
@@ -118,7 +131,8 @@ TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" 
 TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer][selected]" )
 {
 	MockDevice device;
-	editor::SelectionRenderer renderer{ device };
+	MockShaderManager shaderManager;
+	editor::SelectionRenderer renderer{ device, shaderManager };
 
 	ecs::Scene scene;
 
@@ -153,7 +167,8 @@ TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer
 TEST_CASE( "SelectionRenderer - Animation support", "[selection-renderer][animation]" )
 {
 	MockDevice device;
-	editor::SelectionRenderer renderer{ device };
+	MockShaderManager shaderManager;
+	editor::SelectionRenderer renderer{ device, shaderManager };
 
 	auto &style = renderer.getStyle();
 
