@@ -422,6 +422,16 @@ target_sources(editor.selection PUBLIC
 target_compile_features(editor.selection PUBLIC cxx_std_23)
 target_link_libraries(editor.selection PUBLIC runtime.ecs runtime.entity runtime.components runtime.systems engine.bounding_box_3d engine.vec engine.math runtime.time)
 
+add_library(editor.selection_renderer)
+target_sources(editor.selection_renderer PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/editor/selection_renderer.ixx
+  PRIVATE
+    src/editor/selection_renderer.cpp
+)
+target_compile_features(editor.selection_renderer PUBLIC cxx_std_23)
+target_link_libraries(editor.selection_renderer PUBLIC runtime.ecs runtime.entity runtime.components platform.dx12 engine.math engine.vec engine.matrix engine.renderer runtime.console runtime.time)
+
 add_library(editor.viewport_input)
 target_sources(editor.viewport_input PUBLIC
   FILE_SET CXX_MODULES FILES
@@ -494,6 +504,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/systems_tests.cpp
     tests/components_tests.cpp
     tests/selection_tests.cpp
+    tests/selection_renderer_tests.cpp
     tests/app_tests.cpp
     tests/renderer_integration_tests.cpp
     tests/integration_tests.cpp
@@ -540,6 +551,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.grid
     editor.viewport
     editor.selection
+    editor.selection_renderer
     editor.viewport_input
     runtime.entity
     runtime.time
