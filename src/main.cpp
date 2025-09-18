@@ -105,6 +105,9 @@ int main()
 	// Create system manager and add systems
 	systems::SystemManager systemManager;
 
+	// Add TransformSystem to handle hierarchical transforms
+	systemManager.addSystem<systems::TransformSystem>();
+
 	// Add MeshRenderingSystem to handle 3D mesh rendering
 	systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer, shaderManager );
 

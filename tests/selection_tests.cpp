@@ -5,17 +5,22 @@ import editor.selection;
 import runtime.ecs;
 import runtime.entity;
 import runtime.components;
+import runtime.systems;
 import engine.vec;
 import engine.bounding_box_3d;
 
 using namespace ecs;
 using namespace components;
+using namespace systems;
 using namespace editor;
 
 TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -82,7 +87,10 @@ TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 TEST_CASE( "SelectionManager - Multi-selection", "[selection][multi]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -159,7 +167,10 @@ TEST_CASE( "SelectionManager - Multi-selection", "[selection][multi]" )
 TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -223,7 +234,10 @@ TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	// Create entities at known positions with bounds
 	auto entity1 = scene.createEntity( "Cube1" );
@@ -282,7 +296,10 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 TEST_CASE( "SelectionManager - Validation and cleanup", "[selection][validation]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -321,7 +338,10 @@ TEST_CASE( "SelectionManager - Validation and cleanup", "[selection][validation]
 TEST_CASE( "SelectionManager - Serialization", "[selection][serialization]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -366,10 +386,72 @@ TEST_CASE( "SelectionManager - Serialization", "[selection][serialization]" )
 	}
 }
 
+TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spatial][hierarchy]" )
+{
+	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
+
+	// Create parent entity at origin
+	auto parent = scene.createEntity( "Parent" );
+	scene.addComponent( parent, Transform{} );
+	auto *parentTransform = scene.getComponent<Transform>( parent );
+	parentTransform->position = math::Vec3<>{ 10.0f, 0.0f, 0.0f }; // Parent at (10,0,0)
+
+	MeshRenderer parentMesh;
+	parentMesh.bounds = math::BoundingBox3Df{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
+	};
+	scene.addComponent( parent, parentMesh );
+
+	// Create child entity with local offset
+	auto child = scene.createEntity( "Child" );
+	scene.addComponent( child, Transform{} );
+	auto *childTransform = scene.getComponent<Transform>( child );
+	childTransform->position = math::Vec3<>{ 5.0f, 0.0f, 0.0f }; // Local offset (5,0,0)
+
+	// Set up parent-child relationship
+	scene.setParent( child, parent );
+
+	MeshRenderer childMesh;
+	childMesh.bounds = math::BoundingBox3Df{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
+	};
+	scene.addComponent( child, childMesh );
+
+	// Select only the child
+	selection.select( child );
+
+	// Update the transform system to ensure world matrices are computed
+	systemManager.update( scene, 0.016f );
+
+	SECTION( "Child bounds should use world transform (parent + local)" )
+	{
+		auto bounds = selection.getSelectionBounds();
+
+		REQUIRE( bounds.isValid() );
+
+		// Child should be at world position (15, 0, 0) = parent(10,0,0) + local(5,0,0)
+		// With bounds extending from (14, -1, -1) to (16, 1, 1)
+		REQUIRE( bounds.min.x == Catch::Approx( 14.0f ) ); // 15.0 - 1.0
+		REQUIRE( bounds.max.x == Catch::Approx( 16.0f ) ); // 15.0 + 1.0
+
+		auto center = bounds.center();
+		REQUIRE( center.x == Catch::Approx( 15.0f ) ); // Should be at world position
+	}
+}
+
 TEST_CASE( "SelectionManager - Edge cases", "[selection][edge-cases]" )
 {
 	Scene scene;
-	SelectionManager selection( scene );
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	SelectionManager selection( scene, systemManager );
 
 	SECTION( "Select invalid entity does nothing" )
 	{

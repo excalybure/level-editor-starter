@@ -3,6 +3,7 @@ export module editor.selection;
 import runtime.ecs;
 import runtime.entity;
 import runtime.components;
+import runtime.systems;
 import engine.bounding_box_3d;
 import engine.vec;
 import runtime.time;
@@ -28,7 +29,7 @@ export struct SelectionChangedEvent
 export class SelectionManager
 {
 public:
-	explicit SelectionManager( ecs::Scene &scene );
+	explicit SelectionManager( ecs::Scene &scene, systems::SystemManager &systemManager );
 
 	// Basic selection operations
 	void select( ecs::Entity entity, bool additive = false );
@@ -68,6 +69,7 @@ public:
 
 private:
 	ecs::Scene &m_scene;
+	systems::SystemManager &m_systemManager;
 	std::vector<ecs::Entity> m_selection;
 	ecs::Entity m_primarySelection{};
 	std::vector<SelectionListener> m_listeners;
@@ -79,6 +81,9 @@ private:
 
 	SelectionChangedEvent createChangeEvent( const std::vector<ecs::Entity> &previous,
 		ecs::Entity previousPrimary ) const;
+
+	// Legacy fallback method for when TransformSystem is not available
+	math::BoundingBox3Df getSelectionBoundsLegacy() const;
 };
 
 } // namespace editor

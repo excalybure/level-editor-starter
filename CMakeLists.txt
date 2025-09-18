@@ -420,7 +420,7 @@ target_sources(editor.selection PUBLIC
     src/editor/selection.cpp
 )
 target_compile_features(editor.selection PUBLIC cxx_std_23)
-target_link_libraries(editor.selection PUBLIC runtime.ecs runtime.entity runtime.components engine.bounding_box_3d engine.vec engine.math runtime.time)
+target_link_libraries(editor.selection PUBLIC runtime.ecs runtime.entity runtime.components runtime.systems engine.bounding_box_3d engine.vec engine.math runtime.time)
 
 add_library(editor.viewport_input)
 target_sources(editor.viewport_input PUBLIC

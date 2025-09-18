@@ -8,6 +8,7 @@ import editor.viewport;
 import runtime.ecs;
 import runtime.components;
 import runtime.entity;
+import runtime.systems;
 import engine.vec;
 import engine.matrix;
 import engine.bounding_box_3d;
@@ -17,6 +18,7 @@ using namespace editor;
 using namespace picking;
 using namespace components;
 using namespace ecs;
+using namespace systems;
 
 // Mock viewport helper for testing
 class MockViewport : public editor::Viewport
@@ -48,8 +50,11 @@ public:
 TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	MockViewport viewport;
@@ -109,8 +114,11 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	MockViewport viewport;
@@ -199,8 +207,11 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	MockViewport viewport;
@@ -258,8 +269,11 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	MockViewport viewport;
@@ -301,8 +315,11 @@ TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" 
 TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input][mode]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	// We can test selection mode indirectly through the behavior
@@ -348,8 +365,11 @@ TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input]
 TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 {
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
-	SelectionManager selectionManager( scene );
+	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
 
 	MockViewport viewport;

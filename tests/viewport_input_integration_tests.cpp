@@ -8,6 +8,7 @@ import editor.viewport;
 import runtime.ecs;
 import runtime.entity;
 import runtime.components;
+import runtime.systems;
 import engine.vec;
 import engine.matrix;
 import std;
@@ -47,8 +48,11 @@ TEST_CASE( "ViewportInputHandler - Basic functionality", "[viewport_input][integ
 {
 	// Setup test environment
 	auto scene = ecs::Scene{};
+	auto systemManager = systems::SystemManager{};
+	systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
 	auto pickingSystem = picking::PickingSystem{};
-	auto selectionManager = editor::SelectionManager{ scene };
+	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 
 	// Create handler
 	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
@@ -95,8 +99,11 @@ TEST_CASE( "ViewportInputHandler - Basic functionality", "[viewport_input][integ
 TEST_CASE( "ViewportInputHandler - Rectangle selection bounds", "[viewport_input][integration]" )
 {
 	auto scene = ecs::Scene{};
+	auto systemManager = systems::SystemManager{};
+	systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
 	auto pickingSystem = picking::PickingSystem{};
-	auto selectionManager = editor::SelectionManager{ scene };
+	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
 	MockViewport viewport;
 
@@ -131,8 +138,11 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection bounds", "[viewport_input
 TEST_CASE( "ViewportInputHandler - Integration with SelectionManager", "[viewport_input][integration]" )
 {
 	auto scene = ecs::Scene{};
+	auto systemManager = systems::SystemManager{};
+	systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
 	auto pickingSystem = picking::PickingSystem{};
-	auto selectionManager = editor::SelectionManager{ scene };
+	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
 
 	// Create test entity

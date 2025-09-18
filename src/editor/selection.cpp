@@ -2,13 +2,14 @@ module editor.selection;
 
 import runtime.entity;
 import runtime.components;
+import runtime.systems;
 import engine.math;
 
 namespace editor
 {
 
-SelectionManager::SelectionManager( ecs::Scene &scene )
-	: m_scene( scene )
+SelectionManager::SelectionManager( ecs::Scene &scene, systems::SystemManager &systemManager )
+	: m_scene( scene ), m_systemManager( systemManager )
 {
 }
 
@@ -193,6 +194,55 @@ void SelectionManager::setPrimarySelection( ecs::Entity entity )
 }
 
 math::BoundingBox3Df SelectionManager::getSelectionBounds() const
+{
+	if ( m_selection.empty() )
+	{
+		return math::BoundingBox3Df{};
+	}
+
+	// Get the TransformSystem for proper world transforms
+	auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>();
+	if ( !transformSystem )
+	{
+		// Fallback to the old method if TransformSystem is not available
+		return getSelectionBoundsLegacy();
+	}
+
+	math::BoundingBox3Df combinedBounds;
+	bool firstBounds = true;
+
+	for ( const auto entity : m_selection )
+	{
+		auto *const transform = m_scene.getComponent<components::Transform>( entity );
+		auto *const meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
+
+		if ( transform && meshRenderer && meshRenderer->bounds.isValid() )
+		{
+			// Get world transform using TransformSystem for proper hierarchical transforms
+			const auto worldMatrix = transformSystem->getWorldTransform( m_scene, entity );
+
+			// Transform corners of bounding box
+			for ( int i = 0; i < 8; ++i )
+			{
+				const auto corner = meshRenderer->bounds.corner( i );
+				const auto worldCorner = worldMatrix.transformPoint( corner );
+				if ( firstBounds )
+				{
+					combinedBounds = math::BoundingBox3Df{ worldCorner, worldCorner };
+					firstBounds = false;
+				}
+				else
+				{
+					combinedBounds.expand( worldCorner );
+				}
+			}
+		}
+	}
+
+	return combinedBounds;
+}
+
+math::BoundingBox3Df SelectionManager::getSelectionBoundsLegacy() const
 {
 	if ( m_selection.empty() )
 	{
