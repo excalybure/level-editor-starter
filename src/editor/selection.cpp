@@ -204,8 +204,8 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 	auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>();
 	if ( !transformSystem )
 	{
-		// Fallback to the old method if TransformSystem is not available
-		return getSelectionBoundsLegacy();
+		// TransformSystem is required for proper hierarchical transforms
+		return math::BoundingBox3Df{};
 	}
 
 	math::BoundingBox3Df combinedBounds;
@@ -242,48 +242,7 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 	return combinedBounds;
 }
 
-math::BoundingBox3Df SelectionManager::getSelectionBoundsLegacy() const
-{
-	if ( m_selection.empty() )
-	{
-		return math::BoundingBox3Df{};
-	}
 
-	math::BoundingBox3Df combinedBounds;
-	bool firstBounds = true;
-
-	for ( const auto entity : m_selection )
-	{
-		auto *const transform = m_scene.getComponent<components::Transform>( entity );
-		auto *const meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
-
-		if ( transform && meshRenderer && meshRenderer->bounds.isValid() )
-		{
-			// Transform bounds to world space
-			const auto worldBounds = meshRenderer->bounds;
-			// TODO: Use TransformSystem::getWorldTransform() for proper hierarchical transforms
-			const auto &worldMatrix = transform->getLocalMatrix();
-
-			// Transform corners of bounding box
-			for ( int i = 0; i < 8; ++i )
-			{
-				const auto corner = worldBounds.corner( i );
-				const auto worldCorner = worldMatrix.transformPoint( corner );
-				if ( firstBounds )
-				{
-					combinedBounds = math::BoundingBox3Df{ worldCorner, worldCorner };
-					firstBounds = false;
-				}
-				else
-				{
-					combinedBounds.expand( worldCorner );
-				}
-			}
-		}
-	}
-
-	return combinedBounds;
-}
 
 math::Vec3<> SelectionManager::getSelectionCenter() const
 {

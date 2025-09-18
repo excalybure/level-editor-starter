@@ -81,9 +81,6 @@ private:
 
 	SelectionChangedEvent createChangeEvent( const std::vector<ecs::Entity> &previous,
 		ecs::Entity previousPrimary ) const;
-
-	// Legacy fallback method for when TransformSystem is not available
-	math::BoundingBox3Df getSelectionBoundsLegacy() const;
 };
 
 } // namespace editor
