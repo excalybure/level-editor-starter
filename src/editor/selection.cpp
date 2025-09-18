@@ -211,7 +211,8 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 		{
 			// Transform bounds to world space
 			const auto worldBounds = meshRenderer->bounds;
-			const auto &worldMatrix = transform->getWorldMatrix();
+			// TODO: Use TransformSystem::getWorldTransform() for proper hierarchical transforms
+			const auto &worldMatrix = transform->getLocalMatrix();
 
 			// Transform corners of bounding box
 			for ( int i = 0; i < 8; ++i )

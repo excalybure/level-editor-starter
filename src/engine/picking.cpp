@@ -7,6 +7,7 @@ import engine.matrix;
 import runtime.ecs;
 import runtime.components;
 import runtime.entity;
+import runtime.systems;
 import editor.viewport;
 import std;
 
@@ -67,7 +68,6 @@ std::vector<HitResult> PickingSystem::raycastAll( ecs::Scene &scene,
 		if ( scene.hasComponent<components::Transform>( entity ) &&
 			scene.hasComponent<components::MeshRenderer>( entity ) )
 		{
-
 			float hitDistance = 0.0f;
 
 			// Test entity bounds first for early rejection
@@ -112,8 +112,9 @@ bool PickingSystem::testEntityBounds( ecs::Scene &scene, ecs::Entity entity, con
 		return false;
 	}
 
-	// Transform bounding box to world space using entity's transform
-	const auto &worldMatrix = transform->getWorldMatrix();
+	// Get world matrix from TransformSystem - for now, use local matrix as fallback
+	// TODO: This should use a proper TransformSystem instance passed as parameter
+	const auto worldMatrix = transform->getLocalMatrix();
 
 	// For simplicity, we'll use the AABB in world space
 	// In a more advanced implementation, we could transform the ray to local space

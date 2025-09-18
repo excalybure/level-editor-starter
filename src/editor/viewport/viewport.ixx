@@ -130,9 +130,9 @@ public:
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
-	ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept;
+	virtual ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept; // Virtual for unit test mocking
 	math::Vec3<> screenToWorld( const math::Vec2<> &screenPos, float depth = 0.0f ) const noexcept;
-	math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept;
+	virtual math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept; // Virtual for unit test mocking
 
 	// View operations
 	void frameAll() noexcept;
