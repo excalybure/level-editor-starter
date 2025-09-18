@@ -226,6 +226,62 @@ TEST_CASE( "SystemManager initialize/update/shutdown flow", "[systems][manager][
 	REQUIRE_NOTHROW( manager.shutdown( scene ) );
 }
 
+TEST_CASE( "TransformSystem automatic marking on component addition", "[systems][transform][automatic]" )
+{
+	Scene scene;
+	SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+
+	// Create entity and add transform - should automatically mark dirty
+	Entity entity = scene.createEntity( "AutoEntity" );
+	Transform t;
+	t.position = { 10.0f, 20.0f, 30.0f };
+	REQUIRE( scene.addComponent( entity, t ) );
+
+	// Update system - should process automatically marked dirty entity
+	systemManager.update( scene, 0.016f );
+
+	// World transform should be calculated automatically
+	const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
+	REQUIRE( worldMatrix.m03() == Catch::Approx( 10.0f ) );
+	REQUIRE( worldMatrix.m13() == Catch::Approx( 20.0f ) );
+	REQUIRE( worldMatrix.m23() == Catch::Approx( 30.0f ) );
+}
+
+TEST_CASE( "TransformSystem automatic marking on hierarchy changes", "[systems][transform][automatic][hierarchy]" )
+{
+	Scene scene;
+	SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+
+	// Create parent and child entities
+	Entity parent = scene.createEntity( "AutoParent" );
+	Entity child = scene.createEntity( "AutoChild" );
+
+	Transform parentTransform;
+	parentTransform.position = { 5.0f, 0.0f, 0.0f };
+	REQUIRE( scene.addComponent( parent, parentTransform ) );
+
+	Transform childTransform;
+	childTransform.position = { 3.0f, 0.0f, 0.0f };
+	REQUIRE( scene.addComponent( child, childTransform ) );
+
+	// Update after adding components
+	systemManager.update( scene, 0.016f );
+
+	// Set parent-child relationship - should automatically mark both as dirty
+	scene.setParent( child, parent );
+
+	// Update again - should recalculate world transforms
+	systemManager.update( scene, 0.016f );
+
+	// Child should now have world position (8, 0, 0) = parent(5,0,0) + child(3,0,0)
+	const auto childWorldMatrix = transformSystem->getWorldTransform( scene, child );
+	REQUIRE( childWorldMatrix.m03() == Catch::Approx( 8.0f ) );
+}
+
 TEST_CASE( "TransformSystem with rotation and scale", "[systems][transform][rotation_scale]" )
 {
 	Scene scene;

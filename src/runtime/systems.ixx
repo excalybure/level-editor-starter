@@ -35,10 +35,20 @@ public:
 		m_dirtyTransforms.clear();
 		m_worldMatrices.clear();
 
-		// Register for Transform component removal notifications
+		// Register for Transform component lifecycle notifications
 		scene.registerTransformRemovalCallback(
 			[this]( ecs::Entity entity ) {
 				this->onTransformRemoved( entity );
+			} );
+
+		scene.registerTransformAdditionCallback(
+			[this]( ecs::Entity entity ) {
+				this->markDirty( entity );
+			} );
+
+		scene.registerTransformModificationCallback(
+			[this]( ecs::Entity entity ) {
+				this->markDirty( entity );
 			} );
 
 		// Mark all entities with a Transform component as dirty

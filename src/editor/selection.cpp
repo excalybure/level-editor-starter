@@ -243,7 +243,6 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 }
 
 
-
 math::Vec3<> SelectionManager::getSelectionCenter() const
 {
 	const auto bounds = getSelectionBounds();

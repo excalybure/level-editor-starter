@@ -266,7 +266,19 @@ public:
 		}
 
 		auto *typedStorage = static_cast<TypedComponentStorage<C> *>( m_componentStorages[typeIndex].get() );
-		return typedStorage->storage.add( entity, component );
+		const bool result = typedStorage->storage.add( entity, component );
+
+		// Special handling for Transform component addition
+		if ( result && std::is_same_v<C, components::Transform> )
+		{
+			// Notify any registered Transform addition callbacks
+			for ( auto &callback : m_transformAdditionCallbacks )
+			{
+				callback( entity );
+			}
+		}
+
+		return result;
 	}
 
 	template <components::Component C>
@@ -386,6 +398,13 @@ public:
 		// Set new parent
 		m_parentMap[child] = parent;
 		m_childrenMap[parent].push_back( child );
+
+		// Notify Transform modification callbacks for hierarchy change
+		for ( auto &callback : m_transformModificationCallbacks )
+		{
+			callback( child );
+			callback( parent );
+		}
 	}
 
 private:
@@ -513,10 +532,20 @@ public:
 		return true;
 	}
 
-	// Register callback for Transform component removal (for cache invalidation)
+	// Register callbacks for Transform component lifecycle (for cache invalidation)
 	void registerTransformRemovalCallback( std::function<void( Entity )> callback )
 	{
 		m_transformRemovalCallbacks.push_back( std::move( callback ) );
+	}
+
+	void registerTransformAdditionCallback( std::function<void( Entity )> callback )
+	{
+		m_transformAdditionCallbacks.push_back( std::move( callback ) );
+	}
+
+	void registerTransformModificationCallback( std::function<void( Entity )> callback )
+	{
+		m_transformModificationCallbacks.push_back( std::move( callback ) );
 	}
 
 private:
@@ -527,8 +556,10 @@ private:
 	std::unordered_map<Entity, Entity> m_parentMap;
 	std::unordered_map<Entity, std::vector<Entity>> m_childrenMap;
 
-	// Transform removal callbacks for cache invalidation
+	// Transform lifecycle callbacks for cache invalidation
 	std::vector<std::function<void( Entity )>> m_transformRemovalCallbacks;
+	std::vector<std::function<void( Entity )>> m_transformAdditionCallbacks;
+	std::vector<std::function<void( Entity )>> m_transformModificationCallbacks;
 };
 
 // Legacy Storage template for backward compatibility with existing tests
