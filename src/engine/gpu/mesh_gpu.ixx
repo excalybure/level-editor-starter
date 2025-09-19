@@ -2,12 +2,7 @@
 module;
 
 #include <d3d12.h>
-#include <dxgi1_6.h>
 #include <wrl.h>
-#include <windows.h>
-#include <combaseapi.h>
-#include <winerror.h>
-#include <comdef.h>
 
 export module engine.gpu.mesh_gpu;
 

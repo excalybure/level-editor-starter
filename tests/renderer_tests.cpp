@@ -3,7 +3,6 @@
 
 // Need D3D12 headers for constants
 #include <d3d12.h>
-#include <windows.h>
 
 import engine.renderer;
 import platform.dx12;

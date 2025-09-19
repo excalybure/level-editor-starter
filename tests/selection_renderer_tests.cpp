@@ -37,7 +37,6 @@ public:
 
 	dx12::CommandContext *getCommandContext() const
 	{
-	completion:
 		return nullptr;
 	}
 };

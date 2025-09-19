@@ -4,7 +4,6 @@
 module;
 
 #ifdef _WIN32
-#include <windows.h>
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>

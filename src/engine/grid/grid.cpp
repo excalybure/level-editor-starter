@@ -5,11 +5,7 @@ module; // global module fragment
 
 #include <cstring>
 #include <d3d12.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
 #include <wrl.h>
-#include <windows.h>
 
 module engine.grid;
 

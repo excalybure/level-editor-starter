@@ -2,9 +2,7 @@
 module;
 
 #include <d3d12.h>
-#include <dxgi1_6.h>
 #include <wrl.h>
-#include <windows.h>
 #include <cassert>
 
 module platform.dx12;
