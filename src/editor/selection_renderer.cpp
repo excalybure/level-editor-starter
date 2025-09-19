@@ -132,13 +132,42 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
 	}
 
-	// TODO: Update constant buffer with rectangle bounds and render quad
-	// For now, this is a placeholder implementation
-	console::info( "Rendering rectangle selection from ({}, {}) to ({}, {})",
-		startPos.x,
-		startPos.y,
-		endPos.x,
-		endPos.y );
+	// Update constant buffer with rectangle bounds
+	if ( m_constantBuffer && m_constantBufferData )
+	{
+		// Calculate normalized device coordinates for rectangle
+		// Assuming screen coordinates are passed in, we need to convert to NDC
+		struct RectConstants
+		{
+			math::Vec4<> rectBounds;   // startX, startY, endX, endY in NDC
+			math::Vec4<> rectColor;	   // Selection color
+			math::Vec4<> screenParams; // screenWidth, screenHeight, unused, unused
+			math::Vec4<> padding;	   // Padding for 256-byte alignment
+		};
+
+		RectConstants constants;
+		constants.rectBounds = math::Vec4<>{ startPos.x, startPos.y, endPos.x, endPos.y };
+		constants.rectColor = m_style.rectSelectColor;
+		constants.screenParams = math::Vec4<>{ 1920.0f, 1080.0f, 0.0f, 0.0f }; // TODO: Get actual screen size
+		constants.padding = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+		// Copy to constant buffer
+		memcpy( m_constantBufferData, &constants, sizeof( constants ) );
+
+		// Set constant buffer for rendering
+		commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
+	}
+
+	// Set vertex and index buffers
+	if ( m_rectVertexBuffer && m_rectIndexBuffer )
+	{
+		commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+		commandList->IASetVertexBuffers( 0, 1, &m_rectVertexBufferView );
+		commandList->IASetIndexBuffer( &m_rectIndexBufferView );
+
+		// Draw the rectangle (2 triangles = 6 indices)
+		commandList->DrawIndexedInstanced( 6, 1, 0, 0, 0 );
+	}
 }
 
 void SelectionRenderer::setupRenderingResources()
