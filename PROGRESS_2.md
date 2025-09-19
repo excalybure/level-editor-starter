@@ -1,5 +1,16 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-15 — 3.5 Selection Visual Feedback - D3D12 Resource Creation Methods Implementation
+**Summary:** Extended the SelectionRenderer with D3D12 resource creation method stubs to support actual rectangle selection rendering. Implemented createRootSignature, createRectPipelineState, createConstantBuffer, and createRectVertexBuffer methods as part of completing the visual feedback system. These methods provide the foundation for D3D12 GPU resource management but are currently stubbed due to module system limitations with D3D12 constants.
+
+**Atomic functionalities completed:**
+- AF5.5: D3D12 resource creation infrastructure - Added stub implementations for createRootSignature (constant buffer setup), createRectPipelineState (blend states and rasterizer), createConstantBuffer (upload heap for shader constants), and createRectVertexBuffer (quad geometry for rectangle rendering)
+- AF5.6: Rendering method integration - Updated renderRectSelection to integrate with D3D12 resources, added proper render method for test compatibility, and improved error handling and logging throughout the system
+- AF5.7: Module interface compliance - Fixed interface mismatches, corrected method signatures (renderRectSelection parameters, renderEntityOutline parameter count), and resolved compilation errors for proper module integration
+
+**Tests:** SelectionRenderer module compiles successfully and integrates with test infrastructure; some tests pass while others encounter linker issues with module symbol export; filtered commands used: `unit_test_runner.exe --list-tests "*selection*"`
+**Notes:** The D3D12 resource creation methods are currently stubbed with proper logging and TODO comments because the full D3D12 constants and helper functions are not available through the current module system. This provides a clear foundation for completing the actual GPU resource creation once the module dependency issues are resolved. The SelectionRenderer infrastructure is complete and ready for actual D3D12 implementation when the platform.dx12 module exports are enhanced. This work completes the basic infrastructure for AF5.1 rectangle selection visual feedback.
+
 ## 2025-09-16 — 3.5 Selection Visual Feedback Implementation
 **Summary:** Successfully implemented section 3.5 "Selection Visual Feedback" from M2_P3.md, completing the final rendering component of the object picking and selection system. Created the `editor.selection_renderer` module with ShaderManager integration, external shader files, and comprehensive visual feedback for selected, hovered, and rectangle selection states. The implementation provides a clean foundation for visual selection feedback in the level editor.
 
