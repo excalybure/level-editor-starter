@@ -135,6 +135,8 @@ public:
 	void endFrame();
 	void present();
 
+	bool isValid() const { return m_device != nullptr; }
+
 	// Frame state query
 	bool isInFrame() const noexcept { return m_inFrame; }
 

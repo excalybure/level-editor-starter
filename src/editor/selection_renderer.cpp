@@ -247,272 +247,282 @@ math::Vec4<> SelectionRenderer::animateColor( const math::Vec4<> &baseColor, flo
 
 void SelectionRenderer::createRootSignature()
 {
-	// Create root signature with one constant buffer parameter for rectangle constants
-	D3D12_ROOT_PARAMETER rootParam = {};
-	rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam.Descriptor.ShaderRegister = 0;
-	rootParam.Descriptor.RegisterSpace = 0;
-	rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-	rootSigDesc.NumParameters = 1;
-	rootSigDesc.pParameters = &rootParam;
-	rootSigDesc.NumStaticSamplers = 0;
-	rootSigDesc.pStaticSamplers = nullptr;
-	rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> signature;
-	Microsoft::WRL::ComPtr<ID3DBlob> error;
-
-	HRESULT hr = D3D12SerializeRootSignature( &rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error );
-	if ( FAILED( hr ) )
+	if ( m_device.isValid() )
 	{
-		if ( error )
+		// Create root signature with one constant buffer parameter for rectangle constants
+		D3D12_ROOT_PARAMETER rootParam = {};
+		rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParam.Descriptor.ShaderRegister = 0;
+		rootParam.Descriptor.RegisterSpace = 0;
+		rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
+		rootSigDesc.NumParameters = 1;
+		rootSigDesc.pParameters = &rootParam;
+		rootSigDesc.NumStaticSamplers = 0;
+		rootSigDesc.pStaticSamplers = nullptr;
+		rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+		Microsoft::WRL::ComPtr<ID3DBlob> signature;
+		Microsoft::WRL::ComPtr<ID3DBlob> error;
+
+		HRESULT hr = D3D12SerializeRootSignature( &rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error );
+		if ( FAILED( hr ) )
 		{
-			console::error( "Failed to serialize root signature: {}", reinterpret_cast<const char *>( error->GetBufferPointer() ) );
+			if ( error )
+			{
+				console::error( "Failed to serialize root signature: {}", reinterpret_cast<const char *>( error->GetBufferPointer() ) );
+			}
+			else
+			{
+				console::error( "Failed to create selection renderer root signature. hr is {}", hr );
+			}
 		}
-		else
+
+		hr = m_device->CreateRootSignature( 0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) );
+		if ( FAILED( hr ) )
 		{
 			console::error( "Failed to create selection renderer root signature. hr is {}", hr );
 		}
-	}
-
-	hr = m_device->CreateRootSignature( 0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to create selection renderer root signature. hr is {}", hr );
 	}
 }
 
 void SelectionRenderer::createRectPipelineState()
 {
-	// Check if shaders are compiled
-	const auto *vsBlob = m_shaderManager.getShaderBlob( m_rectVertexShader );
-	const auto *psBlob = m_shaderManager.getShaderBlob( m_rectPixelShader );
-
-	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+	if ( m_device.isValid() )
 	{
-		console::warning( "Rectangle shaders not ready, will create pipeline state later" );
-		return;
+		// Check if shaders are compiled
+		const auto *vsBlob = m_shaderManager.getShaderBlob( m_rectVertexShader );
+		const auto *psBlob = m_shaderManager.getShaderBlob( m_rectPixelShader );
+
+		if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+		{
+			console::warning( "Rectangle shaders not ready, will create pipeline state later" );
+			return;
+		}
+
+		// Define input layout for rectangle vertices (just position)
+		D3D12_INPUT_ELEMENT_DESC inputElements[] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
+		// Create blend state for transparent rectangle overlay
+		D3D12_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = FALSE;
+		blendDesc.IndependentBlendEnable = FALSE;
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+		// Create rasterizer state
+		D3D12_RASTERIZER_DESC rasterizerDesc = {};
+		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+		rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+		rasterizerDesc.FrontCounterClockwise = FALSE;
+		rasterizerDesc.DepthBias = 0;
+		rasterizerDesc.DepthBiasClamp = 0.0f;
+		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+		rasterizerDesc.DepthClipEnable = TRUE;
+		rasterizerDesc.MultisampleEnable = FALSE;
+		rasterizerDesc.AntialiasedLineEnable = FALSE;
+		rasterizerDesc.ForcedSampleCount = 0;
+		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+		// Disable depth testing for UI overlay
+		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
+		depthStencilDesc.DepthEnable = FALSE;
+		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		depthStencilDesc.StencilEnable = FALSE;
+
+		// Create pipeline state
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+		psoDesc.pRootSignature = m_rootSignature.Get();
+		psoDesc.VS = { vsBlob->blob->GetBufferPointer(), vsBlob->blob->GetBufferSize() };
+		psoDesc.PS = { psBlob->blob->GetBufferPointer(), psBlob->blob->GetBufferSize() };
+		psoDesc.BlendState = blendDesc;
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.RasterizerState = rasterizerDesc;
+		psoDesc.DepthStencilState = depthStencilDesc;
+		psoDesc.InputLayout = { inputElements, _countof( inputElements ) };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.SampleDesc.Quality = 0;
+
+		HRESULT hr = m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_rectPipelineState ) );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to create rectangle pipeline state. hr was {}", hr );
+		}
 	}
-
-	// Define input layout for rectangle vertices (just position)
-	D3D12_INPUT_ELEMENT_DESC inputElements[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
-	// Create blend state for transparent rectangle overlay
-	D3D12_BLEND_DESC blendDesc = {};
-	blendDesc.AlphaToCoverageEnable = FALSE;
-	blendDesc.IndependentBlendEnable = FALSE;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-	// Create rasterizer state
-	D3D12_RASTERIZER_DESC rasterizerDesc = {};
-	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-	rasterizerDesc.FrontCounterClockwise = FALSE;
-	rasterizerDesc.DepthBias = 0;
-	rasterizerDesc.DepthBiasClamp = 0.0f;
-	rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-	rasterizerDesc.DepthClipEnable = TRUE;
-	rasterizerDesc.MultisampleEnable = FALSE;
-	rasterizerDesc.AntialiasedLineEnable = FALSE;
-	rasterizerDesc.ForcedSampleCount = 0;
-	rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-	// Disable depth testing for UI overlay
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-	depthStencilDesc.DepthEnable = FALSE;
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-	depthStencilDesc.StencilEnable = FALSE;
-
-	// Create pipeline state
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = { vsBlob->blob->GetBufferPointer(), vsBlob->blob->GetBufferSize() };
-	psoDesc.PS = { psBlob->blob->GetBufferPointer(), psBlob->blob->GetBufferSize() };
-	psoDesc.BlendState = blendDesc;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.RasterizerState = rasterizerDesc;
-	psoDesc.DepthStencilState = depthStencilDesc;
-	psoDesc.InputLayout = { inputElements, _countof( inputElements ) };
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer
-	psoDesc.SampleDesc.Count = 1;
-	psoDesc.SampleDesc.Quality = 0;
-
-	HRESULT hr = m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_rectPipelineState ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to create rectangle pipeline state. hr was {}", hr );
-	}
-
-	console::info( "Created rectangle pipeline state" );
 }
 
 void SelectionRenderer::createConstantBuffer()
 {
-	// Create constant buffer for rectangle constants (256-byte aligned)
-	const UINT constantBufferSize = ( sizeof( math::Vec4<> ) * 4 + 255 ) & ~255; // 4 Vec4s + alignment
-
-	D3D12_HEAP_PROPERTIES heapProps = {};
-	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapProps.CreationNodeMask = 0;
-	heapProps.VisibleNodeMask = 0;
-
-	D3D12_RESOURCE_DESC bufferDesc = {};
-	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	bufferDesc.Width = constantBufferSize;
-	bufferDesc.Height = 1;
-	bufferDesc.DepthOrArraySize = 1;
-	bufferDesc.MipLevels = 1;
-	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-	bufferDesc.SampleDesc.Count = 1;
-	bufferDesc.SampleDesc.Quality = 0;
-	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-	HRESULT hr = m_device->CreateCommittedResource(
-		&heapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&bufferDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS( &m_constantBuffer ) );
-
-	if ( FAILED( hr ) )
+	if ( m_device.isValid() )
 	{
-		console::error( "Failed to create selection renderer constant buffer. hr was {}", hr );
-	}
+		// Create constant buffer for rectangle constants (256-byte aligned)
+		const UINT constantBufferSize = ( sizeof( math::Vec4<> ) * 4 + 255 ) & ~255; // 4 Vec4s + alignment
 
-	// Map the constant buffer for CPU access
-	D3D12_RANGE readRange = { 0, 0 }; // We won't read from this resource on the CPU
-	hr = m_constantBuffer->Map( 0, &readRange, reinterpret_cast<void **>( &m_constantBufferData ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to map selection renderer constant buffer. hr was {}", hr );
+		D3D12_HEAP_PROPERTIES heapProps = {};
+		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapProps.CreationNodeMask = 0;
+		heapProps.VisibleNodeMask = 0;
+
+		D3D12_RESOURCE_DESC bufferDesc = {};
+		bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		bufferDesc.Width = constantBufferSize;
+		bufferDesc.Height = 1;
+		bufferDesc.DepthOrArraySize = 1;
+		bufferDesc.MipLevels = 1;
+		bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+		bufferDesc.SampleDesc.Count = 1;
+		bufferDesc.SampleDesc.Quality = 0;
+		bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+		HRESULT hr = m_device->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&bufferDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &m_constantBuffer ) );
+
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to create selection renderer constant buffer. hr was {}", hr );
+		}
+
+		// Map the constant buffer for CPU access
+		D3D12_RANGE readRange = { 0, 0 }; // We won't read from this resource on the CPU
+		hr = m_constantBuffer->Map( 0, &readRange, reinterpret_cast<void **>( &m_constantBufferData ) );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to map selection renderer constant buffer. hr was {}", hr );
+		}
 	}
 }
 
 void SelectionRenderer::createRectVertexBuffer()
 {
-	// Rectangle vertices in normalized device coordinates (full screen quad)
-	struct RectVertex
+	if ( m_device.isValid() )
 	{
-		float position[2];
-	};
+		// Rectangle vertices in normalized device coordinates (full screen quad)
+		struct RectVertex
+		{
+			float position[2];
+		};
 
-	const RectVertex vertices[] = {
-		{ { -1.0f, -1.0f } }, // Bottom left
-		{ { 1.0f, -1.0f } },  // Bottom right
-		{ { 1.0f, 1.0f } },	  // Top right
-		{ { -1.0f, 1.0f } }	  // Top left
-	};
+		const RectVertex vertices[] = {
+			{ { -1.0f, -1.0f } }, // Bottom left
+			{ { 1.0f, -1.0f } },  // Bottom right
+			{ { 1.0f, 1.0f } },	  // Top right
+			{ { -1.0f, 1.0f } }	  // Top left
+		};
 
-	const uint16_t indices[] = {
-		0, 1, 2, // First triangle
-		0,
-		2,
-		3 // Second triangle
-	};
+		const uint16_t indices[] = {
+			0, 1, 2, // First triangle
+			0,
+			2,
+			3 // Second triangle
+		};
 
-	// Create vertex buffer
-	const UINT vertexBufferSize = sizeof( vertices );
+		// Create vertex buffer
+		const UINT vertexBufferSize = sizeof( vertices );
 
-	D3D12_HEAP_PROPERTIES heapProps = {};
-	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapProps.CreationNodeMask = 0;
-	heapProps.VisibleNodeMask = 0;
+		D3D12_HEAP_PROPERTIES heapProps = {};
+		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapProps.CreationNodeMask = 0;
+		heapProps.VisibleNodeMask = 0;
 
-	D3D12_RESOURCE_DESC bufferDesc = {};
-	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	bufferDesc.Width = vertexBufferSize;
-	bufferDesc.Height = 1;
-	bufferDesc.DepthOrArraySize = 1;
-	bufferDesc.MipLevels = 1;
-	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
-	bufferDesc.SampleDesc.Count = 1;
-	bufferDesc.SampleDesc.Quality = 0;
-	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+		D3D12_RESOURCE_DESC bufferDesc = {};
+		bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		bufferDesc.Width = vertexBufferSize;
+		bufferDesc.Height = 1;
+		bufferDesc.DepthOrArraySize = 1;
+		bufferDesc.MipLevels = 1;
+		bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+		bufferDesc.SampleDesc.Count = 1;
+		bufferDesc.SampleDesc.Quality = 0;
+		bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	HRESULT hr = m_device->CreateCommittedResource(
-		&heapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&bufferDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS( &m_rectVertexBuffer ) );
+		HRESULT hr = m_device->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&bufferDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &m_rectVertexBuffer ) );
 
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to create rectangle vertex buffer. hr was {}", hr );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to create rectangle vertex buffer. hr was {}", hr );
+		}
+
+		// Copy vertex data
+		void *pVertexDataBegin;
+		D3D12_RANGE readRange = { 0, 0 };
+		hr = m_rectVertexBuffer->Map( 0, &readRange, &pVertexDataBegin );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to map rectangle vertex buffer. hr was {}", hr );
+		}
+		memcpy( pVertexDataBegin, vertices, vertexBufferSize );
+		m_rectVertexBuffer->Unmap( 0, nullptr );
+
+		// Initialize vertex buffer view
+		m_rectVertexBufferView.BufferLocation = m_rectVertexBuffer->GetGPUVirtualAddress();
+		m_rectVertexBufferView.StrideInBytes = sizeof( RectVertex );
+		m_rectVertexBufferView.SizeInBytes = vertexBufferSize;
+
+		// Create index buffer
+		const UINT indexBufferSize = sizeof( indices );
+		bufferDesc.Width = indexBufferSize;
+
+		hr = m_device->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&bufferDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &m_rectIndexBuffer ) );
+
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to create rectangle index buffer. hr was {}", hr );
+		}
+
+		// Copy index data
+		void *pIndexDataBegin;
+		hr = m_rectIndexBuffer->Map( 0, &readRange, &pIndexDataBegin );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to map rectangle index buffer. hr was {}", hr );
+		}
+		memcpy( pIndexDataBegin, indices, indexBufferSize );
+		m_rectIndexBuffer->Unmap( 0, nullptr );
+
+		// Initialize index buffer view
+		m_rectIndexBufferView.BufferLocation = m_rectIndexBuffer->GetGPUVirtualAddress();
+		m_rectIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+		m_rectIndexBufferView.SizeInBytes = indexBufferSize;
 	}
-
-	// Copy vertex data
-	void *pVertexDataBegin;
-	D3D12_RANGE readRange = { 0, 0 };
-	hr = m_rectVertexBuffer->Map( 0, &readRange, &pVertexDataBegin );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to map rectangle vertex buffer. hr was {}", hr );
-	}
-	memcpy( pVertexDataBegin, vertices, vertexBufferSize );
-	m_rectVertexBuffer->Unmap( 0, nullptr );
-
-	// Initialize vertex buffer view
-	m_rectVertexBufferView.BufferLocation = m_rectVertexBuffer->GetGPUVirtualAddress();
-	m_rectVertexBufferView.StrideInBytes = sizeof( RectVertex );
-	m_rectVertexBufferView.SizeInBytes = vertexBufferSize;
-
-	// Create index buffer
-	const UINT indexBufferSize = sizeof( indices );
-	bufferDesc.Width = indexBufferSize;
-
-	hr = m_device->CreateCommittedResource(
-		&heapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&bufferDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS( &m_rectIndexBuffer ) );
-
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to create rectangle index buffer. hr was {}", hr );
-	}
-
-	// Copy index data
-	void *pIndexDataBegin;
-	hr = m_rectIndexBuffer->Map( 0, &readRange, &pIndexDataBegin );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Failed to map rectangle index buffer. hr was {}", hr );
-	}
-	memcpy( pIndexDataBegin, indices, indexBufferSize );
-	m_rectIndexBuffer->Unmap( 0, nullptr );
-
-	// Initialize index buffer view
-	m_rectIndexBufferView.BufferLocation = m_rectIndexBuffer->GetGPUVirtualAddress();
-	m_rectIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-	m_rectIndexBufferView.SizeInBytes = indexBufferSize;
 }
 
 } // namespace editor
