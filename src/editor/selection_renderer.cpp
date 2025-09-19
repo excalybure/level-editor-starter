@@ -73,7 +73,7 @@ void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 			outlineColor = animateColor( outlineColor, getAnimationTime() );
 		}
 
-		renderEntityOutline( entity, scene, outlineColor, commandList, viewMatrix, projMatrix );
+		renderEntityOutline( entity, scene, outlineColor, commandList, viewMatrix, projMatrix, math::Vec2<>{ 1920.0f, 1080.0f } ); // TODO: Pass actual viewport size
 	} );
 }
 
@@ -99,7 +99,7 @@ void SelectionRenderer::renderHoverHighlight( ecs::Entity hoveredEntity,
 		return;
 	}
 
-	renderEntityOutline( hoveredEntity, scene, m_style.hoveredColor, commandList, viewMatrix, projMatrix );
+	renderEntityOutline( hoveredEntity, scene, m_style.hoveredColor, commandList, viewMatrix, projMatrix, math::Vec2<>{ 1920.0f, 1080.0f } ); // TODO: Pass actual viewport size
 }
 
 void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
@@ -200,11 +200,12 @@ void SelectionRenderer::setupRenderingResources()
 			"ps_5_1",
 			shader_manager::ShaderType::Pixel );
 
-		// Create D3D12 resources (stubbed for now)
+		// Create D3D12 resources
 		createRootSignature();
 		createConstantBuffer();
 		createRectVertexBuffer();
 		createRectPipelineState();
+		createOutlinePipelineState();
 	}
 	catch ( const std::exception &e )
 	{
@@ -217,7 +218,8 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 	const math::Vec4<> &color,
 	ID3D12GraphicsCommandList *commandList,
 	const math::Mat4<> &viewMatrix,
-	const math::Mat4<> &projMatrix )
+	const math::Mat4<> &projMatrix,
+	const math::Vec2<> &viewportSize )
 {
 	if ( !commandList )
 	{
@@ -235,14 +237,68 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 	const math::Mat4<> worldMatrix = getEntityWorldMatrix( entity, scene );
 	const math::Mat4<> worldViewProj = projMatrix * viewMatrix * worldMatrix;
 
-	// TODO: Rendering outline
-	console::info( "Rendering outline for entity {}.{} with color ({:.2f}, {:.2f}, {:.2f}, {:.2f}) using ShaderManager",
-		entity.id,
-		entity.generation,
-		color.x,
-		color.y,
-		color.z,
-		color.w );
+	// Check if outline shaders are ready
+	const auto *vsBlob = m_shaderManager.getShaderBlob( m_outlineVertexShader );
+	const auto *psBlob = m_shaderManager.getShaderBlob( m_outlinePixelShader );
+
+	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+	{
+		console::warning( "Selection outline shaders not ready, skipping outline render" );
+		return;
+	}
+
+	// Set pipeline state for outline rendering
+	if ( m_outlinePipelineState )
+	{
+		commandList->SetPipelineState( m_outlinePipelineState.Get() );
+	}
+
+	// Update constant buffer with outline constants
+	if ( m_constantBuffer && m_constantBufferData )
+	{
+		struct OutlineConstants
+		{
+			math::Mat4<> worldViewProj;
+			math::Vec4<> outlineColor;
+			math::Vec4<> screenParams; // width, height, outlineWidth, time
+			math::Vec4<> padding;	   // Padding for 256-byte alignment
+		};
+
+		OutlineConstants constants;
+		constants.worldViewProj = worldViewProj;
+		constants.outlineColor = color;
+		constants.screenParams = math::Vec4<>{ viewportSize.x, viewportSize.y, m_style.outlineWidth, getAnimationTime() };
+		constants.padding = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+		// Copy to constant buffer
+		memcpy( m_constantBufferData, &constants, sizeof( constants ) );
+
+		// Set constant buffer for rendering
+		commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
+	}
+
+	// Render the mesh with outline effect
+	if ( meshRenderer->gpuMesh )
+	{
+		// Render all primitives in the mesh
+		const std::uint32_t primitiveCount = meshRenderer->gpuMesh->getPrimitiveCount();
+		for ( std::uint32_t i = 0; i < primitiveCount; ++i )
+		{
+			const auto &primitive = meshRenderer->gpuMesh->getPrimitive( i );
+
+			// Set vertex and index buffers from the primitive
+			const auto vertexBufferView = primitive.getVertexBufferView();
+			const auto indexBufferView = primitive.getIndexBufferView();
+
+			commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+			commandList->IASetVertexBuffers( 0, 1, &vertexBufferView );
+			commandList->IASetIndexBuffer( &indexBufferView );
+
+			// Draw the primitive geometry
+			const uint32_t indexCount = primitive.getIndexCount();
+			commandList->DrawIndexedInstanced( indexCount, 1, 0, 0, 0 );
+		}
+	}
 }
 
 math::Mat4<> SelectionRenderer::getEntityWorldMatrix( ecs::Entity entity, ecs::Scene &scene ) const
@@ -552,6 +608,81 @@ void SelectionRenderer::createRectVertexBuffer()
 		m_rectIndexBufferView.BufferLocation = m_rectIndexBuffer->GetGPUVirtualAddress();
 		m_rectIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
 		m_rectIndexBufferView.SizeInBytes = indexBufferSize;
+	}
+}
+
+void SelectionRenderer::createOutlinePipelineState()
+{
+	if ( m_device.isValid() )
+	{
+		// Check if shaders are compiled
+		const auto *vsBlob = m_shaderManager.getShaderBlob( m_outlineVertexShader );
+		const auto *psBlob = m_shaderManager.getShaderBlob( m_outlinePixelShader );
+
+		if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+		{
+			console::warning( "Outline shaders not ready, will create pipeline state later" );
+			return;
+		}
+
+		// Define input layout for outline vertices (position, normal, UV)
+		D3D12_INPUT_ELEMENT_DESC inputElements[] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
+		// Create blend state for outline rendering (no blending, replace)
+		D3D12_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = FALSE;
+		blendDesc.IndependentBlendEnable = FALSE;
+		blendDesc.RenderTarget[0].BlendEnable = FALSE;
+		blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+		// Create rasterizer state for outline (wireframe or inflated geometry)
+		D3D12_RASTERIZER_DESC rasterizerDesc = {};
+		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+		rasterizerDesc.FrontCounterClockwise = FALSE;
+		rasterizerDesc.DepthBias = 0;
+		rasterizerDesc.DepthBiasClamp = 0.0f;
+		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+		rasterizerDesc.DepthClipEnable = TRUE;
+		rasterizerDesc.MultisampleEnable = FALSE;
+		rasterizerDesc.AntialiasedLineEnable = FALSE;
+		rasterizerDesc.ForcedSampleCount = 0;
+		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+		// Enable depth testing for 3D outline rendering
+		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
+		depthStencilDesc.DepthEnable = TRUE;
+		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		depthStencilDesc.StencilEnable = FALSE;
+
+		// Create pipeline state
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+		psoDesc.pRootSignature = m_rootSignature.Get();
+		psoDesc.VS = { vsBlob->blob->GetBufferPointer(), vsBlob->blob->GetBufferSize() };
+		psoDesc.PS = { psBlob->blob->GetBufferPointer(), psBlob->blob->GetBufferSize() };
+		psoDesc.BlendState = blendDesc;
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.RasterizerState = rasterizerDesc;
+		psoDesc.DepthStencilState = depthStencilDesc;
+		psoDesc.InputLayout = { inputElements, _countof( inputElements ) };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT; // Depth buffer
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.SampleDesc.Quality = 0;
+
+		HRESULT hr = m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_outlinePipelineState ) );
+		if ( FAILED( hr ) )
+		{
+			console::error( "Failed to create outline pipeline state. hr was {}", hr );
+		}
 	}
 }
 

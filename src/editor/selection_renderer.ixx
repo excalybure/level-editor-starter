@@ -111,7 +111,8 @@ private:
 		const math::Vec4<> &color,
 		ID3D12GraphicsCommandList *commandList,
 		const math::Mat4<> &viewMatrix,
-		const math::Mat4<> &projMatrix );
+		const math::Mat4<> &projMatrix,
+		const math::Vec2<> &viewportSize );
 
 	// Helper to get entity world matrix
 	math::Mat4<> getEntityWorldMatrix( ecs::Entity entity, ecs::Scene &scene ) const;
