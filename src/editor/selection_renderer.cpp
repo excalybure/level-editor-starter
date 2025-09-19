@@ -104,7 +104,8 @@ void SelectionRenderer::renderHoverHighlight( ecs::Entity hoveredEntity,
 
 void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 	const math::Vec2<> &endPos,
-	ID3D12GraphicsCommandList *commandList )
+	ID3D12GraphicsCommandList *commandList,
+	const math::Vec2<> &viewportSize )
 {
 	if ( !commandList )
 	{
@@ -148,7 +149,7 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		RectConstants constants;
 		constants.rectBounds = math::Vec4<>{ startPos.x, startPos.y, endPos.x, endPos.y };
 		constants.rectColor = m_style.rectSelectColor;
-		constants.screenParams = math::Vec4<>{ 1920.0f, 1080.0f, 0.0f, 0.0f }; // TODO: Get actual screen size
+		constants.screenParams = math::Vec4<>{ viewportSize.x, viewportSize.y, 0.0f, 0.0f };
 		constants.padding = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
 
 		// Copy to constant buffer

@@ -60,7 +60,8 @@ public:
 
 	void renderRectSelection( const math::Vec2<> &startPos,
 		const math::Vec2<> &endPos,
-		ID3D12GraphicsCommandList *commandList );
+		ID3D12GraphicsCommandList *commandList,
+		const math::Vec2<> &viewportSize );
 
 	// Configuration
 	SelectionStyle &getStyle() { return m_style; }

@@ -122,8 +122,9 @@ TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" 
 	{
 		math::Vec2<> startPos{ 100.0f, 100.0f };
 		math::Vec2<> endPos{ 200.0f, 200.0f };
+		math::Vec2<> viewportSize{ 1920.0f, 1080.0f };
 
-		REQUIRE_NOTHROW( renderer.renderRectSelection( startPos, endPos, nullptr ) );
+		REQUIRE_NOTHROW( renderer.renderRectSelection( startPos, endPos, nullptr, viewportSize ) );
 	}
 }
 
