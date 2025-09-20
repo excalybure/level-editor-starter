@@ -45,18 +45,21 @@ public:
 	void render( ecs::Scene &scene,
 		ID3D12GraphicsCommandList *commandList,
 		const math::Mat4<> &viewMatrix,
-		const math::Mat4<> &projMatrix );
+		const math::Mat4<> &projMatrix,
+		const math::Vec2<> &viewportSize );
 
 	void renderSelectionOutlines( ecs::Scene &scene,
 		ID3D12GraphicsCommandList *commandList,
 		const math::Mat4<> &viewMatrix,
-		const math::Mat4<> &projMatrix );
+		const math::Mat4<> &projMatrix,
+		const math::Vec2<> &viewportSize );
 
 	void renderHoverHighlight( ecs::Entity hoveredEntity,
 		ecs::Scene &scene,
 		ID3D12GraphicsCommandList *commandList,
 		const math::Mat4<> &viewMatrix,
-		const math::Mat4<> &projMatrix );
+		const math::Mat4<> &projMatrix,
+		const math::Vec2<> &viewportSize );
 
 	void renderRectSelection( const math::Vec2<> &startPos,
 		const math::Vec2<> &endPos,

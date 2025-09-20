@@ -22,17 +22,19 @@ SelectionRenderer::SelectionRenderer( dx12::Device &device, shader_manager::Shad
 void SelectionRenderer::render( ecs::Scene &scene,
 	ID3D12GraphicsCommandList *commandList,
 	const math::Mat4<> &viewMatrix,
-	const math::Mat4<> &projMatrix )
+	const math::Mat4<> &projMatrix,
+	const math::Vec2<> &viewportSize )
 {
 	// Main render method that calls both outline and hover rendering
-	renderSelectionOutlines( scene, commandList, viewMatrix, projMatrix );
+	renderSelectionOutlines( scene, commandList, viewMatrix, projMatrix, viewportSize );
 	// Note: Hover highlighting would typically be called separately by the viewport system
 }
 
 void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 	ID3D12GraphicsCommandList *commandList,
 	const math::Mat4<> &viewMatrix,
-	const math::Mat4<> &projMatrix )
+	const math::Mat4<> &projMatrix,
+	const math::Vec2<> &viewportSize )
 {
 	if ( !commandList )
 	{
@@ -73,7 +75,7 @@ void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 			outlineColor = animateColor( outlineColor, getAnimationTime() );
 		}
 
-		renderEntityOutline( entity, scene, outlineColor, commandList, viewMatrix, projMatrix, math::Vec2<>{ 1920.0f, 1080.0f } ); // TODO: Pass actual viewport size
+		renderEntityOutline( entity, scene, outlineColor, commandList, viewMatrix, projMatrix, viewportSize );
 	} );
 }
 
@@ -81,7 +83,8 @@ void SelectionRenderer::renderHoverHighlight( ecs::Entity hoveredEntity,
 	ecs::Scene &scene,
 	ID3D12GraphicsCommandList *commandList,
 	const math::Mat4<> &viewMatrix,
-	const math::Mat4<> &projMatrix )
+	const math::Mat4<> &projMatrix,
+	const math::Vec2<> &viewportSize )
 {
 	if ( !commandList || hoveredEntity == ecs::Entity{} )
 	{
@@ -99,7 +102,7 @@ void SelectionRenderer::renderHoverHighlight( ecs::Entity hoveredEntity,
 		return;
 	}
 
-	renderEntityOutline( hoveredEntity, scene, m_style.hoveredColor, commandList, viewMatrix, projMatrix, math::Vec2<>{ 1920.0f, 1080.0f } ); // TODO: Pass actual viewport size
+	renderEntityOutline( hoveredEntity, scene, m_style.hoveredColor, commandList, viewMatrix, projMatrix, viewportSize );
 }
 
 void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,

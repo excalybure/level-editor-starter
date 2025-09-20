@@ -113,9 +113,10 @@ TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" 
 
 	SECTION( "Render methods accept null command list (headless mode)" )
 	{
-		REQUIRE_NOTHROW( renderer.render( scene, nullptr, viewMatrix, projMatrix ) );
-		REQUIRE_NOTHROW( renderer.renderSelectionOutlines( scene, nullptr, viewMatrix, projMatrix ) );
-		REQUIRE_NOTHROW( renderer.renderHoverHighlight( entity, scene, nullptr, viewMatrix, projMatrix ) );
+		const math::Vec2<> viewportSize{ 800.0f, 600.0f };
+		REQUIRE_NOTHROW( renderer.render( scene, nullptr, viewMatrix, projMatrix, viewportSize ) );
+		REQUIRE_NOTHROW( renderer.renderSelectionOutlines( scene, nullptr, viewMatrix, projMatrix, viewportSize ) );
+		REQUIRE_NOTHROW( renderer.renderHoverHighlight( entity, scene, nullptr, viewMatrix, projMatrix, viewportSize ) );
 	}
 
 	SECTION( "Rectangle selection rendering" )
@@ -155,12 +156,14 @@ TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer
 
 	SECTION( "Render handles multiple selected entities" )
 	{
-		REQUIRE_NOTHROW( renderer.render( scene, nullptr, viewMatrix, projMatrix ) );
+		const math::Vec2<> viewportSize{ 1920.0f, 1080.0f };
+		REQUIRE_NOTHROW( renderer.render( scene, nullptr, viewMatrix, projMatrix, viewportSize ) );
 	}
 
 	SECTION( "Outline rendering handles selection states" )
 	{
-		REQUIRE_NOTHROW( renderer.renderSelectionOutlines( scene, nullptr, viewMatrix, projMatrix ) );
+		const math::Vec2<> viewportSize{ 1920.0f, 1080.0f };
+		REQUIRE_NOTHROW( renderer.renderSelectionOutlines( scene, nullptr, viewMatrix, projMatrix, viewportSize ) );
 	}
 }
 
