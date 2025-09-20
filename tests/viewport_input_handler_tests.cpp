@@ -53,7 +53,7 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
@@ -117,7 +117,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 

@@ -16,6 +16,11 @@ namespace picking
 
 using namespace math;
 
+PickingSystem::PickingSystem( systems::SystemManager &systemManager )
+	: m_systemManager( systemManager )
+{
+}
+
 HitResult PickingSystem::raycast( ecs::Scene &scene,
 	const Vec3<> &rayOrigin,
 	const Vec3<> &rayDirection,
@@ -112,9 +117,16 @@ bool PickingSystem::testEntityBounds( ecs::Scene &scene, ecs::Entity entity, con
 		return false;
 	}
 
-	// Get world matrix from TransformSystem - for now, use local matrix as fallback
-	// TODO: This should use a proper TransformSystem instance passed as parameter
-	const auto worldMatrix = transform->getLocalMatrix();
+	// Get TransformSystem for proper hierarchical transforms
+	auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>();
+	if ( !transformSystem )
+	{
+		// TransformSystem is required for proper hierarchical transforms
+		return false;
+	}
+
+	// Get world transform using TransformSystem for proper hierarchical transforms
+	const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
 
 	// For simplicity, we'll use the AABB in world space
 	// In a more advanced implementation, we could transform the ray to local space

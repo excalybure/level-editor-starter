@@ -7,6 +7,7 @@ import engine.matrix;
 import runtime.ecs;
 import runtime.components;
 import runtime.entity;
+import runtime.systems;
 import std;
 
 // Forward declarations for viewport integration
@@ -42,6 +43,8 @@ export struct HitResult
 export class PickingSystem
 {
 public:
+	explicit PickingSystem( systems::SystemManager &systemManager );
+
 	// Ray casting against all renderable entities
 	HitResult raycast( ecs::Scene &scene,
 		const Vec3<> &rayOrigin,
@@ -64,6 +67,8 @@ public:
 		const Vec2<> &screenPos ) const;
 
 private:
+	systems::SystemManager &m_systemManager;
+
 	// Core intersection testing
 	bool testEntityBounds( ecs::Scene &scene, ecs::Entity entity, const Vec3<> &rayOrigin, const Vec3<> &rayDirection, float &hitDistance ) const;
 

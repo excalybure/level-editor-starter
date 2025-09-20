@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-25 — PickingSystem Hierarchical Transform TODO Resolution
+**Summary:** Addressed the TODO in PickingSystem::testEntityBounds to use TransformSystem::getWorldTransform() for proper hierarchical transforms instead of manual local matrix extraction. Updated the constructor to accept SystemManager parameter and implemented proper world transform computation for entity picking operations.
+
+**Atomic functionalities completed:**
+- AF1: Updated PickingSystem constructor to accept SystemManager parameter for TransformSystem access
+- AF2: Replaced manual local matrix extraction with TransformSystem::getWorldTransform() call in testEntityBounds method
+- AF3: Added proper error handling when TransformSystem is not available in picking operations
+- AF4: Updated test files to pass SystemManager parameter to PickingSystem constructor calls
+- AF5: Implemented proper hierarchical transform support for entity bounds testing in ray intersection
+
+**Tests:** Core implementation completed successfully; all PickingSystem tests pass (9 assertions in 2 test cases); picking integration tests pass (47 assertions in 4 test cases); filtered commands: `unit_test_runner.exe "*picking*"` and `unit_test_runner.exe "*PickingSystem*"`
+**Notes:** The TODO comment has been resolved and testEntityBounds now correctly uses world transforms computed by TransformSystem instead of raw local matrices. This ensures that entities with parent-child hierarchical relationships are positioned correctly in world space for ray intersection testing during picking operations. The implementation follows the same pattern as ViewportInputHandler and SelectionManager for accessing TransformSystem.
+
 ## 2025-01-25 — ViewportInputHandler Hierarchical Transform TODO Resolution
 **Summary:** Addressed the TODO in ViewportInputHandler::getEntitiesInRect to use TransformSystem::getWorldTransform() for proper hierarchical transforms instead of manual local matrix extraction. Updated the constructor to accept SystemManager parameter and implemented proper world transform computation for entity rectangle selection.
 
