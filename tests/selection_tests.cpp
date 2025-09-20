@@ -278,12 +278,6 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 		REQUIRE( center.x == Catch::Approx( 2.5f ) ); // Midpoint
 	}
 
-	SECTION( "Selection center" )
-	{
-		auto center = selection.getSelectionCenter();
-		REQUIRE( center.x == Catch::Approx( 2.5f ) ); // Average of positions
-	}
-
 	SECTION( "Selection radius" )
 	{
 		auto radius = selection.getSelectionRadius();
@@ -481,11 +475,6 @@ TEST_CASE( "SelectionManager - Edge cases", "[selection][edge-cases]" )
 	{
 		auto bounds = selection.getSelectionBounds();
 		REQUIRE_FALSE( bounds.isValid() );
-
-		auto center = selection.getSelectionCenter();
-		REQUIRE( center.x == 0.0f );
-		REQUIRE( center.y == 0.0f );
-		REQUIRE( center.z == 0.0f );
 
 		auto radius = selection.getSelectionRadius();
 		REQUIRE( radius == 0.0f );

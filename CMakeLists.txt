@@ -492,6 +492,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/math_2d_tests.cpp
     tests/math_3d_tests.cpp
     tests/picking_tests.cpp
+    tests/picking_selection_integration_tests.cpp
     tests/dx12_tests.cpp
     tests/renderer_tests.cpp
     tests/camera_tests.cpp

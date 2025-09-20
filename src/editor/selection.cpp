@@ -226,15 +226,7 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 			{
 				const auto corner = meshRenderer->bounds.corner( i );
 				const auto worldCorner = worldMatrix.transformPoint( corner );
-				if ( firstBounds )
-				{
-					combinedBounds = math::BoundingBox3Df{ worldCorner, worldCorner };
-					firstBounds = false;
-				}
-				else
-				{
-					combinedBounds.expand( worldCorner );
-				}
+				combinedBounds.expand( worldCorner );
 			}
 		}
 	}
@@ -242,12 +234,6 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 	return combinedBounds;
 }
 
-
-math::Vec3<> SelectionManager::getSelectionCenter() const
-{
-	const auto bounds = getSelectionBounds();
-	return bounds.isValid() ? bounds.center() : math::Vec3<>{};
-}
 
 float SelectionManager::getSelectionRadius() const
 {

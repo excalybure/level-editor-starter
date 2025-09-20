@@ -51,7 +51,6 @@ public:
 
 	// Spatial selection queries
 	math::BoundingBox3Df getSelectionBounds() const;
-	math::Vec3<> getSelectionCenter() const;
 	float getSelectionRadius() const; // Bounding sphere radius
 
 	// Event registration
