@@ -92,7 +92,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 
 	PickingSystem picker;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker );
+	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create test scene with multiple objects at different depths
 	const auto nearCube = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "NearCube" );
@@ -283,7 +283,7 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 
 	PickingSystem picker;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker );
+	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create grid of objects for rectangle selection testing
 	std::vector<Entity> gridEntities;
@@ -461,7 +461,7 @@ TEST_CASE( "Error Handling - Robustness integration", "[error][handling][integra
 
 	PickingSystem picker;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker );
+	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	SECTION( "Invalid entity handling" )
 	{
@@ -539,7 +539,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 
 	PickingSystem picker;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker );
+	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create test objects
 	auto testObject = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "TestObject" );

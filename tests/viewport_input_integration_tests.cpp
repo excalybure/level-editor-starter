@@ -55,7 +55,7 @@ TEST_CASE( "ViewportInputHandler - Basic functionality", "[viewport_input][integ
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 
 	// Create handler
-	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
+	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem, systemManager };
 
 	SECTION( "Handler initializes correctly" )
 	{
@@ -104,7 +104,7 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection bounds", "[viewport_input
 	systemManager.initialize( scene );
 	auto pickingSystem = picking::PickingSystem{};
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
-	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
+	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem, systemManager };
 	MockViewport viewport;
 
 	SECTION( "Rectangle selection activation" )
@@ -143,7 +143,7 @@ TEST_CASE( "ViewportInputHandler - Integration with SelectionManager", "[viewpor
 	systemManager.initialize( scene );
 	auto pickingSystem = picking::PickingSystem{};
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
-	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem };
+	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem, systemManager };
 
 	// Create test entity
 	const auto entity = scene.createEntity();

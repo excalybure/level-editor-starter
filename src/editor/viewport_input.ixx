@@ -5,6 +5,7 @@ import engine.picking;
 import editor.viewport;
 import runtime.ecs;
 import runtime.entity;
+import runtime.systems;
 import engine.vec;
 import std;
 
@@ -33,7 +34,8 @@ export class ViewportInputHandler
 {
 public:
 	ViewportInputHandler( SelectionManager &selectionManager,
-		picking::PickingSystem &pickingSystem );
+		picking::PickingSystem &pickingSystem,
+		systems::SystemManager &systemManager );
 
 	// Mouse input handling
 	void handleMouseClick( ecs::Scene &scene,
@@ -70,6 +72,7 @@ public:
 private:
 	SelectionManager &m_selectionManager;
 	picking::PickingSystem &m_pickingSystem;
+	systems::SystemManager &m_systemManager;
 
 	RectSelection m_rectSelection;
 	ecs::Entity m_hoveredEntity{};

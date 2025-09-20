@@ -55,7 +55,7 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity = scene.createEntity( "TestCube" );
@@ -119,7 +119,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity1 = scene.createEntity( "Cube1" );
@@ -212,7 +212,7 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 
@@ -274,7 +274,7 @@ TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" 
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity = scene.createEntity( "HoverCube" );
@@ -320,7 +320,7 @@ TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input]
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	// We can test selection mode indirectly through the behavior
 	MockViewport viewport;
@@ -370,7 +370,7 @@ TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 	systemManager.initialize( scene );
 	PickingSystem pickingSystem;
 	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem );
+	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 

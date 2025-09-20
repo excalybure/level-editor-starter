@@ -6,6 +6,7 @@ import editor.viewport;
 import runtime.ecs;
 import runtime.entity;
 import runtime.components;
+import runtime.systems;
 import engine.vec;
 import engine.matrix;
 import std;
@@ -14,8 +15,9 @@ namespace editor
 {
 
 ViewportInputHandler::ViewportInputHandler( SelectionManager &selectionManager,
-	picking::PickingSystem &pickingSystem )
-	: m_selectionManager( selectionManager ), m_pickingSystem( pickingSystem )
+	picking::PickingSystem &pickingSystem,
+	systems::SystemManager &systemManager )
+	: m_selectionManager( selectionManager ), m_pickingSystem( pickingSystem ), m_systemManager( systemManager )
 {
 }
 
@@ -149,6 +151,14 @@ std::vector<ecs::Entity> ViewportInputHandler::getEntitiesInRect( ecs::Scene &sc
 {
 	std::vector<ecs::Entity> entitiesInRect;
 
+	// Get TransformSystem for proper hierarchical transforms
+	auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>();
+	if ( !transformSystem )
+	{
+		// TransformSystem is required for proper hierarchical transforms
+		return entitiesInRect;
+	}
+
 	// Simple implementation: test center point of each entity's screen projection
 	// In a more advanced implementation, we could test entity bounds overlap with rectangle
 
@@ -157,13 +167,8 @@ std::vector<ecs::Entity> ViewportInputHandler::getEntitiesInRect( ecs::Scene &sc
 		if ( scene.hasComponent<components::Transform>( entity ) &&
 			scene.hasComponent<components::MeshRenderer>( entity ) )
 		{
-			// Get entity world position
-			const auto *transform = scene.getComponent<components::Transform>( entity );
-			if ( !transform )
-				continue;
-
-			// TODO: Use TransformSystem::getWorldTransform() for proper hierarchical transforms
-			const auto worldMatrix = transform->getLocalMatrix();
+			// Get entity world position using TransformSystem for proper hierarchical transforms
+			const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
 			const auto worldPos = math::Vec3<>{ worldMatrix.m30(), worldMatrix.m31(), worldMatrix.m32() }; // Extract translation
 
 			// Project to screen coordinates
