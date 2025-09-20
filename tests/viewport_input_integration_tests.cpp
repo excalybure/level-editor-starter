@@ -51,7 +51,7 @@ TEST_CASE( "ViewportInputHandler - Basic functionality", "[viewport_input][integ
 	auto systemManager = systems::SystemManager{};
 	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	auto pickingSystem = picking::PickingSystem{};
+	auto pickingSystem = picking::PickingSystem{ systemManager };
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 
 	// Create handler
@@ -102,7 +102,7 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection bounds", "[viewport_input
 	auto systemManager = systems::SystemManager{};
 	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	auto pickingSystem = picking::PickingSystem{};
+	auto pickingSystem = picking::PickingSystem{ systemManager };
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem, systemManager };
 	MockViewport viewport;
@@ -141,7 +141,7 @@ TEST_CASE( "ViewportInputHandler - Integration with SelectionManager", "[viewpor
 	auto systemManager = systems::SystemManager{};
 	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	auto pickingSystem = picking::PickingSystem{};
+	auto pickingSystem = picking::PickingSystem{ systemManager };
 	auto selectionManager = editor::SelectionManager{ scene, systemManager };
 	auto handler = editor::ViewportInputHandler{ selectionManager, pickingSystem, systemManager };
 

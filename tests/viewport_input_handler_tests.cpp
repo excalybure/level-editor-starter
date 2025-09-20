@@ -210,7 +210,7 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
@@ -272,7 +272,7 @@ TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" 
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
@@ -318,7 +318,7 @@ TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input]
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
@@ -368,7 +368,7 @@ TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 	SystemManager systemManager;
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem;
+	PickingSystem pickingSystem( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 

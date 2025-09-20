@@ -90,7 +90,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker;
+	PickingSystem picker( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
@@ -281,7 +281,7 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker;
+	PickingSystem picker( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
@@ -371,7 +371,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker;
+	PickingSystem picker( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 
 	// Create large number of objects for performance testing
@@ -459,7 +459,7 @@ TEST_CASE( "Error Handling - Robustness integration", "[error][handling][integra
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker;
+	PickingSystem picker( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
@@ -537,7 +537,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 	systemManager.addSystem<TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker;
+	PickingSystem picker( systemManager );
 	SelectionManager selectionManager( scene, systemManager );
 	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
