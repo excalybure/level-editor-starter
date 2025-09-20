@@ -9,6 +9,16 @@
     "clang-format.assumeFilename": "${workspaceFolder}/.clang-format",
     "clang-format.executable": "${workspaceFolder}/clang-format-custom.exe",
     "C_Cpp.default.cppStandard": "c++23",
+    "cmake.defaultVariants": {
+        "buildType": "debug"
+    },
+    "cmake.configureOnOpen": false,
+    "cmake.preferredGenerators": ["Ninja"],
+    "cmake.configurePreset": "ninja-msvc",
+    "cmake.buildPreset": "build",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.experimentalFeatures": "enabled",
+    "C_Cpp.vcFormat.newLine.beforeOpenBrace.function": "newLine",
     "testMate.cpp.test.executables": "${workspaceFolder}/build/vs2022-x64/Debug/unit_test_runner.exe",
     "testMate.cpp.test.workingDirectory": "${workspaceFolder}",
     "chat.tools.autoApprove": true,

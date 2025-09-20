@@ -3,18 +3,27 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${vcpkgRoot}/x64-windows/include"
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/build/ninja-msvc/**",
+                "${workspaceFolder}/vcpkg_installed/x64-windows/include",
+                "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.44.35207/include",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared"
             ],
             "compileCommands": [
-                "${workspaceFolder}/build/vs2022-x64/compile_commands.json"
+                "${workspaceFolder}/compile_commands.json"
             ],
             "compilerArgs": [
-                "/experimental:module"
+                "/experimental:module",
+                "/std:c++latest",
+                "/permissive-",
+                "/W4"
             ],
             "browse": {
                 "path": [
-                    "${workspaceFolder}/src"
+                    "${workspaceFolder}/src",
+                    "${workspaceFolder}/build/ninja-msvc"
                 ],
                 "limitSymbolsToIncludedHeaders": false
             },
@@ -24,11 +33,13 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.26100.0",
-            "compilerPath": "cl.exe",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
             "cStandard": "c17",
             "cppStandard": "c++23",
             "intelliSenseMode": "windows-msvc-x64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "mergeConfigurations": false,
+            "forcedInclude": []
         }
     ],
     "version": 4
