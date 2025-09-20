@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-20 — Task 1: ImGuizmo Dependency Integration (M2-P4-T01)
+**Summary:** Successfully integrated ImGuizmo library into the build system by updating vcpkg dependencies and CMake configuration. ImGuizmo is now properly linked to editor.ui module and test runner, with all integration tests passing.
+
+**Atomic functionalities completed:**
+- AF1.1: ImGuizmo already present in vcpkg.json dependencies (verified)
+- AF1.2: Added find_package(imguizmo CONFIG REQUIRED) to CMakeLists.txt and linked to editor.ui
+- AF1.3: Created comprehensive unit tests for ImGuizmo header inclusion and basic functionality
+- AF1.4: Built and verified ImGuizmo integration with successful test runs
+
+**Tests:** 4 new unit tests created in tests/imguizmo_integration_tests.cpp; ran dedicated imguizmo_test_runner.exe with all 11 assertions passing
+**Notes:** ImGuizmo requires ImGui headers to be included first. Successfully verified integration with both standalone test executable and Catch2 unit tests. Ready for gizmo system implementation in subsequent tasks.
+
 ## 2025-09-19 — Fixed picking_tests.cpp compilation errors
 **Summary:** Resolved compilation issues in picking_tests.cpp by properly constructing PickingSystem with required SystemManager dependency. Updated all test cases to create SystemManager instances, add TransformSystem, and initialize them properly before creating PickingSystem instances. All picking tests now pass successfully.
 

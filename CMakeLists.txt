@@ -10,6 +10,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 # Find vcpkg packages
 find_package(imgui CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
@@ -325,6 +326,7 @@ target_sources(editor.ui PUBLIC
 target_compile_features(editor.ui PUBLIC cxx_std_23)
 target_link_libraries(editor.ui PRIVATE 
   imgui::imgui
+  imguizmo::imguizmo
   Microsoft::DirectX-Headers
   d3d12
   platform.win32
@@ -530,6 +532,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gpu_resource_manager_tests.cpp
     tests/mesh_rendering_system_tests.cpp
     tests/asset_rendering_integration_tests.cpp
+    tests/imguizmo_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -573,6 +576,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     engine.gpu.material_gpu
     engine.gpu.gpu_resource_manager
     engine.gltf_loader
+    imgui::imgui
+    imguizmo::imguizmo
     Catch2::Catch2WithMain
   )
   target_compile_features(unit_test_runner PUBLIC cxx_std_23)
