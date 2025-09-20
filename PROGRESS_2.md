@@ -1,5 +1,16 @@
 # 📊 Milestone 2 Progress Report
 
+## 2024‑12‑28 — Task 2: Core Gizmo System Module (M2-P4-T02)
+**Summary:** Implemented complete core gizmo system module via strict TDD, creating foundational enums, structs, and classes for gizmo manipulation with comprehensive test coverage.
+**Atomic functionalities completed:**
+- AF2.1: GizmoOperation enum (Translate, Rotate, Scale, Universal)
+- AF2.2: GizmoMode enum (Local, World)  
+- AF2.3: GizmoResult struct with manipulation state flags and transform deltas
+- AF2.4: GizmoSystem class interface with operation/mode accessors
+- AF2.5: Gizmo state management with manipulation tracking methods
+**Tests:** 5 test cases, 44 assertions; filtered commands: `unit_test_runner.exe "[gizmos]"`
+**Notes:** Used strict Red→Green→Refactor TDD for each atomic functionality. Fixed Vec3 comparison issues in tests by checking individual components. All C++23 constexpr methods properly implemented with const-correctness.
+
 ## 2025-09-20 — Task 1: ImGuizmo Dependency Integration (M2-P4-T01)
 **Summary:** Successfully integrated ImGuizmo library into the build system by updating vcpkg dependencies and CMake configuration. ImGuizmo is now properly linked to editor.ui module and test runner, with all integration tests passing.
 

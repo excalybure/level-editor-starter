@@ -444,6 +444,16 @@ target_sources(editor.viewport_input PUBLIC
 target_compile_features(editor.viewport_input PUBLIC cxx_std_23)
 target_link_libraries(editor.viewport_input PUBLIC editor.selection engine.picking editor.viewport runtime.ecs engine.vec engine.math)
 
+add_library(editor.gizmos)
+target_sources(editor.gizmos PUBLIC
+  FILE_SET CXX_MODULES FILES
+    src/editor/gizmos.ixx
+  PRIVATE
+    src/editor/gizmos.cpp
+)
+target_compile_features(editor.gizmos PUBLIC cxx_std_23)
+target_link_libraries(editor.gizmos PUBLIC editor.selection runtime.ecs runtime.entity runtime.components engine.vec engine.matrix imgui::imgui imguizmo::imguizmo)
+
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
@@ -457,7 +467,7 @@ if (MSVC)
     engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
     engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
     engine.math_2d engine.math_3d engine.renderer engine.camera engine.grid
-    runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui editor.viewport editor.selection editor.viewport_input)
+    runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui editor.viewport editor.selection editor.viewport_input editor.gizmos)
     target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
   endforeach()
 endif()
@@ -533,6 +543,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/mesh_rendering_system_tests.cpp
     tests/asset_rendering_integration_tests.cpp
     tests/imguizmo_integration_tests.cpp
+    tests/gizmos_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     engine.math
@@ -557,6 +568,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     editor.selection
     editor.selection_renderer
     editor.viewport_input
+    editor.gizmos
     runtime.entity
     runtime.time
     runtime.ecs
