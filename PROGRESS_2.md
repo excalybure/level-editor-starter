@@ -1,5 +1,16 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-19 — Fixed picking_tests.cpp compilation errors
+**Summary:** Resolved compilation issues in picking_tests.cpp by properly constructing PickingSystem with required SystemManager dependency. Updated all test cases to create SystemManager instances, add TransformSystem, and initialize them properly before creating PickingSystem instances. All picking tests now pass successfully.
+
+**Atomic functionalities completed:**
+- AF1: Added runtime.systems import to picking_tests.cpp
+- AF2: Updated PickingSystem instantiation in "Ray-AABB intersection" test to use proper SystemManager constructor
+- AF3: Updated PickingSystem instantiation in "Multiple entities distance sorting" test to use proper SystemManager constructor
+
+**Tests:** 3 test cases updated; ran `unit_test_runner.exe "[picking]"` to validate all picking tests pass
+**Notes:** The PickingSystem class requires a SystemManager reference for TransformSystem access to compute proper hierarchical transforms for entity bounds testing.
+
 ## 2025-01-25 — PickingSystem Hierarchical Transform TODO Resolution
 **Summary:** Addressed the TODO in PickingSystem::testEntityBounds to use TransformSystem::getWorldTransform() for proper hierarchical transforms instead of manual local matrix extraction. Updated the constructor to accept SystemManager parameter and implemented proper world transform computation for entity picking operations.
 

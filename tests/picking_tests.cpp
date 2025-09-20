@@ -6,6 +6,7 @@ import engine.math_3d;
 import runtime.ecs;
 import runtime.components;
 import runtime.entity;
+import runtime.systems;
 import engine.vec;
 import engine.matrix;
 import engine.bounding_box_3d;
@@ -14,6 +15,7 @@ using namespace math;
 using namespace picking;
 using namespace components;
 using namespace ecs;
+using namespace systems;
 
 TEST_CASE( "HitResult - Basic functionality", "[picking][hit-result]" )
 {
@@ -34,8 +36,11 @@ TEST_CASE( "HitResult - Basic functionality", "[picking][hit-result]" )
 
 TEST_CASE( "PickingSystem - Ray-AABB intersection", "[picking][aabb]" )
 {
-	PickingSystem picker;
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	PickingSystem picker( systemManager );
 
 	// Create entity with mesh renderer (has bounds)
 	auto entity = scene.createEntity( "TestCube" );
@@ -75,8 +80,11 @@ TEST_CASE( "PickingSystem - Ray-AABB intersection", "[picking][aabb]" )
 
 TEST_CASE( "PickingSystem - Multiple entities distance sorting", "[picking][multiple]" )
 {
-	PickingSystem picker;
 	Scene scene;
+	SystemManager systemManager;
+	systemManager.addSystem<TransformSystem>();
+	systemManager.initialize( scene );
+	PickingSystem picker( systemManager );
 
 	// Create two cubes at different distances
 	auto nearCube = scene.createEntity( "NearCube" );
