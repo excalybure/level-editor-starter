@@ -14,6 +14,9 @@ struct Vec2
 	constexpr Vec2() = default;
 	constexpr Vec2( T x_, T y_ ) : x{ x_ }, y{ y_ } {}
 
+	const T *data() const { return &x; }
+	T *data() { return &x; }
+
 	// Arithmetic operators (component-wise for +,- and scalar + component-wise for *,/)
 	constexpr Vec2 operator+( const Vec2 &rhs ) const { return { x + rhs.x, y + rhs.y }; }
 	constexpr Vec2 operator-( const Vec2 &rhs ) const { return { x - rhs.x, y - rhs.y }; }
@@ -74,6 +77,9 @@ struct Vec3
 	using value_type = T;
 	constexpr Vec3() = default;
 	constexpr Vec3( T x_, T y_, T z_ ) : x{ x_ }, y{ y_ }, z{ z_ } {}
+
+	const T *data() const { return &x; }
+	T *data() { return &x; }
 
 	// Swizzle accessors for 2D components
 	constexpr Vec2<T> xy() const { return Vec2<T>{ x, y }; }
@@ -145,6 +151,9 @@ struct Vec4
 	using value_type = T;
 	constexpr Vec4() = default;
 	constexpr Vec4( T x_, T y_, T z_, T w_ ) : x{ x_ }, y{ y_ }, z{ z_ }, w{ w_ } {}
+
+	const T *data() const { return &x; }
+	T *data() { return &x; }
 
 	// Swizzle accessors for 2D components
 	constexpr Vec2<T> xy() const { return Vec2<T>{ x, y }; }

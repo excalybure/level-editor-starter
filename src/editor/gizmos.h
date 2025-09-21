@@ -131,6 +131,14 @@ public:
 		m_wasManipulated = false;
 	}
 
+	// ImGuizmo integration methods
+	bool setupImGuizmo( const math::Mat4<> &viewMatrix, const math::Mat4<> &projectionMatrix, const math::Vec4<> &viewport ) noexcept;
+	GizmoResult renderGizmo() noexcept;
+
+	// ImGuizmo coordinate space conversion
+	int getImGuizmoMode() const noexcept;
+	int getImGuizmoOperation() const noexcept;
+
 private:
 	SelectionManager *m_selectionManager = nullptr;
 	ecs::Scene *m_scene = nullptr;
@@ -147,6 +155,12 @@ private:
 
 	// Visibility state
 	bool m_visible = true;
+
+	// ImGuizmo state
+	bool m_isImGuizmoSetup = false;
+	math::Mat4<> m_viewMatrix = math::Mat4<>::identity();
+	math::Mat4<> m_projectionMatrix = math::Mat4<>::identity();
+	math::Vec4<> m_viewportRect{ 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
 } // namespace editor

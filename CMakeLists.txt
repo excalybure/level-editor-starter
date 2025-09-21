@@ -102,17 +102,17 @@ target_include_directories(editor PUBLIC
 )
 target_compile_features(editor PUBLIC cxx_std_23)
 target_compile_definitions(editor PUBLIC NOMINMAX PIX_AVAILABLE)
-# target_link_libraries(editor PUBLIC 
-# imgui::imgui
-# imguizmo::imguizmo
-#  Microsoft::DirectX-Headers
-#  Microsoft::WinPixEventRuntime
-#  d3d12
-#  dxgi
-#  d3dcompiler
-#  runtime
-#  platform
-#)
+target_link_libraries(editor PUBLIC 
+  imgui::imgui
+  imguizmo::imguizmo
+  Microsoft::DirectX-Headers
+  Microsoft::WinPixEventRuntime
+  d3d12
+  dxgi
+  d3dcompiler
+  runtime
+  platform
+)
 
 if (MSVC)
   target_compile_options(editor PRIVATE /W4 /permissive- /std:c++latest)

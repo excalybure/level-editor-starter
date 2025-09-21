@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025‑09‑21 — Task 3: ImGuizmo Integration Layer Complete (M2-P4-T03)
+**Summary:** Successfully implemented complete ImGuizmo integration layer via strict TDD approach. Added ImGuizmo context setup, coordinate space configuration, operation mode binding, snap value configuration, manipulation detection, and result extraction. The gizmo system now fully integrates with ImGuizmo library for real-time 3D manipulation with proper viewport matrix setup and coordinate system conversion.
+
+**Atomic functionalities completed:**
+- AF3.1: ImGuizmo context setup with viewport matrices and validation  
+- AF3.2: Local/world coordinate space configuration and dynamic switching
+- AF3.3: GizmoOperation enum binding to ImGuizmo operations (translate/rotate/scale/universal)
+- AF3.4: Snap value application with configurable precision for different operations
+- AF3.5: Manipulation detection and result extraction from ImGuizmo (implemented in renderGizmo)
+- AF3.6: Matrix decomposition for delta calculations (basic translation delta extraction)
+- AF3.7: Edge case handling and validation (viewport validation, empty selection handling)
+
+**Tests:** 8 new test cases, 32 total assertions for ImGuizmo functionality; comprehensive coverage including setup validation, coordinate conversion, operation binding, and snap configuration; filtered commands: `unit_test_runner.exe "[imguizmo]"`
+**Notes:** Used strict Red→Green→Refactor TDD for each atomic functionality. Successfully enabled ImGuizmo linking in CMakeLists.txt and resolved header dependencies. Implemented proper matrix conversion between math::Mat4 and ImGuizmo float arrays. Added accessor methods for ImGuizmo mode/operation conversion with proper enum value mapping. Foundation now ready for UI controls and full integration testing.
+
 ## 2025‑09‑20 — Task 2: Core Gizmo System Complete (M2-P4-T02)
 **Summary:** Completed the core gizmo system implementation by adding the remaining atomic functionalities via strict TDD. Extended GizmoSystem with SelectionManager integration, selection center calculation, gizmo matrix computation, and transform delta application. The system now supports snap-to-grid functionality, visibility control, and full transform manipulation for single and multi-entity selections.
 

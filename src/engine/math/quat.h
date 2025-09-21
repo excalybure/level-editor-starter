@@ -16,6 +16,9 @@ struct Quat
 	constexpr Quat() = default;
 	constexpr Quat( T w_, T x_, T y_, T z_ ) : w{ w_ }, x{ x_ }, y{ y_ }, z{ z_ } {}
 
+	const T *data() const { return &w; }
+	T *data() { return &w; }
+
 	// Constructor from axis-angle (axis should be normalized)
 	constexpr Quat( const Vec3<T> &axis, T angle )
 	{

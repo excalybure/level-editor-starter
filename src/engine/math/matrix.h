@@ -524,6 +524,9 @@ struct Mat4
 	constexpr Mat4( const Vec4<T> &row0_, const Vec4<T> &row1_, const Vec4<T> &row2_, const Vec4<T> &row3_ )
 		: row0{ row0_ }, row1{ row1_ }, row2{ row2_ }, row3{ row3_ } {}
 
+	const T *data() const { return row0.data(); }
+	T *data() { return row0.data(); }
+
 	// Identity matrix constructor
 	static constexpr Mat4 identity()
 	{

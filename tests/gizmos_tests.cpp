@@ -7,6 +7,8 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/components.h"
+#include <imgui.h>
+#include <ImGuizmo.h>
 
 using namespace editor;
 using namespace math;
@@ -481,5 +483,222 @@ TEST_CASE( "GizmoSystem state management", "[gizmos][unit][state]" )
 		system.resetManipulationState();
 		REQUIRE_FALSE( system.isManipulating() );
 		REQUIRE_FALSE( system.wasManipulated() );
+	}
+}
+
+TEST_CASE( "GizmoSystem ImGuizmo setup", "[gizmos][unit][imguizmo][setup]" )
+{
+	SECTION( "GizmoSystem can setup ImGuizmo context with viewport matrices" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Create test view and projection matrices
+		const auto viewMatrix = Mat4f::lookAt( Vec3f{ 0, 0, 10 }, Vec3f{ 0, 0, 0 }, Vec3f{ 0, 1, 0 } );
+		const auto projMatrix = Mat4f::perspective( 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
+		const auto viewport = math::Vec4<>{ 0.0f, 0.0f, 1920.0f, 1080.0f };
+
+		// Setup should not crash and should return true for success
+		const bool result = system.setupImGuizmo( viewMatrix, projMatrix, viewport );
+		REQUIRE( result );
+	}
+
+	SECTION( "GizmoSystem setup handles invalid viewport gracefully" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Create test matrices with invalid viewport (zero width/height)
+		const auto viewMatrix = Mat4f::identity();
+		const auto projMatrix = Mat4f::identity();
+		const auto invalidViewport = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+		// Setup should handle invalid viewport gracefully
+		const bool result = system.setupImGuizmo( viewMatrix, projMatrix, invalidViewport );
+		REQUIRE_FALSE( result );
+	}
+}
+
+TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit][imguizmo][coordinates]" )
+{
+	SECTION( "GizmoSystem converts Local mode to ImGuizmo LOCAL" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to local mode
+		system.setMode( GizmoMode::Local );
+
+		// Test coordinate space conversion
+		const auto imguizmoMode = system.getImGuizmoMode();
+		REQUIRE( imguizmoMode == 0 ); // ImGuizmo::LOCAL is 0
+	}
+
+	SECTION( "GizmoSystem converts World mode to ImGuizmo WORLD" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to world mode
+		system.setMode( GizmoMode::World );
+
+		// Test coordinate space conversion
+		const auto imguizmoMode = system.getImGuizmoMode();
+		REQUIRE( imguizmoMode == 1 ); // ImGuizmo::WORLD is 1
+	}
+
+	SECTION( "GizmoSystem coordinate space can be switched dynamically" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Start with local mode
+		system.setMode( GizmoMode::Local );
+		REQUIRE( system.getImGuizmoMode() == 0 );
+
+		// Switch to world mode
+		system.setMode( GizmoMode::World );
+		REQUIRE( system.getImGuizmoMode() == 1 );
+
+		// Switch back to local mode
+		system.setMode( GizmoMode::Local );
+		REQUIRE( system.getImGuizmoMode() == 0 );
+	}
+}
+
+TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguizmo][operations]" )
+{
+	SECTION( "GizmoSystem converts Translate operation to ImGuizmo TRANSLATE" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to translate operation
+		system.setOperation( GizmoOperation::Translate );
+
+		// Test operation conversion
+		const auto imguizmoOp = system.getImGuizmoOperation();
+		REQUIRE( imguizmoOp == 7 ); // ImGuizmo::TRANSLATE is 7
+	}
+
+	SECTION( "GizmoSystem converts Rotate operation to ImGuizmo ROTATE" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to rotate operation
+		system.setOperation( GizmoOperation::Rotate );
+
+		// Test operation conversion
+		const auto imguizmoOp = system.getImGuizmoOperation();
+		REQUIRE( imguizmoOp == 120 ); // ImGuizmo::ROTATE is 120
+	}
+
+	SECTION( "GizmoSystem converts Scale operation to ImGuizmo SCALE" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to scale operation
+		system.setOperation( GizmoOperation::Scale );
+
+		// Test operation conversion
+		const auto imguizmoOp = system.getImGuizmoOperation();
+		REQUIRE( imguizmoOp == 896 ); // ImGuizmo::SCALE is 896
+	}
+
+	SECTION( "GizmoSystem converts Universal operation to ImGuizmo UNIVERSAL" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set to universal operation
+		system.setOperation( GizmoOperation::Universal );
+
+		// Test operation conversion
+		const auto imguizmoOp = system.getImGuizmoOperation();
+		REQUIRE( imguizmoOp == 1023 ); // ImGuizmo::UNIVERSAL is 1023 (all operations combined)
+	}
+
+	SECTION( "GizmoSystem operation can be switched dynamically" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Start with translate
+		system.setOperation( GizmoOperation::Translate );
+		REQUIRE( system.getImGuizmoOperation() == 7 );
+
+		// Switch to rotate
+		system.setOperation( GizmoOperation::Rotate );
+		REQUIRE( system.getImGuizmoOperation() == 120 );
+
+		// Switch to scale
+		system.setOperation( GizmoOperation::Scale );
+		REQUIRE( system.getImGuizmoOperation() == 896 );
+
+		// Switch to universal
+		system.setOperation( GizmoOperation::Universal );
+		REQUIRE( system.getImGuizmoOperation() == 1023 );
+	}
+}
+
+TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][snap]" )
+{
+	SECTION( "GizmoSystem respects snap enabled/disabled state" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Initially disabled
+		REQUIRE_FALSE( system.isSnapEnabled() );
+
+		// Enable snap
+		system.setSnapEnabled( true );
+		REQUIRE( system.isSnapEnabled() );
+
+		// Disable snap
+		system.setSnapEnabled( false );
+		REQUIRE_FALSE( system.isSnapEnabled() );
+	}
+
+	SECTION( "GizmoSystem uses correct snap values for different operations" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		SelectionManager selectionManager( scene, systemManager );
+		GizmoSystem system( selectionManager, scene );
+
+		// Set custom snap values
+		system.setTranslationSnap( 2.5f );
+		system.setRotationSnap( 45.0f );
+		system.setScaleSnap( 0.25f );
+
+		// Verify values are stored correctly
+		REQUIRE( system.getTranslationSnap() == 2.5f );
+		REQUIRE( system.getRotationSnap() == 45.0f );
+		REQUIRE( system.getScaleSnap() == 0.25f );
 	}
 }
