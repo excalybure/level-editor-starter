@@ -91,6 +91,7 @@ add_library(editor STATIC
   src/editor/gizmos.cpp
   src/editor/selection.cpp
   src/editor/selection_renderer.cpp
+  src/editor/transform_commands.cpp
   src/editor/ui.cpp
   src/editor/viewport_input.cpp
   src/editor/viewport/viewport.cpp
@@ -205,6 +206,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/asset_rendering_integration_tests.cpp
     tests/imguizmo_integration_tests.cpp
     tests/gizmos_tests.cpp
+    tests/transform_commands_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor
