@@ -11,11 +11,8 @@ class Scene;
 
 namespace editor
 {
-class SelectionManager; // Forward declaration
-}
 
-namespace editor
-{
+class SelectionManager;
 
 // Gizmo operation types for transformation modes
 enum class GizmoOperation
