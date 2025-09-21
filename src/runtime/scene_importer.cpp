@@ -8,8 +8,6 @@
 
 using namespace runtime;
 using namespace ecs;
-using namespace components;
-using namespace assets;
 
 bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene )
 {
@@ -21,7 +19,7 @@ bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs:
 	// Import all root nodes recursively (CPU-only)
 	for ( const auto &rootNode : assetScene->getRootNodes() )
 	{
-		importNode( assetScene, *rootNode, targetScene, Entity{} );
+		importNode( assetScene, *rootNode, targetScene, ecs::Entity{} );
 	}
 
 	return true;
@@ -41,7 +39,7 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 		if ( !entity.isValid() )
 			continue;
 
-		auto *meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+		auto *meshRenderer = targetScene.getComponent<components::MeshRenderer>( entity );
 		if ( !meshRenderer || meshRenderer->gpuMesh != nullptr )
 			continue; // Skip if no MeshRenderer or already has GPU resources
 
@@ -61,10 +59,10 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 	return true;
 }
 
-Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, Entity parent )
+ecs::Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, const assets::SceneNode &node, ecs::Scene &targetScene, ecs::Entity parent )
 {
 	// Create entity with node name
-	Entity entity = targetScene.createEntity( node.getName() );
+	ecs::Entity entity = targetScene.createEntity( node.getName() );
 
 	// Set parent relationship if provided
 	if ( parent.isValid() )
@@ -72,21 +70,18 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 		targetScene.setParent( entity, parent );
 	}
 
-	// Setup Transform component if node has transform data
-	if ( node.hasTransform() )
-	{
-		setupTransformComponent( node, entity, targetScene );
-	}
+	// Setup Transform component (always add, use node data if available)
+	setupTransformComponent( node, entity, targetScene );
 
 	// Setup MeshRenderer component if node has meshes (CPU-only)
 	if ( node.hasMeshHandles() )
 	{
 		// For this implementation, we'll create one MeshRenderer per mesh handle
 		// This matches the current test expectations
-		node.foreachMeshHandle( [&]( MeshHandle meshHandle ) {
+		node.foreachMeshHandle( [&]( assets::MeshHandle meshHandle ) {
 			// Create a separate entity for each mesh if multiple meshes exist
 			// or use the same entity for the first mesh
-			Entity meshEntity = ( node.meshCount() == 1 ) ? entity : targetScene.createEntity( node.getName() + "_Mesh" );
+			ecs::Entity meshEntity = ( node.meshCount() == 1 ) ? entity : targetScene.createEntity( node.getName() + "_Mesh" );
 
 			if ( meshEntity != entity && parent.isValid() )
 			{
@@ -103,7 +98,7 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 	}
 
 	// Recursively import children
-	node.foreachChild( [&]( const SceneNode &child ) {
+	node.foreachChild( [&]( const assets::SceneNode &child ) {
 		importNode( assetScene, child, targetScene, entity );
 	} );
 
@@ -111,24 +106,38 @@ Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene, con
 }
 
 
-void SceneImporter::setupTransformComponent( const assets::SceneNode &node, Entity entity, ecs::Scene &targetScene )
+void SceneImporter::setupTransformComponent( const assets::SceneNode &node, ecs::Entity entity, ecs::Scene &targetScene )
 {
-	const auto &nodeTransform = node.getTransform();
+	// Create Transform component with default values
+	components::Transform ecsTransform{};
 
-	components::Transform ecsTransform;
-	ecsTransform.position = { nodeTransform.position.x, nodeTransform.position.y, nodeTransform.position.z };
-	ecsTransform.rotation = { nodeTransform.rotation.x, nodeTransform.rotation.y, nodeTransform.rotation.z };
-	ecsTransform.scale = { nodeTransform.scale.x, nodeTransform.scale.y, nodeTransform.scale.z };
+	// Update with node data if available
+	if ( node.hasTransform() )
+	{
+		const auto &nodeTransform = node.getTransform();
+		ecsTransform.position = nodeTransform.position;
+		ecsTransform.rotation = nodeTransform.rotation;
+		ecsTransform.scale = nodeTransform.scale;
+	}
 
-	targetScene.addComponent( entity, ecsTransform );
+	// Add component to entity
+	const bool success = targetScene.addComponent( entity, ecsTransform );
+
+	// Fallback: if explicit template failed, try alternative approach
+	if ( !success )
+	{
+		// This shouldn't happen but let's try anyway
+		components::Transform fallbackTransform{};
+		targetScene.addComponent<components::Transform>( entity, fallbackTransform );
+	}
 }
 
-void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene )
+void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, ecs::Entity entity, ecs::Scene &targetScene, std::shared_ptr<assets::Scene> assetScene )
 {
 	const auto mesh = assetScene->getMesh( meshHandle );
 	if ( mesh )
 	{
-		MeshRenderer renderer( meshHandle );
+		components::MeshRenderer renderer( meshHandle );
 
 		renderer.bounds = mesh->getBounds();
 		targetScene.addComponent( entity, renderer );

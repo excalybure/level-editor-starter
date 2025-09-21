@@ -12,8 +12,7 @@
 
 using namespace runtime;
 using namespace ecs;
-using namespace components;
-using namespace assets;
+// Note: Not using "using namespace components" or "using namespace assets" to avoid Transform type ambiguity
 using Catch::Approx;
 
 TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer][basic]" )
@@ -24,10 +23,10 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 	scene->setLoaded( true );
 
 	// Create root node with mesh
-	auto rootNode = std::make_unique<SceneNode>( "TestNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "TestNode" );
 
 	// Create a simple mesh
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 	const auto meshHandle = scene->addMesh( mesh );
 	rootNode->addMeshHandle( meshHandle );
 
@@ -42,7 +41,7 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 
 	// Import scene using SceneImporter
 	ecs::Scene ecsScene;
-	const bool result = SceneImporter::importScene( scene, ecsScene );
+	const bool result = runtime::SceneImporter::importScene( scene, ecsScene );
 
 	REQUIRE( result );
 
@@ -50,16 +49,16 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( ecsScene.isValid( entity ) );
 
 	// Check Name component
-	const auto *nameComp = ecsScene.getComponent<Name>( entity );
+	const auto *nameComp = ecsScene.getComponent<components::Name>( entity );
 	REQUIRE( nameComp != nullptr );
 	REQUIRE( nameComp->name == "TestNode" );
 
 	// Check Transform component
-	const auto *transformComp = ecsScene.getComponent<Transform>( entity );
+	const auto *transformComp = ecsScene.getComponent<components::Transform>( entity );
 	REQUIRE( transformComp != nullptr );
 	REQUIRE( transformComp->position.x == Approx( 1.0f ) );
 	REQUIRE( transformComp->position.y == Approx( 2.0f ) );
@@ -72,7 +71,7 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 	REQUIRE( transformComp->scale.z == Approx( 2.0f ) );
 
 	// Check MeshRenderer component
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 }
 
@@ -84,13 +83,13 @@ TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hier
 	scene->setLoaded( true );
 
 	// Create parent node
-	auto parentNode = std::make_unique<SceneNode>( "ParentNode" );
+	auto parentNode = std::make_unique<assets::SceneNode>( "ParentNode" );
 	assets::Transform parentTransform;
 	parentTransform.position = { 0.0f, 0.0f, 0.0f };
 	parentNode->setTransform( parentTransform );
 
 	// Create child node
-	auto childNode = std::make_unique<SceneNode>( "ChildNode" );
+	auto childNode = std::make_unique<assets::SceneNode>( "ChildNode" );
 	assets::Transform childTransform;
 	childTransform.position = { 1.0f, 0.0f, 0.0f };
 	childNode->setTransform( childTransform );
@@ -101,7 +100,7 @@ TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hier
 
 	// Import scene
 	ecs::Scene ecsScene;
-	const bool result = SceneImporter::importScene( scene, ecsScene );
+	const bool result = runtime::SceneImporter::importScene( scene, ecsScene );
 
 	REQUIRE( result );
 
@@ -110,13 +109,13 @@ TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hier
 	REQUIRE( entities.size() == 2 ); // Parent + child
 
 	// Find parent and child entities
-	Entity parentEntity{}, childEntity{};
+	ecs::Entity parentEntity{}, childEntity{};
 	for ( const auto entity : entities )
 	{
 		if ( !entity.isValid() )
 			continue;
 
-		const auto *name = ecsScene.getComponent<Name>( entity );
+		const auto *name = ecsScene.getComponent<components::Name>( entity );
 		if ( name && name->name == "ParentNode" )
 		{
 			parentEntity = entity;
@@ -131,7 +130,7 @@ TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hier
 	REQUIRE( childEntity.isValid() );
 
 	// Verify parent-child relationship
-	const Entity actualParent = ecsScene.getParent( childEntity );
+	const ecs::Entity actualParent = ecsScene.getParent( childEntity );
 	REQUIRE( actualParent == parentEntity );
 
 	const auto children = ecsScene.getChildren( parentEntity );
@@ -146,7 +145,7 @@ TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty
 	scene->setPath( "empty_node_scene.gltf" );
 	scene->setLoaded( true );
 
-	auto emptyNode = std::make_unique<SceneNode>( "EmptyNode" );
+	auto emptyNode = std::make_unique<assets::SceneNode>( "EmptyNode" );
 	assets::Transform transform;
 	transform.position = { 5.0f, 6.0f, 7.0f };
 	emptyNode->setTransform( transform );
@@ -156,7 +155,7 @@ TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty
 
 	// Import scene
 	ecs::Scene ecsScene;
-	const bool result = SceneImporter::importScene( scene, ecsScene );
+	const bool result = runtime::SceneImporter::importScene( scene, ecsScene );
 
 	REQUIRE( result );
 
@@ -164,13 +163,13 @@ TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( ecsScene.isValid( entity ) );
 
 	// Should have Name and Transform but not MeshRenderer
-	REQUIRE( ecsScene.hasComponent<Name>( entity ) );
-	REQUIRE( ecsScene.hasComponent<Transform>( entity ) );
-	REQUIRE_FALSE( ecsScene.hasComponent<MeshRenderer>( entity ) );
+	REQUIRE( ecsScene.hasComponent<components::Name>( entity ) );
+	REQUIRE( ecsScene.hasComponent<components::Transform>( entity ) );
+	REQUIRE_FALSE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 }
 
 TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[scene_importer][gpu_comparison]" )
@@ -181,14 +180,14 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	scene->setLoaded( true );
 
 	// Create a node with transform and mesh
-	auto node = std::make_unique<SceneNode>( "ComparisonNode" );
+	auto node = std::make_unique<assets::SceneNode>( "ComparisonNode" );
 	assets::Transform transform;
 	transform.position = { 10.0f, 20.0f, 30.0f };
 	transform.rotation = { 0.5f, 1.0f, 1.5f };
 	transform.scale = { 0.5f, 1.5f, 2.0f };
 	node->setTransform( transform );
 
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 	const auto meshHandle = scene->addMesh( mesh );
 	node->addMeshHandle( meshHandle );
 
@@ -196,7 +195,7 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 
 	// Import using non-GPU path
 	ecs::Scene nonGpuScene;
-	const bool nonGpuResult = SceneImporter::importScene( scene, nonGpuScene );
+	const bool nonGpuResult = runtime::SceneImporter::importScene( scene, nonGpuScene );
 
 	// Import using CPU-only path
 	ecs::Scene gpuScene;
@@ -204,11 +203,11 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool gpuResult = SceneImporter::importScene( scene, gpuScene );
+	const bool gpuResult = runtime::SceneImporter::importScene( scene, gpuScene );
 	REQUIRE( gpuResult );
 
 	// Create GPU resources separately
-	const bool gpuResourceResult = SceneImporter::createGPUResources( scene, gpuScene, resourceManager );
+	const bool gpuResourceResult = runtime::SceneImporter::createGPUResources( scene, gpuScene, resourceManager );
 	REQUIRE( gpuResourceResult );
 
 	// Both should succeed
@@ -222,19 +221,19 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	REQUIRE( nonGpuEntities.size() == 1 );
 
 	// Compare components (they should be identical for now since GPU path calls non-GPU path)
-	const Entity nonGpuEntity = nonGpuEntities[0];
-	const Entity gpuEntity = gpuEntities[0];
+	const ecs::Entity nonGpuEntity = nonGpuEntities[0];
+	const ecs::Entity gpuEntity = gpuEntities[0];
 
 	// Compare Name components
-	const auto *nonGpuName = nonGpuScene.getComponent<Name>( nonGpuEntity );
-	const auto *gpuName = gpuScene.getComponent<Name>( gpuEntity );
+	const auto *nonGpuName = nonGpuScene.getComponent<components::Name>( nonGpuEntity );
+	const auto *gpuName = gpuScene.getComponent<components::Name>( gpuEntity );
 	REQUIRE( nonGpuName != nullptr );
 	REQUIRE( gpuName != nullptr );
 	REQUIRE( nonGpuName->name == gpuName->name );
 
 	// Compare Transform components
-	const auto *nonGpuTransform = nonGpuScene.getComponent<Transform>( nonGpuEntity );
-	const auto *gpuTransform = gpuScene.getComponent<Transform>( gpuEntity );
+	const auto *nonGpuTransform = nonGpuScene.getComponent<components::Transform>( nonGpuEntity );
+	const auto *gpuTransform = gpuScene.getComponent<components::Transform>( gpuEntity );
 	REQUIRE( nonGpuTransform != nullptr );
 	REQUIRE( gpuTransform != nullptr );
 	REQUIRE( nonGpuTransform->position.x == Approx( gpuTransform->position.x ) );
@@ -242,8 +241,8 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	REQUIRE( nonGpuTransform->position.z == Approx( gpuTransform->position.z ) );
 
 	// Compare MeshRenderer components
-	const auto *nonGpuRenderer = nonGpuScene.getComponent<MeshRenderer>( nonGpuEntity );
-	const auto *gpuRenderer = gpuScene.getComponent<MeshRenderer>( gpuEntity );
+	const auto *nonGpuRenderer = nonGpuScene.getComponent<components::MeshRenderer>( nonGpuEntity );
+	const auto *gpuRenderer = gpuScene.getComponent<components::MeshRenderer>( gpuEntity );
 	REQUIRE( nonGpuRenderer != nullptr );
 	REQUIRE( gpuRenderer != nullptr );
 }
@@ -253,13 +252,13 @@ TEST_CASE( "SceneImporter handles invalid scene gracefully", "[scene_importer][e
 	ecs::Scene ecsScene;
 
 	// Test with null scene
-	REQUIRE_FALSE( SceneImporter::importScene( nullptr, ecsScene ) );
+	REQUIRE_FALSE( runtime::SceneImporter::importScene( nullptr, ecsScene ) );
 
 	// Test with unloaded scene
 	auto unloadedScene = std::make_shared<assets::Scene>();
 	unloadedScene->setPath( "unloaded.gltf" );
 	unloadedScene->setLoaded( false );
-	REQUIRE_FALSE( SceneImporter::importScene( unloadedScene, ecsScene ) );
+	REQUIRE_FALSE( runtime::SceneImporter::importScene( unloadedScene, ecsScene ) );
 
 	// Scene should remain empty after failed imports
 	const auto entities = ecsScene.getAllEntities();
@@ -274,10 +273,10 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 	scene->setLoaded( true );
 
 	// Create a mesh with a primitive containing vertices
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 
 	// Create primitive with vertices that define a specific bounding box
-	Primitive primitive;
+	assets::Primitive primitive;
 	primitive.addVertex( { { -2.0f, -3.0f, -4.0f }, {}, {} } ); // Min corner
 	primitive.addVertex( { { 5.0f, 7.0f, 9.0f }, {}, {} } );	// Max corner
 	primitive.addVertex( { { 1.0f, 2.0f, 3.0f }, {}, {} } );	// Interior point
@@ -292,23 +291,23 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 	const auto meshHandle = scene->addMesh( mesh );
 
 	// Create a node with this mesh
-	auto rootNode = std::make_unique<SceneNode>( "BoundsTestNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "BoundsTestNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
 	// Import the scene
 	ecs::Scene ecsScene;
-	const bool result = SceneImporter::importScene( scene, ecsScene );
+	const bool result = runtime::SceneImporter::importScene( scene, ecsScene );
 	REQUIRE( result );
 
 	// Verify that an entity was created with bounds
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
-	REQUIRE( ecsScene.hasComponent<MeshRenderer>( entity ) );
+	const ecs::Entity entity = entities[0];
+	REQUIRE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// Verify bounds were set and are valid
@@ -340,16 +339,16 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 	scene->setPath( "multi_primitive_bounds_test.gltf" );
 	scene->setLoaded( true );
 
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 
 	// First primitive - extends from (-10, -5, -1) to (0, 0, 0)
-	Primitive primitive1;
+	assets::Primitive primitive1;
 	primitive1.addVertex( { { -10.0f, -5.0f, -1.0f }, {}, {} } );
 	primitive1.addVertex( { { 0.0f, 0.0f, 0.0f }, {}, {} } );
 	mesh->addPrimitive( std::move( primitive1 ) );
 
 	// Second primitive - extends from (0, 0, 0) to (8, 12, 6)
-	Primitive primitive2;
+	assets::Primitive primitive2;
 	primitive2.addVertex( { { 0.0f, 0.0f, 0.0f }, {}, {} } );
 	primitive2.addVertex( { { 8.0f, 12.0f, 6.0f }, {}, {} } );
 	mesh->addPrimitive( std::move( primitive2 ) );
@@ -358,7 +357,7 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 	REQUIRE( mesh->hasBounds() );
 
 	const auto meshHandle = scene->addMesh( mesh );
-	auto rootNode = std::make_unique<SceneNode>( "MultiPrimitiveNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "MultiPrimitiveNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
@@ -370,10 +369,10 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
-	REQUIRE( ecsScene.hasComponent<MeshRenderer>( entity ) );
+	const ecs::Entity entity = entities[0];
+	REQUIRE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// Verify bounds encompass all vertices
@@ -396,12 +395,12 @@ TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_impor
 	scene->setLoaded( true );
 
 	// Create an empty mesh
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 	// Don't add any primitives - mesh should have no bounds
 	REQUIRE_FALSE( mesh->hasBounds() );
 
 	const auto meshHandle = scene->addMesh( mesh );
-	auto rootNode = std::make_unique<SceneNode>( "EmptyMeshNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "EmptyMeshNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
@@ -413,10 +412,10 @@ TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_impor
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
-	REQUIRE( ecsScene.hasComponent<MeshRenderer>( entity ) );
+	const ecs::Entity entity = entities[0];
+	REQUIRE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// MeshRenderer should exist but bounds should be invalid (default state)
@@ -430,13 +429,13 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	scene->setPath( "center_size_bounds_test.gltf" );
 	scene->setLoaded( true );
 
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 
 	// Create a primitive with vertices that form a known bounding box
 	// Center at (1, 2, 3) with size (4, 6, 8) means:
 	// Min = (1, 2, 3) - (2, 3, 4) = (-1, -1, -1)
 	// Max = (1, 2, 3) + (2, 3, 4) = (3, 5, 7)
-	Primitive primitive;
+	assets::Primitive primitive;
 	primitive.addVertex( { { -1.0f, -1.0f, -1.0f }, {}, {} } ); // Min corner
 	primitive.addVertex( { { 3.0f, 5.0f, 7.0f }, {}, {} } );	// Max corner
 	primitive.addVertex( { { 1.0f, 2.0f, 3.0f }, {}, {} } );	// Center point
@@ -458,7 +457,7 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	REQUIRE( boundsSize.z == Approx( 8.0f ) );
 
 	const auto meshHandle = scene->addMesh( mesh );
-	auto rootNode = std::make_unique<SceneNode>( "CenterSizeNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "CenterSizeNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
@@ -470,8 +469,8 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const ecs::Entity entity = entities[0];
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// Verify MeshRenderer bounds match the center/size calculation

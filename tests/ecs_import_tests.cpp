@@ -22,29 +22,29 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	scene->setLoaded( true );
 
 	// Create root node with mesh containing two primitives
-	auto rootNode = std::make_unique<SceneNode>( "RootNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "RootNode" );
 
 	// Create a mesh with two primitives
-	auto mesh = std::make_shared<Mesh>();
+	auto mesh = std::make_shared<assets::Mesh>();
 
 	// Create and add materials to the scene first
-	auto material1 = std::make_shared<Material>();
+	auto material1 = std::make_shared<assets::Material>();
 	material1->setName( "Material1" );
 	const auto material1Handle = scene->addMaterial( material1 );
 
-	auto material2 = std::make_shared<Material>();
+	auto material2 = std::make_shared<assets::Material>();
 	material2->setName( "Material2" );
 	const auto material2Handle = scene->addMaterial( material2 );
 
 	// First primitive
-	Primitive primitive1;
+	assets::Primitive primitive1;
 	primitive1.addVertex( { .position = { 0.0f, 0.0f, 0.0f } } );
 	primitive1.addVertex( { .position = { 1.0f, 0.0f, 0.0f } } );
 	primitive1.addVertex( { .position = { 0.0f, 1.0f, 0.0f } } );
 	primitive1.setMaterialHandle( material1Handle );
 
 	// Second primitive
-	Primitive primitive2;
+	assets::Primitive primitive2;
 	primitive2.addVertex( { .position = { 2.0f, 0.0f, 0.0f } } );
 	primitive2.addVertex( { .position = { 3.0f, 0.0f, 0.0f } } );
 	primitive2.addVertex( { .position = { 2.0f, 1.0f, 0.0f } } );
@@ -88,23 +88,23 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( ecsScene.isValid( entity ) );
 
 	// Check Name component
-	const auto *nameComp = ecsScene.getComponent<Name>( entity );
+	const auto *nameComp = ecsScene.getComponent<components::Name>( entity );
 	REQUIRE( nameComp != nullptr );
 	REQUIRE( nameComp->name == "RootNode" );
 
 	// Check Transform component
-	const auto *transformComp = ecsScene.getComponent<Transform>( entity );
+	const auto *transformComp = ecsScene.getComponent<components::Transform>( entity );
 	REQUIRE( transformComp != nullptr );
 	REQUIRE( transformComp->position.x == Approx( 1.0f ) );
 	REQUIRE( transformComp->position.y == Approx( 2.0f ) );
 	REQUIRE( transformComp->position.z == Approx( 3.0f ) );
 
 	// Check MeshRenderer component
-	const auto *rendererComp = ecsScene.getComponent<MeshRenderer>( entity );
+	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// Cleanup
@@ -156,13 +156,13 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	REQUIRE( entities.size() == 2 ); // Parent + child
 
 	// Find parent and child entities
-	Entity parentEntity{}, childEntity{};
+	ecs::Entity parentEntity{}, childEntity{};
 	for ( const auto entity : entities )
 	{
 		if ( !entity.isValid() )
 			continue;
 
-		const auto *name = ecsScene.getComponent<Name>( entity );
+		const auto *name = ecsScene.getComponent<components::Name>( entity );
 		if ( name && name->name == "ParentNode" )
 		{
 			parentEntity = entity;
@@ -177,7 +177,7 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	REQUIRE( childEntity.isValid() );
 
 	// Verify parent-child relationship
-	const Entity actualParent = ecsScene.getParent( childEntity );
+	const ecs::Entity actualParent = ecsScene.getParent( childEntity );
 	REQUIRE( actualParent == parentEntity );
 
 	const auto children = ecsScene.getChildren( parentEntity );
@@ -224,13 +224,13 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( ecsScene.isValid( entity ) );
 
 	// Should have Name and Transform but not MeshRenderer
-	REQUIRE( ecsScene.hasComponent<Name>( entity ) );
-	REQUIRE( ecsScene.hasComponent<Transform>( entity ) );
-	REQUIRE_FALSE( ecsScene.hasComponent<MeshRenderer>( entity ) );
+	REQUIRE( ecsScene.hasComponent<components::Name>( entity ) );
+	REQUIRE( ecsScene.hasComponent<components::Transform>( entity ) );
+	REQUIRE_FALSE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 
 	// Cleanup
 	AssetManager::clearImportSceneCallback();
