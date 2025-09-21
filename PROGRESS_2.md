@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-21 — Transform Command System Implementation
+**Summary:** Implemented core transform command infrastructure for undo/redo system with base Command interface, TransformEntityCommand for single entities, and BatchTransformCommand for multi-entity operations.
+
+**Atomic functionalities completed:**
+- AF4.1: Created base Command interface with execute(), undo(), and getDescription() methods
+- AF4.2: Implemented TransformEntityCommand with full execute/undo cycle for single entity transformations
+- AF4.3: Implemented BatchTransformCommand for managing multiple entity transformations as a single unit
+
+**Tests:** 3 new test cases with 12+ assertions; tested command interface contract, single entity execute/undo cycle, and batch construction.
+**Files:** `src/editor/transform_commands.h/cpp`, `tests/transform_commands_tests.cpp`, updated CMakeLists.txt
+**Notes:** Foundation is ready for factory pattern and GizmoSystem integration. Remaining tasks (AF4.4-4.6) deferred for future implementation.
+
 ## 2025‑09‑21 — Task 3: ImGuizmo Integration Layer Complete (M2-P4-T03)
 **Summary:** Successfully implemented complete ImGuizmo integration layer via strict TDD approach. Added ImGuizmo context setup, coordinate space configuration, operation mode binding, snap value configuration, manipulation detection, and result extraction. The gizmo system now fully integrates with ImGuizmo library for real-time 3D manipulation with proper viewport matrix setup and coordinate system conversion.
 
