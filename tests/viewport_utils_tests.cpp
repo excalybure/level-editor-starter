@@ -1,15 +1,16 @@
-﻿// Viewport Utility Functions tests
+﻿// editor::Viewport Utility Functions tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <string>
 
 #include "editor/viewport/viewport.h"
 
-using namespace editor;
+using Catch::Approx;
+
 
 TEST_CASE( "ViewportUtils Name Functions", "[viewport][utils][names]" )
 {
-	SECTION( "Viewport type name mapping" )
+	SECTION( "editor::Viewport type name mapping" )
 	{
 		// Test all viewport type names
 		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Perspective ) ) == "Perspective" );
@@ -18,7 +19,7 @@ TEST_CASE( "ViewportUtils Name Functions", "[viewport][utils][names]" )
 		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Side ) ) == "Side" );
 	}
 
-	SECTION( "Viewport type names are consistent" )
+	SECTION( "editor::Viewport type names are consistent" )
 	{
 		// Names should be non-empty and consistent between calls
 		const char *perspective1 = ViewportUtils::getViewportTypeName( ViewportType::Perspective );
@@ -99,14 +100,14 @@ TEST_CASE( "ViewportUtils Input Event Creation", "[viewport][utils][input]" )
 	}
 }
 
-TEST_CASE( "Viewport Display Name Functionality", "[viewport][utils][display]" )
+TEST_CASE( "editor::Viewport Display Name Functionality", "[viewport][utils][display]" )
 {
 	SECTION( "Individual viewport display names" )
 	{
-		Viewport perspectiveViewport( ViewportType::Perspective );
-		Viewport topViewport( ViewportType::Top );
-		Viewport frontViewport( ViewportType::Front );
-		Viewport sideViewport( ViewportType::Side );
+		editor::Viewport perspectiveViewport( ViewportType::Perspective );
+		editor::Viewport topViewport( ViewportType::Top );
+		editor::Viewport frontViewport( ViewportType::Front );
+		editor::Viewport sideViewport( ViewportType::Side );
 
 		// Get display names
 		const char *perspectiveName = perspectiveViewport.getDisplayName();
@@ -134,7 +135,7 @@ TEST_CASE( "Viewport Display Name Functionality", "[viewport][utils][display]" )
 
 	SECTION( "Display name consistency" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( ViewportType::Perspective );
 
 		// Multiple calls should return the same name
 		const char *name1 = viewport.getDisplayName();
@@ -145,10 +146,10 @@ TEST_CASE( "Viewport Display Name Functionality", "[viewport][utils][display]" )
 
 	SECTION( "Display name uniqueness" )
 	{
-		Viewport perspective( ViewportType::Perspective );
-		Viewport top( ViewportType::Top );
-		Viewport front( ViewportType::Front );
-		Viewport side( ViewportType::Side );
+		editor::Viewport perspective( ViewportType::Perspective );
+		editor::Viewport top( ViewportType::Top );
+		editor::Viewport front( ViewportType::Front );
+		editor::Viewport side( ViewportType::Side );
 
 		// All display names should be unique
 		std::set<std::string> displayNames;
@@ -161,14 +162,14 @@ TEST_CASE( "Viewport Display Name Functionality", "[viewport][utils][display]" )
 	}
 }
 
-TEST_CASE( "Viewport Camera Type Mapping", "[viewport][utils][camera]" )
+TEST_CASE( "editor::Viewport Camera Type Mapping", "[viewport][utils][camera]" )
 {
 	SECTION( "Camera view type consistency" )
 	{
-		Viewport perspectiveViewport( ViewportType::Perspective );
-		Viewport topViewport( ViewportType::Top );
-		Viewport frontViewport( ViewportType::Front );
-		Viewport sideViewport( ViewportType::Side );
+		editor::Viewport perspectiveViewport( ViewportType::Perspective );
+		editor::Viewport topViewport( ViewportType::Top );
+		editor::Viewport frontViewport( ViewportType::Front );
+		editor::Viewport sideViewport( ViewportType::Side );
 
 		// Get camera view types
 		auto perspectiveViewType = perspectiveViewport.getCameraViewType();
@@ -189,7 +190,7 @@ TEST_CASE( "Viewport Camera Type Mapping", "[viewport][utils][camera]" )
 
 	SECTION( "Camera view type stability" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( ViewportType::Top );
 
 		// Camera view type should be consistent
 		auto viewType1 = viewport.getCameraViewType();

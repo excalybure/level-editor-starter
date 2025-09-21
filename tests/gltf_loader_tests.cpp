@@ -12,6 +12,8 @@
 
 using Catch::Approx;
 
+using Catch::Approx;
+
 TEST_CASE( "GLTFLoader Tests", "[gltf][loader]" )
 {
 
@@ -62,10 +64,10 @@ TEST_CASE( "triangle_yellow.gltf loads with yellow material", "[gltf][materials]
 	const auto materialPtr = scene->getMaterial( 0 );
 	REQUIRE( materialPtr );
 	const auto &pbr = materialPtr->getPBRMaterial();
-	CHECK( pbr.baseColorFactor.x == Approx( 1.0f ) );
-	CHECK( pbr.baseColorFactor.y == Approx( 1.0f ) );
-	CHECK( pbr.baseColorFactor.z == Approx( 0.0f ) );
-	CHECK( pbr.baseColorFactor.w == Approx( 1.0f ) );
+	CHECK( pbr.baseColorFactor.x == Catch::Approx( 1.0f ) );
+	CHECK( pbr.baseColorFactor.y == Catch::Approx( 1.0f ) );
+	CHECK( pbr.baseColorFactor.z == Catch::Approx( 0.0f ) );
+	CHECK( pbr.baseColorFactor.w == Catch::Approx( 1.0f ) );
 }
 
 TEST_CASE( "cube.gltf loads six colored materials", "[gltf][materials][cube]" )
@@ -93,10 +95,10 @@ TEST_CASE( "cube.gltf loads six colored materials", "[gltf][materials][cube]" )
 		const auto matPtr = scene->getMaterial( static_cast<assets::MaterialHandle>( i ) );
 		REQUIRE( matPtr );
 		const auto &pbr = matPtr->getPBRMaterial();
-		CHECK( pbr.baseColorFactor.x == Approx( expected[i].r ) );
-		CHECK( pbr.baseColorFactor.y == Approx( expected[i].g ) );
-		CHECK( pbr.baseColorFactor.z == Approx( expected[i].b ) );
-		CHECK( pbr.baseColorFactor.w == Approx( expected[i].a ) );
+		CHECK( pbr.baseColorFactor.x == Catch::Approx( expected[i].r ) );
+		CHECK( pbr.baseColorFactor.y == Catch::Approx( expected[i].g ) );
+		CHECK( pbr.baseColorFactor.z == Catch::Approx( expected[i].b ) );
+		CHECK( pbr.baseColorFactor.w == Catch::Approx( expected[i].a ) );
 	}
 }
 

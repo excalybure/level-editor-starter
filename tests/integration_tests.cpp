@@ -2,7 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
-// Test the integration between UI and Viewport systems
+// Test the integration between UI and editor::Viewport systems
 #include "editor/ui.h"
 #include "editor/viewport/viewport.h"
 #include "engine/math/vec.h"
@@ -12,24 +12,20 @@
 #include "engine/grid/grid.h"
 #include "engine/camera/camera.h"
 
-using namespace editor;
-using namespace math;
-using namespace grid;
-using namespace camera;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][viewport]" )
+TEST_CASE( "UI editor::Viewport Integration - Full System Test", "[integration][ui][viewport]" )
 {
 	SECTION( "UI basic functionality in headless mode" )
 	{
 		// Test basic UI functionality that doesn't require full initialization
-		UI ui;
+		editor::UI ui;
 
 		// Test that getViewport returns nullptr before initialization (safe behavior)
-		REQUIRE( ui.getViewport( ViewportType::Perspective ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Top ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Front ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Side ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Perspective ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Top ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Front ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Side ) == nullptr );
 
 		// Test that layout is available even without initialization
 		const auto &layout = ui.getLayout();
@@ -41,16 +37,16 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		{
 			switch ( pane.type )
 			{
-			case ViewportType::Perspective:
+			case editor::ViewportType::Perspective:
 				foundPerspective = true;
 				break;
-			case ViewportType::Top:
+			case editor::ViewportType::Top:
 				foundTop = true;
 				break;
-			case ViewportType::Front:
+			case editor::ViewportType::Front:
 				foundFront = true;
 				break;
-			case ViewportType::Side:
+			case editor::ViewportType::Side:
 				foundSide = true;
 				break;
 			}
@@ -67,7 +63,7 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 	SECTION( "UI initialization requires valid parameters" )
 	{
-		UI ui;
+		editor::UI ui;
 		dx12::Device device;
 
 		// Should fail with null window handle
@@ -83,7 +79,7 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 
 	SECTION( "UI layout structure is consistent" )
 	{
-		UI ui;
+		editor::UI ui;
 		const auto &layout = ui.getLayout();
 
 		// Layout should have exactly 4 viewport panes
@@ -93,10 +89,10 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		for ( const auto &pane : layout.panes )
 		{
 			// Verify type is valid
-			REQUIRE( ( pane.type == ViewportType::Perspective ||
-				pane.type == ViewportType::Top ||
-				pane.type == ViewportType::Front ||
-				pane.type == ViewportType::Side ) );
+			REQUIRE( ( pane.type == editor::ViewportType::Perspective ||
+				pane.type == editor::ViewportType::Top ||
+				pane.type == editor::ViewportType::Front ||
+				pane.type == editor::ViewportType::Side ) );
 
 			// Verify name is not empty
 			REQUIRE( std::string( pane.name ).length() > 0 );
@@ -108,17 +104,17 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		dx12::Device device;
 		REQUIRE( requireHeadlessDevice( device, "All viewports have proper camera setup through UI" ) );
 
-		UI ui;
+		editor::UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
 
 		// Test that UI-managed viewports have properly configured cameras
-		const ViewportType types[] = {
-			ViewportType::Perspective,
-			ViewportType::Top,
-			ViewportType::Front,
-			ViewportType::Side
+		const editor::ViewportType types[] = {
+			editor::ViewportType::Perspective,
+			editor::ViewportType::Top,
+			editor::ViewportType::Front,
+			editor::ViewportType::Side
 		};
 
 		for ( auto type : types )
@@ -145,17 +141,17 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		}
 	}
 
-	SECTION( "Viewport state changes persist through UI access" )
+	SECTION( "editor::Viewport state changes persist through UI access" )
 	{
 		dx12::Device device;
-		REQUIRE( requireHeadlessDevice( device, "Viewport state changes persist through UI access" ) );
+		REQUIRE( requireHeadlessDevice( device, "editor::Viewport state changes persist through UI access" ) );
 
-		UI ui;
+		editor::UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
 
-		auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
 		REQUIRE( perspectiveViewport != nullptr );
 
 		// Change viewport state
@@ -165,7 +161,7 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		perspectiveViewport->setRenderTargetSize( 1024, 768 );
 
 		// Access viewport through UI again
-		const auto *sameViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *sameViewport = ui.getViewport( editor::ViewportType::Perspective );
 
 		// State should persist
 		REQUIRE( sameViewport->isActive() );
@@ -181,7 +177,7 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 		dx12::Device device;
 		REQUIRE( requireHeadlessDevice( device, "UI layout consistency with viewport types" ) );
 
-		UI ui;
+		editor::UI ui;
 		HWND dummyHwnd = reinterpret_cast<HWND>( 0x1 ); // Dummy window handle for testing
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( ui.initialize( dummyHwnd, &device, shaderManager ) );
@@ -202,11 +198,11 @@ TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][view
 	}
 }
 
-TEST_CASE( "Viewport Camera Type Consistency", "[integration][viewport][camera]" )
+TEST_CASE( "editor::Viewport camera::Camera Type Consistency", "[integration][viewport][camera]" )
 {
 	SECTION( "Perspective viewport has perspective camera" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		const auto *camera = viewport.getCamera();
 
 		// Should be positioned for 3D perspective view
@@ -226,11 +222,11 @@ TEST_CASE( "Viewport Camera Type Consistency", "[integration][viewport][camera]"
 
 	SECTION( "Orthographic viewports have orthographic cameras" )
 	{
-		const ViewportType orthoTypes[] = { ViewportType::Top, ViewportType::Front, ViewportType::Side };
+		const editor::ViewportType orthoTypes[] = { editor::ViewportType::Top, editor::ViewportType::Front, editor::ViewportType::Side };
 
 		for ( auto type : orthoTypes )
 		{
-			Viewport viewport( type );
+			editor::Viewport viewport( type );
 			const auto *camera = viewport.getCamera();
 
 			// Should be positioned appropriately for orthographic view
@@ -251,9 +247,9 @@ TEST_CASE( "Viewport Camera Type Consistency", "[integration][viewport][camera]"
 	}
 }
 
-TEST_CASE( "Viewport Render Target Management Integration", "[integration][viewport][rendering]" )
+TEST_CASE( "editor::Viewport Render Target Management Integration", "[integration][viewport][rendering]" )
 {
-	Viewport viewport( ViewportType::Perspective );
+	editor::Viewport viewport( editor::ViewportType::Perspective );
 
 	SECTION( "Render target size affects camera aspect ratio" )
 	{
@@ -278,7 +274,7 @@ TEST_CASE( "Viewport Render Target Management Integration", "[integration][viewp
 			REQUIRE( viewport.getSize().y == testCase.height );
 			REQUIRE_THAT( viewport.getAspectRatio(), WithinAbs( testCase.expectedAspect, 0.001f ) );
 
-			// Camera projection should reflect the new aspect ratio
+			// camera::Camera projection should reflect the new aspect ratio
 			const auto *camera = viewport.getCamera();
 			const auto projMatrix = camera->getProjectionMatrix( viewport.getAspectRatio() );
 			REQUIRE( projMatrix.m00() != 0.0f ); // Valid projection matrix
@@ -298,34 +294,34 @@ TEST_CASE( "Viewport Render Target Management Integration", "[integration][viewp
 	}
 }
 
-TEST_CASE( "Viewport Utility Functions Integration", "[integration][viewport][utils]" )
+TEST_CASE( "editor::Viewport Utility Functions Integration", "[integration][viewport][utils]" )
 {
 	SECTION( "ViewportUtils functions work with actual viewports" )
 	{
-		const ViewportType types[] = { ViewportType::Perspective, ViewportType::Top, ViewportType::Front, ViewportType::Side };
+		const editor::ViewportType types[] = { editor::ViewportType::Perspective, editor::ViewportType::Top, editor::ViewportType::Front, editor::ViewportType::Side };
 		const char *expectedNames[] = { "Perspective", "Top", "Front", "Side" };
 
 		for ( size_t i = 0; i < 4; ++i )
 		{
 			// Create viewport and test utility functions
-			Viewport viewport( types[i] );
+			editor::Viewport viewport( types[i] );
 
 			// Name should match utility function
-			const char *name = ViewportUtils::getViewportTypeName( types[i] );
+			const char *name = editor::ViewportUtils::getViewportTypeName( types[i] );
 			REQUIRE( std::string( name ) == std::string( expectedNames[i] ) );
 
-			// Viewport type should be correct
+			// editor::Viewport type should be correct
 			REQUIRE( viewport.getType() == types[i] );
 		}
 	}
 }
 
-TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
+TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewport]" )
 {
-	SECTION( "Grid settings window management without initialization" )
+	SECTION( "grid::Grid settings window management without initialization" )
 	{
 		// Test grid settings functionality that doesn't require full UI initialization
-		UI ui;
+		editor::UI ui;
 
 		// Default state
 		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
@@ -349,35 +345,35 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 	}
 
 #if defined( _WIN32 )
-	SECTION( "Full UI Grid Settings Integration with D3D12" )
+	SECTION( "Full UI grid::Grid Settings Integration with D3D12" )
 	{
 		// Create test window and D3D12 device
 		platform::Win32Window window;
-		if ( !window.create( "Grid Settings Integration Test", 800, 600 ) )
+		if ( !window.create( "grid::Grid Settings Integration Test", 800, 600 ) )
 		{
-			WARN( "Skipping Grid Settings integration: failed to create Win32 window" );
+			WARN( "Skipping grid::Grid Settings integration: failed to create Win32 window" );
 			return;
 		}
 
 		dx12::Device device;
 		if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
 		{
-			WARN( "Skipping Grid Settings integration: D3D12 initialize failed" );
+			WARN( "Skipping grid::Grid Settings integration: D3D12 initialize failed" );
 			return;
 		}
 
-		UI ui;
+		editor::UI ui;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
 		// Test grid settings window functionality with fully initialized UI
-		SECTION( "Grid settings window with initialized viewports" )
+		SECTION( "grid::Grid settings window with initialized viewports" )
 		{
 			// Verify all viewports are accessible
-			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-			auto *topViewport = ui.getViewport( ViewportType::Top );
-			auto *frontViewport = ui.getViewport( ViewportType::Front );
-			auto *sideViewport = ui.getViewport( ViewportType::Side );
+			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
+			auto *frontViewport = ui.getViewport( editor::ViewportType::Front );
+			auto *sideViewport = ui.getViewport( editor::ViewportType::Side );
 
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
@@ -390,17 +386,17 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			REQUIRE( frontViewport->isGridVisible() );
 			REQUIRE( sideViewport->isGridVisible() );
 
-			// Grid settings should be accessible
+			// grid::Grid settings should be accessible
 			REQUIRE_NOTHROW( perspectiveViewport->getGridSettings() );
 			REQUIRE_NOTHROW( topViewport->getGridSettings() );
 			REQUIRE_NOTHROW( frontViewport->getGridSettings() );
 			REQUIRE_NOTHROW( sideViewport->getGridSettings() );
 		}
 
-		SECTION( "Grid settings modification through UI integration" )
+		SECTION( "grid::Grid settings modification through UI integration" )
 		{
-			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-			auto *topViewport = ui.getViewport( ViewportType::Top );
+			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
 
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
@@ -432,10 +428,10 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			REQUIRE_THAT( updatedTop.majorGridAlpha, WithinAbs( 0.9f, 0.001f ) );
 		}
 
-		SECTION( "Grid visibility toggle through UI integration" )
+		SECTION( "grid::Grid visibility toggle through UI integration" )
 		{
-			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-			auto *topViewport = ui.getViewport( ViewportType::Top );
+			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
 
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
@@ -454,7 +450,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			REQUIRE( perspectiveViewport->isGridVisible() );
 		}
 
-		SECTION( "Grid settings window state with frame operations" )
+		SECTION( "grid::Grid settings window state with frame operations" )
 		{
 			// Test that grid settings window state persists through frame operations
 			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
@@ -477,7 +473,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 
 		SECTION( "Comprehensive grid settings validation" )
 		{
-			auto *viewport = ui.getViewport( ViewportType::Perspective );
+			auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );
 
 			// Test all major grid settings properties
@@ -538,26 +534,26 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 
 		SECTION( "Adaptive grid spacing algorithm validation" )
 		{
-			const Viewport *viewport = ui.getViewport( ViewportType::Perspective );
+			const editor::Viewport *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );
 
 			// Test the new adaptive spacing algorithm with various distances
 			// The algorithm should use: spacing = (base 10 order of magnitude lower than camera distance) * 0.1
 
 			// Test distance 0.7 -> log10(0.7) = -0.15, floor(-0.15) = -1, 10^-1 = 0.1, spacing = 0.1 * 0.1 = 0.01
-			const float spacing1 = GridRenderer::calculateOptimalSpacing( 0.7f, 1.0f );
+			const float spacing1 = grid::GridRenderer::calculateOptimalSpacing( 0.7f, 1.0f );
 			REQUIRE_THAT( spacing1, WithinAbs( 0.01f, 0.001f ) );
 
 			// Test distance 3.2 -> log10(3.2) = 0.505, floor(0.505) = 0, 10^0 = 1, spacing = 1 * 0.1 = 0.1
-			const float spacing2 = GridRenderer::calculateOptimalSpacing( 3.2f, 1.0f );
+			const float spacing2 = grid::GridRenderer::calculateOptimalSpacing( 3.2f, 1.0f );
 			REQUIRE_THAT( spacing2, WithinAbs( 0.1f, 0.001f ) );
 
 			// Test distance 15.8 -> log10(15.8) = 1.199, floor(1.199) = 1, 10^1 = 10, spacing = 10 * 0.1 = 1.0
-			const float spacing3 = GridRenderer::calculateOptimalSpacing( 15.8f, 1.0f );
+			const float spacing3 = grid::GridRenderer::calculateOptimalSpacing( 15.8f, 1.0f );
 			REQUIRE_THAT( spacing3, WithinAbs( 1.0f, 0.001f ) );
 
 			// Test distance 127.3 -> log10(127.3) = 2.105, floor(2.105) = 2, 10^2 = 100, spacing = 100 * 0.1 = 10.0
-			const float spacing4 = GridRenderer::calculateOptimalSpacing( 127.3f, 1.0f );
+			const float spacing4 = grid::GridRenderer::calculateOptimalSpacing( 127.3f, 1.0f );
 			REQUIRE_THAT( spacing4, WithinAbs( 10.0f, 0.001f ) );
 
 			// Test that spacing always increases with distance (monotonic behavior)
@@ -566,39 +562,39 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			REQUIRE( spacing3 < spacing4 );
 
 			// Test edge case: very small distance
-			const float smallSpacing = GridRenderer::calculateOptimalSpacing( 0.01f, 1.0f );
+			const float smallSpacing = grid::GridRenderer::calculateOptimalSpacing( 0.01f, 1.0f );
 			REQUIRE( smallSpacing > 0.0f );
 			REQUIRE( smallSpacing <= 0.01f ); // Should be smaller than very fine grids
 
 			// Test edge case: zero distance should not crash
-			const float zeroSpacing = GridRenderer::calculateOptimalSpacing( 0.0f, 1.0f );
+			const float zeroSpacing = grid::GridRenderer::calculateOptimalSpacing( 0.0f, 1.0f );
 			REQUIRE( zeroSpacing > 0.0f );
 		}
 
-		SECTION( "Grid visibility and camera distance interaction" )
+		SECTION( "grid::Grid visibility and camera distance interaction" )
 		{
-			auto *viewport = ui.getViewport( ViewportType::Perspective );
+			auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );
 
 			// Test that grid remains visible at various distances (never disappears per user requirement)
-			Camera *camera = viewport->getCamera();
+			camera::Camera *camera = viewport->getCamera();
 			REQUIRE( camera != nullptr );
 
 			// Test close distance
 			camera->setPosition( { 0.0f, 0.0f, 0.5f } );
-			REQUIRE( viewport->isGridVisible() ); // Grid should always be visible
+			REQUIRE( viewport->isGridVisible() ); // grid::Grid should always be visible
 
 			// Test medium distance
 			camera->setPosition( { 0.0f, 0.0f, 10.0f } );
-			REQUIRE( viewport->isGridVisible() ); // Grid should always be visible
+			REQUIRE( viewport->isGridVisible() ); // grid::Grid should always be visible
 
 			// Test far distance
 			camera->setPosition( { 0.0f, 0.0f, 100.0f } );
-			REQUIRE( viewport->isGridVisible() ); // Grid should always be visible
+			REQUIRE( viewport->isGridVisible() ); // grid::Grid should always be visible
 
 			// Test very far distance
 			camera->setPosition( { 0.0f, 0.0f, 1000.0f } );
-			REQUIRE( viewport->isGridVisible() ); // Grid should always be visible
+			REQUIRE( viewport->isGridVisible() ); // grid::Grid should always be visible
 
 			// Reset camera position
 			camera->setPosition( { 0.0f, 0.0f, 10.0f } );
@@ -607,10 +603,10 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		SECTION( "Multiple viewport grid settings independence" )
 		{
 			// Test that each viewport maintains its own independent grid settings
-			auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-			auto *topViewport = ui.getViewport( ViewportType::Top );
-			auto *frontViewport = ui.getViewport( ViewportType::Front );
-			auto *sideViewport = ui.getViewport( ViewportType::Side );
+			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
+			auto *frontViewport = ui.getViewport( editor::ViewportType::Front );
+			auto *sideViewport = ui.getViewport( editor::ViewportType::Side );
 
 			REQUIRE( perspectiveViewport != nullptr );
 			REQUIRE( topViewport != nullptr );
@@ -656,9 +652,9 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 			REQUIRE_THAT( verifySide.majorGridColor.y, WithinAbs( 1.0f, 0.001f ) );		   // Yellow (green component)
 		}
 
-		SECTION( "Grid settings persistence through UI operations" )
+		SECTION( "grid::Grid settings persistence through UI operations" )
 		{
-			auto *viewport = ui.getViewport( ViewportType::Perspective );
+			auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );
 
 			// Modify grid settings
@@ -682,6 +678,6 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 		ui.shutdown();
 	}
 #else
-	WARN( "Grid Settings integration test skipped: not on Win32 platform" );
+	WARN( "grid::Grid Settings integration test skipped: not on Win32 platform" );
 #endif
 }

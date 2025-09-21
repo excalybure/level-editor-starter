@@ -6,52 +6,47 @@
 #include "engine/math/vec.h"
 #include "engine/math/math.h"
 
-using namespace math;
+using Catch::Approx;
 
-// Type aliases for convenience
-using BoundingBox3Df = BoundingBox3D<float>;
-using BoundingSpheref = BoundingSphere<float>;
-using Planef = Plane<float>;
-using Frustumf = Frustum<float>;
 
 TEST_CASE( "3D Point-in-Shape Tests", "[3d][geometry]" )
 {
 	SECTION( "Point in Sphere" )
 	{
-		Vec3f center( 0.0f, 0.0f, 0.0f );
+		math::Vec3f center( 0.0f, 0.0f, 0.0f );
 		float radius = 5.0f;
 
-		REQUIRE( pointInSphere( Vec3f( 0.0f, 0.0f, 0.0f ), center, radius ) );		 // Center
-		REQUIRE( pointInSphere( Vec3f( 3.0f, 0.0f, 0.0f ), center, radius ) );		 // Inside
-		REQUIRE( pointInSphere( Vec3f( 5.0f, 0.0f, 0.0f ), center, radius ) );		 // On surface
-		REQUIRE_FALSE( pointInSphere( Vec3f( 6.0f, 0.0f, 0.0f ), center, radius ) ); // Outside
-		REQUIRE_FALSE( pointInSphere( Vec3f( 4.0f, 4.0f, 0.0f ), center, radius ) ); // Outside diagonal
+		REQUIRE( pointInSphere( math::Vec3f( 0.0f, 0.0f, 0.0f ), center, radius ) );		 // Center
+		REQUIRE( pointInSphere( math::Vec3f( 3.0f, 0.0f, 0.0f ), center, radius ) );		 // Inside
+		REQUIRE( pointInSphere( math::Vec3f( 5.0f, 0.0f, 0.0f ), center, radius ) );		 // On surface
+		REQUIRE_FALSE( pointInSphere( math::Vec3f( 6.0f, 0.0f, 0.0f ), center, radius ) ); // Outside
+		REQUIRE_FALSE( pointInSphere( math::Vec3f( 4.0f, 4.0f, 0.0f ), center, radius ) ); // Outside diagonal
 	}
 
 	SECTION( "Point in AABB" )
 	{
-		Vec3f min( -2.0f, -3.0f, -1.0f );
-		Vec3f max( 2.0f, 3.0f, 1.0f );
+		math::Vec3f min( -2.0f, -3.0f, -1.0f );
+		math::Vec3f max( 2.0f, 3.0f, 1.0f );
 
-		REQUIRE( pointInAABB( Vec3f( 0.0f, 0.0f, 0.0f ), min, max ) );		  // Center
-		REQUIRE( pointInAABB( Vec3f( -2.0f, -3.0f, -1.0f ), min, max ) );	  // Min corner
-		REQUIRE( pointInAABB( Vec3f( 2.0f, 3.0f, 1.0f ), min, max ) );		  // Max corner
-		REQUIRE_FALSE( pointInAABB( Vec3f( -3.0f, 0.0f, 0.0f ), min, max ) ); // Outside X
-		REQUIRE_FALSE( pointInAABB( Vec3f( 0.0f, 4.0f, 0.0f ), min, max ) );  // Outside Y
-		REQUIRE_FALSE( pointInAABB( Vec3f( 0.0f, 0.0f, 2.0f ), min, max ) );  // Outside Z
+		REQUIRE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 0.0f ), min, max ) );		  // Center
+		REQUIRE( pointInAABB( math::Vec3f( -2.0f, -3.0f, -1.0f ), min, max ) );	  // Min corner
+		REQUIRE( pointInAABB( math::Vec3f( 2.0f, 3.0f, 1.0f ), min, max ) );		  // Max corner
+		REQUIRE_FALSE( pointInAABB( math::Vec3f( -3.0f, 0.0f, 0.0f ), min, max ) ); // Outside X
+		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 4.0f, 0.0f ), min, max ) );  // Outside Y
+		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 2.0f ), min, max ) );  // Outside Z
 	}
 
 	SECTION( "Point in Tetrahedron" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
-		Vec3f d( 0.0f, 0.0f, 1.0f );
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f d( 0.0f, 0.0f, 1.0f );
 
-		REQUIRE( pointInTetrahedron( Vec3f( 0.1f, 0.1f, 0.1f ), a, b, c, d ) );		   // Inside
-		REQUIRE( pointInTetrahedron( Vec3f( 0.0f, 0.0f, 0.0f ), a, b, c, d ) );		   // On vertex
-		REQUIRE_FALSE( pointInTetrahedron( Vec3f( 0.5f, 0.5f, 0.5f ), a, b, c, d ) );  // Outside
-		REQUIRE_FALSE( pointInTetrahedron( Vec3f( -0.1f, 0.1f, 0.1f ), a, b, c, d ) ); // Outside
+		REQUIRE( pointInTetrahedron( math::Vec3f( 0.1f, 0.1f, 0.1f ), a, b, c, d ) );		   // Inside
+		REQUIRE( pointInTetrahedron( math::Vec3f( 0.0f, 0.0f, 0.0f ), a, b, c, d ) );		   // On vertex
+		REQUIRE_FALSE( pointInTetrahedron( math::Vec3f( 0.5f, 0.5f, 0.5f ), a, b, c, d ) );  // Outside
+		REQUIRE_FALSE( pointInTetrahedron( math::Vec3f( -0.1f, 0.1f, 0.1f ), a, b, c, d ) ); // Outside
 	}
 }
 
@@ -59,81 +54,81 @@ TEST_CASE( "3D Ray-Shape Intersections", "[3d][geometry][ray]" )
 {
 	SECTION( "Ray-Sphere Intersection" )
 	{
-		Vec3f center( 0.0f, 0.0f, 0.0f );
+		math::Vec3f center( 0.0f, 0.0f, 0.0f );
 		float radius = 2.0f;
 		float hitDistance = 0.0f;
 
 		// Ray from outside hitting sphere
-		REQUIRE( raySphereIntersection( Vec3f( -5.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
+		REQUIRE( raySphereIntersection( math::Vec3f( -5.0f, 0.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
 		REQUIRE( hitDistance == Catch::Approx( 3.0f ) );
 
 		// Ray missing sphere
-		REQUIRE_FALSE( raySphereIntersection( Vec3f( -5.0f, 3.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
+		REQUIRE_FALSE( raySphereIntersection( math::Vec3f( -5.0f, 3.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
 
 		// Ray from inside sphere
-		REQUIRE( raySphereIntersection( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
+		REQUIRE( raySphereIntersection( math::Vec3f( 0.0f, 0.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
 		REQUIRE( hitDistance == Catch::Approx( 2.0f ) );
 
 		// Ray going away from sphere
-		REQUIRE_FALSE( raySphereIntersection( Vec3f( -5.0f, 0.0f, 0.0f ), Vec3f( -1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
+		REQUIRE_FALSE( raySphereIntersection( math::Vec3f( -5.0f, 0.0f, 0.0f ), math::Vec3f( -1.0f, 0.0f, 0.0f ), center, radius, hitDistance ) );
 	}
 
 	SECTION( "Ray-AABB Intersection" )
 	{
-		Vec3f min( -1.0f, -1.0f, -1.0f );
-		Vec3f max( 1.0f, 1.0f, 1.0f );
+		math::Vec3f min( -1.0f, -1.0f, -1.0f );
+		math::Vec3f max( 1.0f, 1.0f, 1.0f );
 		float hitDistance = 0.0f;
 
 		// Ray hitting box from outside
-		REQUIRE( rayAABBIntersection( Vec3f( -2.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
+		REQUIRE( rayAABBIntersection( math::Vec3f( -2.0f, 0.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
 		REQUIRE( hitDistance == Catch::Approx( 1.0f ) );
 
 		// Ray missing box
-		REQUIRE_FALSE( rayAABBIntersection( Vec3f( -2.0f, 2.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
+		REQUIRE_FALSE( rayAABBIntersection( math::Vec3f( -2.0f, 2.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
 
 		// Ray from inside box
-		REQUIRE( rayAABBIntersection( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
+		REQUIRE( rayAABBIntersection( math::Vec3f( 0.0f, 0.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), min, max, hitDistance ) );
 		REQUIRE( hitDistance == Catch::Approx( 0.0f ) );
 
 		// Ray parallel to box face
-		REQUIRE_FALSE( rayAABBIntersection( Vec3f( -2.0f, 0.0f, 0.0f ), Vec3f( 0.0f, 1.0f, 0.0f ), min, max, hitDistance ) );
+		REQUIRE_FALSE( rayAABBIntersection( math::Vec3f( -2.0f, 0.0f, 0.0f ), math::Vec3f( 0.0f, 1.0f, 0.0f ), min, max, hitDistance ) );
 	}
 
 	SECTION( "Ray-Triangle Intersection" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
-		Vec3f hitPoint;
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f hitPoint;
 
 		// Ray hitting triangle
-		REQUIRE( rayTriangleIntersection( Vec3f( 0.25f, 0.25f, -1.0f ), Vec3f( 0.0f, 0.0f, 1.0f ), a, b, c, hitPoint ) );
+		REQUIRE( rayTriangleIntersection( math::Vec3f( 0.25f, 0.25f, -1.0f ), math::Vec3f( 0.0f, 0.0f, 1.0f ), a, b, c, hitPoint ) );
 		REQUIRE( hitPoint.x == Catch::Approx( 0.25f ) );
 		REQUIRE( hitPoint.y == Catch::Approx( 0.25f ) );
 		REQUIRE( hitPoint.z == Catch::Approx( 0.0f ) );
 
 		// Ray missing triangle
-		REQUIRE_FALSE( rayTriangleIntersection( Vec3f( 1.0f, 1.0f, -1.0f ), Vec3f( 0.0f, 0.0f, 1.0f ), a, b, c, hitPoint ) );
+		REQUIRE_FALSE( rayTriangleIntersection( math::Vec3f( 1.0f, 1.0f, -1.0f ), math::Vec3f( 0.0f, 0.0f, 1.0f ), a, b, c, hitPoint ) );
 
 		// Ray parallel to triangle
-		REQUIRE_FALSE( rayTriangleIntersection( Vec3f( 0.25f, 0.25f, -1.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), a, b, c, hitPoint ) );
+		REQUIRE_FALSE( rayTriangleIntersection( math::Vec3f( 0.25f, 0.25f, -1.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), a, b, c, hitPoint ) );
 	}
 
 	SECTION( "Ray-Plane Intersection" )
 	{
-		Vec3f planePoint( 0.0f, 0.0f, 0.0f );
-		Vec3f planeNormal( 0.0f, 0.0f, 1.0f );
+		math::Vec3f planePoint( 0.0f, 0.0f, 0.0f );
+		math::Vec3f planeNormal( 0.0f, 0.0f, 1.0f );
 		float hitDistance = 0.0f;
 
 		// Ray hitting plane
-		REQUIRE( rayPlaneIntersection( Vec3f( 1.0f, 1.0f, -2.0f ), Vec3f( 0.0f, 0.0f, 1.0f ), planePoint, planeNormal, hitDistance ) );
+		REQUIRE( rayPlaneIntersection( math::Vec3f( 1.0f, 1.0f, -2.0f ), math::Vec3f( 0.0f, 0.0f, 1.0f ), planePoint, planeNormal, hitDistance ) );
 		REQUIRE( hitDistance == Catch::Approx( 2.0f ) );
 
 		// Ray parallel to plane
-		REQUIRE_FALSE( rayPlaneIntersection( Vec3f( 1.0f, 1.0f, -2.0f ), Vec3f( 1.0f, 0.0f, 0.0f ), planePoint, planeNormal, hitDistance ) );
+		REQUIRE_FALSE( rayPlaneIntersection( math::Vec3f( 1.0f, 1.0f, -2.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ), planePoint, planeNormal, hitDistance ) );
 
 		// Ray going away from plane
-		REQUIRE_FALSE( rayPlaneIntersection( Vec3f( 1.0f, 1.0f, -2.0f ), Vec3f( 0.0f, 0.0f, -1.0f ), planePoint, planeNormal, hitDistance ) );
+		REQUIRE_FALSE( rayPlaneIntersection( math::Vec3f( 1.0f, 1.0f, -2.0f ), math::Vec3f( 0.0f, 0.0f, -1.0f ), planePoint, planeNormal, hitDistance ) );
 	}
 }
 
@@ -141,40 +136,40 @@ TEST_CASE( "3D Distance Calculations", "[3d][geometry][distance]" )
 {
 	SECTION( "Distance Point to Plane" )
 	{
-		Vec3f planePoint( 0.0f, 0.0f, 0.0f );
-		Vec3f planeNormal( 0.0f, 0.0f, 1.0f );
+		math::Vec3f planePoint( 0.0f, 0.0f, 0.0f );
+		math::Vec3f planeNormal( 0.0f, 0.0f, 1.0f );
 
-		REQUIRE( distancePointToPlane( Vec3f( 1.0f, 1.0f, 3.0f ), planePoint, planeNormal ) == Catch::Approx( 3.0f ) );
-		REQUIRE( distancePointToPlane( Vec3f( 1.0f, 1.0f, -2.0f ), planePoint, planeNormal ) == Catch::Approx( 2.0f ) );
-		REQUIRE( distancePointToPlane( Vec3f( 1.0f, 1.0f, 0.0f ), planePoint, planeNormal ) == Catch::Approx( 0.0f ) );
+		REQUIRE( distancePointToPlane( math::Vec3f( 1.0f, 1.0f, 3.0f ), planePoint, planeNormal ) == Catch::Approx( 3.0f ) );
+		REQUIRE( distancePointToPlane( math::Vec3f( 1.0f, 1.0f, -2.0f ), planePoint, planeNormal ) == Catch::Approx( 2.0f ) );
+		REQUIRE( distancePointToPlane( math::Vec3f( 1.0f, 1.0f, 0.0f ), planePoint, planeNormal ) == Catch::Approx( 0.0f ) );
 	}
 
 	SECTION( "Distance Point to Line 3D" )
 	{
-		Vec3f linePoint( 0.0f, 0.0f, 0.0f );
-		Vec3f lineDirection( 1.0f, 0.0f, 0.0f );
+		math::Vec3f linePoint( 0.0f, 0.0f, 0.0f );
+		math::Vec3f lineDirection( 1.0f, 0.0f, 0.0f );
 
-		REQUIRE( distancePointToLine3D( Vec3f( 2.0f, 3.0f, 0.0f ), linePoint, lineDirection ) == Catch::Approx( 3.0f ) );
-		REQUIRE( distancePointToLine3D( Vec3f( 2.0f, 0.0f, 4.0f ), linePoint, lineDirection ) == Catch::Approx( 4.0f ) );
-		REQUIRE( distancePointToLine3D( Vec3f( 2.0f, 0.0f, 0.0f ), linePoint, lineDirection ) == Catch::Approx( 0.0f ) );
+		REQUIRE( distancePointToLine3D( math::Vec3f( 2.0f, 3.0f, 0.0f ), linePoint, lineDirection ) == Catch::Approx( 3.0f ) );
+		REQUIRE( distancePointToLine3D( math::Vec3f( 2.0f, 0.0f, 4.0f ), linePoint, lineDirection ) == Catch::Approx( 4.0f ) );
+		REQUIRE( distancePointToLine3D( math::Vec3f( 2.0f, 0.0f, 0.0f ), linePoint, lineDirection ) == Catch::Approx( 0.0f ) );
 	}
 
 	SECTION( "Distance Point to Segment 3D" )
 	{
-		Vec3f segmentStart( 0.0f, 0.0f, 0.0f );
-		Vec3f segmentEnd( 4.0f, 0.0f, 0.0f );
+		math::Vec3f segmentStart( 0.0f, 0.0f, 0.0f );
+		math::Vec3f segmentEnd( 4.0f, 0.0f, 0.0f );
 
 		// Point closest to middle of segment
-		REQUIRE( distancePointToSegment3D( Vec3f( 2.0f, 3.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( 3.0f ) );
+		REQUIRE( distancePointToSegment3D( math::Vec3f( 2.0f, 3.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( 3.0f ) );
 
 		// Point closest to start of segment
-		REQUIRE( distancePointToSegment3D( Vec3f( -1.0f, 2.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( std::sqrt( 5.0f ) ) );
+		REQUIRE( distancePointToSegment3D( math::Vec3f( -1.0f, 2.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( std::sqrt( 5.0f ) ) );
 
 		// Point closest to end of segment
-		REQUIRE( distancePointToSegment3D( Vec3f( 5.0f, 2.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( std::sqrt( 5.0f ) ) );
+		REQUIRE( distancePointToSegment3D( math::Vec3f( 5.0f, 2.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( std::sqrt( 5.0f ) ) );
 
 		// Point on segment
-		REQUIRE( distancePointToSegment3D( Vec3f( 2.0f, 0.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( 0.0f ) );
+		REQUIRE( distancePointToSegment3D( math::Vec3f( 2.0f, 0.0f, 0.0f ), segmentStart, segmentEnd ) == Catch::Approx( 0.0f ) );
 	}
 }
 
@@ -182,10 +177,10 @@ TEST_CASE( "3D Geometric Calculations", "[3d][geometry]" )
 {
 	SECTION( "Tetrahedron Volume" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
-		Vec3f d( 0.0f, 0.0f, 1.0f );
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f d( 0.0f, 0.0f, 1.0f );
 
 		float volume = tetrahedronVolume( a, b, c, d );
 		REQUIRE( volume == Catch::Approx( 1.0f / 6.0f ) ); // Unit tetrahedron volume
@@ -193,9 +188,9 @@ TEST_CASE( "3D Geometric Calculations", "[3d][geometry]" )
 
 	SECTION( "Triangle Area 3D" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
 
 		float area = triangleArea3D( a, b, c );
 		REQUIRE( area == Catch::Approx( 0.5f ) ); // Right triangle with legs of length 1
@@ -203,11 +198,11 @@ TEST_CASE( "3D Geometric Calculations", "[3d][geometry]" )
 
 	SECTION( "Triangle Normal" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
 
-		Vec3f normal = triangleNormal( a, b, c );
+		math::Vec3f normal = triangleNormal( a, b, c );
 		REQUIRE( normal.x == Catch::Approx( 0.0f ) );
 		REQUIRE( normal.y == Catch::Approx( 0.0f ) );
 		REQUIRE( normal.z == Catch::Approx( 1.0f ) );
@@ -215,18 +210,18 @@ TEST_CASE( "3D Geometric Calculations", "[3d][geometry]" )
 
 	SECTION( "Barycentric Coordinates 3D" )
 	{
-		Vec3f a( 0.0f, 0.0f, 0.0f );
-		Vec3f b( 1.0f, 0.0f, 0.0f );
-		Vec3f c( 0.0f, 1.0f, 0.0f );
+		math::Vec3f a( 0.0f, 0.0f, 0.0f );
+		math::Vec3f b( 1.0f, 0.0f, 0.0f );
+		math::Vec3f c( 0.0f, 1.0f, 0.0f );
 
 		// Point at vertex a
-		Vec3f bary = barycentric3D( a, a, b, c );
+		math::Vec3f bary = barycentric3D( a, a, b, c );
 		REQUIRE( bary.x == Catch::Approx( 1.0f ) );
 		REQUIRE( bary.y == Catch::Approx( 0.0f ) );
 		REQUIRE( bary.z == Catch::Approx( 0.0f ) );
 
 		// Point at center of triangle
-		Vec3f center = Vec3f( 1.0f / 3.0f, 1.0f / 3.0f, 0.0f );
+		math::Vec3f center = math::Vec3f( 1.0f / 3.0f, 1.0f / 3.0f, 0.0f );
 		bary = barycentric3D( center, a, b, c );
 		REQUIRE( bary.x == Catch::Approx( 1.0f / 3.0f ) );
 		REQUIRE( bary.y == Catch::Approx( 1.0f / 3.0f ) );
@@ -238,31 +233,31 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 {
 	SECTION( "BoundingBox3D Operations" )
 	{
-		BoundingBox3Df box( Vec3f( -1.0f, -2.0f, -3.0f ), Vec3f( 1.0f, 2.0f, 3.0f ) );
+		math::BoundingBox3Df box( math::Vec3f( -1.0f, -2.0f, -3.0f ), math::Vec3f( 1.0f, 2.0f, 3.0f ) );
 
 		// Contains test
-		REQUIRE( box.contains( Vec3f( 0.0f, 0.0f, 0.0f ) ) );
-		REQUIRE( box.contains( Vec3f( -1.0f, -2.0f, -3.0f ) ) );
-		REQUIRE_FALSE( box.contains( Vec3f( 2.0f, 0.0f, 0.0f ) ) );
+		REQUIRE( box.contains( math::Vec3f( 0.0f, 0.0f, 0.0f ) ) );
+		REQUIRE( box.contains( math::Vec3f( -1.0f, -2.0f, -3.0f ) ) );
+		REQUIRE_FALSE( box.contains( math::Vec3f( 2.0f, 0.0f, 0.0f ) ) );
 
 		// Intersection test
-		BoundingBox3Df other( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 2.0f, 3.0f, 4.0f ) );
+		math::BoundingBox3Df other( math::Vec3f( 0.0f, 0.0f, 0.0f ), math::Vec3f( 2.0f, 3.0f, 4.0f ) );
 		REQUIRE( box.intersects( other ) );
 
-		BoundingBox3Df separate( Vec3f( 3.0f, 3.0f, 3.0f ), Vec3f( 5.0f, 5.0f, 5.0f ) );
+		math::BoundingBox3Df separate( math::Vec3f( 3.0f, 3.0f, 3.0f ), math::Vec3f( 5.0f, 5.0f, 5.0f ) );
 		REQUIRE_FALSE( box.intersects( separate ) );
 
 		// Sphere intersection
-		REQUIRE( box.intersects( Vec3f( 0.0f, 0.0f, 0.0f ), 1.0f ) );
-		REQUIRE_FALSE( box.intersects( Vec3f( 5.0f, 5.0f, 5.0f ), 1.0f ) );
+		REQUIRE( box.intersects( math::Vec3f( 0.0f, 0.0f, 0.0f ), 1.0f ) );
+		REQUIRE_FALSE( box.intersects( math::Vec3f( 5.0f, 5.0f, 5.0f ), 1.0f ) );
 
 		// Properties
-		Vec3f center = box.center();
+		math::Vec3f center = box.center();
 		REQUIRE( center.x == Catch::Approx( 0.0f ) );
 		REQUIRE( center.y == Catch::Approx( 0.0f ) );
 		REQUIRE( center.z == Catch::Approx( 0.0f ) );
 
-		Vec3f size = box.size();
+		math::Vec3f size = box.size();
 		REQUIRE( size.x == Catch::Approx( 2.0f ) );
 		REQUIRE( size.y == Catch::Approx( 4.0f ) );
 		REQUIRE( size.z == Catch::Approx( 6.0f ) );
@@ -270,18 +265,18 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE( box.volume() == Catch::Approx( 48.0f ) );
 
 		// Corner test
-		Vec3f corner0 = box.corner( 0 );
+		math::Vec3f corner0 = box.corner( 0 );
 		REQUIRE( corner0.x == Catch::Approx( -1.0f ) );
 		REQUIRE( corner0.y == Catch::Approx( -2.0f ) );
 		REQUIRE( corner0.z == Catch::Approx( -3.0f ) );
 
-		Vec3f corner7 = box.corner( 7 );
+		math::Vec3f corner7 = box.corner( 7 );
 		REQUIRE( corner7.x == Catch::Approx( 1.0f ) );
 		REQUIRE( corner7.y == Catch::Approx( 2.0f ) );
 		REQUIRE( corner7.z == Catch::Approx( 3.0f ) );
 
 		// Default constructor should create invalid bounds
-		const BoundingBox3Df defaultBox;
+		const math::BoundingBox3Df defaultBox;
 		REQUIRE_FALSE( defaultBox.isValid() );
 		// Default initialization should create min > max for easy expansion
 		REQUIRE( defaultBox.min.x > defaultBox.max.x );
@@ -289,20 +284,20 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE( defaultBox.min.z > defaultBox.max.z );
 	}
 
-	SECTION( "BoundingSphere Operations" )
+	SECTION( "math::BoundingSphere Operations" )
 	{
-		BoundingSphere<float> sphere( Vec3f( 0.0f, 0.0f, 0.0f ), 2.0f );
+		math::BoundingSphere<float> sphere( math::Vec3f( 0.0f, 0.0f, 0.0f ), 2.0f );
 
 		// Contains test
-		REQUIRE( sphere.contains( Vec3f( 0.0f, 0.0f, 0.0f ) ) );
-		REQUIRE( sphere.contains( Vec3f( 1.0f, 1.0f, 0.0f ) ) );
-		REQUIRE_FALSE( sphere.contains( Vec3f( 3.0f, 0.0f, 0.0f ) ) );
+		REQUIRE( sphere.contains( math::Vec3f( 0.0f, 0.0f, 0.0f ) ) );
+		REQUIRE( sphere.contains( math::Vec3f( 1.0f, 1.0f, 0.0f ) ) );
+		REQUIRE_FALSE( sphere.contains( math::Vec3f( 3.0f, 0.0f, 0.0f ) ) );
 
 		// Intersection test
-		BoundingSphere<float> other( Vec3f( 3.0f, 0.0f, 0.0f ), 2.0f );
+		math::BoundingSphere<float> other( math::Vec3f( 3.0f, 0.0f, 0.0f ), 2.0f );
 		REQUIRE( sphere.intersects( other ) );
 
-		BoundingSphere<float> separate( Vec3f( 10.0f, 0.0f, 0.0f ), 2.0f );
+		math::BoundingSphere<float> separate( math::Vec3f( 10.0f, 0.0f, 0.0f ), 2.0f );
 		REQUIRE_FALSE( sphere.intersects( separate ) );
 
 		// Properties
@@ -312,43 +307,43 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 
 	SECTION( "Plane Operations" )
 	{
-		Plane<float> plane( Vec3f( 0.0f, 0.0f, 0.0f ), Vec3f( 0.0f, 0.0f, 1.0f ) );
+		math::Plane<float> plane( math::Vec3f( 0.0f, 0.0f, 0.0f ), math::Vec3f( 0.0f, 0.0f, 1.0f ) );
 
 		// Distance test
-		REQUIRE( plane.distanceToPoint( Vec3f( 1.0f, 1.0f, 3.0f ) ) == Catch::Approx( 3.0f ) );
-		REQUIRE( plane.distanceToPoint( Vec3f( 1.0f, 1.0f, -2.0f ) ) == Catch::Approx( -2.0f ) );
+		REQUIRE( plane.distanceToPoint( math::Vec3f( 1.0f, 1.0f, 3.0f ) ) == Catch::Approx( 3.0f ) );
+		REQUIRE( plane.distanceToPoint( math::Vec3f( 1.0f, 1.0f, -2.0f ) ) == Catch::Approx( -2.0f ) );
 
 		// Closest point
-		Vec3f closest = plane.closestPoint( Vec3f( 1.0f, 2.0f, 3.0f ) );
+		math::Vec3f closest = plane.closestPoint( math::Vec3f( 1.0f, 2.0f, 3.0f ) );
 		REQUIRE( closest.x == Catch::Approx( 1.0f ) );
 		REQUIRE( closest.y == Catch::Approx( 2.0f ) );
 		REQUIRE( closest.z == Catch::Approx( 0.0f ) );
 
 		// Point on plane test
-		REQUIRE( plane.isPointOnPlane( Vec3f( 1.0f, 2.0f, 0.0f ) ) );
-		REQUIRE_FALSE( plane.isPointOnPlane( Vec3f( 1.0f, 2.0f, 1.0f ) ) );
+		REQUIRE( plane.isPointOnPlane( math::Vec3f( 1.0f, 2.0f, 0.0f ) ) );
+		REQUIRE_FALSE( plane.isPointOnPlane( math::Vec3f( 1.0f, 2.0f, 1.0f ) ) );
 	}
 
 	SECTION( "Frustum Operations" )
 	{
-		Frustum<float> frustum;
+		math::Frustum<float> frustum;
 		// Set up a simple frustum (normally would be calculated from projection matrix)
-		frustum.planes[0] = Plane<float>( Vec3f( -1.0f, 0.0f, 0.0f ), Vec3f( 1.0f, 0.0f, 0.0f ) ); // Left
-		frustum.planes[1] = Plane<float>( Vec3f( 1.0f, 0.0f, 0.0f ), Vec3f( -1.0f, 0.0f, 0.0f ) ); // Right
-		frustum.planes[2] = Plane<float>( Vec3f( 0.0f, -1.0f, 0.0f ), Vec3f( 0.0f, 1.0f, 0.0f ) ); // Bottom
-		frustum.planes[3] = Plane<float>( Vec3f( 0.0f, 1.0f, 0.0f ), Vec3f( 0.0f, -1.0f, 0.0f ) ); // Top
-		frustum.planes[4] = Plane<float>( Vec3f( 0.0f, 0.0f, -1.0f ), Vec3f( 0.0f, 0.0f, 1.0f ) ); // Near
-		frustum.planes[5] = Plane<float>( Vec3f( 0.0f, 0.0f, 1.0f ), Vec3f( 0.0f, 0.0f, -1.0f ) ); // Far
+		frustum.planes[0] = math::Plane<float>( math::Vec3f( -1.0f, 0.0f, 0.0f ), math::Vec3f( 1.0f, 0.0f, 0.0f ) ); // Left
+		frustum.planes[1] = math::Plane<float>( math::Vec3f( 1.0f, 0.0f, 0.0f ), math::Vec3f( -1.0f, 0.0f, 0.0f ) ); // Right
+		frustum.planes[2] = math::Plane<float>( math::Vec3f( 0.0f, -1.0f, 0.0f ), math::Vec3f( 0.0f, 1.0f, 0.0f ) ); // Bottom
+		frustum.planes[3] = math::Plane<float>( math::Vec3f( 0.0f, 1.0f, 0.0f ), math::Vec3f( 0.0f, -1.0f, 0.0f ) ); // Top
+		frustum.planes[4] = math::Plane<float>( math::Vec3f( 0.0f, 0.0f, -1.0f ), math::Vec3f( 0.0f, 0.0f, 1.0f ) ); // Near
+		frustum.planes[5] = math::Plane<float>( math::Vec3f( 0.0f, 0.0f, 1.0f ), math::Vec3f( 0.0f, 0.0f, -1.0f ) ); // Far
 
 		// Point containment
-		REQUIRE( frustum.contains( Vec3f( 0.0f, 0.0f, 0.0f ) ) );
-		REQUIRE_FALSE( frustum.contains( Vec3f( 2.0f, 0.0f, 0.0f ) ) );
+		REQUIRE( frustum.contains( math::Vec3f( 0.0f, 0.0f, 0.0f ) ) );
+		REQUIRE_FALSE( frustum.contains( math::Vec3f( 2.0f, 0.0f, 0.0f ) ) );
 
 		// Bounding box intersection
-		BoundingBox3Df insideBox( Vec3f( -0.5f, -0.5f, -0.5f ), Vec3f( 0.5f, 0.5f, 0.5f ) );
+		math::BoundingBox3Df insideBox( math::Vec3f( -0.5f, -0.5f, -0.5f ), math::Vec3f( 0.5f, 0.5f, 0.5f ) );
 		REQUIRE( frustum.intersects( insideBox ) );
 
-		BoundingBox3Df outsideBox( Vec3f( 2.0f, 2.0f, 2.0f ), Vec3f( 3.0f, 3.0f, 3.0f ) );
+		math::BoundingBox3Df outsideBox( math::Vec3f( 2.0f, 2.0f, 2.0f ), math::Vec3f( 3.0f, 3.0f, 3.0f ) );
 		REQUIRE_FALSE( frustum.intersects( outsideBox ) );
 	}
 }

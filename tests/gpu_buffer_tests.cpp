@@ -7,9 +7,6 @@
 #include "engine/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
-using namespace assets;
-using namespace engine::gpu;
-
 TEST_CASE( "PrimitiveGPU creates vertex buffer from primitive", "[gpu][primitive][unit]" )
 {
 	// Create a headless D3D12 device for testing
@@ -17,17 +14,17 @@ TEST_CASE( "PrimitiveGPU creates vertex buffer from primitive", "[gpu][primitive
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a test primitive with some vertices
-	Primitive primitive;
-	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 
 	primitive.addIndex( 0 );
 	primitive.addIndex( 1 );
 	primitive.addIndex( 2 );
 
 	// This should compile and create GPU buffers
-	PrimitiveGPU gpuBuffer( device, primitive );
+	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	// Verify the buffer was created successfully
 	REQUIRE( gpuBuffer.isValid() );
@@ -42,17 +39,17 @@ TEST_CASE( "PrimitiveGPU provides valid D3D12 buffer views", "[gpu][primitive][u
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a test primitive
-	Primitive primitive;
-	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 
 	primitive.addIndex( 0 );
 	primitive.addIndex( 1 );
 	primitive.addIndex( 2 );
 
 	// This should provide valid buffer views for rendering
-	PrimitiveGPU gpuBuffer( device, primitive );
+	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	const auto vertexView = gpuBuffer.getVertexBufferView();
 	const auto indexView = gpuBuffer.getIndexBufferView();
@@ -73,23 +70,23 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a mesh with multiple primitives
-	Mesh mesh;
+	assets::Mesh mesh;
 
 	// Add first primitive
-	Primitive primitive1;
-	primitive1.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive1.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive1.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive1;
+	primitive1.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive1.addIndex( 0 );
 	primitive1.addIndex( 1 );
 	primitive1.addIndex( 2 );
 	primitive1.setMaterialHandle( 0 );
 
 	// Add second primitive
-	Primitive primitive2;
-	primitive2.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive2.addVertex( Vertex{ { 2.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive2.addVertex( Vertex{ { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive2;
+	primitive2.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( assets::Vertex{ { 2.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( assets::Vertex{ { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive2.addIndex( 0 );
 	primitive2.addIndex( 1 );
 	primitive2.addIndex( 2 );
@@ -99,7 +96,7 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	mesh.addPrimitive( std::move( primitive2 ) );
 
 	// This should create GPU buffers for each primitive independently
-	MeshGPU meshBuffers( device, mesh );
+	engine::gpu::MeshGPU meshBuffers( device, mesh );
 
 	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
 
@@ -118,14 +115,14 @@ TEST_CASE( "PrimitiveGPU handles empty primitive gracefully", "[gpu][primitive][
 	REQUIRE( device.initializeHeadless() );
 
 	// Create an empty primitive
-	Primitive emptyPrimitive;
+	assets::Primitive emptyPrimitive;
 	REQUIRE( emptyPrimitive.getVertexCount() == 0 );
 	REQUIRE( emptyPrimitive.getIndexCount() == 0 );
 
 	// Creating GPU buffers for empty primitive should fail gracefully
-	PrimitiveGPU gpuBuffer( device, emptyPrimitive );
+	engine::gpu::PrimitiveGPU gpuBuffer( device, emptyPrimitive );
 
-	// Buffer should be invalid for empty primitive
+	// engine::gpu::engine::gpu::Buffer should be invalid for empty primitive
 	REQUIRE_FALSE( gpuBuffer.isValid() );
 	REQUIRE( gpuBuffer.getVertexCount() == 0 );
 	REQUIRE( gpuBuffer.getIndexCount() == 0 );
@@ -138,27 +135,27 @@ TEST_CASE( "MeshGPU handles mesh with empty primitives", "[gpu][mesh][error][uni
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a mesh with one valid and one empty primitive
-	Mesh mesh;
+	assets::Mesh mesh;
 
 	// Add valid primitive
-	Primitive validPrimitive;
-	validPrimitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	validPrimitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	validPrimitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive validPrimitive;
+	validPrimitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	validPrimitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	validPrimitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	validPrimitive.addIndex( 0 );
 	validPrimitive.addIndex( 1 );
 	validPrimitive.addIndex( 2 );
 
 	// Add empty primitive
-	Primitive emptyPrimitive;
+	assets::Primitive emptyPrimitive;
 
 	mesh.addPrimitive( std::move( validPrimitive ) );
 	mesh.addPrimitive( std::move( emptyPrimitive ) );
 
-	// Mesh should have 2 primitives but only 1 should have valid GPU buffers
+	// assets::Mesh should have 2 primitives but only 1 should have valid GPU buffers
 	REQUIRE( mesh.getPrimitiveCount() == 2 );
 
-	MeshGPU meshBuffers( device, mesh );
+	engine::gpu::MeshGPU meshBuffers( device, mesh );
 
 	// Should have failed to create buffers for the empty primitive
 	// The implementation should skip empty primitives
@@ -172,7 +169,7 @@ TEST_CASE( "GPU buffers support large vertex counts", "[gpu][primitive][performa
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a primitive with many vertices
-	Primitive largePrimitive;
+	assets::Primitive largePrimitive;
 	const std::uint32_t vertexCount = 10000;
 	const std::uint32_t indexCount = 30000; // 10000 triangles
 
@@ -180,7 +177,7 @@ TEST_CASE( "GPU buffers support large vertex counts", "[gpu][primitive][performa
 	for ( std::uint32_t i = 0; i < vertexCount; ++i )
 	{
 		const float t = static_cast<float>( i ) / static_cast<float>( vertexCount - 1 );
-		largePrimitive.addVertex( Vertex{
+		largePrimitive.addVertex( assets::Vertex{
 			{ t, 0.0f, 0.0f },
 			{ 0.0f, 1.0f, 0.0f },
 			{ t, 0.0f },
@@ -194,7 +191,7 @@ TEST_CASE( "GPU buffers support large vertex counts", "[gpu][primitive][performa
 	}
 
 	// Should handle large buffers successfully
-	PrimitiveGPU gpuBuffer( device, largePrimitive );
+	engine::gpu::PrimitiveGPU gpuBuffer( device, largePrimitive );
 
 	REQUIRE( gpuBuffer.isValid() );
 	REQUIRE( gpuBuffer.getVertexCount() == vertexCount );
@@ -217,10 +214,10 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a test primitive
-	Primitive primitive;
-	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive.addIndex( 0 );
 	primitive.addIndex( 1 );
 	primitive.addIndex( 2 );
@@ -232,10 +229,10 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	material->setRoughnessFactor( 0.3f );
 
 	// Create MaterialGPU
-	std::shared_ptr<MaterialGPU> materialGPU = std::make_shared<MaterialGPU>( material );
+	std::shared_ptr<engine::gpu::MaterialGPU> materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material );
 
 	// Create primitive GPU buffer and set material
-	PrimitiveGPU primGPU( device, primitive );
+	engine::gpu::PrimitiveGPU primGPU( device, primitive );
 	primGPU.setMaterial( materialGPU );
 
 	// Verify the buffer was created successfully
@@ -253,16 +250,16 @@ TEST_CASE( "PrimitiveGPU constructor without MaterialGPU has no material", "[gpu
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a test primitive
-	Primitive primitive;
-	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive.addIndex( 0 );
 	primitive.addIndex( 1 );
 	primitive.addIndex( 2 );
 
 	// Create primitive GPU buffer without material
-	PrimitiveGPU gpuBuffer( device, primitive );
+	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	// Verify the buffer was created successfully but has no material
 	REQUIRE( gpuBuffer.isValid() );
@@ -277,16 +274,16 @@ TEST_CASE( "PrimitiveGPU bindForRendering sets vertex and index buffers", "[gpu]
 	REQUIRE( device.initializeHeadless() );
 
 	// Create a test primitive
-	Primitive primitive;
-	primitive.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	assets::Primitive primitive;
+	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive.addIndex( 0 );
 	primitive.addIndex( 1 );
 	primitive.addIndex( 2 );
 
 	// Create primitive GPU buffer
-	PrimitiveGPU primGPU( device, primitive );
+	engine::gpu::PrimitiveGPU primGPU( device, primitive );
 	REQUIRE( primGPU.isValid() );
 
 	// Create command list for testing (note: this is a stub test - actual command list binding would require more setup)
@@ -321,9 +318,9 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 
 	// Add first primitive with material
 	assets::Primitive primitive1;
-	primitive1.addVertex( Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive1.addVertex( Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
-	primitive1.addVertex( Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	primitive1.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
 	primitive1.addIndex( 0 );
 	primitive1.addIndex( 1 );
 	primitive1.addIndex( 2 );
@@ -331,9 +328,9 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 
 	// Add second primitive without material
 	assets::Primitive primitive2;
-	primitive2.addVertex( Vertex{ { 2.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
-	primitive2.addVertex( Vertex{ { 3.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
-	primitive2.addVertex( Vertex{ { 2.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( assets::Vertex{ { 2.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( assets::Vertex{ { 3.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
+	primitive2.addVertex( assets::Vertex{ { 2.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } } );
 	primitive2.addIndex( 0 );
 	primitive2.addIndex( 1 );
 	primitive2.addIndex( 2 );
@@ -343,7 +340,7 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	mesh.addPrimitive( std::move( primitive2 ) );
 
 	// Create MeshGPU first (without materials)
-	MeshGPU gpuMesh( device, mesh );
+	engine::gpu::MeshGPU gpuMesh( device, mesh );
 	REQUIRE( gpuMesh.isValid() );
 	REQUIRE( gpuMesh.getPrimitiveCount() == 2 );
 

@@ -1,4 +1,4 @@
-﻿// ViewportManager specific tests
+﻿// editor::ViewportManager specific tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
@@ -6,16 +6,15 @@
 #include "editor/viewport/viewport.h"
 #include "platform/dx12/dx12_device.h"
 
-using namespace editor;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "ViewportManager Creation and Management", "[viewport][manager]" )
+TEST_CASE( "editor::ViewportManager Creation and Management", "[viewport][manager]" )
 {
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "ViewportManager Creation and Management" ) )
+	if ( !requireHeadlessDevice( device, "editor::ViewportManager Creation and Management" ) )
 		return;
 
-	ViewportManager manager;
+	editor::ViewportManager manager;
 	REQUIRE( manager.initialize( &device ) );
 
 	SECTION( "Multiple viewport creation" )
@@ -83,7 +82,7 @@ TEST_CASE( "ViewportManager Creation and Management", "[viewport][manager]" )
 		REQUIRE( manager.getFocusedViewport() == nullptr );
 	}
 
-	SECTION( "Viewport destruction" )
+	SECTION( "editor::Viewport destruction" )
 	{
 		auto *viewport = manager.createViewport( ViewportType::Perspective );
 		REQUIRE( manager.getViewports().size() == 1 );
@@ -107,13 +106,13 @@ TEST_CASE( "ViewportManager Creation and Management", "[viewport][manager]" )
 	}
 }
 
-TEST_CASE( "ViewportManager Update and Render", "[viewport][manager]" )
+TEST_CASE( "editor::ViewportManager Update and Render", "[viewport][manager]" )
 {
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "ViewportManager Update and Render" ) )
+	if ( !requireHeadlessDevice( device, "editor::ViewportManager Update and Render" ) )
 		return;
 
-	ViewportManager manager;
+	editor::ViewportManager manager;
 	REQUIRE( manager.initialize( &device ) );
 
 	SECTION( "Update with delta time" )

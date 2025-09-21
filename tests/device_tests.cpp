@@ -1,17 +1,16 @@
-﻿// D3D12 Device comprehensive initialization and state tests
+﻿// D3D12 dx12::Device comprehensive initialization and state tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
 #include "platform/dx12/dx12_device.h"
 
-using namespace dx12;
 
-TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
+TEST_CASE( "dx12::Device Initialization Methods", "[dx12][device][initialization]" )
 {
 	SECTION( "Headless initialization" )
 	{
-		Device device;
+		dx12::Device device;
 
 		// Headless initialization should succeed on D3D12-capable systems
 		bool result = device.initializeHeadless();
@@ -37,7 +36,7 @@ TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 
 	SECTION( "Multiple headless initializations" )
 	{
-		Device device;
+		dx12::Device device;
 
 		bool result1 = device.initializeHeadless();
 		if ( result1 )
@@ -45,7 +44,7 @@ TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 			// Second initialization - behavior may vary (re-init or fail)
 			bool result2 = device.initializeHeadless();
 
-			// Device should remain functional regardless
+			// dx12::Device should remain functional regardless
 			REQUIRE( device.get() != nullptr );
 			REQUIRE( device.getDevice() != nullptr );
 
@@ -55,18 +54,18 @@ TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 
 	SECTION( "Windowed initialization without window" )
 	{
-		Device device;
+		dx12::Device device;
 
 		// Should fail gracefully with null window handle
 		REQUIRE_FALSE( device.initialize( nullptr ) );
 
-		// Device should remain in safe state
+		// dx12::Device should remain in safe state
 		REQUIRE( device.get() == nullptr );
 	}
 
 	SECTION( "Shutdown before initialization" )
 	{
-		Device device;
+		dx12::Device device;
 
 		// Should be safe to shutdown uninitialized device
 		REQUIRE_NOTHROW( device.shutdown() );
@@ -74,10 +73,10 @@ TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 	}
 }
 
-TEST_CASE( "Device Component Access", "[dx12][device][components]" )
+TEST_CASE( "dx12::Device Component Access", "[dx12][device][components]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Device component access" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Device component access" ) )
 		return;
 
 	SECTION( "Core D3D12 components" )
@@ -111,7 +110,7 @@ TEST_CASE( "Device Component Access", "[dx12][device][components]" )
 		// (Exact state depends on implementation)
 	}
 
-	SECTION( "Texture manager integration" )
+	SECTION( "dx12::Texture manager integration" )
 	{
 		auto textureManager = device.getTextureManager();
 		REQUIRE( textureManager != nullptr );
@@ -121,10 +120,10 @@ TEST_CASE( "Device Component Access", "[dx12][device][components]" )
 	}
 }
 
-TEST_CASE( "Device Frame Operations", "[dx12][device][frame]" )
+TEST_CASE( "dx12::Device Frame Operations", "[dx12][device][frame]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Device frame operations" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Device frame operations" ) )
 		return;
 
 	SECTION( "Frame lifecycle without window" )
@@ -165,11 +164,11 @@ TEST_CASE( "Device Frame Operations", "[dx12][device][frame]" )
 	}
 }
 
-TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
+TEST_CASE( "dx12::Device Error Handling and Edge Cases", "[dx12][device][error]" )
 {
-	SECTION( "Device creation on unsupported systems" )
+	SECTION( "dx12::Device creation on unsupported systems" )
 	{
-		Device device;
+		dx12::Device device;
 
 		// On systems without D3D12, initialization should fail gracefully
 		bool result = device.initializeHeadless();
@@ -193,7 +192,7 @@ TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
 
 	SECTION( "Operations after shutdown" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( device.initializeHeadless() )
 		{
 			device.shutdown();
@@ -214,12 +213,12 @@ TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
 	{
 		// Test that destructor handles all states safely
 		{
-			Device device; // Uninitialized
+			dx12::Device device; // Uninitialized
 						   // Should destruct safely
 		}
 
 		{
-			Device device;
+			dx12::Device device;
 			if ( device.initializeHeadless() )
 			{
 				// Should destruct safely when initialized
@@ -227,7 +226,7 @@ TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
 		}
 
 		{
-			Device device;
+			dx12::Device device;
 			if ( device.initializeHeadless() )
 			{
 				device.shutdown();
@@ -237,7 +236,7 @@ TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
 	}
 }
 
-TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
+TEST_CASE( "dx12::Device Helper Functions", "[dx12][device][helpers]" )
 {
 	SECTION( "throwIfFailed with success" )
 	{
@@ -256,7 +255,7 @@ TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
 
 	SECTION( "throwIfFailed with device context" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( device.initializeHeadless() )
 		{
 			// Should not throw for success with device context
@@ -268,10 +267,10 @@ TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
 	}
 }
 
-TEST_CASE( "Device Resource Management", "[dx12][device][resources]" )
+TEST_CASE( "dx12::Device dx12::Resource Management", "[dx12][device][resources]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Device resource management" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Device resource management" ) )
 		return;
 
 	SECTION( "Factory object properties" )
@@ -288,7 +287,7 @@ TEST_CASE( "Device Resource Management", "[dx12][device][resources]" )
 		REQUIRE( adapter != nullptr );
 	}
 
-	SECTION( "Device capabilities" )
+	SECTION( "dx12::Device capabilities" )
 	{
 		auto d3dDevice = device.get();
 		REQUIRE( d3dDevice != nullptr );

@@ -9,9 +9,9 @@
 
 #include "engine/shader_manager/shader_manager.h"
 
-using namespace shader_manager;
+using shader_manager::INVALID_SHADER_HANDLE;
 
-TEST_CASE( "ShaderManager Performance - Hash-based lookup optimization", "[ShaderManager][Performance]" )
+TEST_CASE( "shader_manager::ShaderManager Performance - Hash-based lookup optimization", "[shader_manager::ShaderManager][Performance]" )
 {
 	// Create a temporary directory for test shaders
 	auto tempDir = std::filesystem::temp_directory_path() / "shader_manager_perf_tests";
@@ -51,8 +51,8 @@ VSOutput VSMain(VSInput input)
 		file.close();
 	}
 
-	ShaderManager shaderManager;
-	std::vector<ShaderHandle> handles;
+	shader_manager::ShaderManager shaderManager;
+	std::vector<shader_manager::ShaderHandle> handles;
 	handles.reserve( numShaders );
 
 	// Register all shaders first
@@ -62,11 +62,11 @@ VSOutput VSMain(VSInput input)
 
 		for ( int i = 0; i < numShaders; ++i )
 		{
-			ShaderHandle handle = shaderManager.registerShader(
+			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
 				"vs_5_0",
-				ShaderType::Vertex );
+				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 			REQUIRE( handle != INVALID_SHADER_HANDLE );
 		}
@@ -83,11 +83,11 @@ VSOutput VSMain(VSInput input)
 		// First register all shaders
 		for ( int i = 0; i < numShaders; ++i )
 		{
-			ShaderHandle handle = shaderManager.registerShader(
+			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
 				"vs_5_0",
-				ShaderType::Vertex );
+				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 		}
 
@@ -97,11 +97,11 @@ VSOutput VSMain(VSInput input)
 		// Try to register the same shaders again (should find existing ones quickly)
 		for ( int i = 0; i < numShaders; ++i )
 		{
-			ShaderHandle duplicateHandle = shaderManager.registerShader(
+			shader_manager::ShaderHandle duplicateHandle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
 				"vs_5_0",
-				ShaderType::Vertex );
+				shader_manager::ShaderType::Vertex );
 
 			// Should return the existing handle
 			REQUIRE( duplicateHandle == handles[i] );
@@ -124,11 +124,11 @@ VSOutput VSMain(VSInput input)
 		// Register all shaders first
 		for ( int i = 0; i < numShaders; ++i )
 		{
-			ShaderHandle handle = shaderManager.registerShader(
+			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
 				"vs_5_0",
-				ShaderType::Vertex );
+				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 		}
 
@@ -145,11 +145,11 @@ VSOutput VSMain(VSInput input)
 			const int randomIndex = dis( gen );
 
 			// Try to register the same shader (should use hash lookup)
-			const ShaderHandle duplicateHandle = shaderManager.registerShader(
+			const shader_manager::ShaderHandle duplicateHandle = shaderManager.registerShader(
 				shaderPaths[randomIndex],
 				"VSMain",
 				"vs_5_0",
-				ShaderType::Vertex );
+				shader_manager::ShaderType::Vertex );
 
 			REQUIRE( duplicateHandle == handles[randomIndex] );
 		}

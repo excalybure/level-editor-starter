@@ -9,18 +9,16 @@
 #include "engine/math/vec.h"
 #include "engine/math/bounding_box_3d.h"
 
-using namespace ecs;
-using namespace components;
-using namespace systems;
-using namespace editor;
+using Catch::Approx;
+
 
 TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -35,8 +33,8 @@ TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 		REQUIRE( selection.getPrimarySelection() == entity1 );
 
 		// ECS component should be added
-		REQUIRE( scene.hasComponent<Selected>( entity1 ) );
-		auto *selectedComp = scene.getComponent<Selected>( entity1 );
+		REQUIRE( scene.hasComponent<components::Selected>( entity1 ) );
+		auto *selectedComp = scene.getComponent<components::Selected>( entity1 );
 		REQUIRE( selectedComp->isPrimary == true );
 	}
 
@@ -47,10 +45,10 @@ TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 
 		REQUIRE( selection.getSelectionCount() == 0 );
 		REQUIRE_FALSE( selection.isSelected( entity1 ) );
-		REQUIRE( selection.getPrimarySelection() == Entity{} );
+		REQUIRE( selection.getPrimarySelection() == ecs::Entity{} );
 
 		// ECS component should be removed
-		REQUIRE_FALSE( scene.hasComponent<Selected>( entity1 ) );
+		REQUIRE_FALSE( scene.hasComponent<components::Selected>( entity1 ) );
 	}
 
 	SECTION( "Replace selection (non-additive)" )
@@ -76,21 +74,21 @@ TEST_CASE( "SelectionManager - Basic operations", "[selection][basic]" )
 		REQUIRE( selection.getSelectionCount() == 0 );
 		REQUIRE_FALSE( selection.isSelected( entity1 ) );
 		REQUIRE_FALSE( selection.isSelected( entity2 ) );
-		REQUIRE( selection.getPrimarySelection() == Entity{} );
+		REQUIRE( selection.getPrimarySelection() == ecs::Entity{} );
 
 		// ECS components should be removed
-		REQUIRE_FALSE( scene.hasComponent<Selected>( entity1 ) );
-		REQUIRE_FALSE( scene.hasComponent<Selected>( entity2 ) );
+		REQUIRE_FALSE( scene.hasComponent<components::Selected>( entity1 ) );
+		REQUIRE_FALSE( scene.hasComponent<components::Selected>( entity2 ) );
 	}
 }
 
 TEST_CASE( "SelectionManager - Multi-selection", "[selection][multi]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -109,24 +107,24 @@ TEST_CASE( "SelectionManager - Multi-selection", "[selection][multi]" )
 		REQUIRE( selection.getPrimarySelection() == entity1 );
 
 		// Both have Selected components
-		REQUIRE( scene.hasComponent<Selected>( entity1 ) );
-		REQUIRE( scene.hasComponent<Selected>( entity2 ) );
+		REQUIRE( scene.hasComponent<components::Selected>( entity1 ) );
+		REQUIRE( scene.hasComponent<components::Selected>( entity2 ) );
 
 		// Only primary is marked as primary
-		REQUIRE( scene.getComponent<Selected>( entity1 )->isPrimary == true );
-		REQUIRE( scene.getComponent<Selected>( entity2 )->isPrimary == false );
+		REQUIRE( scene.getComponent<components::Selected>( entity1 )->isPrimary == true );
+		REQUIRE( scene.getComponent<components::Selected>( entity2 )->isPrimary == false );
 	}
 
 	SECTION( "Batch selection" )
 	{
-		std::vector<Entity> entities = { entity1, entity2, entity3 };
+		std::vector<ecs::Entity> entities = { entity1, entity2, entity3 };
 		selection.select( entities, false );
 
 		REQUIRE( selection.getSelectionCount() == 3 );
 		for ( auto entity : entities )
 		{
 			REQUIRE( selection.isSelected( entity ) );
-			REQUIRE( scene.hasComponent<Selected>( entity ) );
+			REQUIRE( scene.hasComponent<components::Selected>( entity ) );
 		}
 
 		// First in list becomes primary
@@ -158,33 +156,33 @@ TEST_CASE( "SelectionManager - Multi-selection", "[selection][multi]" )
 		REQUIRE( selection.getPrimarySelection() == entity2 );
 
 		// Check ECS components reflect primary change
-		REQUIRE( scene.getComponent<Selected>( entity1 )->isPrimary == false );
-		REQUIRE( scene.getComponent<Selected>( entity2 )->isPrimary == true );
-		REQUIRE( scene.getComponent<Selected>( entity3 )->isPrimary == false );
+		REQUIRE( scene.getComponent<components::Selected>( entity1 )->isPrimary == false );
+		REQUIRE( scene.getComponent<components::Selected>( entity2 )->isPrimary == true );
+		REQUIRE( scene.getComponent<components::Selected>( entity3 )->isPrimary == false );
 	}
 }
 
 TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
 
 	// Event capture
-	SelectionChangedEvent lastEvent;
+	editor::SelectionChangedEvent lastEvent;
 	bool eventReceived = false;
 
-	selection.registerListener( [&]( const SelectionChangedEvent &event ) {
+	selection.registerListener( [&]( const editor::SelectionChangedEvent &event ) {
 		lastEvent = event;
 		eventReceived = true;
 	} );
 
-	SECTION( "Selection event" )
+	SECTION( "components::Selection event" )
 	{
 		selection.select( entity1 );
 
@@ -212,7 +210,7 @@ TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 		REQUIRE( lastEvent.removed[0] == entity1 );
 		REQUIRE( lastEvent.added.empty() );
 		REQUIRE( lastEvent.previousPrimarySelection == entity1 );
-		REQUIRE( lastEvent.newPrimarySelection == Entity{} );
+		REQUIRE( lastEvent.newPrimarySelection == ecs::Entity{} );
 	}
 
 	SECTION( "Primary change event" )
@@ -233,19 +231,19 @@ TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 
 TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	// Create entities at known positions with bounds
 	auto entity1 = scene.createEntity( "Cube1" );
-	scene.addComponent( entity1, Transform{} );
-	auto *transform1 = scene.getComponent<Transform>( entity1 );
+	scene.addComponent( entity1, components::Transform{} );
+	auto *transform1 = scene.getComponent<components::Transform>( entity1 );
 	transform1->position = math::Vec3<>{ 0.0f, 0.0f, 0.0f };
 
-	MeshRenderer mesh1;
+	components::MeshRenderer mesh1;
 	mesh1.bounds = math::BoundingBox3Df{
 		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
 		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
@@ -253,11 +251,11 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 	scene.addComponent( entity1, mesh1 );
 
 	auto entity2 = scene.createEntity( "Cube2" );
-	scene.addComponent( entity2, Transform{} );
-	auto *transform2 = scene.getComponent<Transform>( entity2 );
+	scene.addComponent( entity2, components::Transform{} );
+	auto *transform2 = scene.getComponent<components::Transform>( entity2 );
 	transform2->position = math::Vec3<>{ 5.0f, 0.0f, 0.0f };
 
-	MeshRenderer mesh2;
+	components::MeshRenderer mesh2;
 	mesh2.bounds = math::BoundingBox3Df{
 		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
 		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
@@ -266,7 +264,7 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 
 	selection.select( { entity1, entity2 } );
 
-	SECTION( "Selection bounds calculation" )
+	SECTION( "components::Selection bounds calculation" )
 	{
 		auto bounds = selection.getSelectionBounds();
 
@@ -278,7 +276,7 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 		REQUIRE( center.x == Catch::Approx( 2.5f ) ); // Midpoint
 	}
 
-	SECTION( "Selection radius" )
+	SECTION( "components::Selection radius" )
 	{
 		auto radius = selection.getSelectionRadius();
 		REQUIRE( radius > 0.0f );
@@ -289,11 +287,11 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 
 TEST_CASE( "SelectionManager - Validation and cleanup", "[selection][validation]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -319,7 +317,7 @@ TEST_CASE( "SelectionManager - Validation and cleanup", "[selection][validation]
 	{
 		// Manually add Selected component
 		auto entity3 = scene.createEntity( "Object3" );
-		scene.addComponent( entity3, Selected{ false } );
+		scene.addComponent( entity3, components::Selected{ false } );
 
 		// Refresh should pick up the new selection
 		selection.refreshFromECS();
@@ -331,11 +329,11 @@ TEST_CASE( "SelectionManager - Validation and cleanup", "[selection][validation]
 
 TEST_CASE( "SelectionManager - Serialization", "[selection][serialization]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	auto entity1 = scene.createEntity( "Object1" );
 	auto entity2 = scene.createEntity( "Object2" );
@@ -382,19 +380,19 @@ TEST_CASE( "SelectionManager - Serialization", "[selection][serialization]" )
 
 TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spatial][hierarchy]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	// Create parent entity at origin
 	auto parent = scene.createEntity( "Parent" );
-	scene.addComponent( parent, Transform{} );
-	auto *parentTransform = scene.getComponent<Transform>( parent );
+	scene.addComponent( parent, components::Transform{} );
+	auto *parentTransform = scene.getComponent<components::Transform>( parent );
 	parentTransform->position = math::Vec3<>{ 10.0f, 0.0f, 0.0f }; // Parent at (10,0,0)
 
-	MeshRenderer parentMesh;
+	components::MeshRenderer parentMesh;
 	parentMesh.bounds = math::BoundingBox3Df{
 		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
 		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
@@ -403,14 +401,14 @@ TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spat
 
 	// Create child entity with local offset
 	auto child = scene.createEntity( "Child" );
-	scene.addComponent( child, Transform{} );
-	auto *childTransform = scene.getComponent<Transform>( child );
+	scene.addComponent( child, components::Transform{} );
+	auto *childTransform = scene.getComponent<components::Transform>( child );
 	childTransform->position = math::Vec3<>{ 5.0f, 0.0f, 0.0f }; // Local offset (5,0,0)
 
 	// Set up parent-child relationship
 	scene.setParent( child, parent );
 
-	MeshRenderer childMesh;
+	components::MeshRenderer childMesh;
 	childMesh.bounds = math::BoundingBox3Df{
 		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
 		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
@@ -441,15 +439,15 @@ TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spat
 
 TEST_CASE( "SelectionManager - Edge cases", "[selection][edge-cases]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	SelectionManager selection( scene, systemManager );
+	editor::SelectionManager selection( scene, systemManager );
 
 	SECTION( "Select invalid entity does nothing" )
 	{
-		Entity invalidEntity{ 999 }; // Non-existent entity
+		ecs::Entity invalidEntity{ 999 }; // Non-existent entity
 
 		selection.select( invalidEntity );
 		REQUIRE( selection.getSelectionCount() == 0 );
@@ -468,7 +466,7 @@ TEST_CASE( "SelectionManager - Edge cases", "[selection][edge-cases]" )
 		auto entity = scene.createEntity( "Object" );
 
 		selection.setPrimarySelection( entity ); // Not selected
-		REQUIRE( selection.getPrimarySelection() == Entity{} );
+		REQUIRE( selection.getPrimarySelection() == ecs::Entity{} );
 	}
 
 	SECTION( "Empty selection has no bounds" )
@@ -487,8 +485,8 @@ TEST_CASE( "SelectionManager - Edge cases", "[selection][edge-cases]" )
 		int listener1Called = 0;
 		int listener2Called = 0;
 
-		selection.registerListener( [&]( const SelectionChangedEvent & ) { listener1Called++; } );
-		selection.registerListener( [&]( const SelectionChangedEvent & ) { listener2Called++; } );
+		selection.registerListener( [&]( const editor::SelectionChangedEvent & ) { listener1Called++; } );
+		selection.registerListener( [&]( const editor::SelectionChangedEvent & ) { listener2Called++; } );
 
 		selection.select( entity );
 

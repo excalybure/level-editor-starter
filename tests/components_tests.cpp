@@ -7,12 +7,11 @@
 #include "engine/math/matrix.h"
 #include "engine/math/vec.h"
 
-using namespace ecs;
-using namespace components;
+using Catch::Approx;
 
-TEST_CASE( "Transform component basic functionality", "[components][transform]" )
+TEST_CASE( "components::Transform component basic functionality", "[components][transform]" )
 {
-	Transform transform;
+	components::Transform transform;
 
 	// Test default values
 	REQUIRE( transform.position.x == Catch::Approx( 0.0f ) );
@@ -29,9 +28,9 @@ TEST_CASE( "Transform component basic functionality", "[components][transform]" 
 	REQUIRE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "Transform component local matrix calculation", "[components][transform][matrix]" )
+TEST_CASE( "components::Transform component local matrix calculation", "[components][transform][matrix]" )
 {
-	Transform transform;
+	components::Transform transform;
 	transform.position = math::Vec3<float>( 5.0f, 10.0f, 15.0f );
 	transform.scale = math::Vec3<float>( 2.0f, 3.0f, 4.0f );
 
@@ -46,9 +45,9 @@ TEST_CASE( "Transform component local matrix calculation", "[components][transfo
 	REQUIRE_FALSE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "Transform component rotation matrix", "[components][transform][rotation]" )
+TEST_CASE( "components::Transform component rotation matrix", "[components][transform][rotation]" )
 {
-	Transform transform;
+	components::Transform transform;
 	transform.rotation = math::Vec3<float>( math::pi<float> / 2.0f, 0.0f, 0.0f ); // 90 degrees around X-axis
 
 	const auto localMatrix = transform.getLocalMatrix();
@@ -61,9 +60,9 @@ TEST_CASE( "Transform component rotation matrix", "[components][transform][rotat
 	REQUIRE( localMatrix.m22() == Catch::Approx( 0.0f ).margin( 0.0001f ) );
 }
 
-TEST_CASE( "Transform component scale matrix", "[components][transform][scale]" )
+TEST_CASE( "components::Transform component scale matrix", "[components][transform][scale]" )
 {
-	Transform transform;
+	components::Transform transform;
 	transform.scale = math::Vec3<float>( 2.0f, 3.0f, 4.0f );
 
 	const auto localMatrix = transform.getLocalMatrix();
@@ -74,9 +73,9 @@ TEST_CASE( "Transform component scale matrix", "[components][transform][scale]" 
 	REQUIRE( localMatrix.m22() == Catch::Approx( 4.0f ) );
 }
 
-TEST_CASE( "Transform component markDirty", "[components][transform][dirty]" )
+TEST_CASE( "components::Transform component markDirty", "[components][transform][dirty]" )
 {
-	Transform transform;
+	components::Transform transform;
 
 	// Get matrix to clear dirty flag
 	transform.getLocalMatrix();
@@ -87,23 +86,23 @@ TEST_CASE( "Transform component markDirty", "[components][transform][dirty]" )
 	REQUIRE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "Name component functionality", "[components][name]" )
+TEST_CASE( "components::Name component functionality", "[components][name]" )
 {
 	SECTION( "Default constructor" )
 	{
-		Name name;
+		components::Name name;
 		REQUIRE( name.name == "Unnamed" );
 	}
 
 	SECTION( "String constructor" )
 	{
-		Name name( "TestEntity" );
+		components::Name name( "TestEntity" );
 		REQUIRE( name.name == "TestEntity" );
 	}
 
 	SECTION( "Assignment" )
 	{
-		Name name;
+		components::Name name;
 		name.name = "AssignedName";
 		REQUIRE( name.name == "AssignedName" );
 	}
@@ -111,7 +110,7 @@ TEST_CASE( "Name component functionality", "[components][name]" )
 
 TEST_CASE( "Visible component functionality", "[components][visible]" )
 {
-	Visible visible;
+	components::Visible visible;
 
 	// Test default values
 	REQUIRE( visible.visible );
@@ -128,26 +127,26 @@ TEST_CASE( "Visible component functionality", "[components][visible]" )
 	REQUIRE_FALSE( visible.receiveShadows );
 }
 
-TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" )
+TEST_CASE( "components::MeshRenderer component functionality", "[components][meshrenderer]" )
 {
 	SECTION( "Default constructor" )
 	{
-		MeshRenderer renderer;
+		components::MeshRenderer renderer;
 		REQUIRE( renderer.gpuMesh == nullptr );
 		REQUIRE( renderer.lodBias == 0.0f );
 	}
 
 	SECTION( "Default GPU mesh state" )
 	{
-		// Test that default constructor creates MeshRenderer with no GPU mesh
-		MeshRenderer renderer;
+		// Test that default constructor creates components::MeshRenderer with no GPU mesh
+		components::MeshRenderer renderer;
 		REQUIRE( renderer.gpuMesh == nullptr );
 		REQUIRE( renderer.lodBias == 0.0f );
 	}
 
 	SECTION( "LOD bias assignment" )
 	{
-		MeshRenderer renderer;
+		components::MeshRenderer renderer;
 		renderer.lodBias = 2.5f;
 
 		REQUIRE( renderer.lodBias == Catch::Approx( 2.5f ) );
@@ -155,7 +154,7 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 
 	SECTION( "Bounds assignment" )
 	{
-		MeshRenderer renderer;
+		components::MeshRenderer renderer;
 		const math::Vec3f minPoint{ -1.0f, -2.0f, -3.0f };
 		const math::Vec3f maxPoint{ 1.0f, 2.0f, 3.0f };
 		renderer.bounds = math::BoundingBox3Df{ minPoint, maxPoint };
@@ -170,14 +169,14 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 
 	SECTION( "Component size optimization verification" )
 	{
-		// Verify that the new MeshRenderer structure is more memory-efficient
+		// Verify that the new components::MeshRenderer structure is more memory-efficient
 		// Old structure had: std::string + std::vector<std::string> + bool + bounds
 		// New structure has: shared_ptr + float + bounds
 
 		// The new structure should be significantly smaller due to:
 		// - shared_ptr (8 bytes) vs string + vector of strings (potentially 100+ bytes)
 		// - float (4 bytes) vs bool (1 byte, but with padding considerations)
-		const std::size_t rendererSize = sizeof( MeshRenderer );
+		const std::size_t rendererSize = sizeof( components::MeshRenderer );
 
 		// Reasonable upper bound: shared_ptr(8) + float(4) + bounds(24) + padding ≈ 40 bytes
 		// Old structure with strings could easily be 100+ bytes
@@ -193,7 +192,7 @@ TEST_CASE( "Selected Component - Basic functionality", "[components][selection]"
 {
 	SECTION( "Default construction sets timestamp" )
 	{
-		Selected selected;
+		components::Selected selected;
 		REQUIRE( selected.isPrimary == false );
 		REQUIRE( selected.selectionTime > 0.0f );
 		REQUIRE( selected.highlightColor.x == 1.0f ); // Orange highlight
@@ -204,7 +203,7 @@ TEST_CASE( "Selected Component - Basic functionality", "[components][selection]"
 
 	SECTION( "Primary selection constructor" )
 	{
-		Selected primary( true );
+		components::Selected primary( true );
 		REQUIRE( primary.isPrimary == true );
 		REQUIRE( primary.selectionTime > 0.0f );
 	}
@@ -213,29 +212,29 @@ TEST_CASE( "Selected Component - Basic functionality", "[components][selection]"
 TEST_CASE( "Component concept validation", "[components][concepts]" )
 {
 	// These should all compile and pass with our relaxed Component concept
-	REQUIRE( components::Component<Transform> );
-	REQUIRE( components::Component<Name> );
-	REQUIRE( components::Component<Visible> );
-	REQUIRE( components::Component<MeshRenderer> );
-	REQUIRE( components::Component<Selected> );
+	REQUIRE( components::Component<components::Transform> );
+	REQUIRE( components::Component<components::Name> );
+	REQUIRE( components::Component<components::Visible> );
+	REQUIRE( components::Component<components::MeshRenderer> );
+	REQUIRE( components::Component<components::Selected> );
 }
 
-TEST_CASE( "Transform component with Scene integration", "[components][transform][integration]" )
+TEST_CASE( "components::Transform component with ecs::Scene integration", "[components][transform][integration]" )
 {
-	Scene scene;
-	Entity entity = scene.createEntity( "TransformTest" );
+	ecs::Scene scene;
+	ecs::Entity entity = scene.createEntity( "TransformTest" );
 
 	// Add transform component
-	Transform transform;
+	components::Transform transform;
 	transform.position = math::Vec3<float>( 1.0f, 2.0f, 3.0f );
 	transform.rotation = math::Vec3<float>( 0.0f, math::pi<float> / 4.0f, 0.0f ); // 45 degrees around Y
 	transform.scale = math::Vec3<float>( 1.5f, 1.5f, 1.5f );
 
 	REQUIRE( scene.addComponent( entity, transform ) );
-	REQUIRE( scene.hasComponent<Transform>( entity ) );
+	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
 
 	// Get the component back and verify
-	const Transform *storedTransform = scene.getComponent<Transform>( entity );
+	const components::Transform *storedTransform = scene.getComponent<components::Transform>( entity );
 	REQUIRE( storedTransform != nullptr );
 	REQUIRE( storedTransform->position.x == Catch::Approx( 1.0f ) );
 	REQUIRE( storedTransform->position.y == Catch::Approx( 2.0f ) );
@@ -245,19 +244,19 @@ TEST_CASE( "Transform component with Scene integration", "[components][transform
 
 TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 {
-	Scene scene;
-	Entity entity = scene.createEntity( "MultiComponentTest" );
+	ecs::Scene scene;
+	ecs::Entity entity = scene.createEntity( "MultiComponentTest" );
 
 	// Add multiple components
-	Transform transform;
+	components::Transform transform;
 	transform.position = math::Vec3<float>( 5.0f, 0.0f, 0.0f );
 
-	Name name( "TestEntity" );
-	Visible visible;
+	components::Name name( "TestEntity" );
+	components::Visible visible;
 	visible.castShadows = false;
 
-	MeshRenderer renderer;
-	Selected selected{ true }; // Primary selection
+	components::MeshRenderer renderer;
+	components::Selected selected{ true }; // Primary selection
 
 	REQUIRE( scene.addComponent( entity, transform ) );
 	REQUIRE( scene.addComponent( entity, name ) );
@@ -266,16 +265,16 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 	REQUIRE( scene.addComponent( entity, selected ) );
 
 	// Verify all components are present
-	REQUIRE( scene.hasComponent<Transform>( entity ) );
-	REQUIRE( scene.hasComponent<Name>( entity ) );
-	REQUIRE( scene.hasComponent<Visible>( entity ) );
-	REQUIRE( scene.hasComponent<MeshRenderer>( entity ) );
-	REQUIRE( scene.hasComponent<Selected>( entity ) );
+	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
+	REQUIRE( scene.hasComponent<components::Name>( entity ) );
+	REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+	REQUIRE( scene.hasComponent<components::MeshRenderer>( entity ) );
+	REQUIRE( scene.hasComponent<components::Selected>( entity ) );
 
 	// Verify component data
-	const auto *storedName = scene.getComponent<Name>( entity );
-	const auto *storedVisible = scene.getComponent<Visible>( entity );
-	const auto *storedSelected = scene.getComponent<Selected>( entity );
+	const auto *storedName = scene.getComponent<components::Name>( entity );
+	const auto *storedVisible = scene.getComponent<components::Visible>( entity );
+	const auto *storedSelected = scene.getComponent<components::Selected>( entity );
 
 	REQUIRE( storedName->name == "TestEntity" );
 	REQUIRE_FALSE( storedVisible->castShadows );
@@ -284,23 +283,23 @@ TEST_CASE( "Multiple components on single entity", "[components][integration]" )
 
 TEST_CASE( "Selected Component - ECS integration", "[components][selection][ecs]" )
 {
-	Scene scene;
+	ecs::Scene scene;
 
 	SECTION( "Add and remove Selected component" )
 	{
 		auto entity = scene.createEntity( "TestObject" );
 
 		// Add Selected component
-		scene.addComponent( entity, Selected{} );
-		REQUIRE( scene.hasComponent<Selected>( entity ) );
+		scene.addComponent( entity, components::Selected{} );
+		REQUIRE( scene.hasComponent<components::Selected>( entity ) );
 
-		auto *selected = scene.getComponent<Selected>( entity );
+		auto *selected = scene.getComponent<components::Selected>( entity );
 		REQUIRE( selected != nullptr );
 		REQUIRE( selected->isPrimary == false );
 
 		// Remove Selected component
-		scene.removeComponent<Selected>( entity );
-		REQUIRE_FALSE( scene.hasComponent<Selected>( entity ) );
+		scene.removeComponent<components::Selected>( entity );
+		REQUIRE_FALSE( scene.hasComponent<components::Selected>( entity ) );
 	}
 
 	SECTION( "Primary selection tracking" )
@@ -308,13 +307,13 @@ TEST_CASE( "Selected Component - ECS integration", "[components][selection][ecs]
 		auto entity1 = scene.createEntity( "Object1" );
 		auto entity2 = scene.createEntity( "Object2" );
 
-		scene.addComponent( entity1, Selected{ true } );  // Primary
-		scene.addComponent( entity2, Selected{ false } ); // Secondary
+		scene.addComponent( entity1, components::Selected{ true } );  // Primary
+		scene.addComponent( entity2, components::Selected{ false } ); // Secondary
 
 		// Count selected entities
 		int selectedCount = 0;
 		int primaryCount = 0;
-		scene.forEach<Selected>( [&]( Entity, const Selected &sel ) {
+		scene.forEach<components::Selected>( [&]( ecs::Entity, const components::Selected &sel ) {
 			selectedCount++;
 			if ( sel.isPrimary )
 				primaryCount++;

@@ -1,20 +1,18 @@
-﻿// Viewport 3D Picking and Ray Casting tests
+﻿// editor::Viewport 3D Picking and picking::Ray Casting tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "editor/viewport/viewport.h"
 #include "engine/math/vec.h"
 
-using namespace editor;
-using namespace math;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "Viewport Ray Structure", "[viewport][ray][picking]" )
+TEST_CASE( "editor::Viewport picking::Ray Structure", "[viewport][ray][picking]" )
 {
-	SECTION( "Ray construction and properties" )
+	SECTION( "picking::Ray construction and properties" )
 	{
 		// Default constructor
-		Ray defaultRay;
+		picking::Ray defaultRay;
 		REQUIRE_THAT( defaultRay.origin.x, WithinAbs( 0.0f, 0.001f ) );
 		REQUIRE_THAT( defaultRay.origin.y, WithinAbs( 0.0f, 0.001f ) );
 		REQUIRE_THAT( defaultRay.origin.z, WithinAbs( 0.0f, 0.001f ) );
@@ -23,9 +21,9 @@ TEST_CASE( "Viewport Ray Structure", "[viewport][ray][picking]" )
 		REQUIRE_THAT( defaultRay.direction.z, WithinAbs( 0.0f, 0.001f ) );
 
 		// Parameterized constructor
-		Vec3<> origin( 1.0f, 2.0f, 3.0f );
-		Vec3<> direction( 0.0f, 0.0f, -1.0f ); // Looking down negative Z
-		Ray ray( origin, direction );
+		math::Vec3<> origin( 1.0f, 2.0f, 3.0f );
+		math::Vec3<> direction( 0.0f, 0.0f, -1.0f ); // Looking down negative Z
+		picking::Ray ray( origin, direction );
 
 		REQUIRE_THAT( ray.origin.x, WithinAbs( 1.0f, 0.001f ) );
 		REQUIRE_THAT( ray.origin.y, WithinAbs( 2.0f, 0.001f ) );
@@ -35,11 +33,11 @@ TEST_CASE( "Viewport Ray Structure", "[viewport][ray][picking]" )
 		REQUIRE_THAT( ray.direction.z, WithinAbs( -1.0f, 0.001f ) );
 	}
 
-	SECTION( "Ray assignment and modification" )
+	SECTION( "picking::Ray assignment and modification" )
 	{
-		Ray ray;
-		ray.origin = Vec3<>( 5.0f, -3.0f, 10.0f );
-		ray.direction = Vec3<>( 1.0f, 0.0f, 0.0f ); // Looking right
+		picking::Ray ray;
+		ray.origin = math::Vec3<>( 5.0f, -3.0f, 10.0f );
+		ray.direction = math::Vec3<>( 1.0f, 0.0f, 0.0f ); // Looking right
 
 		REQUIRE_THAT( ray.origin.x, WithinAbs( 5.0f, 0.001f ) );
 		REQUIRE_THAT( ray.origin.y, WithinAbs( -3.0f, 0.001f ) );
@@ -50,17 +48,17 @@ TEST_CASE( "Viewport Ray Structure", "[viewport][ray][picking]" )
 	}
 }
 
-TEST_CASE( "Viewport Picking Ray Generation", "[viewport][ray][picking]" )
+TEST_CASE( "editor::Viewport Picking picking::Ray Generation", "[viewport][ray][picking]" )
 {
 	SECTION( "Perspective viewport picking rays" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( ViewportType::Perspective );
 		viewport.setRenderTargetSize( 800, 600 );
 
 		// Test center of screen ray
 		auto centerRay = viewport.getPickingRay( 400.0f, 300.0f );
 
-		// Ray should have a valid origin (camera position)
+		// picking::Ray should have a valid origin (camera position)
 		// The exact values depend on camera setup, but should not be at origin
 		bool hasValidOrigin = ( centerRay.origin.x != 0.0f ||
 			centerRay.origin.y != 0.0f ||
@@ -86,7 +84,7 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][ray][picking]" )
 
 	SECTION( "Orthographic viewport picking rays" )
 	{
-		Viewport topViewport( ViewportType::Top );
+		editor::Viewport topViewport( ViewportType::Top );
 		topViewport.setRenderTargetSize( 1024, 768 );
 
 		// Test picking ray from top view
@@ -108,7 +106,7 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][ray][picking]" )
 
 	SECTION( "Front viewport picking rays" )
 	{
-		Viewport frontViewport( ViewportType::Front );
+		editor::Viewport frontViewport( ViewportType::Front );
 		frontViewport.setRenderTargetSize( 640, 480 );
 
 		auto ray = frontViewport.getPickingRay( 320.0f, 240.0f ); // Center
@@ -120,7 +118,7 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][ray][picking]" )
 
 	SECTION( "Side viewport picking rays" )
 	{
-		Viewport sideViewport( ViewportType::Side );
+		editor::Viewport sideViewport( ViewportType::Side );
 		sideViewport.setRenderTargetSize( 1280, 720 );
 
 		auto ray = sideViewport.getPickingRay( 640.0f, 360.0f ); // Center
@@ -131,9 +129,9 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][ray][picking]" )
 	}
 }
 
-TEST_CASE( "Viewport Picking Ray Edge Cases", "[viewport][ray][picking][edge]" )
+TEST_CASE( "editor::Viewport Picking picking::Ray Edge Cases", "[viewport][ray][picking][edge]" )
 {
-	Viewport viewport( ViewportType::Perspective );
+	editor::Viewport viewport( ViewportType::Perspective );
 	viewport.setRenderTargetSize( 800, 600 );
 
 	SECTION( "Out of bounds screen coordinates" )
@@ -156,7 +154,7 @@ TEST_CASE( "Viewport Picking Ray Edge Cases", "[viewport][ray][picking][edge]" )
 		REQUIRE_NOTHROW( viewport.getPickingRay( 0.0f, 0.0f ) );
 
 		auto ray = viewport.getPickingRay( 100.0f, 100.0f );
-		// Ray should still be valid even with degenerate viewport
+		// picking::Ray should still be valid even with degenerate viewport
 	}
 
 	SECTION( "Very small viewport size" )
@@ -189,7 +187,7 @@ TEST_CASE( "Viewport Picking Ray Edge Cases", "[viewport][ray][picking][edge]" )
 	}
 }
 
-TEST_CASE( "Viewport Info Structure", "[viewport][info][structure]" )
+TEST_CASE( "editor::Viewport Info Structure", "[viewport][info][structure]" )
 {
 	SECTION( "ViewportInfo construction and defaults" )
 	{
@@ -204,7 +202,7 @@ TEST_CASE( "Viewport Info Structure", "[viewport][info][structure]" )
 
 	SECTION( "ViewportInfo modification" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( ViewportType::Perspective );
 		auto &info = viewport.getInfo();
 
 		// Modify values
@@ -223,7 +221,7 @@ TEST_CASE( "Viewport Info Structure", "[viewport][info][structure]" )
 
 	SECTION( "ViewportInfo consistency with viewport methods" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( ViewportType::Top );
 		viewport.setRenderTargetSize( 1024, 768 );
 
 		const auto &info = viewport.getInfo();

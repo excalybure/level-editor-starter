@@ -5,28 +5,27 @@
 #include "engine/assets/asset_manager.h"
 #include "engine/gltf_loader/gltf_loader.h"
 
-using namespace assets;
 
-TEST_CASE( "AssetManager can be instantiated", "[AssetManager][unit]" )
+TEST_CASE( "assets::AssetManager can be instantiated", "[assets::AssetManager][unit]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 	REQUIRE( true ); // Basic instantiation test
 }
 
-TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
+TEST_CASE( "assets::AssetManager caches assets correctly", "[assets::AssetManager][unit]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	SECTION( "Loading same material twice returns same instance" )
 	{
 		// First load
-		const auto material1 = manager.load<Material>( "test_material.mtl" );
+		const auto material1 = manager.load<assets::Material>( "test_material.mtl" );
 		REQUIRE( material1 != nullptr );
 		REQUIRE( material1->getPath() == "test_material.mtl" );
 		REQUIRE( material1->isLoaded() );
 
 		// Second load should return same instance from cache
-		const auto material2 = manager.load<Material>( "test_material.mtl" );
+		const auto material2 = manager.load<assets::Material>( "test_material.mtl" );
 		REQUIRE( material2 != nullptr );
 		REQUIRE( material1.get() == material2.get() ); // Same object
 		REQUIRE( material1.use_count() == 3 );		   // Both shared_ptrs + cache reference
@@ -40,11 +39,11 @@ TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 		} );
 
 		// Load first
-		const auto scene1 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene1 = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene1 != nullptr );
 
 		// Get from cache without loading
-		const auto scene2 = manager.get<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene2 = manager.get<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene2 != nullptr );
 		REQUIRE( scene1.get() == scene2.get() );
 
@@ -54,18 +53,18 @@ TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 
 	SECTION( "Get returns nullptr for non-cached assets" )
 	{
-		auto scene = manager.get<Scene>( "non_existent.gltf" );
+		auto scene = manager.get<assets::Scene>( "non_existent.gltf" );
 		REQUIRE( scene == nullptr );
 	}
 }
 
-TEST_CASE( "AssetManager store functionality", "[AssetManager][unit]" )
+TEST_CASE( "assets::AssetManager store functionality", "[assets::AssetManager][unit]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	SECTION( "Store puts asset in cache" )
 	{
-		const auto material = std::make_shared<Material>();
+		const auto material = std::make_shared<assets::Material>();
 		const std::string path = "stored_material.mtl";
 
 		// Verify not in cache initially
@@ -80,18 +79,18 @@ TEST_CASE( "AssetManager store functionality", "[AssetManager][unit]" )
 		REQUIRE( material->isLoaded() );
 
 		// Verify can retrieve same object
-		const auto retrieved = manager.get<Material>( path );
+		const auto retrieved = manager.get<assets::Material>( path );
 		REQUIRE( retrieved.get() == material.get() );
 	}
 }
 
-TEST_CASE( "AssetManager unload functionality", "[AssetManager][unit]" )
+TEST_CASE( "assets::AssetManager unload functionality", "[assets::AssetManager][unit]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	SECTION( "Unload removes asset when no other references" )
 	{
-		auto material = manager.load<Material>( "unload_test.mtl" );
+		auto material = manager.load<assets::Material>( "unload_test.mtl" );
 		REQUIRE( manager.isCached( "unload_test.mtl" ) );
 
 		// Release our reference
@@ -105,7 +104,7 @@ TEST_CASE( "AssetManager unload functionality", "[AssetManager][unit]" )
 
 	SECTION( "Unload fails when other references exist" )
 	{
-		const auto material = manager.load<Material>( "unload_test2.mtl" );
+		const auto material = manager.load<assets::Material>( "unload_test2.mtl" );
 		REQUIRE( manager.isCached( "unload_test2.mtl" ) );
 
 		// Keep reference alive
@@ -121,9 +120,9 @@ TEST_CASE( "AssetManager unload functionality", "[AssetManager][unit]" )
 	}
 }
 
-TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
+TEST_CASE( "assets::AssetManager clearCache functionality", "[assets::AssetManager][unit]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	// Set up mock callback for scene loading
 	assets::AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
@@ -131,8 +130,8 @@ TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 	} );
 
 	// Load several assets
-	const auto material = manager.load<Material>( "clear_test1.mtl" );
-	const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+	const auto material = manager.load<assets::Material>( "clear_test1.mtl" );
+	const auto scene = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 
 	REQUIRE( manager.isCached( "clear_test1.mtl" ) );
 	REQUIRE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
@@ -152,9 +151,9 @@ TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 	assets::AssetManager::clearSceneLoaderCallback();
 }
 
-TEST_CASE( "AssetManager integration with GLTFLoader", "[AssetManager][integration]" )
+TEST_CASE( "assets::AssetManager integration with GLTFLoader", "[assets::AssetManager][integration]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 	gltf_loader::GLTFLoader gltfLoader;
 
 	SECTION( "Store externally loaded scene" )
@@ -170,28 +169,28 @@ TEST_CASE( "AssetManager integration with GLTFLoader", "[AssetManager][integrati
 		// Load using GLTFLoader
 		auto loadedScene = gltfLoader.loadFromString( gltfContent );
 
-		// Store in AssetManager
+		// Store in assets::AssetManager
 		const std::string path = "test_integration.gltf";
 		if ( loadedScene )
 		{
 			// Convert unique_ptr to shared_ptr for storage
-			const auto sharedScene = std::shared_ptr<Scene>( loadedScene.release() );
+			const auto sharedScene = std::shared_ptr<assets::Scene>( loadedScene.release() );
 			manager.store( path, sharedScene );
 
 			// Verify it's cached
 			REQUIRE( manager.isCached( path ) );
 
 			// Verify we can retrieve it
-			const auto retrievedScene = manager.get<Scene>( path );
+			const auto retrievedScene = manager.get<assets::Scene>( path );
 			REQUIRE( retrievedScene != nullptr );
 			REQUIRE( retrievedScene.get() == sharedScene.get() );
 		}
 	}
 }
 
-TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][callback]" )
+TEST_CASE( "assets::AssetManager ECS import callback mechanism", "[assets::AssetManager][ecs][callback]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	// Mock ECS scene - we'll just use a simple test double
 	struct MockEcsScene
@@ -201,7 +200,7 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	} mockEcsScene;
 
 	// Set up the callback to capture ECS integration
-	AssetManager::setImportSceneCallback( [&mockEcsScene]( std::shared_ptr<assets::Scene> scene, ecs::Scene & ) {
+	assets::AssetManager::setImportSceneCallback( [&mockEcsScene]( std::shared_ptr<assets::Scene> scene, ecs::Scene & ) {
 		mockEcsScene.wasImported = true;
 		mockEcsScene.importedScene = scene;
 	} );
@@ -209,7 +208,7 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	SECTION( "importScene calls callback when set" )
 	{
 		// Set up mock scene loader callback
-		AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			return std::make_shared<assets::Scene>();
 		} );
 
@@ -223,12 +222,12 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 		REQUIRE( mockEcsScene.importedScene->isLoaded() == true );
 
 		// Clean up scene loader callback
-		AssetManager::clearSceneLoaderCallback();
+		assets::AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "importScene returns false when no callback set" )
 	{
-		AssetManager::clearImportSceneCallback();
+		assets::AssetManager::clearImportSceneCallback();
 
 		const bool result = manager.importScene( "assets/test/triangle_no_mat.gltf", reinterpret_cast<ecs::Scene &>( mockEcsScene ) );
 
@@ -237,20 +236,20 @@ TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][ca
 	}
 
 	// Clean up callback after test
-	AssetManager::clearImportSceneCallback();
+	assets::AssetManager::clearImportSceneCallback();
 }
 
-TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][loadScene][integration]" )
+TEST_CASE( "assets::AssetManager loadScene loads actual glTF content", "[assets::AssetManager][loadScene][integration]" )
 {
-	AssetManager manager;
+	assets::AssetManager manager;
 
 	SECTION( "loadScene returns nullptr without callback" )
 	{
 		// Ensure no callback is set
-		AssetManager::clearSceneLoaderCallback();
+		assets::AssetManager::clearSceneLoaderCallback();
 
 		// Load the test triangle scene
-		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 
 		// Without callback, should return nullptr
 		REQUIRE( scene == nullptr );
@@ -260,9 +259,9 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 	SECTION( "loadScene handles invalid file path gracefully" )
 	{
 		// Ensure no callback is set
-		AssetManager::clearSceneLoaderCallback();
+		assets::AssetManager::clearSceneLoaderCallback();
 
-		const auto scene = manager.load<Scene>( "non_existent_file.gltf" );
+		const auto scene = manager.load<assets::Scene>( "non_existent_file.gltf" );
 		REQUIRE( scene == nullptr ); // Without callback, returns nullptr
 		REQUIRE_FALSE( manager.isCached( "non_existent_file.gltf" ) );
 	}
@@ -270,18 +269,18 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 	SECTION( "loadScene caches successfully loaded scenes" )
 	{
 		// Set up a mock loader callback
-		AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			auto scene = std::make_shared<assets::Scene>();
 			return scene;
 		} );
 
 		// Load scene first time
-		const auto scene1 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene1 = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene1 != nullptr );
 		REQUIRE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 
 		// Load same scene second time - should return cached instance
-		const auto scene2 = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene2 = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene2 != nullptr );
 		REQUIRE( scene1.get() == scene2.get() ); // Same object
 
@@ -293,7 +292,7 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 	{
 		// Set up a mock loader callback using the static method
 		bool callbackCalled = false;
-		AssetManager::setSceneLoaderCallback( [&callbackCalled]( const std::string & ) -> std::shared_ptr<assets::Scene> {
+		assets::AssetManager::setSceneLoaderCallback( [&callbackCalled]( const std::string & ) -> std::shared_ptr<assets::Scene> {
 			callbackCalled = true;
 
 			// Create a mock scene with some content
@@ -304,22 +303,22 @@ TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][l
 			return scene;
 		} );
 
-		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene != nullptr );
 		REQUIRE( callbackCalled );
 		REQUIRE( scene->getRootNodes().size() == 1 );
 		REQUIRE( scene->getRootNodes()[0]->getName() == "test_node" );
 
 		// Clean up using the static method
-		AssetManager::clearSceneLoaderCallback();
+		assets::AssetManager::clearSceneLoaderCallback();
 	}
 
 	SECTION( "loadScene returns nullptr when callback unavailable" )
 	{
 		// Ensure no callback is set
-		AssetManager::clearSceneLoaderCallback();
+		assets::AssetManager::clearSceneLoaderCallback();
 
-		const auto scene = manager.load<Scene>( "assets/test/triangle_no_mat.gltf" );
+		const auto scene = manager.load<assets::Scene>( "assets/test/triangle_no_mat.gltf" );
 		REQUIRE( scene == nullptr ); // No callback means no loading
 		REQUIRE_FALSE( manager.isCached( "assets/test/triangle_no_mat.gltf" ) );
 	}

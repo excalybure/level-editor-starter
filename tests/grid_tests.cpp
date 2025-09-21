@@ -1,4 +1,4 @@
-﻿// Grid system comprehensive tests
+﻿// grid::Grid system comprehensive tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
@@ -9,15 +9,11 @@
 #include "engine/math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 
-using namespace grid;
-using namespace math;
-using namespace camera;
-
-TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
+TEST_CASE( "grid::Grid Settings Configuration", "[grid][settings]" )
 {
 	SECTION( "Default grid settings" )
 	{
-		GridSettings settings;
+		grid::GridSettings settings;
 
 		// Check default colors (using direct comparison for now)
 		REQUIRE( settings.majorGridColor.x == 0.5f );
@@ -53,12 +49,12 @@ TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 		REQUIRE( settings.showAxes == true );
 	}
 
-	SECTION( "Grid settings modification" )
+	SECTION( "grid::Grid settings modification" )
 	{
-		GridSettings settings;
+		grid::GridSettings settings;
 
 		// Modify colors
-		settings.majorGridColor = Vec3<>( 1.0f, 0.0f, 0.0f );
+		settings.majorGridColor = math::Vec3<>( 1.0f, 0.0f, 0.0f );
 		settings.majorGridAlpha = 0.5f;
 
 		REQUIRE( settings.majorGridColor.x == 1.0f );
@@ -84,11 +80,11 @@ TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 	}
 }
 
-TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
+TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization]" )
 {
-	SECTION( "GridRenderer creation" )
+	SECTION( "grid::GridRenderer creation" )
 	{
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 
 		// Should be created with default settings
 		const auto &settings = renderer.getSettings();
@@ -97,12 +93,12 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 		REQUIRE( settings.showAxes == true );
 	}
 
-	SECTION( "GridRenderer settings management" )
+	SECTION( "grid::GridRenderer settings management" )
 	{
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 
 		// Modify settings
-		GridSettings newSettings;
+		grid::GridSettings newSettings;
 		newSettings.gridSpacing = 0.5f;
 		newSettings.majorGridInterval = 20.0f;
 		newSettings.showGrid = false;
@@ -115,13 +111,13 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 		REQUIRE_FALSE( retrievedSettings.showGrid );
 	}
 
-	SECTION( "GridRenderer D3D12 initialization" )
+	SECTION( "grid::GridRenderer D3D12 initialization" )
 	{
 		dx12::Device device;
-		if ( !requireHeadlessDevice( device, "GridRenderer D3D12 initialization" ) )
+		if ( !requireHeadlessDevice( device, "grid::GridRenderer D3D12 initialization" ) )
 			return;
 
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
 		// Initialize should succeed with valid device and shader manager
@@ -131,9 +127,9 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 		REQUIRE_NOTHROW( renderer.shutdown() );
 	}
 
-	SECTION( "GridRenderer initialization error cases" )
+	SECTION( "grid::GridRenderer initialization error cases" )
 	{
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 
 		// Initialize with null device should fail
 		REQUIRE_FALSE( renderer.initialize( nullptr, nullptr ) );
@@ -147,7 +143,7 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 	}
 }
 
-TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
+TEST_CASE( "grid::Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 {
 	SECTION( "Optimal spacing calculation" )
 	{
@@ -156,28 +152,28 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 		// Close distance (0.5) - fine grid
 		// log10(0.5) = -0.301, floor(-0.301) = -1, 10^-1 = 0.1, spacing = 0.1 * 0.1 = 0.01
 		const float closeDistance = 0.5f;
-		const float closeSpacing = GridRenderer::calculateOptimalSpacing( closeDistance, baseSpacing );
+		const float closeSpacing = grid::GridRenderer::calculateOptimalSpacing( closeDistance, baseSpacing );
 		REQUIRE( closeSpacing < baseSpacing );
 		REQUIRE_THAT( closeSpacing, Catch::Matchers::WithinAbs( 0.01f, 0.001f ) );
 
 		// Medium distance (5.0) - normal grid
 		// log10(5.0) = 0.699, floor(0.699) = 0, 10^0 = 1, spacing = 1 * 0.1 = 0.1
 		const float mediumDistance = 5.0f;
-		const float mediumSpacing = GridRenderer::calculateOptimalSpacing( mediumDistance, baseSpacing );
+		const float mediumSpacing = grid::GridRenderer::calculateOptimalSpacing( mediumDistance, baseSpacing );
 		REQUIRE( mediumSpacing < baseSpacing );
 		REQUIRE_THAT( mediumSpacing, Catch::Matchers::WithinAbs( 0.1f, 0.001f ) );
 
 		// Far distance (50.0) - coarse grid
 		// log10(50.0) = 1.699, floor(1.699) = 1, 10^1 = 10, spacing = 10 * 0.1 = 1.0
 		const float farDistance = 50.0f;
-		const float farSpacing = GridRenderer::calculateOptimalSpacing( farDistance, baseSpacing );
+		const float farSpacing = grid::GridRenderer::calculateOptimalSpacing( farDistance, baseSpacing );
 		REQUIRE( farSpacing == baseSpacing );
 		REQUIRE_THAT( farSpacing, Catch::Matchers::WithinAbs( 1.0f, 0.001f ) );
 
 		// Very far distance (500.0) - very coarse grid
 		// log10(500.0) = 2.699, floor(2.699) = 2, 10^2 = 100, spacing = 100 * 0.1 = 10.0
 		const float veryFarDistance = 500.0f;
-		const float veryFarSpacing = GridRenderer::calculateOptimalSpacing( veryFarDistance, baseSpacing );
+		const float veryFarSpacing = grid::GridRenderer::calculateOptimalSpacing( veryFarDistance, baseSpacing );
 		REQUIRE( veryFarSpacing > farSpacing );
 		REQUIRE_THAT( veryFarSpacing, Catch::Matchers::WithinAbs( 10.0f, 0.001f ) );
 	}
@@ -186,17 +182,17 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 	{
 		// Fine spacing - more frequent major lines
 		float fineSpacing = 0.05f;
-		int fineMajor = GridRenderer::calculateMajorInterval( fineSpacing );
+		int fineMajor = grid::GridRenderer::calculateMajorInterval( fineSpacing );
 		REQUIRE( fineMajor == 10 );
 
 		// Normal spacing - standard interval
 		float normalSpacing = 0.5f;
-		int normalMajor = GridRenderer::calculateMajorInterval( normalSpacing );
+		int normalMajor = grid::GridRenderer::calculateMajorInterval( normalSpacing );
 		REQUIRE( normalMajor == 5 );
 
 		// Coarse spacing - less frequent major lines
 		float coarseSpacing = 5.0f;
-		int coarseMajor = GridRenderer::calculateMajorInterval( coarseSpacing );
+		int coarseMajor = grid::GridRenderer::calculateMajorInterval( coarseSpacing );
 		REQUIRE( coarseMajor == 10 );
 	}
 
@@ -206,16 +202,16 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 		if ( !requireHeadlessDevice( device, "Adaptive spacing with camera" ) )
 			return;
 
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		// Create camera at different distances
-		PerspectiveCamera closeCamera;
-		closeCamera.setPosition( Vec3<>( 0, 0, 0.5f ) );
+		camera::PerspectiveCamera closeCamera;
+		closeCamera.setPosition( math::Vec3<>( 0, 0, 0.5f ) );
 
-		PerspectiveCamera farCamera;
-		farCamera.setPosition( Vec3<>( 0, 0, 100.0f ) );
+		camera::PerspectiveCamera farCamera;
+		farCamera.setPosition( math::Vec3<>( 0, 0, 100.0f ) );
 
 		// Update adaptive spacing for close camera
 		renderer.updateAdaptiveSpacing( closeCamera );
@@ -234,126 +230,126 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 
 TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 {
-	SECTION( "Grid snapping functions" )
+	SECTION( "grid::Grid snapping functions" )
 	{
 		float spacing = 1.0f;
 
 		// 2D snapping
-		Vec2<> point2d( 1.3f, 2.7f );
-		Vec2<> snapped2d = GridUtils::snapToGrid( point2d, spacing );
+		math::Vec2<> point2d( 1.3f, 2.7f );
+		math::Vec2<> snapped2d = grid::GridUtils::snapToGrid( point2d, spacing );
 		// TODO: Fix floating point comparison syntax
 		// REQUIRE(snapped2d.x == Catch::Matchers::WithinAbs(1.0f, 0.001f));
 		// REQUIRE(snapped2d.y == Catch::Matchers::WithinAbs(3.0f, 0.001f));
 
 		// 3D snapping
-		Vec3<> point3d( 1.3f, 2.7f, -0.4f );
-		Vec3<> snapped3d = GridUtils::snapToGrid( point3d, spacing );
+		math::Vec3<> point3d( 1.3f, 2.7f, -0.4f );
+		math::Vec3<> snapped3d = grid::GridUtils::snapToGrid( point3d, spacing );
 		// TODO: Fix floating point comparison syntax
 		// REQUIRE_THAT(snapped3d.x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
 		// REQUIRE_THAT(snapped3d.y, Catch::Matchers::WithinAbs(3.0f, 0.001f));
 		// REQUIRE_THAT(snapped3d.z, Catch::Matchers::WithinAbs(0.0f, 0.001f));
 
 		// Exact grid points should remain unchanged
-		Vec2<> exactPoint( 2.0f, 3.0f );
-		Vec2<> exactSnapped = GridUtils::snapToGrid( exactPoint, spacing );
+		math::Vec2<> exactPoint( 2.0f, 3.0f );
+		math::Vec2<> exactSnapped = grid::GridUtils::snapToGrid( exactPoint, spacing );
 		REQUIRE( exactSnapped.x == exactPoint.x );
 		REQUIRE( exactSnapped.y == exactPoint.y );
 	}
 
-	SECTION( "Grid line detection" )
+	SECTION( "grid::Grid line detection" )
 	{
 		float spacing = 1.0f;
 		float tolerance = 0.01f;
 
 		// Point on grid line (X axis)
-		Vec2<> onGridX( 1.0f, 0.5f );
-		REQUIRE( GridUtils::isOnGridLine( onGridX, spacing, tolerance ) );
+		math::Vec2<> onGridX( 1.0f, 0.5f );
+		REQUIRE( grid::GridUtils::isOnGridLine( onGridX, spacing, tolerance ) );
 
 		// Point on grid line (Y axis)
-		Vec2<> onGridY( 0.5f, 2.0f );
-		REQUIRE( GridUtils::isOnGridLine( onGridY, spacing, tolerance ) );
+		math::Vec2<> onGridY( 0.5f, 2.0f );
+		REQUIRE( grid::GridUtils::isOnGridLine( onGridY, spacing, tolerance ) );
 
 		// Point on grid intersection
-		Vec2<> onIntersection( 1.0f, 2.0f );
-		REQUIRE( GridUtils::isOnGridLine( onIntersection, spacing, tolerance ) );
+		math::Vec2<> onIntersection( 1.0f, 2.0f );
+		REQUIRE( grid::GridUtils::isOnGridLine( onIntersection, spacing, tolerance ) );
 
 		// Point not on grid line
-		Vec2<> offGrid( 0.5f, 0.5f );
-		REQUIRE_FALSE( GridUtils::isOnGridLine( offGrid, spacing, tolerance ) );
+		math::Vec2<> offGrid( 0.5f, 0.5f );
+		REQUIRE_FALSE( grid::GridUtils::isOnGridLine( offGrid, spacing, tolerance ) );
 
 		// Point near grid line (within tolerance)
-		Vec2<> nearGrid( 1.005f, 0.5f );
-		REQUIRE( GridUtils::isOnGridLine( nearGrid, spacing, tolerance ) );
+		math::Vec2<> nearGrid( 1.005f, 0.5f );
+		REQUIRE( grid::GridUtils::isOnGridLine( nearGrid, spacing, tolerance ) );
 
 		// Point near grid line (outside tolerance)
-		Vec2<> farFromGrid( 1.02f, 0.5f );
-		REQUIRE_FALSE( GridUtils::isOnGridLine( farFromGrid, spacing, tolerance ) );
+		math::Vec2<> farFromGrid( 1.02f, 0.5f );
+		REQUIRE_FALSE( grid::GridUtils::isOnGridLine( farFromGrid, spacing, tolerance ) );
 	}
 
 	SECTION( "Axis color utilities" )
 	{
 		// X axis should be red
-		Vec3<> xColor = GridUtils::getAxisColor( 0 );
+		math::Vec3<> xColor = grid::GridUtils::getAxisColor( 0 );
 		REQUIRE( xColor.x > 0.8f ); // Should be predominantly red
 		REQUIRE( xColor.y < 0.3f );
 		REQUIRE( xColor.z < 0.3f );
 
 		// Y axis should be green
-		Vec3<> yColor = GridUtils::getAxisColor( 1 );
+		math::Vec3<> yColor = grid::GridUtils::getAxisColor( 1 );
 		REQUIRE( yColor.x < 0.3f );
 		REQUIRE( yColor.y > 0.8f ); // Should be predominantly green
 		REQUIRE( yColor.z < 0.3f );
 
 		// Z axis should be blue
-		Vec3<> zColor = GridUtils::getAxisColor( 2 );
+		math::Vec3<> zColor = grid::GridUtils::getAxisColor( 2 );
 		REQUIRE( zColor.x < 0.3f );
 		REQUIRE( zColor.y < 0.3f );
 		REQUIRE( zColor.z > 0.8f ); // Should be predominantly blue
 
 		// Invalid axis should return gray
-		Vec3<> invalidColor = GridUtils::getAxisColor( 5 );
+		math::Vec3<> invalidColor = grid::GridUtils::getAxisColor( 5 );
 		// TODO: Fix floating point comparison syntax
 		// REQUIRE(invalidColor.x == Catch::Matchers::WithinAbs(0.5f, 0.001f));
 		// REQUIRE(invalidColor.y == Catch::Matchers::WithinAbs(0.5f, 0.001f));
 		// REQUIRE(invalidColor.z == Catch::Matchers::WithinAbs(0.5f, 0.001f));
 	}
 
-	SECTION( "Grid fade calculations" )
+	SECTION( "grid::Grid fade calculations" )
 	{
-		Vec3<> cameraPos( 0, 0, 0 );
+		math::Vec3<> cameraPos( 0, 0, 0 );
 		float fadeDistance = 10.0f;
 
 		// Close position - no fade
-		Vec3<> closePos( 1, 1, 0 );
-		float closeFade = GridUtils::calculateGridFade( closePos, cameraPos, fadeDistance );
+		math::Vec3<> closePos( 1, 1, 0 );
+		float closeFade = grid::GridUtils::calculateGridFade( closePos, cameraPos, fadeDistance );
 		REQUIRE( closeFade > 0.8f );
 
 		// Medium distance - partial fade
-		Vec3<> mediumPos( 5, 0, 0 );
-		float mediumFade = GridUtils::calculateGridFade( mediumPos, cameraPos, fadeDistance );
+		math::Vec3<> mediumPos( 5, 0, 0 );
+		float mediumFade = grid::GridUtils::calculateGridFade( mediumPos, cameraPos, fadeDistance );
 		REQUIRE( mediumFade > 0.4f );
 		REQUIRE( mediumFade < 0.6f );
 
 		// Far position - strong fade
-		Vec3<> farPos( 9, 0, 0 );
-		float farFade = GridUtils::calculateGridFade( farPos, cameraPos, fadeDistance );
+		math::Vec3<> farPos( 9, 0, 0 );
+		float farFade = grid::GridUtils::calculateGridFade( farPos, cameraPos, fadeDistance );
 		REQUIRE( farFade < 0.2f );
 
 		// Beyond fade distance - complete fade
-		Vec3<> beyondPos( 15, 0, 0 );
-		float beyondFade = GridUtils::calculateGridFade( beyondPos, cameraPos, fadeDistance );
+		math::Vec3<> beyondPos( 15, 0, 0 );
+		float beyondFade = grid::GridUtils::calculateGridFade( beyondPos, cameraPos, fadeDistance );
 		REQUIRE( beyondFade == 0.0f );
 	}
 
-	SECTION( "Grid bounds calculation" )
+	SECTION( "grid::Grid bounds calculation" )
 	{
-		PerspectiveCamera camera;
-		camera.setPosition( Vec3<>( 5, 5, 10 ) );
+		camera::PerspectiveCamera camera;
+		camera.setPosition( math::Vec3<>( 5, 5, 10 ) );
 
-		Mat4<> viewMatrix = camera.getViewMatrix();
-		Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f ); // 1:1 aspect ratio
+		math::Mat4<> viewMatrix = camera.getViewMatrix();
+		math::Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f ); // 1:1 aspect ratio
 
-		auto bounds = GridUtils::calculateGridBounds( camera, viewMatrix, projMatrix, 800, 600 );
+		auto bounds = grid::GridUtils::calculateGridBounds( camera, viewMatrix, projMatrix, 800, 600 );
 
 		// Bounds should be reasonable
 		REQUIRE( bounds.max.x > bounds.min.x );
@@ -362,7 +358,7 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 		REQUIRE( bounds.majorInterval > 0 );
 
 		// Should include camera area
-		Vec3<> cameraPos = camera.getPosition();
+		math::Vec3<> cameraPos = camera.getPosition();
 		REQUIRE( bounds.min.x <= cameraPos.x );
 		REQUIRE( bounds.max.x >= cameraPos.x );
 		REQUIRE( bounds.min.y <= cameraPos.y );
@@ -370,24 +366,24 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 	}
 }
 
-TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
+TEST_CASE( "grid::Grid Rendering Integration", "[grid][render][integration]" )
 {
-	SECTION( "Grid rendering with valid setup" )
+	SECTION( "grid::Grid rendering with valid setup" )
 	{
 		platform::Win32Window window;
 		dx12::Device device;
-		REQUIRE( requireDevice( window, device, "Grid rendering integration" ) );
+		REQUIRE( requireDevice( window, device, "grid::Grid rendering integration" ) );
 
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
 		// Create camera
-		PerspectiveCamera camera;
-		camera.setPosition( Vec3<>( 0, 0, 10 ) );
+		camera::PerspectiveCamera camera;
+		camera.setPosition( math::Vec3<>( 0, 0, 10 ) );
 
-		Mat4<> viewMatrix = camera.getViewMatrix();
-		Mat4<> projMatrix = camera.getProjectionMatrix( 1.78f ); // 16:9 aspect ratio
+		math::Mat4<> viewMatrix = camera.getViewMatrix();
+		math::Mat4<> projMatrix = camera.getProjectionMatrix( 1.78f ); // 16:9 aspect ratio
 
 		REQUIRE_NOTHROW( device.beginFrame() );
 		bool renderResult = renderer.render( camera, viewMatrix, projMatrix, 1920, 1080 );
@@ -398,35 +394,35 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		renderer.shutdown();
 	}
 
-	SECTION( "Grid rendering error cases" )
+	SECTION( "grid::Grid rendering error cases" )
 	{
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 
-		PerspectiveCamera camera;
-		Mat4<> viewMatrix = camera.getViewMatrix();
-		Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f );
+		camera::PerspectiveCamera camera;
+		math::Mat4<> viewMatrix = camera.getViewMatrix();
+		math::Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f );
 
 		// Render without initialization should fail
 		bool renderResult = renderer.render( camera, viewMatrix, projMatrix, 800, 600 );
 		REQUIRE_FALSE( renderResult );
 	}
 
-	SECTION( "Grid rendering with different settings" )
+	SECTION( "grid::Grid rendering with different settings" )
 	{
 		platform::Win32Window window;
 		dx12::Device device;
-		REQUIRE( requireDevice( window, device, "Grid rendering with different settings" ) );
+		REQUIRE( requireDevice( window, device, "grid::Grid rendering with different settings" ) );
 
-		GridRenderer renderer;
+		grid::GridRenderer renderer;
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( renderer.initialize( &device, shaderManager ) );
 
-		PerspectiveCamera camera;
-		Mat4<> viewMatrix = camera.getViewMatrix();
-		Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f );
+		camera::PerspectiveCamera camera;
+		math::Mat4<> viewMatrix = camera.getViewMatrix();
+		math::Mat4<> projMatrix = camera.getProjectionMatrix( 1.0f );
 
 		// Test with grid disabled
-		GridSettings settings = renderer.getSettings();
+		grid::GridSettings settings = renderer.getSettings();
 		settings.showGrid = false;
 		renderer.setSettings( settings );
 

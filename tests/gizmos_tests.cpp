@@ -10,24 +10,22 @@
 #include <imgui.h>
 #include <ImGuizmo.h>
 
-using namespace editor;
-using namespace math;
 
 TEST_CASE( "GizmoOperation enum values", "[gizmos][unit][operation]" )
 {
 	SECTION( "GizmoOperation has correct enum values" )
 	{
-		REQUIRE( static_cast<int>( GizmoOperation::Translate ) == 0 );
-		REQUIRE( static_cast<int>( GizmoOperation::Rotate ) == 1 );
-		REQUIRE( static_cast<int>( GizmoOperation::Scale ) == 2 );
-		REQUIRE( static_cast<int>( GizmoOperation::Universal ) == 3 );
+		REQUIRE( static_cast<int>( editor::GizmoOperation::Translate ) == 0 );
+		REQUIRE( static_cast<int>( editor::GizmoOperation::Rotate ) == 1 );
+		REQUIRE( static_cast<int>( editor::GizmoOperation::Scale ) == 2 );
+		REQUIRE( static_cast<int>( editor::GizmoOperation::Universal ) == 3 );
 	}
 
 	SECTION( "GizmoOperation enum can be compared" )
 	{
-		const auto op1 = GizmoOperation::Translate;
-		const auto op2 = GizmoOperation::Translate;
-		const auto op3 = GizmoOperation::Rotate;
+		const auto op1 = editor::GizmoOperation::Translate;
+		const auto op2 = editor::GizmoOperation::Translate;
+		const auto op3 = editor::GizmoOperation::Rotate;
 
 		REQUIRE( op1 == op2 );
 		REQUIRE( op1 != op3 );
@@ -38,15 +36,15 @@ TEST_CASE( "GizmoMode enum values", "[gizmos][unit][mode]" )
 {
 	SECTION( "GizmoMode has correct enum values" )
 	{
-		REQUIRE( static_cast<int>( GizmoMode::Local ) == 0 );
-		REQUIRE( static_cast<int>( GizmoMode::World ) == 1 );
+		REQUIRE( static_cast<int>( editor::GizmoMode::Local ) == 0 );
+		REQUIRE( static_cast<int>( editor::GizmoMode::World ) == 1 );
 	}
 
 	SECTION( "GizmoMode enum can be compared" )
 	{
-		const auto mode1 = GizmoMode::Local;
-		const auto mode2 = GizmoMode::Local;
-		const auto mode3 = GizmoMode::World;
+		const auto mode1 = editor::GizmoMode::Local;
+		const auto mode2 = editor::GizmoMode::Local;
+		const auto mode3 = editor::GizmoMode::World;
 
 		REQUIRE( mode1 == mode2 );
 		REQUIRE( mode1 != mode3 );
@@ -57,12 +55,12 @@ TEST_CASE( "GizmoResult struct default values and manipulation flags", "[gizmos]
 {
 	SECTION( "GizmoResult has correct default values" )
 	{
-		const GizmoResult result;
+		const editor::GizmoResult result;
 
 		REQUIRE_FALSE( result.wasManipulated );
 		REQUIRE_FALSE( result.isManipulating );
 
-		// Check individual components instead of using Vec3 equality
+		// Check individual components instead of using math::Vec3 equality
 		REQUIRE( result.translationDelta.x == 0.0f );
 		REQUIRE( result.translationDelta.y == 0.0f );
 		REQUIRE( result.translationDelta.z == 0.0f );
@@ -78,7 +76,7 @@ TEST_CASE( "GizmoResult struct default values and manipulation flags", "[gizmos]
 
 	SECTION( "GizmoResult manipulation flags can be set" )
 	{
-		GizmoResult result;
+		editor::GizmoResult result;
 		result.wasManipulated = true;
 		result.isManipulating = true;
 
@@ -88,10 +86,10 @@ TEST_CASE( "GizmoResult struct default values and manipulation flags", "[gizmos]
 
 	SECTION( "GizmoResult delta values can be set" )
 	{
-		GizmoResult result;
-		result.translationDelta = Vec3<>{ 1.0f, 2.0f, 3.0f };
-		result.rotationDelta = Vec3<>{ 0.1f, 0.2f, 0.3f };
-		result.scaleDelta = Vec3<>{ 1.5f, 2.0f, 0.5f };
+		editor::GizmoResult result;
+		result.translationDelta = math::Vec3<>{ 1.0f, 2.0f, 3.0f };
+		result.rotationDelta = math::Vec3<>{ 0.1f, 0.2f, 0.3f };
+		result.scaleDelta = math::Vec3<>{ 1.5f, 2.0f, 0.5f };
 
 		REQUIRE( result.translationDelta.x == 1.0f );
 		REQUIRE( result.translationDelta.y == 2.0f );
@@ -111,22 +109,22 @@ TEST_CASE( "GizmoSystem class interface", "[gizmos][unit][system]" )
 {
 	SECTION( "GizmoSystem can be instantiated" )
 	{
-		const GizmoSystem system;
+		const editor::GizmoSystem system;
 
 		// Should have default values for operation and mode
-		REQUIRE( system.getCurrentOperation() == GizmoOperation::Translate );
-		REQUIRE( system.getCurrentMode() == GizmoMode::World );
+		REQUIRE( system.getCurrentOperation() == editor::GizmoOperation::Translate );
+		REQUIRE( system.getCurrentMode() == editor::GizmoMode::World );
 	}
 
 	SECTION( "GizmoSystem operation and mode can be set" )
 	{
-		GizmoSystem system;
+		editor::GizmoSystem system;
 
-		system.setOperation( GizmoOperation::Rotate );
-		system.setMode( GizmoMode::Local );
+		system.setOperation( editor::GizmoOperation::Rotate );
+		system.setMode( editor::GizmoMode::Local );
 
-		REQUIRE( system.getCurrentOperation() == GizmoOperation::Rotate );
-		REQUIRE( system.getCurrentMode() == GizmoMode::Local );
+		REQUIRE( system.getCurrentOperation() == editor::GizmoOperation::Rotate );
+		REQUIRE( system.getCurrentMode() == editor::GizmoMode::Local );
 	}
 }
 
@@ -136,13 +134,13 @@ TEST_CASE( "GizmoSystem with SelectionManager", "[gizmos][unit][selection]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
+		editor::SelectionManager selectionManager( scene, systemManager );
 
-		const GizmoSystem system( selectionManager, scene );
+		const editor::GizmoSystem system( selectionManager, scene );
 
 		// Should have default values for operation and mode
-		REQUIRE( system.getCurrentOperation() == GizmoOperation::Translate );
-		REQUIRE( system.getCurrentMode() == GizmoMode::World );
+		REQUIRE( system.getCurrentOperation() == editor::GizmoOperation::Translate );
+		REQUIRE( system.getCurrentMode() == editor::GizmoMode::World );
 	}
 }
 
@@ -150,7 +148,7 @@ TEST_CASE( "GizmoSystem settings with snap values", "[gizmos][unit][settings]" )
 {
 	SECTION( "GizmoSystem has default snap values" )
 	{
-		const GizmoSystem system;
+		const editor::GizmoSystem system;
 
 		REQUIRE( system.getTranslationSnap() == 1.0f );
 		REQUIRE( system.getRotationSnap() == 15.0f ); // 15 degrees
@@ -160,7 +158,7 @@ TEST_CASE( "GizmoSystem settings with snap values", "[gizmos][unit][settings]" )
 
 	SECTION( "GizmoSystem snap values can be set" )
 	{
-		GizmoSystem system;
+		editor::GizmoSystem system;
 
 		system.setTranslationSnap( 0.5f );
 		system.setRotationSnap( 30.0f );
@@ -178,14 +176,14 @@ TEST_CASE( "GizmoSystem visibility control", "[gizmos][unit][visibility]" )
 {
 	SECTION( "GizmoSystem starts visible by default" )
 	{
-		const GizmoSystem system;
+		const editor::GizmoSystem system;
 
 		REQUIRE( system.isVisible() );
 	}
 
 	SECTION( "GizmoSystem visibility can be toggled" )
 	{
-		GizmoSystem system;
+		editor::GizmoSystem system;
 
 		system.setVisible( false );
 		REQUIRE_FALSE( system.isVisible() );
@@ -201,13 +199,13 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entity with transform
 		const auto entity = scene.createEntity();
 		scene.addComponent<components::Transform>( entity,
-			components::Transform{ Vec3f{ 5.0f, 10.0f, 15.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 5.0f, 10.0f, 15.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 
 		// Select the entity
 		selectionManager.select( entity );
@@ -224,16 +222,16 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entities with transforms
 		const auto entity1 = scene.createEntity();
 		const auto entity2 = scene.createEntity();
 		scene.addComponent<components::Transform>( entity1,
-			components::Transform{ Vec3f{ 0.0f, 0.0f, 0.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 0.0f, 0.0f, 0.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 		scene.addComponent<components::Transform>( entity2,
-			components::Transform{ Vec3f{ 10.0f, 20.0f, 30.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 10.0f, 20.0f, 30.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 
 		// Select both entities
 		selectionManager.select( { entity1, entity2 } );
@@ -250,8 +248,8 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// No selection
 		const auto center = system.calculateSelectionCenter();
@@ -268,13 +266,13 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entity with transform
 		const auto entity = scene.createEntity();
 		scene.addComponent<components::Transform>( entity,
-			components::Transform{ Vec3f{ 2.0f, 4.0f, 6.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 2.0f, 4.0f, 6.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 
 		// Select the entity
 		selectionManager.select( entity );
@@ -292,16 +290,16 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entities with transforms
 		const auto entity1 = scene.createEntity();
 		const auto entity2 = scene.createEntity();
 		scene.addComponent<components::Transform>( entity1,
-			components::Transform{ Vec3f{ 0.0f, 0.0f, 0.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 0.0f, 0.0f, 0.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 		scene.addComponent<components::Transform>( entity2,
-			components::Transform{ Vec3f{ 4.0f, 8.0f, 12.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 4.0f, 8.0f, 12.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 
 		// Select both entities
 		selectionManager.select( { entity1, entity2 } );
@@ -319,14 +317,14 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// No selection
 		const auto matrix = system.calculateGizmoMatrix();
 
 		// Should be identity matrix
-		const auto identity = Mat4f::identity();
+		const auto identity = math::Mat4f::identity();
 		REQUIRE( matrix.row0.x == identity.row0.x );
 		REQUIRE( matrix.row0.y == identity.row0.y );
 		REQUIRE( matrix.row0.z == identity.row0.z );
@@ -352,22 +350,22 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entity with initial transform
 		const auto entity = scene.createEntity();
 		scene.addComponent<components::Transform>( entity,
-			components::Transform{ Vec3f{ 1.0f, 2.0f, 3.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 1.0f, 2.0f, 3.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 
 		// Select the entity
 		selectionManager.select( entity );
 
 		// Create transform delta
-		GizmoResult delta;
-		delta.translationDelta = Vec3f{ 5.0f, 10.0f, 15.0f };
-		delta.rotationDelta = Vec3f{ 0.1f, 0.2f, 0.3f };
-		delta.scaleDelta = Vec3f{ 2.0f, 3.0f, 4.0f };
+		editor::GizmoResult delta;
+		delta.translationDelta = math::Vec3f{ 5.0f, 10.0f, 15.0f };
+		delta.rotationDelta = math::Vec3f{ 0.1f, 0.2f, 0.3f };
+		delta.scaleDelta = math::Vec3f{ 2.0f, 3.0f, 4.0f };
 
 		// Apply delta
 		system.applyTransformDelta( delta );
@@ -391,24 +389,24 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create entities with initial transforms
 		const auto entity1 = scene.createEntity();
 		const auto entity2 = scene.createEntity();
 		scene.addComponent<components::Transform>( entity1,
-			components::Transform{ Vec3f{ 1.0f, 2.0f, 3.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 1, 1, 1 } } );
+			components::Transform{ math::Vec3f{ 1.0f, 2.0f, 3.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
 		scene.addComponent<components::Transform>( entity2,
-			components::Transform{ Vec3f{ 10.0f, 20.0f, 30.0f }, Vec3f{ 0, 0, 0 }, Vec3f{ 2, 2, 2 } } );
+			components::Transform{ math::Vec3f{ 10.0f, 20.0f, 30.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 2, 2, 2 } } );
 
 		// Select both entities
 		selectionManager.select( { entity1, entity2 } );
 
 		// Create transform delta
-		GizmoResult delta;
-		delta.translationDelta = Vec3f{ 5.0f, 10.0f, 15.0f };
-		delta.scaleDelta = Vec3f{ 0.5f, 0.5f, 0.5f };
+		editor::GizmoResult delta;
+		delta.translationDelta = math::Vec3f{ 5.0f, 10.0f, 15.0f };
+		delta.scaleDelta = math::Vec3f{ 0.5f, 0.5f, 0.5f };
 
 		// Apply delta
 		system.applyTransformDelta( delta );
@@ -440,12 +438,12 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// No selection
-		GizmoResult delta;
-		delta.translationDelta = Vec3f{ 5.0f, 10.0f, 15.0f };
+		editor::GizmoResult delta;
+		delta.translationDelta = math::Vec3f{ 5.0f, 10.0f, 15.0f };
 
 		// Should not crash when applying delta to empty selection
 		system.applyTransformDelta( delta );
@@ -459,7 +457,7 @@ TEST_CASE( "GizmoSystem state management", "[gizmos][unit][state]" )
 {
 	SECTION( "GizmoSystem starts with no active manipulation" )
 	{
-		const GizmoSystem system;
+		const editor::GizmoSystem system;
 
 		REQUIRE_FALSE( system.isManipulating() );
 		REQUIRE_FALSE( system.wasManipulated() );
@@ -467,7 +465,7 @@ TEST_CASE( "GizmoSystem state management", "[gizmos][unit][state]" )
 
 	SECTION( "GizmoSystem can track active manipulation state" )
 	{
-		GizmoSystem system;
+		editor::GizmoSystem system;
 
 		// Start manipulation
 		system.beginManipulation();
@@ -492,12 +490,12 @@ TEST_CASE( "GizmoSystem ImGuizmo setup", "[gizmos][unit][imguizmo][setup]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create test view and projection matrices
-		const auto viewMatrix = Mat4f::lookAt( Vec3f{ 0, 0, 10 }, Vec3f{ 0, 0, 0 }, Vec3f{ 0, 1, 0 } );
-		const auto projMatrix = Mat4f::perspective( 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
+		const auto viewMatrix = math::Mat4f::lookAt( math::Vec3f{ 0, 0, 10 }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 0, 1, 0 } );
+		const auto projMatrix = math::Mat4f::perspective( 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
 		const auto viewport = math::Vec4<>{ 0.0f, 0.0f, 1920.0f, 1080.0f };
 
 		// Setup should not crash and should return true for success
@@ -509,12 +507,12 @@ TEST_CASE( "GizmoSystem ImGuizmo setup", "[gizmos][unit][imguizmo][setup]" )
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Create test matrices with invalid viewport (zero width/height)
-		const auto viewMatrix = Mat4f::identity();
-		const auto projMatrix = Mat4f::identity();
+		const auto viewMatrix = math::Mat4f::identity();
+		const auto projMatrix = math::Mat4f::identity();
 		const auto invalidViewport = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
 
 		// Setup should handle invalid viewport gracefully
@@ -529,11 +527,11 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to local mode
-		system.setMode( GizmoMode::Local );
+		system.setMode( editor::GizmoMode::Local );
 
 		// Test coordinate space conversion
 		const auto imguizmoMode = system.getImGuizmoMode();
@@ -544,11 +542,11 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to world mode
-		system.setMode( GizmoMode::World );
+		system.setMode( editor::GizmoMode::World );
 
 		// Test coordinate space conversion
 		const auto imguizmoMode = system.getImGuizmoMode();
@@ -559,19 +557,19 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Start with local mode
-		system.setMode( GizmoMode::Local );
+		system.setMode( editor::GizmoMode::Local );
 		REQUIRE( system.getImGuizmoMode() == 0 );
 
 		// Switch to world mode
-		system.setMode( GizmoMode::World );
+		system.setMode( editor::GizmoMode::World );
 		REQUIRE( system.getImGuizmoMode() == 1 );
 
 		// Switch back to local mode
-		system.setMode( GizmoMode::Local );
+		system.setMode( editor::GizmoMode::Local );
 		REQUIRE( system.getImGuizmoMode() == 0 );
 	}
 }
@@ -582,11 +580,11 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to translate operation
-		system.setOperation( GizmoOperation::Translate );
+		system.setOperation( editor::GizmoOperation::Translate );
 
 		// Test operation conversion
 		const auto imguizmoOp = system.getImGuizmoOperation();
@@ -597,11 +595,11 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to rotate operation
-		system.setOperation( GizmoOperation::Rotate );
+		system.setOperation( editor::GizmoOperation::Rotate );
 
 		// Test operation conversion
 		const auto imguizmoOp = system.getImGuizmoOperation();
@@ -612,11 +610,11 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to scale operation
-		system.setOperation( GizmoOperation::Scale );
+		system.setOperation( editor::GizmoOperation::Scale );
 
 		// Test operation conversion
 		const auto imguizmoOp = system.getImGuizmoOperation();
@@ -627,11 +625,11 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set to universal operation
-		system.setOperation( GizmoOperation::Universal );
+		system.setOperation( editor::GizmoOperation::Universal );
 
 		// Test operation conversion
 		const auto imguizmoOp = system.getImGuizmoOperation();
@@ -642,23 +640,23 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Start with translate
-		system.setOperation( GizmoOperation::Translate );
+		system.setOperation( editor::GizmoOperation::Translate );
 		REQUIRE( system.getImGuizmoOperation() == 7 );
 
 		// Switch to rotate
-		system.setOperation( GizmoOperation::Rotate );
+		system.setOperation( editor::GizmoOperation::Rotate );
 		REQUIRE( system.getImGuizmoOperation() == 120 );
 
 		// Switch to scale
-		system.setOperation( GizmoOperation::Scale );
+		system.setOperation( editor::GizmoOperation::Scale );
 		REQUIRE( system.getImGuizmoOperation() == 896 );
 
 		// Switch to universal
-		system.setOperation( GizmoOperation::Universal );
+		system.setOperation( editor::GizmoOperation::Universal );
 		REQUIRE( system.getImGuizmoOperation() == 1023 );
 	}
 }
@@ -669,8 +667,8 @@ TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Initially disabled
 		REQUIRE_FALSE( system.isSnapEnabled() );
@@ -688,8 +686,8 @@ TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][
 	{
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
-		SelectionManager selectionManager( scene, systemManager );
-		GizmoSystem system( selectionManager, scene );
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene );
 
 		// Set custom snap values
 		system.setTranslationSnap( 2.5f );

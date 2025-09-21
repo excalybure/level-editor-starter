@@ -11,17 +11,15 @@
 #include "engine/math/color.h"
 #include "test_dx12_helpers.h"
 
-using namespace renderer;
-using namespace math;
 
-TEST_CASE( "Renderer Vertex Format", "[renderer]" )
+TEST_CASE( "renderer::Renderer Vertex Format", "[renderer]" )
 {
 	SECTION( "Vertex can be constructed" )
 	{
-		const Vec3<> position{ 1.0f, 2.0f, 3.0f };
-		const Color color{ 1.0f, 0.5f, 0.0f, 1.0f };
+		const math::Vec3<> position{ 1.0f, 2.0f, 3.0f };
+		const renderer::Color color{ 1.0f, 0.5f, 0.0f, 1.0f };
 
-		const Vertex vertex( position, color );
+		const renderer::Vertex vertex( position, color );
 
 		REQUIRE( vertex.position.x == 1.0f );
 		REQUIRE( vertex.position.y == 2.0f );
@@ -47,7 +45,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                     }
                 )";
 
-				const auto blob = ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
+				const auto blob = renderer::ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
 				REQUIRE( blob.isValid() );
 				REQUIRE( blob.entryPoint == "main" );
 				REQUIRE( blob.profile == "vs_5_0" );
@@ -71,7 +69,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                     }
                 )";
 
-				const auto blob = ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
+				const auto blob = renderer::ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
 				REQUIRE( blob.isValid() );
 			}
 			catch ( const std::runtime_error &e )
@@ -86,7 +84,7 @@ TEST_CASE( "Render State", "[renderer]" )
 {
 	SECTION( "Default render state" )
 	{
-		const RenderState state;
+		const renderer::RenderState state;
 
 		const auto depthDesc = state.getDepthStencilDesc();
 		REQUIRE( depthDesc.DepthEnable == TRUE );
@@ -102,7 +100,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 	SECTION( "Wireframe state" )
 	{
-		RenderState state;
+		renderer::RenderState state;
 		state.setWireframe( true );
 
 		const auto rasterizerDesc = state.getRasterizerDesc();
@@ -111,7 +109,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 	SECTION( "Depth state modifications" )
 	{
-		RenderState state;
+		renderer::RenderState state;
 		state.setDepthTest( false );
 		state.setDepthWrite( false );
 
@@ -123,7 +121,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 TEST_CASE( "Render State permutations", "[renderer]" )
 {
-	RenderState state;
+	renderer::RenderState state;
 	SECTION( "Disable depth test & write, enable blend wireframe front cull" )
 	{
 		state.setDepthTest( false );
@@ -162,7 +160,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 				#endif
 				float4 main(float3 pos:POSITION):SV_POSITION { return float4(pos,1); }
 			)";
-			REQUIRE_NOTHROW( ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
+			REQUIRE_NOTHROW( renderer::ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
 		}
 		catch ( const std::runtime_error &e )
 		{
@@ -174,7 +172,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
+			renderer::ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
 		}
 		catch ( const std::runtime_error & )
 		{
@@ -187,7 +185,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
+			renderer::ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
 		}
 		catch ( const std::runtime_error & )
 		{
@@ -204,12 +202,12 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 		return;
 
 	// Start with 3 vertices
-	std::vector<Vertex> verts = {
-		{ { 0, 0, 0 }, Color::red() },
-		{ { 1, 0, 0 }, Color::green() },
-		{ { 0, 1, 0 }, Color::blue() }
+	std::vector<renderer::Vertex> verts = {
+		{ { 0, 0, 0 }, renderer::Color::red() },
+		{ { 1, 0, 0 }, renderer::Color::green() },
+		{ { 0, 1, 0 }, renderer::Color::blue() }
 	};
-	VertexBuffer vb( device, verts );
+	renderer::VertexBuffer vb( device, verts );
 	REQUIRE( vb.getVertexCount() == 3 );
 
 	// Same size update -> count unchanged
@@ -218,13 +216,13 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 	REQUIRE( vb.getVertexCount() == 3 );
 
 	// Larger update -> count grows
-	verts.push_back( { { 0, 0, 1 }, Color::white() } );
+	verts.push_back( { { 0, 0, 1 }, renderer::Color::white() } );
 	vb.update( verts );
 	REQUIRE( vb.getVertexCount() == 4 );
 
 	// Index buffer similar path
 	std::vector<uint16_t> idx = { 0, 1, 2 };
-	IndexBuffer ib( device, idx );
+	renderer::IndexBuffer ib( device, idx );
 	REQUIRE( ib.getIndexCount() == 3 );
 	idx.push_back( 2 );
 	ib.update( idx );
@@ -239,7 +237,7 @@ TEST_CASE( "Empty buffer creation rejected", "[renderer][buffers][error]" )
 	bool threwV = false, threwI = false;
 	try
 	{
-		VertexBuffer vb( device, {} );
+		renderer::VertexBuffer vb( device, {} );
 	}
 	catch ( const std::runtime_error & )
 	{
@@ -247,7 +245,7 @@ TEST_CASE( "Empty buffer creation rejected", "[renderer][buffers][error]" )
 	}
 	try
 	{
-		IndexBuffer ib( device, {} );
+		renderer::IndexBuffer ib( device, {} );
 	}
 	catch ( const std::runtime_error & )
 	{
@@ -262,7 +260,7 @@ TEST_CASE( "ViewProjection accessor", "[renderer]" )
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "viewProj" ) )
 		return;
-	Renderer renderer( device );
+	renderer::Renderer renderer( device );
 	math::Mat4<> custom = math::Mat4<>::identity();
 	custom.row0.x = 2.0f; // mutate something
 	renderer.setViewProjectionMatrix( custom );
@@ -281,18 +279,18 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 				if ( !requireHeadlessDevice( device, "VertexBuffer" ) )
 					return; // Skip if unsupported
 
-				const std::vector<Vertex> vertices = {
-					{ Vec3<>{ 0.0f, 1.0f, 0.0f }, Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
-					{ Vec3<>{ -1.0f, -1.0f, 0.0f }, Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
-					{ Vec3<>{ 1.0f, -1.0f, 0.0f }, Color{ 0.0f, 0.0f, 1.0f, 1.0f } }
+				const std::vector<renderer::Vertex> vertices = {
+					{ math::Vec3<>{ 0.0f, 1.0f, 0.0f }, renderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
+					{ math::Vec3<>{ -1.0f, -1.0f, 0.0f }, renderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
+					{ math::Vec3<>{ 1.0f, -1.0f, 0.0f }, renderer::Color{ 0.0f, 0.0f, 1.0f, 1.0f } }
 				};
 
-				const VertexBuffer vb( device, vertices );
+				const renderer::VertexBuffer vb( device, vertices );
 				REQUIRE( vb.getVertexCount() == 3 );
 
 				const auto view = vb.getView();
-				REQUIRE( view.SizeInBytes == vertices.size() * sizeof( Vertex ) );
-				REQUIRE( view.StrideInBytes == sizeof( Vertex ) );
+				REQUIRE( view.SizeInBytes == vertices.size() * sizeof( renderer::Vertex ) );
+				REQUIRE( view.StrideInBytes == sizeof( renderer::Vertex ) );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -312,7 +310,7 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 
 				const std::vector<uint16_t> indices = { 0, 1, 2 };
 
-				const IndexBuffer ib( device, indices );
+				const renderer::IndexBuffer ib( device, indices );
 				REQUIRE( ib.getIndexCount() == 3 );
 
 				const auto view = ib.getView();
@@ -327,22 +325,22 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 	}
 }
 
-TEST_CASE( "Renderer Creation", "[renderer]" )
+TEST_CASE( "renderer::Renderer Creation", "[renderer]" )
 {
-	SECTION( "Renderer can be created with valid device" )
+	SECTION( "renderer::Renderer can be created with valid device" )
 	{
 		REQUIRE_NOTHROW( []() {
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "Renderer creation" ) )
+				if ( !requireHeadlessDevice( device, "renderer::Renderer creation" ) )
 					return;
-				const Renderer renderer( device );
+				const renderer::Renderer renderer( device );
 				// Just test that it constructs without throwing
 			}
 			catch ( const std::runtime_error &e )
 			{
-				WARN( "Renderer creation failed (D3D12 may not be available): " << e.what() );
+				WARN( "renderer::Renderer creation failed (D3D12 may not be available): " << e.what() );
 			}
 		}() );
 	}
@@ -352,11 +350,11 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 {
 	SECTION( "Default vertex shader is valid string" )
 	{
-		REQUIRE( DefaultShaders::kVertexShader != nullptr );
-		REQUIRE( std::string( DefaultShaders::kVertexShader ).length() > 0 );
+		REQUIRE( renderer::DefaultShaders::kVertexShader != nullptr );
+		REQUIRE( std::string( renderer::DefaultShaders::kVertexShader ).length() > 0 );
 
 		// Check for basic vertex shader components
-		const std::string vs( DefaultShaders::kVertexShader );
+		const std::string vs( renderer::DefaultShaders::kVertexShader );
 		REQUIRE( vs.find( "VSInput" ) != std::string::npos );
 		REQUIRE( vs.find( "PSInput" ) != std::string::npos );
 		REQUIRE( vs.find( "POSITION" ) != std::string::npos );
@@ -366,11 +364,11 @@ TEST_CASE( "Default Shaders", "[renderer]" )
 
 	SECTION( "Default pixel shader is valid string" )
 	{
-		REQUIRE( DefaultShaders::kPixelShader != nullptr );
-		REQUIRE( std::string( DefaultShaders::kPixelShader ).length() > 0 );
+		REQUIRE( renderer::DefaultShaders::kPixelShader != nullptr );
+		REQUIRE( std::string( renderer::DefaultShaders::kPixelShader ).length() > 0 );
 
 		// Check for basic pixel shader components
-		const std::string ps( DefaultShaders::kPixelShader );
+		const std::string ps( renderer::DefaultShaders::kPixelShader );
 		REQUIRE( ps.find( "PSInput" ) != std::string::npos );
 		REQUIRE( ps.find( "SV_TARGET" ) != std::string::npos );
 	}
@@ -382,15 +380,15 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
 
-	Renderer renderer( device );
+	renderer::Renderer renderer( device );
 
 	device.beginFrame();
 	renderer.beginFrame();
 
-	std::vector<Vertex> tri = {
-		{ { 0, 0, 0 }, Color::red() },
-		{ { 1, 0, 0 }, Color::green() },
-		{ { 0, 1, 0 }, Color::blue() }
+	std::vector<renderer::Vertex> tri = {
+		{ { 0, 0, 0 }, renderer::Color::red() },
+		{ { 1, 0, 0 }, renderer::Color::green() },
+		{ { 0, 1, 0 }, renderer::Color::blue() }
 	};
 	renderer.drawVertices( tri );
 	ID3D12Resource *firstVB = renderer.getDynamicVertexResource();
@@ -398,7 +396,7 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	tri[1].position.y = 0.2f;
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexResource() == firstVB );
-	tri.push_back( { { 0, 0, 1 }, Color::white() } );
+	tri.push_back( { { 0, 0, 1 }, renderer::Color::white() } );
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 4 );
 	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
@@ -414,10 +412,10 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	Renderer renderer( device );
+	renderer::Renderer renderer( device );
 	device.beginFrame();
 	renderer.beginFrame();
-	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
+	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 2 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 0 );
 	renderer.endFrame();
@@ -431,10 +429,10 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	Renderer renderer( device );
+	renderer::Renderer renderer( device );
 	renderer.beginFrame();
 	device.beginFrame();
-	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
@@ -448,11 +446,11 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	Renderer renderer( device );
+	renderer::Renderer renderer( device );
 	renderer.beginFrame();
 	device.beginFrame();
-	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, Color::white() );
-	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, Color::red() );
+	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
@@ -466,11 +464,11 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "pso cache" ) );
 
-	Renderer r( device );
+	renderer::Renderer r( device );
 	device.beginFrame();
 	r.beginFrame();
 
-	std::vector<Vertex> tri = { { { 0, 0, 0 }, Color::red() }, { { 1, 0, 0 }, Color::green() }, { { 0, 1, 0 }, Color::blue() } };
+	std::vector<renderer::Vertex> tri = { { { 0, 0, 0 }, renderer::Color::red() }, { { 1, 0, 0 }, renderer::Color::green() }, { { 0, 1, 0 }, renderer::Color::blue() } };
 	r.drawVertices( tri );
 	REQUIRE( r.getPipelineStateCacheSize() == 1 );
 
@@ -478,7 +476,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	r.drawVertices( tri );
 	REQUIRE( r.getPipelineStateCacheSize() == 1 );
 
-	RenderState s;
+	renderer::RenderState s;
 	s.setWireframe( true );
 	r.setRenderState( s );
 	r.drawVertices( tri );

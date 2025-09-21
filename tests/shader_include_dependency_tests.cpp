@@ -4,7 +4,8 @@
 #include "engine/shader_manager/shader_manager.h"
 #include "engine/renderer/renderer.h"
 
-using namespace shader_manager;
+using shader_manager::INVALID_SHADER_HANDLE;
+using shader_manager::ShaderInfo;
 
 class IncludeDependencyTestFixture
 {
@@ -65,12 +66,12 @@ PSInput VSMain(VSInput input) {
 
 TEST_CASE_METHOD( IncludeDependencyTestFixture, "Shader Include Dependency Tracking", "[shader_manager][include_dependencies]" )
 {
-	ShaderManager shader_manager;
+	shader_manager::ShaderManager shader_manager;
 
 	SECTION( "Shader with includes compiles and tracks dependencies" )
 	{
 		// Compile the main shader that includes common.hlsl
-		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
 
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
@@ -97,7 +98,7 @@ TEST_CASE_METHOD( IncludeDependencyTestFixture, "Shader Include Dependency Track
 	SECTION( "Modifying included file triggers recompilation" )
 	{
 		// First, compile the shader
-		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// Get initial modification times
@@ -189,7 +190,7 @@ PSInput VSMain(VSInput input) {
 		multi_stream.close();
 
 		// Compile the shader
-		const auto handle = shader_manager.registerShader( multi_include_shader.string(), "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( multi_include_shader.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		const auto *shader_info = shader_manager.getShaderInfo( handle );
@@ -225,7 +226,7 @@ PSInput VSMain(VSInput input) {
 
 TEST_CASE_METHOD( IncludeDependencyTestFixture, "Include Path Resolution", "[shader_manager][include_paths]" )
 {
-	ShaderManager shader_manager;
+	shader_manager::ShaderManager shader_manager;
 
 	SECTION( "Relative include paths are resolved correctly" )
 	{
@@ -269,7 +270,7 @@ PSInput VSMain(VSInput input) {
 		rel_stream.close();
 
 		// Compile the shader
-		const auto handle = shader_manager.registerShader( relative_shader.string(), "VSMain", "vs_5_0", ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( relative_shader.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		const auto *shader_info = shader_manager.getShaderInfo( handle );

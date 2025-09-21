@@ -9,7 +9,7 @@
 #include "platform/dx12/dx12_device.h"
 #include "engine/shader_manager/shader_manager.h"
 
-TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem can be created with renderer and ShaderManager", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -22,7 +22,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	systems::MeshRenderingSystem system( renderer, shaderManager );
 }
 
-TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -38,7 +38,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	system.update( scene, deltaTime );
 }
 
-TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRenderer and Transform", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem render method processes entities with MeshRenderer and Transform", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -61,7 +61,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	system.render( scene, camera );
 }
 
-TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for identity transform", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem calculateMVPMatrix returns valid matrix for identity transform", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -86,7 +86,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	REQUIRE( hasNonZeroElement );
 }
 
-TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without crashing", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem renderEntity handles empty MeshRenderer without crashing", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -104,7 +104,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	REQUIRE_NOTHROW( system.renderEntity( transform, meshRenderer, camera ) );
 }
 
-TEST_CASE( "MeshRenderingSystem complete render system processes entities correctly", "[mesh_rendering_system][integration][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem complete render system processes entities correctly", "[mesh_rendering_system][integration][unit]" )
 {
 	// Arrange
 	dx12::Device device;
@@ -133,7 +133,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	REQUIRE_NOTHROW( system.render( scene, camera ) );
 }
 
-TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GPU mesh present", "[mesh_rendering_system][unit]" )
+TEST_CASE( "systems::MeshRenderingSystem renderEntity sets MVP matrix on renderer when GPU mesh present", "[mesh_rendering_system][unit]" )
 {
 	// Arrange
 	dx12::Device device;

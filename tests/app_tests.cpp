@@ -2,11 +2,10 @@
 #include <catch2/catch_approx.hpp>
 #include "runtime/app.h"
 
-using namespace app;
 
 TEST_CASE( "App tick approximate timing", "[app]" )
 {
-	App a;
+	app::App a;
 	const auto start = std::chrono::high_resolution_clock::now();
 	a.tick();
 	const auto end = std::chrono::high_resolution_clock::now();

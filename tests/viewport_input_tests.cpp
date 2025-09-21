@@ -1,10 +1,9 @@
-﻿// Viewport Input Event System tests
+﻿// editor::Viewport Input Event System tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "editor/viewport/viewport.h"
 
-using namespace editor;
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE( "ViewportInputEvent Creation and Properties", "[viewport][input][events]" )
@@ -70,11 +69,11 @@ TEST_CASE( "ViewportInputEvent Creation and Properties", "[viewport][input][even
 	}
 }
 
-TEST_CASE( "Viewport Input Handling States", "[viewport][input][state]" )
+TEST_CASE( "editor::Viewport Input Handling States", "[viewport][input][state]" )
 {
 	SECTION( "Focused viewport receives input" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( ViewportType::Perspective );
 
 		// Initially not focused
 		REQUIRE_FALSE( viewport.isFocused() );
@@ -93,7 +92,7 @@ TEST_CASE( "Viewport Input Handling States", "[viewport][input][state]" )
 
 	SECTION( "Unfocused viewport input handling" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( ViewportType::Top );
 
 		// Ensure not focused
 		viewport.setFocused( false );
@@ -106,7 +105,7 @@ TEST_CASE( "Viewport Input Handling States", "[viewport][input][state]" )
 
 	SECTION( "Active viewport state management" )
 	{
-		Viewport viewport( ViewportType::Front );
+		editor::Viewport viewport( ViewportType::Front );
 
 		// Initially not active
 		REQUIRE_FALSE( viewport.isActive() );
@@ -125,7 +124,7 @@ TEST_CASE( "Viewport Input Handling States", "[viewport][input][state]" )
 	}
 }
 
-TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
+TEST_CASE( "editor::Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 {
 	SECTION( "Large coordinate values" )
 	{
@@ -139,7 +138,7 @@ TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 		REQUIRE_THAT( largeCoords.mouse.deltaY, WithinAbs( -1000.0f, 0.001f ) );
 
 		// Should handle without crashing
-		Viewport viewport( ViewportType::Side );
+		editor::Viewport viewport( ViewportType::Side );
 		viewport.setFocused( true );
 		REQUIRE_NOTHROW( viewport.handleInput( largeCoords ) );
 	}
@@ -151,7 +150,7 @@ TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 		REQUIRE_THAT( zeroMove.mouse.deltaX, WithinAbs( 0.0f, 0.001f ) );
 		REQUIRE_THAT( zeroMove.mouse.deltaY, WithinAbs( 0.0f, 0.001f ) );
 
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( ViewportType::Perspective );
 		viewport.setFocused( true );
 		REQUIRE_NOTHROW( viewport.handleInput( zeroMove ) );
 	}
@@ -162,7 +161,7 @@ TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 		auto invalidButton = ViewportUtils::createMouseButtonEvent( 99, true, 0.0f, 0.0f );
 		REQUIRE( invalidButton.mouse.button == 99 );
 
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( ViewportType::Top );
 		viewport.setFocused( true );
 		REQUIRE_NOTHROW( viewport.handleInput( invalidButton ) );
 	}
@@ -173,7 +172,7 @@ TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 		auto extremeWheel = ViewportUtils::createMouseWheelEvent( 1e6f, 0.0f, 0.0f );
 		REQUIRE_THAT( extremeWheel.mouse.wheelDelta, WithinAbs( 1e6f, 1000.0f ) );
 
-		Viewport viewport( ViewportType::Front );
+		editor::Viewport viewport( ViewportType::Front );
 		viewport.setFocused( true );
 		REQUIRE_NOTHROW( viewport.handleInput( extremeWheel ) );
 	}

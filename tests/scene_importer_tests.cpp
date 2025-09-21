@@ -10,12 +10,13 @@
 #include "engine/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
-using namespace runtime;
-using namespace ecs;
+using Catch::Approx;
+using runtime::SceneImporter;
+
 // Note: Not using "using namespace components" or "using namespace assets" to avoid Transform type ambiguity
 using Catch::Approx;
 
-TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer][basic]" )
+TEST_CASE( "runtime::SceneImporter imports scene with single mesh node", "[scene_importer][basic]" )
 {
 	// Create a scene with a single node containing a mesh
 	auto scene = std::make_shared<assets::Scene>();
@@ -39,7 +40,7 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 
 	scene->addRootNode( std::move( rootNode ) );
 
-	// Import scene using SceneImporter
+	// Import scene using runtime::SceneImporter
 	ecs::Scene ecsScene;
 	const bool result = runtime::SceneImporter::importScene( scene, ecsScene );
 
@@ -60,22 +61,22 @@ TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer
 	// Check Transform component
 	const auto *transformComp = ecsScene.getComponent<components::Transform>( entity );
 	REQUIRE( transformComp != nullptr );
-	REQUIRE( transformComp->position.x == Approx( 1.0f ) );
-	REQUIRE( transformComp->position.y == Approx( 2.0f ) );
-	REQUIRE( transformComp->position.z == Approx( 3.0f ) );
-	REQUIRE( transformComp->rotation.x == Approx( 0.1f ) );
-	REQUIRE( transformComp->rotation.y == Approx( 0.2f ) );
-	REQUIRE( transformComp->rotation.z == Approx( 0.3f ) );
-	REQUIRE( transformComp->scale.x == Approx( 2.0f ) );
-	REQUIRE( transformComp->scale.y == Approx( 2.0f ) );
-	REQUIRE( transformComp->scale.z == Approx( 2.0f ) );
+	REQUIRE( transformComp->position.x == Catch::Approx( 1.0f ) );
+	REQUIRE( transformComp->position.y == Catch::Approx( 2.0f ) );
+	REQUIRE( transformComp->position.z == Catch::Approx( 3.0f ) );
+	REQUIRE( transformComp->rotation.x == Catch::Approx( 0.1f ) );
+	REQUIRE( transformComp->rotation.y == Catch::Approx( 0.2f ) );
+	REQUIRE( transformComp->rotation.z == Catch::Approx( 0.3f ) );
+	REQUIRE( transformComp->scale.x == Catch::Approx( 2.0f ) );
+	REQUIRE( transformComp->scale.y == Catch::Approx( 2.0f ) );
+	REQUIRE( transformComp->scale.z == Catch::Approx( 2.0f ) );
 
 	// Check MeshRenderer component
 	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 }
 
-TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hierarchy]" )
+TEST_CASE( "runtime::SceneImporter preserves hierarchy correctly", "[scene_importer][hierarchy]" )
 {
 	// Create a scene with parent-child hierarchy
 	auto scene = std::make_shared<assets::Scene>();
@@ -138,7 +139,7 @@ TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hier
 	REQUIRE( children[0] == childEntity );
 }
 
-TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty_nodes]" )
+TEST_CASE( "runtime::SceneImporter handles nodes without meshes", "[scene_importer][empty_nodes]" )
 {
 	// Create a scene with a node that has no mesh data
 	auto scene = std::make_shared<assets::Scene>();
@@ -172,7 +173,7 @@ TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty
 	REQUIRE_FALSE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 }
 
-TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[scene_importer][gpu_comparison]" )
+TEST_CASE( "runtime::SceneImporter GPU and non-GPU paths produce identical results", "[scene_importer][gpu_comparison]" )
 {
 	// Create a test scene
 	auto scene = std::make_shared<assets::Scene>();
@@ -236,9 +237,9 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	const auto *gpuTransform = gpuScene.getComponent<components::Transform>( gpuEntity );
 	REQUIRE( nonGpuTransform != nullptr );
 	REQUIRE( gpuTransform != nullptr );
-	REQUIRE( nonGpuTransform->position.x == Approx( gpuTransform->position.x ) );
-	REQUIRE( nonGpuTransform->position.y == Approx( gpuTransform->position.y ) );
-	REQUIRE( nonGpuTransform->position.z == Approx( gpuTransform->position.z ) );
+	REQUIRE( nonGpuTransform->position.x == Catch::Approx( gpuTransform->position.x ) );
+	REQUIRE( nonGpuTransform->position.y == Catch::Approx( gpuTransform->position.y ) );
+	REQUIRE( nonGpuTransform->position.z == Catch::Approx( gpuTransform->position.z ) );
 
 	// Compare MeshRenderer components
 	const auto *nonGpuRenderer = nonGpuScene.getComponent<components::MeshRenderer>( nonGpuEntity );
@@ -247,7 +248,7 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	REQUIRE( gpuRenderer != nullptr );
 }
 
-TEST_CASE( "SceneImporter handles invalid scene gracefully", "[scene_importer][error_handling]" )
+TEST_CASE( "runtime::SceneImporter handles invalid scene gracefully", "[scene_importer][error_handling]" )
 {
 	ecs::Scene ecsScene;
 
@@ -260,12 +261,12 @@ TEST_CASE( "SceneImporter handles invalid scene gracefully", "[scene_importer][e
 	unloadedScene->setLoaded( false );
 	REQUIRE_FALSE( runtime::SceneImporter::importScene( unloadedScene, ecsScene ) );
 
-	// Scene should remain empty after failed imports
+	// ecs::Scene should remain empty after failed imports
 	const auto entities = ecsScene.getAllEntities();
 	REQUIRE( entities.empty() );
 }
 
-TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primitive", "[scene_importer][bounds]" )
+TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with single primitive", "[scene_importer][bounds]" )
 {
 	// Create a scene with a mesh that has bounds data
 	auto scene = std::make_shared<assets::Scene>();
@@ -324,15 +325,15 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primiti
 
 	// Verify the bounds match the mesh bounds
 	const auto meshBounds = mesh->getBounds();
-	REQUIRE( rendererComp->bounds.min.x == Approx( meshBounds.min.x ) );
-	REQUIRE( rendererComp->bounds.min.y == Approx( meshBounds.min.y ) );
-	REQUIRE( rendererComp->bounds.min.z == Approx( meshBounds.min.z ) );
-	REQUIRE( rendererComp->bounds.max.x == Approx( meshBounds.max.x ) );
-	REQUIRE( rendererComp->bounds.max.y == Approx( meshBounds.max.y ) );
-	REQUIRE( rendererComp->bounds.max.z == Approx( meshBounds.max.z ) );
+	REQUIRE( rendererComp->bounds.min.x == Catch::Approx( meshBounds.min.x ) );
+	REQUIRE( rendererComp->bounds.min.y == Catch::Approx( meshBounds.min.y ) );
+	REQUIRE( rendererComp->bounds.min.z == Catch::Approx( meshBounds.min.z ) );
+	REQUIRE( rendererComp->bounds.max.x == Catch::Approx( meshBounds.max.x ) );
+	REQUIRE( rendererComp->bounds.max.y == Catch::Approx( meshBounds.max.y ) );
+	REQUIRE( rendererComp->bounds.max.z == Catch::Approx( meshBounds.max.z ) );
 }
 
-TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primitives", "[scene_importer][bounds]" )
+TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with multiple primitives", "[scene_importer][bounds]" )
 {
 	// Create a scene with a mesh containing multiple primitives
 	auto scene = std::make_shared<assets::Scene>();
@@ -387,7 +388,7 @@ TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primi
 	REQUIRE( rendererComp->bounds.max.z >= 6.0f );
 }
 
-TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_importer][bounds]" )
+TEST_CASE( "runtime::SceneImporter handles mesh without bounds gracefully", "[scene_importer][bounds]" )
 {
 	// Create a scene with an empty mesh (no primitives/vertices)
 	auto scene = std::make_shared<assets::Scene>();
@@ -422,7 +423,7 @@ TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_impor
 	REQUIRE_FALSE( rendererComp->bounds.isValid() );
 }
 
-TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and getBoundsSize", "[scene_importer][bounds]" )
+TEST_CASE( "runtime::SceneImporter bounds calculation matches mesh getBoundsCenter and getBoundsSize", "[scene_importer][bounds]" )
 {
 	// Test that bounds are correctly calculated using center and size approach
 	auto scene = std::make_shared<assets::Scene>();
@@ -447,14 +448,14 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	const auto boundsSize = mesh->getBounds().size();
 
 	// Center should be (1, 2, 3)
-	REQUIRE( boundsCenter.x == Approx( 1.0f ) );
-	REQUIRE( boundsCenter.y == Approx( 2.0f ) );
-	REQUIRE( boundsCenter.z == Approx( 3.0f ) );
+	REQUIRE( boundsCenter.x == Catch::Approx( 1.0f ) );
+	REQUIRE( boundsCenter.y == Catch::Approx( 2.0f ) );
+	REQUIRE( boundsCenter.z == Catch::Approx( 3.0f ) );
 
 	// Size should be (4, 6, 8)
-	REQUIRE( boundsSize.x == Approx( 4.0f ) );
-	REQUIRE( boundsSize.y == Approx( 6.0f ) );
-	REQUIRE( boundsSize.z == Approx( 8.0f ) );
+	REQUIRE( boundsSize.x == Catch::Approx( 4.0f ) );
+	REQUIRE( boundsSize.y == Catch::Approx( 6.0f ) );
+	REQUIRE( boundsSize.z == Catch::Approx( 8.0f ) );
 
 	const auto meshHandle = scene->addMesh( mesh );
 	auto rootNode = std::make_unique<assets::SceneNode>( "CenterSizeNode" );
@@ -478,10 +479,10 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	const auto expectedMin = boundsCenter - boundsSize * 0.5f;
 	const auto expectedMax = boundsCenter + boundsSize * 0.5f;
 
-	REQUIRE( rendererComp->bounds.min.x == Approx( expectedMin.x ) );
-	REQUIRE( rendererComp->bounds.min.y == Approx( expectedMin.y ) );
-	REQUIRE( rendererComp->bounds.min.z == Approx( expectedMin.z ) );
-	REQUIRE( rendererComp->bounds.max.x == Approx( expectedMax.x ) );
-	REQUIRE( rendererComp->bounds.max.y == Approx( expectedMax.y ) );
-	REQUIRE( rendererComp->bounds.max.z == Approx( expectedMax.z ) );
+	REQUIRE( rendererComp->bounds.min.x == Catch::Approx( expectedMin.x ) );
+	REQUIRE( rendererComp->bounds.min.y == Catch::Approx( expectedMin.y ) );
+	REQUIRE( rendererComp->bounds.min.z == Catch::Approx( expectedMin.z ) );
+	REQUIRE( rendererComp->bounds.max.x == Catch::Approx( expectedMax.x ) );
+	REQUIRE( rendererComp->bounds.max.y == Catch::Approx( expectedMax.y ) );
+	REQUIRE( rendererComp->bounds.max.z == Catch::Approx( expectedMax.z ) );
 }

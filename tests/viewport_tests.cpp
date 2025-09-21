@@ -1,4 +1,4 @@
-﻿// Viewport Management tests
+﻿// editor::Viewport Management tests
 // Tests for multi-viewport system with cameras, input handling, and utility functions
 
 #include <catch2/catch_test_macros.hpp>
@@ -13,16 +13,15 @@
 #include "engine/shader_manager/shader_manager.h"
 #include "test_dx12_helpers.h"
 
-using namespace editor;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "Viewport Basic Properties", "[viewport]" )
+TEST_CASE( "editor::Viewport Basic Properties", "[viewport]" )
 {
 	SECTION( "Perspective viewport creation" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 
-		REQUIRE( viewport.getType() == ViewportType::Perspective );
+		REQUIRE( viewport.getType() == editor::ViewportType::Perspective );
 		REQUIRE_FALSE( viewport.isActive() );
 		REQUIRE_FALSE( viewport.isFocused() );
 		REQUIRE( viewport.isGridVisible() );
@@ -32,13 +31,13 @@ TEST_CASE( "Viewport Basic Properties", "[viewport]" )
 
 	SECTION( "Orthographic viewport creation" )
 	{
-		Viewport topViewport( ViewportType::Top );
-		Viewport frontViewport( ViewportType::Front );
-		Viewport sideViewport( ViewportType::Side );
+		editor::Viewport topViewport( editor::ViewportType::Top );
+		editor::Viewport frontViewport( editor::ViewportType::Front );
+		editor::Viewport sideViewport( editor::ViewportType::Side );
 
-		REQUIRE( topViewport.getType() == ViewportType::Top );
-		REQUIRE( frontViewport.getType() == ViewportType::Front );
-		REQUIRE( sideViewport.getType() == ViewportType::Side );
+		REQUIRE( topViewport.getType() == editor::ViewportType::Top );
+		REQUIRE( frontViewport.getType() == editor::ViewportType::Front );
+		REQUIRE( sideViewport.getType() == editor::ViewportType::Side );
 
 		// Check default states
 		REQUIRE_FALSE( topViewport.isActive() );
@@ -48,7 +47,7 @@ TEST_CASE( "Viewport Basic Properties", "[viewport]" )
 
 	SECTION( "Aspect ratio calculation" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 
 		viewport.setRenderTargetSize( 800, 600 );
 		REQUIRE_THAT( viewport.getAspectRatio(), WithinAbs( 800.0f / 600.0f, 0.001f ) );
@@ -62,9 +61,9 @@ TEST_CASE( "Viewport Basic Properties", "[viewport]" )
 	}
 }
 
-TEST_CASE( "Viewport State Management", "[viewport]" )
+TEST_CASE( "editor::Viewport State Management", "[viewport]" )
 {
-	Viewport viewport( ViewportType::Perspective );
+	editor::Viewport viewport( editor::ViewportType::Perspective );
 
 	SECTION( "Active state" )
 	{
@@ -112,15 +111,15 @@ TEST_CASE( "Viewport State Management", "[viewport]" )
 	}
 }
 
-TEST_CASE( "Viewport Input Handling", "[viewport]" )
+TEST_CASE( "editor::Viewport Input Handling", "[viewport]" )
 {
-	Viewport viewport( ViewportType::Perspective );
+	editor::Viewport viewport( editor::ViewportType::Perspective );
 	viewport.setFocused( true ); // Enable input handling
 
 	SECTION( "Mouse input events" )
 	{
-		const auto mouseMove = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
-		REQUIRE( mouseMove.type == ViewportInputEvent::Type::MouseMove );
+		const auto mouseMove = editor::ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
+		REQUIRE( mouseMove.type == editor::ViewportInputEvent::Type::MouseMove );
 		REQUIRE( mouseMove.mouse.x == 100.0f );
 		REQUIRE( mouseMove.mouse.y == 200.0f );
 		REQUIRE( mouseMove.mouse.deltaX == 5.0f );
@@ -132,8 +131,8 @@ TEST_CASE( "Viewport Input Handling", "[viewport]" )
 
 	SECTION( "Mouse button events" )
 	{
-		const auto leftClick = ViewportUtils::createMouseButtonEvent( 0, true, 150.0f, 250.0f );
-		REQUIRE( leftClick.type == ViewportInputEvent::Type::MouseButton );
+		const auto leftClick = editor::ViewportUtils::createMouseButtonEvent( 0, true, 150.0f, 250.0f );
+		REQUIRE( leftClick.type == editor::ViewportInputEvent::Type::MouseButton );
 		REQUIRE( leftClick.mouse.button == 0 );
 		REQUIRE( leftClick.mouse.pressed == true );
 		REQUIRE( leftClick.mouse.x == 150.0f );
@@ -144,8 +143,8 @@ TEST_CASE( "Viewport Input Handling", "[viewport]" )
 
 	SECTION( "Mouse wheel events" )
 	{
-		const auto wheelEvent = ViewportUtils::createMouseWheelEvent( 120.0f, 300.0f, 400.0f );
-		REQUIRE( wheelEvent.type == ViewportInputEvent::Type::MouseWheel );
+		const auto wheelEvent = editor::ViewportUtils::createMouseWheelEvent( 120.0f, 300.0f, 400.0f );
+		REQUIRE( wheelEvent.type == editor::ViewportInputEvent::Type::MouseWheel );
 		REQUIRE( wheelEvent.mouse.wheelDelta == 120.0f );
 		REQUIRE( wheelEvent.mouse.x == 300.0f );
 		REQUIRE( wheelEvent.mouse.y == 400.0f );
@@ -155,8 +154,8 @@ TEST_CASE( "Viewport Input Handling", "[viewport]" )
 
 	SECTION( "Keyboard events" )
 	{
-		const auto keyPress = ViewportUtils::createKeyEvent( 'W', true, false, true, false );
-		REQUIRE( keyPress.type == ViewportInputEvent::Type::KeyPress );
+		const auto keyPress = editor::ViewportUtils::createKeyEvent( 'W', true, false, true, false );
+		REQUIRE( keyPress.type == editor::ViewportInputEvent::Type::KeyPress );
 		REQUIRE( keyPress.keyboard.keyCode == 'W' );
 		REQUIRE( keyPress.keyboard.ctrl == true );
 		REQUIRE_FALSE( keyPress.keyboard.shift );
@@ -164,22 +163,22 @@ TEST_CASE( "Viewport Input Handling", "[viewport]" )
 
 		REQUIRE_NOTHROW( viewport.handleInput( keyPress ) );
 
-		const auto keyRelease = ViewportUtils::createKeyEvent( 'W', false, false, true, false );
-		REQUIRE( keyRelease.type == ViewportInputEvent::Type::KeyRelease );
+		const auto keyRelease = editor::ViewportUtils::createKeyEvent( 'W', false, false, true, false );
+		REQUIRE( keyRelease.type == editor::ViewportInputEvent::Type::KeyRelease );
 	}
 
 	SECTION( "Input ignored when not focused" )
 	{
 		viewport.setFocused( false );
 
-		auto mouseMove = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
+		auto mouseMove = editor::ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
 		REQUIRE_NOTHROW( viewport.handleInput( mouseMove ) ); // Should not crash but ignore input
 	}
 }
 
-TEST_CASE( "Viewport View Operations", "[viewport]" )
+TEST_CASE( "editor::Viewport View Operations", "[viewport]" )
 {
-	Viewport viewport( ViewportType::Perspective );
+	editor::Viewport viewport( editor::ViewportType::Perspective );
 
 	SECTION( "Reset view operation" )
 	{
@@ -202,7 +201,7 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 {
 	SECTION( "ViewportManager requires D3D12 initialization" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "ViewportManager Basic Operations" ) );
@@ -215,13 +214,13 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 		REQUIRE( manager.getFocusedViewport() == nullptr );
 
 		// Test viewport creation
-		auto *viewport1 = manager.createViewport( ViewportType::Perspective );
+		auto *viewport1 = manager.createViewport( editor::ViewportType::Perspective );
 		REQUIRE( viewport1 != nullptr );
 		REQUIRE( manager.getViewports().size() == 1 );
 		REQUIRE( manager.getActiveViewport() == viewport1 );
 		REQUIRE( manager.getFocusedViewport() == viewport1 );
 
-		auto *viewport2 = manager.createViewport( ViewportType::Top );
+		auto *viewport2 = manager.createViewport( editor::ViewportType::Top );
 		REQUIRE( viewport2 != nullptr );
 		REQUIRE( manager.getViewports().size() == 2 );
 		REQUIRE( manager.getActiveViewport() == viewport1 ); // Still first viewport
@@ -237,7 +236,7 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 	SECTION( "ViewportManager handles null operations gracefully" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "ViewportManager null operations" ) );
@@ -254,15 +253,15 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 	SECTION( "Active and focused viewport management" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Active and focused viewport management" ) );
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( manager.initialize( &device, shaderManager ) );
 
-		auto *viewport1 = manager.createViewport( ViewportType::Perspective );
-		auto *viewport2 = manager.createViewport( ViewportType::Top );
+		auto *viewport1 = manager.createViewport( editor::ViewportType::Perspective );
+		auto *viewport2 = manager.createViewport( editor::ViewportType::Top );
 
 		REQUIRE( manager.getActiveViewport() == viewport1 );
 		REQUIRE( viewport1->isActive() );
@@ -283,7 +282,7 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 	SECTION( "Update and render operations" )
 	{
 		platform::Win32Window window;
-		if ( !window.create( "Viewport Test", 640, 480 ) )
+		if ( !window.create( "editor::Viewport Test", 640, 480 ) )
 		{
 			WARN( "Skipping Update and render operations: failed to create Win32 window" );
 			return;
@@ -298,11 +297,11 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		REQUIRE( manager.initialize( &device, shaderManager ) );
 
-		[[maybe_unused]] auto *viewport1 = manager.createViewport( ViewportType::Perspective );
-		[[maybe_unused]] auto *viewport2 = manager.createViewport( ViewportType::Top );
+		[[maybe_unused]] auto *viewport1 = manager.createViewport( editor::ViewportType::Perspective );
+		[[maybe_unused]] auto *viewport2 = manager.createViewport( editor::ViewportType::Top );
 
 		// Should not crash
 		REQUIRE_NOTHROW( manager.update( 0.016f ) ); // 60 FPS
@@ -315,26 +314,26 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 
 TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 {
-	ViewportManager manager;
+	editor::ViewportManager manager;
 	dx12::Device device;
 
-	REQUIRE( requireHeadlessDevice( device, "ViewportFactory Standard Layout" ) );
+	REQUIRE( requireHeadlessDevice( device, "editor::ViewportFactory Standard Layout" ) );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	REQUIRE( manager.initialize( &device, shaderManager ) );
 
 	SECTION( "Create standard 4-viewport layout" )
 	{
-		const auto layout = ViewportFactory::createStandardLayout( manager );
+		const auto layout = editor::ViewportFactory::createStandardLayout( manager );
 
 		REQUIRE( layout.perspective != nullptr );
 		REQUIRE( layout.top != nullptr );
 		REQUIRE( layout.front != nullptr );
 		REQUIRE( layout.side != nullptr );
 
-		REQUIRE( layout.perspective->getType() == ViewportType::Perspective );
-		REQUIRE( layout.top->getType() == ViewportType::Top );
-		REQUIRE( layout.front->getType() == ViewportType::Front );
-		REQUIRE( layout.side->getType() == ViewportType::Side );
+		REQUIRE( layout.perspective->getType() == editor::ViewportType::Perspective );
+		REQUIRE( layout.top->getType() == editor::ViewportType::Top );
+		REQUIRE( layout.front->getType() == editor::ViewportType::Front );
+		REQUIRE( layout.side->getType() == editor::ViewportType::Side );
 
 		REQUIRE( manager.getViewports().size() == 4 );
 		REQUIRE( manager.getActiveViewport() == layout.perspective ); // Perspective is active by default
@@ -342,54 +341,54 @@ TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 
 	SECTION( "Create single viewport" )
 	{
-		const auto *viewport = ViewportFactory::createSingleViewport( manager, ViewportType::Side );
+		const auto *viewport = editor::ViewportFactory::createSingleViewport( manager, editor::ViewportType::Side );
 
 		REQUIRE( viewport != nullptr );
-		REQUIRE( viewport->getType() == ViewportType::Side );
+		REQUIRE( viewport->getType() == editor::ViewportType::Side );
 		REQUIRE( manager.getViewports().size() == 1 );
 		REQUIRE( manager.getActiveViewport() == viewport );
 	}
 }
 
-TEST_CASE( "ViewportUtils Utility Functions", "[viewport][utils]" )
+TEST_CASE( "editor::ViewportUtils Utility Functions", "[viewport][utils]" )
 {
-	SECTION( "Viewport type names" )
+	SECTION( "editor::Viewport type names" )
 	{
-		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Perspective ) ) == "Perspective" );
-		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Top ) ) == "Top" );
-		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Front ) ) == "Front" );
-		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Side ) ) == "Side" );
+		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Perspective ) ) == "Perspective" );
+		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Top ) ) == "Top" );
+		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Front ) ) == "Front" );
+		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Side ) ) == "Side" );
 	}
 
 	SECTION( "Orthographic type detection" )
 	{
-		REQUIRE_FALSE( ViewportUtils::isOrthographicType( ViewportType::Perspective ) );
-		REQUIRE( ViewportUtils::isOrthographicType( ViewportType::Top ) );
-		REQUIRE( ViewportUtils::isOrthographicType( ViewportType::Front ) );
-		REQUIRE( ViewportUtils::isOrthographicType( ViewportType::Side ) );
+		REQUIRE_FALSE( editor::ViewportUtils::isOrthographicType( editor::ViewportType::Perspective ) );
+		REQUIRE( editor::ViewportUtils::isOrthographicType( editor::ViewportType::Top ) );
+		REQUIRE( editor::ViewportUtils::isOrthographicType( editor::ViewportType::Front ) );
+		REQUIRE( editor::ViewportUtils::isOrthographicType( editor::ViewportType::Side ) );
 	}
 }
 
-TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
+TEST_CASE( "editor::Viewport Input Event Creation", "[viewport][input]" )
 {
 	SECTION( "Mouse events" )
 	{
-		const auto moveEvent = ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
-		REQUIRE( moveEvent.type == ViewportInputEvent::Type::MouseMove );
+		const auto moveEvent = editor::ViewportUtils::createMouseMoveEvent( 100.0f, 200.0f, 5.0f, -3.0f );
+		REQUIRE( moveEvent.type == editor::ViewportInputEvent::Type::MouseMove );
 		REQUIRE( moveEvent.mouse.x == 100.0f );
 		REQUIRE( moveEvent.mouse.y == 200.0f );
 		REQUIRE( moveEvent.mouse.deltaX == 5.0f );
 		REQUIRE( moveEvent.mouse.deltaY == -3.0f );
 
-		const auto buttonEvent = ViewportUtils::createMouseButtonEvent( 1, true, 150.0f, 250.0f );
-		REQUIRE( buttonEvent.type == ViewportInputEvent::Type::MouseButton );
+		const auto buttonEvent = editor::ViewportUtils::createMouseButtonEvent( 1, true, 150.0f, 250.0f );
+		REQUIRE( buttonEvent.type == editor::ViewportInputEvent::Type::MouseButton );
 		REQUIRE( buttonEvent.mouse.button == 1 );
 		REQUIRE( buttonEvent.mouse.pressed == true );
 		REQUIRE( buttonEvent.mouse.x == 150.0f );
 		REQUIRE( buttonEvent.mouse.y == 250.0f );
 
-		const auto wheelEvent = ViewportUtils::createMouseWheelEvent( -120.0f, 300.0f, 400.0f );
-		REQUIRE( wheelEvent.type == ViewportInputEvent::Type::MouseWheel );
+		const auto wheelEvent = editor::ViewportUtils::createMouseWheelEvent( -120.0f, 300.0f, 400.0f );
+		REQUIRE( wheelEvent.type == editor::ViewportInputEvent::Type::MouseWheel );
 		REQUIRE( wheelEvent.mouse.wheelDelta == -120.0f );
 		REQUIRE( wheelEvent.mouse.x == 300.0f );
 		REQUIRE( wheelEvent.mouse.y == 400.0f );
@@ -397,15 +396,15 @@ TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 
 	SECTION( "Keyboard events" )
 	{
-		const auto keyPress = ViewportUtils::createKeyEvent( 'A', true, true, false, true );
-		REQUIRE( keyPress.type == ViewportInputEvent::Type::KeyPress );
+		const auto keyPress = editor::ViewportUtils::createKeyEvent( 'A', true, true, false, true );
+		REQUIRE( keyPress.type == editor::ViewportInputEvent::Type::KeyPress );
 		REQUIRE( keyPress.keyboard.keyCode == 'A' );
 		REQUIRE( keyPress.keyboard.shift == true );
 		REQUIRE( keyPress.keyboard.ctrl == false );
 		REQUIRE( keyPress.keyboard.alt == true );
 
-		const auto keyRelease = ViewportUtils::createKeyEvent( 'B', false, false, true, false );
-		REQUIRE( keyRelease.type == ViewportInputEvent::Type::KeyRelease );
+		const auto keyRelease = editor::ViewportUtils::createKeyEvent( 'B', false, false, true, false );
+		REQUIRE( keyRelease.type == editor::ViewportInputEvent::Type::KeyRelease );
 		REQUIRE( keyRelease.keyboard.keyCode == 'B' );
 		REQUIRE( keyRelease.keyboard.ctrl == true );
 		REQUIRE_FALSE( keyRelease.keyboard.shift );
@@ -414,18 +413,18 @@ TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 
 	SECTION( "Resize events" )
 	{
-		const auto resizeEvent = ViewportUtils::createResizeEvent( 1280, 720 );
-		REQUIRE( resizeEvent.type == ViewportInputEvent::Type::Resize );
+		const auto resizeEvent = editor::ViewportUtils::createResizeEvent( 1280, 720 );
+		REQUIRE( resizeEvent.type == editor::ViewportInputEvent::Type::Resize );
 		REQUIRE( resizeEvent.resize.width == 1280 );
 		REQUIRE( resizeEvent.resize.height == 720 );
 	}
 }
 
-TEST_CASE( "ViewportInputEvent Structure", "[viewport][input][structure]" )
+TEST_CASE( "editor::ViewportInputEvent Structure", "[viewport][input][structure]" )
 {
 	SECTION( "Default values" )
 	{
-		ViewportInputEvent event;
+		editor::ViewportInputEvent event;
 
 		// Check mouse data defaults
 		REQUIRE( event.mouse.x == 0.0f );
@@ -448,11 +447,11 @@ TEST_CASE( "ViewportInputEvent Structure", "[viewport][input][structure]" )
 	}
 }
 
-TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
+TEST_CASE( "editor::Viewport Edge Cases", "[viewport][edge]" )
 {
-	SECTION( "Viewport with zero size" )
+	SECTION( "editor::Viewport with zero size" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		viewport.setRenderTargetSize( 0, 0 );
 
 		// Should handle gracefully
@@ -462,7 +461,7 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 
 	SECTION( "Manager with no viewports" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		platform::Win32Window window;
 		dx12::Device device;
 		REQUIRE( requireDevice( window, device ) );
@@ -486,7 +485,7 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 
 	SECTION( "Destroy null viewport" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "Destroy null viewport" ) );
@@ -498,36 +497,36 @@ TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 	}
 }
 
-TEST_CASE( "Viewport Types Coverage", "[viewport][types]" )
+TEST_CASE( "editor::Viewport Types Coverage", "[viewport][types]" )
 {
 	SECTION( "All viewport types can be created" )
 	{
-		ViewportManager manager;
+		editor::ViewportManager manager;
 		dx12::Device device;
 
 		REQUIRE( requireHeadlessDevice( device, "All viewport types can be created" ) );
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 		REQUIRE( manager.initialize( &device, shaderManager ) );
 
-		const auto *perspective = manager.createViewport( ViewportType::Perspective );
-		const auto *top = manager.createViewport( ViewportType::Top );
-		const auto *front = manager.createViewport( ViewportType::Front );
-		const auto *side = manager.createViewport( ViewportType::Side );
+		const auto *perspective = manager.createViewport( editor::ViewportType::Perspective );
+		const auto *top = manager.createViewport( editor::ViewportType::Top );
+		const auto *front = manager.createViewport( editor::ViewportType::Front );
+		const auto *side = manager.createViewport( editor::ViewportType::Side );
 
-		REQUIRE( perspective->getType() == ViewportType::Perspective );
-		REQUIRE( top->getType() == ViewportType::Top );
-		REQUIRE( front->getType() == ViewportType::Front );
-		REQUIRE( side->getType() == ViewportType::Side );
+		REQUIRE( perspective->getType() == editor::ViewportType::Perspective );
+		REQUIRE( top->getType() == editor::ViewportType::Top );
+		REQUIRE( front->getType() == editor::ViewportType::Front );
+		REQUIRE( side->getType() == editor::ViewportType::Side );
 
 		REQUIRE( manager.getViewports().size() == 4 );
 	}
 }
 
-TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
+TEST_CASE( "editor::Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 {
 	SECTION( "Perspective camera positioning" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		const auto *camera = viewport.getCamera();
 
 		const auto &position = camera->getPosition();
@@ -552,7 +551,7 @@ TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 
 	SECTION( "Top view camera positioning" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( editor::ViewportType::Top );
 		const auto *camera = viewport.getCamera();
 
 		const auto &position = camera->getPosition();
@@ -577,7 +576,7 @@ TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 
 	SECTION( "Front view camera positioning" )
 	{
-		Viewport viewport( ViewportType::Front );
+		editor::Viewport viewport( editor::ViewportType::Front );
 		const auto *camera = viewport.getCamera();
 
 		const auto &position = camera->getPosition();
@@ -602,7 +601,7 @@ TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 
 	SECTION( "Side view camera positioning" )
 	{
-		Viewport viewport( ViewportType::Side );
+		editor::Viewport viewport( editor::ViewportType::Side );
 		const auto *camera = viewport.getCamera();
 
 		const auto &position = camera->getPosition();
@@ -626,11 +625,11 @@ TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 	}
 }
 
-TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
+TEST_CASE( "editor::Viewport Picking Ray Generation", "[viewport][picking]" )
 {
 	SECTION( "Picking ray from center of viewport" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		viewport.setRenderTargetSize( 800, 600 );
 
 		// Get picking ray from center of screen
@@ -643,7 +642,7 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
 
 	SECTION( "Picking rays from different screen positions" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		viewport.setRenderTargetSize( 800, 600 );
 
 		// Get rays from corners
@@ -669,7 +668,7 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
 
 	SECTION( "Orthographic viewport picking rays" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( editor::ViewportType::Top );
 		viewport.setRenderTargetSize( 800, 600 );
 
 		const auto ray = viewport.getPickingRay( math::Vec2<>( 400.0f, 300.0f ) );
@@ -680,11 +679,11 @@ TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
 	}
 }
 
-TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
+TEST_CASE( "editor::Viewport Grid Settings Management", "[viewport][grid]" )
 {
 	SECTION( "Default grid settings values" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 		const auto &settings = viewport.getGridSettings();
 
 		// Test default values match GridSettings defaults
@@ -722,7 +721,7 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 
 	SECTION( "Grid settings modification" )
 	{
-		Viewport viewport( ViewportType::Perspective );
+		editor::Viewport viewport( editor::ViewportType::Perspective );
 
 		// Get initial settings
 		auto settings = viewport.getGridSettings();
@@ -754,7 +753,7 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 
 	SECTION( "Grid settings persistence within viewport" )
 	{
-		Viewport viewport( ViewportType::Top );
+		editor::Viewport viewport( editor::ViewportType::Top );
 
 		// Set custom settings
 		auto settings = viewport.getGridSettings();
@@ -777,8 +776,8 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 
 	SECTION( "Independent grid settings per viewport type" )
 	{
-		Viewport perspectiveViewport( ViewportType::Perspective );
-		Viewport topViewport( ViewportType::Top );
+		editor::Viewport perspectiveViewport( editor::ViewportType::Perspective );
+		editor::Viewport topViewport( editor::ViewportType::Top );
 
 		// Modify perspective viewport settings
 		auto perspectiveSettings = perspectiveViewport.getGridSettings();

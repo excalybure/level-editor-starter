@@ -4,7 +4,6 @@
 
 import platform.win32;
 
-using namespace win32;
 
 TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 {
@@ -38,7 +37,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 		}
 	}
 
-	SECTION( "Window activation and focus events" )
+	SECTION( "win32::Window activation and focus events" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Focus Test", 800, 600, false );
@@ -57,7 +56,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 
 			// Test activation
 			BOOL activated = SetActiveWindow( hwnd );
-			INFO( "Window activation result: " << activated );
+			INFO( "win32::Window activation result: " << activated );
 
 			window.destroy();
 		}
@@ -101,7 +100,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 		}
 	}
 
-	SECTION( "Window state transitions" )
+	SECTION( "win32::Window state transitions" )
 	{
 		Win32Window window;
 		bool result = window.create( L"State Transition Test", 800, 600, false );
@@ -136,7 +135,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 
 TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styling]" )
 {
-	SECTION( "Window styles and extended styles" )
+	SECTION( "win32::Window styles and extended styles" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Style Test", 800, 600, false );
@@ -165,7 +164,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "Window class information" )
+	SECTION( "win32::Window class information" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Class Info Test", 800, 600, false );
@@ -179,7 +178,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 			int nameLength = GetClassName( hwnd, className, 256 );
 			REQUIRE( nameLength > 0 );
 
-			INFO( "Window class name length: " << nameLength );
+			INFO( "win32::Window class name length: " << nameLength );
 
 			// Get class info
 			WNDCLASS wndClass = {};
@@ -194,10 +193,10 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "Window hierarchy and parent-child relationships" )
+	SECTION( "win32::Window hierarchy and parent-child relationships" )
 	{
 		Win32Window parentWindow;
-		bool parentResult = parentWindow.create( L"Parent Window", 1000, 800, false );
+		bool parentResult = parentWindow.create( L"Parent win32::Window", 1000, 800, false );
 
 		if ( parentResult )
 		{
@@ -206,7 +205,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 			// Create child window
 			HWND childHwnd = CreateWindow(
 				L"STATIC",
-				L"Child Window",
+				L"Child win32::Window",
 				WS_CHILD | WS_VISIBLE | WS_BORDER,
 				10,
 				10,
@@ -247,7 +246,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "Window transparency and layering" )
+	SECTION( "win32::Window transparency and layering" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Transparency Test", 800, 600, false );
@@ -290,7 +289,7 @@ TEST_CASE( "Win32Window Performance and Resource Management", "[win32][window][p
 		for ( int i = 0; i < windowCount; ++i )
 		{
 			auto window = std::make_unique<Win32Window>();
-			std::wstring title = L"Rapid Test Window " + std::to_wstring( i );
+			std::wstring title = L"Rapid Test win32::Window " + std::to_wstring( i );
 
 			bool result = window->create( title.c_str(), 400, 300, false );
 			if ( result )
@@ -369,7 +368,7 @@ TEST_CASE( "Win32Window Performance and Resource Management", "[win32][window][p
 		REQUIRE( memoryDiff < 10 * 1024 * 1024 ); // Less than 10MB increase
 	}
 
-	SECTION( "Window handle reuse safety" )
+	SECTION( "win32::Window handle reuse safety" )
 	{
 		std::vector<HWND> usedHandles;
 
@@ -401,7 +400,7 @@ TEST_CASE( "Win32Window Performance and Resource Management", "[win32][window][p
 		REQUIRE( usedHandles.size() >= 50 ); // Should create a reasonable number
 	}
 
-	SECTION( "Window message queue stress test" )
+	SECTION( "win32::Window message queue stress test" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Message Queue Stress", 800, 600, false );

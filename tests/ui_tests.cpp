@@ -14,12 +14,11 @@
 #include "platform/dx12/dx12_device.h"
 #include "engine/shader_manager/shader_manager.h"
 
-using editor::UI;
-using editor::ViewportType;
+using Catch::Approx;
 
 TEST_CASE( "UI Layout Defaults", "[ui]" )
 {
-	UI ui; // Not initialized; layout is still accessible
+	editor::UI ui; // Not initialized; layout is still accessible
 	const auto &layout = ui.getLayout();
 
 	SECTION( "Has four default panes" )
@@ -37,10 +36,10 @@ TEST_CASE( "UI Layout Defaults", "[ui]" )
 
 	SECTION( "Pane types" )
 	{
-		REQUIRE( layout.panes[0].type == ViewportType::Perspective );
-		REQUIRE( layout.panes[1].type == ViewportType::Top );
-		REQUIRE( layout.panes[2].type == ViewportType::Front );
-		REQUIRE( layout.panes[3].type == ViewportType::Side );
+		REQUIRE( layout.panes[0].type == editor::ViewportType::Perspective );
+		REQUIRE( layout.panes[1].type == editor::ViewportType::Top );
+		REQUIRE( layout.panes[2].type == editor::ViewportType::Front );
+		REQUIRE( layout.panes[3].type == editor::ViewportType::Side );
 	}
 
 	SECTION( "Default min sizes" )
@@ -63,14 +62,14 @@ TEST_CASE( "UI Layout Defaults", "[ui]" )
 
 TEST_CASE( "UI wantsCapture without initialization", "[ui]" )
 {
-	UI ui; // Not initialized on purpose
+	editor::UI ui; // Not initialized on purpose
 	REQUIRE( ui.wantsCaptureMouse() == false );
 	REQUIRE( ui.wantsCaptureKeyboard() == false );
 }
 
 TEST_CASE( "UI mutable layout access", "[ui]" )
 {
-	UI ui;
+	editor::UI ui;
 	auto &layout = ui.getLayout();
 
 	// Modify one pane and verify persistence
@@ -85,7 +84,7 @@ TEST_CASE( "UI mutable layout access", "[ui]" )
 
 TEST_CASE( "UI begin/end frame safety when not initialized", "[ui]" )
 {
-	UI ui; // Not initialized
+	editor::UI ui; // Not initialized
 	// Should be no crash or state changes
 	REQUIRE_NOTHROW( ui.beginFrame() );
 	REQUIRE_NOTHROW( ui.endFrame() );
@@ -94,66 +93,66 @@ TEST_CASE( "UI begin/end frame safety when not initialized", "[ui]" )
 	REQUIRE_FALSE( ui.wantsCaptureKeyboard() );
 }
 
-TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
+TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
 {
-	SECTION( "Viewport access returns nullptr for uninitialized UI" )
+	SECTION( "editor::Viewport access returns nullptr for uninitialized UI" )
 	{
 		// Test that uninitialized UI safely returns nullptr for viewport access
-		UI ui;
+		editor::UI ui;
 
-		REQUIRE( ui.getViewport( ViewportType::Perspective ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Top ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Front ) == nullptr );
-		REQUIRE( ui.getViewport( ViewportType::Side ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Perspective ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Top ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Front ) == nullptr );
+		REQUIRE( ui.getViewport( editor::ViewportType::Side ) == nullptr );
 	}
 
 	SECTION( "Const viewport access returns nullptr for uninitialized UI" )
 	{
-		UI ui;
-		const UI &constUI = ui;
+		editor::UI ui;
+		const editor::UI &constUI = ui;
 
-		REQUIRE( constUI.getViewport( ViewportType::Perspective ) == nullptr );
-		REQUIRE( constUI.getViewport( ViewportType::Top ) == nullptr );
-		REQUIRE( constUI.getViewport( ViewportType::Front ) == nullptr );
-		REQUIRE( constUI.getViewport( ViewportType::Side ) == nullptr );
+		REQUIRE( constUI.getViewport( editor::ViewportType::Perspective ) == nullptr );
+		REQUIRE( constUI.getViewport( editor::ViewportType::Top ) == nullptr );
+		REQUIRE( constUI.getViewport( editor::ViewportType::Front ) == nullptr );
+		REQUIRE( constUI.getViewport( editor::ViewportType::Side ) == nullptr );
 	}
 
-	SECTION( "Viewport consistency between calls for uninitialized UI" )
+	SECTION( "editor::Viewport consistency between calls for uninitialized UI" )
 	{
 		// Multiple calls to getViewport should consistently return nullptr
-		UI ui;
-		const auto *viewport1 = ui.getViewport( ViewportType::Perspective );
-		const auto *viewport2 = ui.getViewport( ViewportType::Perspective );
+		editor::UI ui;
+		const auto *viewport1 = ui.getViewport( editor::ViewportType::Perspective );
+		const auto *viewport2 = ui.getViewport( editor::ViewportType::Perspective );
 
 		REQUIRE( viewport1 == viewport2 );
 		REQUIRE( viewport1 == nullptr );
 
 		// Same for const version
-		const UI &constUI = ui;
-		const auto *constViewport1 = constUI.getViewport( ViewportType::Perspective );
-		const auto *constViewport2 = constUI.getViewport( ViewportType::Perspective );
+		const editor::UI &constUI = ui;
+		const auto *constViewport1 = constUI.getViewport( editor::ViewportType::Perspective );
+		const auto *constViewport2 = constUI.getViewport( editor::ViewportType::Perspective );
 
 		REQUIRE( constViewport1 == constViewport2 );
 		REQUIRE( constViewport1 == nullptr );
 		REQUIRE( constViewport1 == viewport1 ); // Should be the same (both nullptr)
 	}
 
-	SECTION( "Viewport cameras would be initialized if UI was initialized" )
+	SECTION( "editor::Viewport cameras would be initialized if UI was initialized" )
 	{
 		// Test that uninitialized UI safely handles camera access attempts
-		UI ui;
+		editor::UI ui;
 
 		// Should return nullptr safely for uninitialized UI
-		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
+		const auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
 		REQUIRE( perspectiveViewport == nullptr );
 
 		// Note: In a fully initialized UI, these viewports would have cameras
 		// This test validates safe behavior when UI is not properly initialized
 	}
 
-	SECTION( "Viewport layout correspondence" )
+	SECTION( "editor::Viewport layout correspondence" )
 	{
-		UI ui;
+		editor::UI ui;
 		const auto &layout = ui.getLayout();
 
 		// Verify that UI layout has the expected structure
@@ -165,16 +164,16 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 		{
 			switch ( pane.type )
 			{
-			case ViewportType::Perspective:
+			case editor::ViewportType::Perspective:
 				foundPerspective = true;
 				break;
-			case ViewportType::Top:
+			case editor::ViewportType::Top:
 				foundTop = true;
 				break;
-			case ViewportType::Front:
+			case editor::ViewportType::Front:
 				foundFront = true;
 				break;
-			case ViewportType::Side:
+			case editor::ViewportType::Side:
 				foundSide = true;
 				break;
 			}
@@ -187,14 +186,14 @@ TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 	}
 }
 
-TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
+TEST_CASE( "UI editor::Viewport State Management", "[ui][viewport]" )
 {
 	SECTION( "Uninitialized UI viewport access is safe" )
 	{
-		UI ui;
+		editor::UI ui;
 
 		// Should safely return nullptr for uninitialized UI
-		const auto *viewport = ui.getViewport( ViewportType::Perspective );
+		const auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 		REQUIRE( viewport == nullptr );
 
 		// Note: In a properly initialized UI (with device and window),
@@ -204,7 +203,7 @@ TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
 
 TEST_CASE( "UI pane toggling persists", "[ui]" )
 {
-	UI ui;
+	editor::UI ui;
 	auto &layout = ui.getLayout();
 	REQUIRE( layout.panes[0].isOpen );
 	layout.panes[0].isOpen = false;
@@ -216,7 +215,7 @@ TEST_CASE( "UI pane toggling persists", "[ui]" )
 
 TEST_CASE( "UI initialize rejects null pointers", "[ui]" )
 {
-	UI ui;
+	editor::UI ui;
 	// Pass nulls to initialization, expect failure
 	bool ok = ui.initialize( nullptr, nullptr, nullptr );
 	REQUIRE_FALSE( ok );
@@ -232,7 +231,7 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device ) );
 
-	UI ui;
+	editor::UI ui;
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
@@ -273,7 +272,7 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 
 TEST_CASE( "UI exit functionality", "[ui]" )
 {
-	UI ui; // Not initialized - testing state only
+	editor::UI ui; // Not initialized - testing state only
 
 	SECTION( "shouldExit returns false by default" )
 	{
@@ -286,7 +285,7 @@ TEST_CASE( "UI exit functionality", "[ui]" )
 
 TEST_CASE( "UI Grid Settings Window Management", "[ui][grid]" )
 {
-	UI ui; // Not initialized - testing interface only
+	editor::UI ui; // Not initialized - testing interface only
 
 	SECTION( "Grid settings window is closed by default" )
 	{
@@ -350,7 +349,7 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device ) );
 
-	UI ui;
+	editor::UI ui;
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
@@ -375,13 +374,13 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
 	}
 
-	SECTION( "Viewport grid settings access through UI" )
+	SECTION( "editor::Viewport grid settings access through UI" )
 	{
 		// Verify we can access viewports for grid settings
-		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-		const auto *topViewport = ui.getViewport( ViewportType::Top );
-		const auto *frontViewport = ui.getViewport( ViewportType::Front );
-		const auto *sideViewport = ui.getViewport( ViewportType::Side );
+		const auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( editor::ViewportType::Top );
+		const auto *frontViewport = ui.getViewport( editor::ViewportType::Front );
+		const auto *sideViewport = ui.getViewport( editor::ViewportType::Side );
 
 		REQUIRE( perspectiveViewport != nullptr );
 		REQUIRE( topViewport != nullptr );
@@ -403,8 +402,8 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 
 	SECTION( "Grid settings consistency across viewports" )
 	{
-		const auto *perspectiveViewport = ui.getViewport( ViewportType::Perspective );
-		const auto *topViewport = ui.getViewport( ViewportType::Top );
+		const auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
+		const auto *topViewport = ui.getViewport( editor::ViewportType::Top );
 
 		REQUIRE( perspectiveViewport != nullptr );
 		REQUIRE( topViewport != nullptr );
@@ -427,7 +426,7 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 
 	SECTION( "Grid settings modification through UI integration" )
 	{
-		auto *viewport = ui.getViewport( ViewportType::Perspective );
+		auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 		REQUIRE( viewport != nullptr );
 
 		// Test grid settings modification
@@ -460,7 +459,7 @@ TEST_CASE( "Grid Settings Default Values", "[ui][grid]" )
 	// Test that we can create a UI and verify default grid settings values
 	// This validates the GridSettings structure is properly imported and accessible
 
-	UI ui; // Not initialized - just testing interface
+	editor::UI ui; // Not initialized - just testing interface
 
 	SECTION( "UI grid settings window interface is available" )
 	{

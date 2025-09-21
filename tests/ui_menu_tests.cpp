@@ -10,7 +10,6 @@
 #include <windows.h>
 #endif
 
-using namespace editor;
 
 TEST_CASE( "UI Exit State Management", "[ui][exit]" )
 {

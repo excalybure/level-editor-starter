@@ -1,4 +1,4 @@
-﻿// Camera Controller Tests
+﻿// camera::Camera Controller Tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
@@ -7,26 +7,25 @@
 #include "engine/math/vec.h"
 #include "engine/math/math.h"
 
-using namespace camera;
-using namespace math;
-using namespace Catch;
+using Catch::Approx;
+
 
 constexpr float EPSILON = 0.001f;
 
 // Helper function to create test input state
-InputState createTestInput()
+camera::InputState createTestInput()
 {
-	InputState input;
+	camera::InputState input;
 	input.deltaTime = 0.016f; // 60 FPS
 	return input;
 }
 
-TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
+TEST_CASE( "camera::Camera Controller Creation", "[camera][controller]" )
 {
 	SECTION( "Create controller for perspective camera" )
 	{
-		auto perspCamera = std::make_unique<PerspectiveCamera>();
-		auto controller = ControllerFactory::createController( perspCamera.get() );
+		auto perspCamera = std::make_unique<camera::PerspectiveCamera>();
+		auto controller = camera::ControllerFactory::createController( perspCamera.get() );
 
 		REQUIRE( controller != nullptr );
 		REQUIRE( controller->getCamera() == perspCamera.get() );
@@ -35,8 +34,8 @@ TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 
 	SECTION( "Create controller for orthographic camera" )
 	{
-		auto orthoCamera = std::make_unique<OrthographicCamera>();
-		auto controller = ControllerFactory::createController( orthoCamera.get() );
+		auto orthoCamera = std::make_unique<camera::OrthographicCamera>();
+		auto controller = camera::ControllerFactory::createController( orthoCamera.get() );
 
 		REQUIRE( controller != nullptr );
 		REQUIRE( controller->getCamera() == orthoCamera.get() );
@@ -45,8 +44,8 @@ TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 
 	SECTION( "Create specific perspective controller" )
 	{
-		auto perspCamera = std::make_unique<PerspectiveCamera>();
-		auto controller = ControllerFactory::createPerspectiveController( perspCamera.get() );
+		auto perspCamera = std::make_unique<camera::PerspectiveCamera>();
+		auto controller = camera::ControllerFactory::createPerspectiveController( perspCamera.get() );
 
 		REQUIRE( controller != nullptr );
 		REQUIRE( controller->getCamera() == perspCamera.get() );
@@ -54,8 +53,8 @@ TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 
 	SECTION( "Create specific orthographic controller" )
 	{
-		auto orthoCamera = std::make_unique<OrthographicCamera>();
-		auto controller = ControllerFactory::createOrthographicController( orthoCamera.get() );
+		auto orthoCamera = std::make_unique<camera::OrthographicCamera>();
+		auto controller = camera::ControllerFactory::createOrthographicController( orthoCamera.get() );
 
 		REQUIRE( controller != nullptr );
 		REQUIRE( controller->getCamera() == orthoCamera.get() );
@@ -63,28 +62,28 @@ TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 
 	SECTION( "Null camera returns null controller" )
 	{
-		auto controller = ControllerFactory::createController( nullptr );
+		auto controller = camera::ControllerFactory::createController( nullptr );
 		REQUIRE( controller == nullptr );
 
-		auto perspController = ControllerFactory::createPerspectiveController( nullptr );
+		auto perspController = camera::ControllerFactory::createPerspectiveController( nullptr );
 		REQUIRE( perspController == nullptr );
 
-		auto orthoController = ControllerFactory::createOrthographicController( nullptr );
+		auto orthoController = camera::ControllerFactory::createOrthographicController( nullptr );
 		REQUIRE( orthoController == nullptr );
 	}
 }
 
-TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" )
+TEST_CASE( "Perspective camera::Camera Controller", "[camera][controller][perspective]" )
 {
-	auto camera = std::make_unique<PerspectiveCamera>();
-	auto controller = std::make_unique<PerspectiveCameraController>( camera.get() );
+	auto camera = std::make_unique<camera::PerspectiveCamera>();
+	auto controller = std::make_unique<camera::PerspectiveCameraController>( camera.get() );
 
 	SECTION( "Controller initialization" )
 	{
-		REQUIRE( controller->getOrbitSensitivity() == Approx( 0.5f ) );
-		REQUIRE( controller->getPanSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->getZoomSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->getKeyboardMoveSpeed() == Approx( 10.0f ) );
+		REQUIRE( controller->getOrbitSensitivity() == Catch::Approx( 0.5f ) );
+		REQUIRE( controller->getPanSensitivity() == Catch::Approx( 1.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Catch::Approx( 1.0f ) );
+		REQUIRE( controller->getKeyboardMoveSpeed() == Catch::Approx( 10.0f ) );
 		REQUIRE_FALSE( controller->getAutoRotate() );
 	}
 
@@ -95,10 +94,10 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		controller->setZoomSensitivity( 0.8f );
 		controller->setKeyboardMoveSpeed( 20.0f );
 
-		REQUIRE( controller->getOrbitSensitivity() == Approx( 2.0f ) );
-		REQUIRE( controller->getPanSensitivity() == Approx( 1.5f ) );
-		REQUIRE( controller->getZoomSensitivity() == Approx( 0.8f ) );
-		REQUIRE( controller->getKeyboardMoveSpeed() == Approx( 20.0f ) );
+		REQUIRE( controller->getOrbitSensitivity() == Catch::Approx( 2.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Catch::Approx( 1.5f ) );
+		REQUIRE( controller->getZoomSensitivity() == Catch::Approx( 0.8f ) );
+		REQUIRE( controller->getKeyboardMoveSpeed() == Catch::Approx( 20.0f ) );
 	}
 
 	SECTION( "Auto rotation" )
@@ -117,7 +116,7 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		const auto newPos = camera->getPosition();
 		const auto newTarget = camera->getTarget();
 		// Position should have changed due to auto rotation
-		REQUIRE_FALSE( approxEqual( initialPos, newPos ) );
+		REQUIRE_FALSE( math::approxEqual( initialPos, newPos ) );
 	}
 
 	SECTION( "Mouse orbit input" )
@@ -136,8 +135,8 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		input.mouse.y = 90.0f;	// Move mouse up
 		controller->update( input );
 
-		// Camera should have orbited (position changed, target same)
-		REQUIRE( approxEqual( camera->getTarget(), initialTarget ) );
+		// camera::Camera should have orbited (position changed, target same)
+		REQUIRE( math::approxEqual( camera->getTarget(), initialTarget ) );
 		// Position should have changed due to orbit
 		// (Exact values depend on orbit implementation)
 	}
@@ -160,7 +159,7 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		controller->update( input );
 
 		// Distance should remain approximately the same for pan
-		REQUIRE( camera->getDistance() == Approx( initialDistance ).margin( 0.1f ) );
+		REQUIRE( camera->getDistance() == Catch::Approx( initialDistance ).margin( 0.1f ) );
 	}
 
 	SECTION( "Mouse wheel zoom" )
@@ -199,7 +198,7 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		const auto movement = newPos - initialPos;
 		const auto targetMovement = newTarget - initialTarget;
 
-		REQUIRE( approxEqual( movement, targetMovement ) );
+		REQUIRE( math::approxEqual( movement, targetMovement ) );
 		REQUIRE( length( movement ) > 0.001f );
 	}
 
@@ -217,9 +216,9 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 			controller->update( input );
 		}
 
-		// Camera should be looking at the target point
-		REQUIRE( approxEqual( camera->getTarget(), targetPoint, 0.1f ) );
-		REQUIRE( camera->getDistance() == Approx( targetDistance ).margin( 0.1f ) );
+		// camera::Camera should be looking at the target point
+		REQUIRE( math::approxEqual( camera->getTarget(), targetPoint, 0.1f ) );
+		REQUIRE( camera->getDistance() == Catch::Approx( targetDistance ).margin( 0.1f ) );
 	}
 
 	SECTION( "Controller enable/disable" )
@@ -234,26 +233,26 @@ TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" 
 		input.keyboard.w = true;
 		controller->update( input );
 
-		REQUIRE( approxEqual( camera->getPosition(), initialPos ) );
+		REQUIRE( math::approxEqual( camera->getPosition(), initialPos ) );
 
 		// Re-enable and test
 		controller->setEnabled( true );
 		controller->update( input );
 
-		REQUIRE_FALSE( approxEqual( camera->getPosition(), initialPos ) );
+		REQUIRE_FALSE( math::approxEqual( camera->getPosition(), initialPos ) );
 	}
 }
 
-TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]" )
+TEST_CASE( "Orthographic camera::Camera Controller", "[camera][controller][orthographic]" )
 {
-	auto camera = std::make_unique<OrthographicCamera>();
-	auto controller = std::make_unique<OrthographicCameraController>( camera.get() );
+	auto camera = std::make_unique<camera::OrthographicCamera>();
+	auto controller = std::make_unique<camera::OrthographicCameraController>( camera.get() );
 
 	{
-		REQUIRE( controller->getPanSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->getZoomSensitivity() == Approx( 1.0f ) );
-		REQUIRE( controller->getMinZoom() == Approx( 0.1f ) );
-		REQUIRE( controller->getMaxZoom() == Approx( 1000.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Catch::Approx( 1.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Catch::Approx( 1.0f ) );
+		REQUIRE( controller->getMinZoom() == Catch::Approx( 0.1f ) );
+		REQUIRE( controller->getMaxZoom() == Catch::Approx( 1000.0f ) );
 	}
 
 	SECTION( "Sensitivity and zoom limit settings" )
@@ -262,10 +261,10 @@ TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]
 		controller->setZoomSensitivity( 1.5f );
 		controller->setZoomLimits( 0.5f, 500.0f );
 
-		REQUIRE( controller->getPanSensitivity() == Approx( 2.0f ) );
-		REQUIRE( controller->getZoomSensitivity() == Approx( 1.5f ) );
-		REQUIRE( controller->getMinZoom() == Approx( 0.5f ) );
-		REQUIRE( controller->getMaxZoom() == Approx( 500.0f ) );
+		REQUIRE( controller->getPanSensitivity() == Catch::Approx( 2.0f ) );
+		REQUIRE( controller->getZoomSensitivity() == Catch::Approx( 1.5f ) );
+		REQUIRE( controller->getMinZoom() == Catch::Approx( 0.5f ) );
+		REQUIRE( controller->getMaxZoom() == Catch::Approx( 500.0f ) );
 	}
 
 	SECTION( "Mouse pan input" )
@@ -285,7 +284,7 @@ TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]
 		controller->update( input );
 
 		// Position should have changed due to panning
-		REQUIRE_FALSE( approxEqual( camera->getPosition(), initialPos ) );
+		REQUIRE_FALSE( math::approxEqual( camera->getPosition(), initialPos ) );
 	}
 
 	SECTION( "Mouse wheel zoom" )
@@ -340,7 +339,7 @@ TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]
 
 		controller->frameBounds( center, size );
 
-		// Camera should be positioned to frame the bounds
+		// camera::Camera should be positioned to frame the bounds
 		// (Exact behavior depends on frameBounds implementation)
 		REQUIRE( math::length( camera->getPosition() - center ) > 0.0f );
 	}
@@ -353,19 +352,19 @@ TEST_CASE( "Input Utility Functions", "[camera][controller][utils]" )
 		const math::Vec2<> screenSize{ 800.0f, 600.0f };
 
 		// Center of screen should be (0,0) in NDC
-		auto ndc = InputUtils::ScreenToNDC( { 400.0f, 300.0f }, screenSize );
-		REQUIRE( ndc.x == Approx( 0.0f ).margin( 0.001f ) );
-		REQUIRE( ndc.y == Approx( 0.0f ).margin( 0.001f ) );
+		auto ndc = camera::InputUtils::ScreenToNDC( { 400.0f, 300.0f }, screenSize );
+		REQUIRE( ndc.x == Catch::Approx( 0.0f ).margin( 0.001f ) );
+		REQUIRE( ndc.y == Catch::Approx( 0.0f ).margin( 0.001f ) );
 
 		// Top-left should be (-1, 1)
-		ndc = InputUtils::ScreenToNDC( { 0.0f, 0.0f }, screenSize );
-		REQUIRE( ndc.x == Approx( -1.0f ) );
-		REQUIRE( ndc.y == Approx( 1.0f ) );
+		ndc = camera::InputUtils::ScreenToNDC( { 0.0f, 0.0f }, screenSize );
+		REQUIRE( ndc.x == Catch::Approx( -1.0f ) );
+		REQUIRE( ndc.y == Catch::Approx( 1.0f ) );
 
 		// Bottom-right should be (1, -1)
-		ndc = InputUtils::ScreenToNDC( { 800.0f, 600.0f }, screenSize );
-		REQUIRE( ndc.x == Approx( 1.0f ) );
-		REQUIRE( ndc.y == Approx( -1.0f ) );
+		ndc = camera::InputUtils::ScreenToNDC( { 800.0f, 600.0f }, screenSize );
+		REQUIRE( ndc.x == Catch::Approx( 1.0f ) );
+		REQUIRE( ndc.y == Catch::Approx( -1.0f ) );
 	}
 
 	SECTION( "Distance-based sensitivity" )
@@ -374,10 +373,10 @@ TEST_CASE( "Input Utility Functions", "[camera][controller][utils]" )
 		const float minSpeed = 0.1f;
 
 		// Close distance should give low sensitivity
-		const auto sensitivity1 = InputUtils::CalculateDistanceBasedSensitivity( baseSpeed, 1.0f, minSpeed );
+		const auto sensitivity1 = camera::InputUtils::CalculateDistanceBasedSensitivity( baseSpeed, 1.0f, minSpeed );
 
 		// Far distance should give higher sensitivity
-		const auto sensitivity2 = InputUtils::CalculateDistanceBasedSensitivity( baseSpeed, 100.0f, minSpeed );
+		const auto sensitivity2 = camera::InputUtils::CalculateDistanceBasedSensitivity( baseSpeed, 100.0f, minSpeed );
 
 		REQUIRE( sensitivity2 > sensitivity1 );
 		REQUIRE( sensitivity1 >= minSpeed );
@@ -391,7 +390,7 @@ TEST_CASE( "Input Utility Functions", "[camera][controller][utils]" )
 		const float smoothing = 5.0f;
 		const float deltaTime = 0.1f;
 
-		const auto smoothed = InputUtils::SmoothInput( current, target, smoothing, deltaTime );
+		const auto smoothed = camera::InputUtils::SmoothInput( current, target, smoothing, deltaTime );
 
 		// Should be between current and target
 		REQUIRE( smoothed > current );
@@ -401,7 +400,7 @@ TEST_CASE( "Input Utility Functions", "[camera][controller][utils]" )
 		const math::Vec2<> current2{ 0.0f, 0.0f };
 		const math::Vec2<> target2{ 10.0f, 5.0f };
 
-		const auto smoothed2 = InputUtils::SmoothInput( current2, target2, smoothing, deltaTime );
+		const auto smoothed2 = camera::InputUtils::SmoothInput( current2, target2, smoothing, deltaTime );
 
 		REQUIRE( smoothed2.x > 0.0f );
 		REQUIRE( smoothed2.x < 10.0f );
@@ -414,21 +413,21 @@ TEST_CASE( "Input Utility Functions", "[camera][controller][utils]" )
 		const float deadzone = 0.2f;
 
 		// Input below deadzone should be zero
-		REQUIRE( InputUtils::ApplyDeadzone( 0.1f, deadzone ) == Approx( 0.0f ) );
-		REQUIRE( InputUtils::ApplyDeadzone( -0.15f, deadzone ) == Approx( 0.0f ) );
+		REQUIRE( camera::InputUtils::ApplyDeadzone( 0.1f, deadzone ) == Catch::Approx( 0.0f ) );
+		REQUIRE( camera::InputUtils::ApplyDeadzone( -0.15f, deadzone ) == Catch::Approx( 0.0f ) );
 
 		// Input above deadzone should be scaled
-		const auto result = InputUtils::ApplyDeadzone( 0.6f, deadzone );
+		const auto result = camera::InputUtils::ApplyDeadzone( 0.6f, deadzone );
 		REQUIRE( result > 0.0f );
 		REQUIRE( result < 0.6f ); // Should be remapped
 
 		// Test Vec2 version
 		const math::Vec2<> input{ 0.1f, 0.1f }; // Below deadzone
-		const auto result2 = InputUtils::ApplyDeadzone( input, deadzone );
-		REQUIRE( math::length( result2 ) == Approx( 0.0f ) );
+		const auto result2 = camera::InputUtils::ApplyDeadzone( input, deadzone );
+		REQUIRE( math::length( result2 ) == Catch::Approx( 0.0f ) );
 
 		const math::Vec2<> input3{ 0.8f, 0.6f }; // Above deadzone
-		const auto result3 = InputUtils::ApplyDeadzone( input3, deadzone );
+		const auto result3 = camera::InputUtils::ApplyDeadzone( input3, deadzone );
 		REQUIRE( math::length( result3 ) > 0.0f );
 		REQUIRE( math::length( result3 ) < ( math::length( input3 ) + 0.001f ) ); // Allow small precision error
 	}

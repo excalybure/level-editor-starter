@@ -4,7 +4,6 @@
 #include "engine/math/vec.h"
 #include "engine/math/math.h"
 
-using namespace math;
 
 // Helper function for floating point comparison
 template <typename T>
@@ -17,8 +16,8 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 {
 	SECTION( "Linear Bezier Curves" )
 	{
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 10.0f, 5.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 10.0f, 5.0f };
 
 		// Test endpoints
 		const auto start = linearBezier( p0, p1, 0.0f );
@@ -35,8 +34,8 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( mid.y, 2.5f ) );
 
 		// Test 3D version
-		const Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
-		const Vec3<> p1_3d{ 6.0f, 3.0f, 9.0f };
+		const math::Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> p1_3d{ 6.0f, 3.0f, 9.0f };
 
 		const auto mid_3d = linearBezier( p0_3d, p1_3d, 0.5f );
 		REQUIRE( approxEqual( mid_3d.x, 3.0f ) );
@@ -46,9 +45,9 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 
 	SECTION( "Quadratic Bezier Curves" )
 	{
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 5.0f, 10.0f }; // Control point
-		const Vec2<> p2{ 10.0f, 0.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 5.0f, 10.0f }; // Control point
+		const math::Vec2<> p2{ 10.0f, 0.0f };
 
 		// Test endpoints
 		const auto start = quadraticBezier( p0, p1, p2, 0.0f );
@@ -79,10 +78,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 
 	SECTION( "Cubic Bezier Curves" )
 	{
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 0.0f, 10.0f };	 // First control point
-		const Vec2<> p2{ 10.0f, 10.0f }; // Second control point
-		const Vec2<> p3{ 10.0f, 0.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 0.0f, 10.0f };	 // First control point
+		const math::Vec2<> p2{ 10.0f, 10.0f }; // Second control point
+		const math::Vec2<> p3{ 10.0f, 0.0f };
 
 		// Test endpoints
 		const auto start = cubicBezier( p0, p1, p2, p3, 0.0f );
@@ -107,10 +106,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( deriv_1.y, -30.0f, 1e-5f ) );
 
 		// Test 3D cubic Bezier
-		const Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
-		const Vec3<> p1_3d{ 1.0f, 1.0f, 1.0f };
-		const Vec3<> p2_3d{ 2.0f, 2.0f, 2.0f };
-		const Vec3<> p3_3d{ 3.0f, 0.0f, 3.0f };
+		const math::Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> p1_3d{ 1.0f, 1.0f, 1.0f };
+		const math::Vec3<> p2_3d{ 2.0f, 2.0f, 2.0f };
+		const math::Vec3<> p3_3d{ 3.0f, 0.0f, 3.0f };
 
 		const auto mid_3d = cubicBezier( p0_3d, p1_3d, p2_3d, p3_3d, 0.5f );
 		REQUIRE( mid_3d.x >= 0.0f );
@@ -121,10 +120,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 
 	SECTION( "Catmull-Rom Splines" )
 	{
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 1.0f, 1.0f };	// Start point
-		const Vec2<> p2{ 2.0f, -1.0f }; // End point (changed to create curvature)
-		const Vec2<> p3{ 3.0f, 0.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 1.0f, 1.0f };	// Start point
+		const math::Vec2<> p2{ 2.0f, -1.0f }; // End point (changed to create curvature)
+		const math::Vec2<> p3{ 3.0f, 0.0f };
 
 		// Test that spline passes through control points
 		const auto start = catmullRom( p0, p1, p2, p3, 0.0f );
@@ -140,10 +139,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( std::abs( deriv_mid.x ) > 0.0f ); // Should have some horizontal movement
 
 		// Test with tension parameter - use more dramatic difference
-		const Vec2<> q0{ 0.0f, 0.0f };
-		const Vec2<> q1{ 1.0f, 0.0f };
-		const Vec2<> q2{ 2.0f, 0.0f };
-		const Vec2<> q3{ 3.0f, 1.0f }; // Non-collinear point to create curvature
+		const math::Vec2<> q0{ 0.0f, 0.0f };
+		const math::Vec2<> q1{ 1.0f, 0.0f };
+		const math::Vec2<> q2{ 2.0f, 0.0f };
+		const math::Vec2<> q3{ 3.0f, 1.0f }; // Non-collinear point to create curvature
 
 		const auto with_high_tension = catmullRomWithTension( q0, q1, q2, q3, 0.5f, 2.0f ); // Very high tension
 		const auto with_low_tension = catmullRomWithTension( q0, q1, q2, q3, 0.5f, 0.1f );	// Low tension
@@ -152,10 +151,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( std::abs( with_high_tension.y - with_low_tension.y ) > 1e-3f );
 
 		// Test 3D Catmull-Rom
-		const Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
-		const Vec3<> p1_3d{ 1.0f, 1.0f, 1.0f };
-		const Vec3<> p2_3d{ 2.0f, 1.0f, 2.0f };
-		const Vec3<> p3_3d{ 3.0f, 0.0f, 1.0f };
+		const math::Vec3<> p0_3d{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> p1_3d{ 1.0f, 1.0f, 1.0f };
+		const math::Vec3<> p2_3d{ 2.0f, 1.0f, 2.0f };
+		const math::Vec3<> p3_3d{ 3.0f, 0.0f, 1.0f };
 
 		const auto start_3d = catmullRom( p0_3d, p1_3d, p2_3d, p3_3d, 0.0f );
 		REQUIRE( approxEqual( start_3d.x, p1_3d.x ) );
@@ -166,7 +165,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 	SECTION( "Arc Length Calculations" )
 	{
 		// Test simple line segment
-		const std::vector<Vec2<>> line = {
+		const std::vector<math::Vec2<>> line = {
 			{ 0.0f, 0.0f },
 			{ 3.0f, 4.0f } // 3-4-5 triangle, length = 5
 		};
@@ -175,7 +174,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( lineLength, 5.0f ) );
 
 		// Test square path
-		const std::vector<Vec2<>> square = {
+		const std::vector<math::Vec2<>> square = {
 			{ 0.0f, 0.0f },
 			{ 1.0f, 0.0f },
 			{ 1.0f, 1.0f },
@@ -187,7 +186,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( squareLength, 4.0f ) );
 
 		// Test 3D arc length
-		const std::vector<Vec3<>> line3d = {
+		const std::vector<math::Vec3<>> line3d = {
 			{ 0.0f, 0.0f, 0.0f },
 			{ 1.0f, 1.0f, 1.0f } // sqrt(3) length
 		};
@@ -196,10 +195,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( line3dLength, std::sqrt( 3.0f ) ) );
 
 		// Test Bezier arc length approximation
-		const Vec2<> b0{ 0.0f, 0.0f };
-		const Vec2<> b1{ 1.0f, 1.0f };
-		const Vec2<> b2{ 2.0f, 1.0f };
-		const Vec2<> b3{ 3.0f, 0.0f };
+		const math::Vec2<> b0{ 0.0f, 0.0f };
+		const math::Vec2<> b1{ 1.0f, 1.0f };
+		const math::Vec2<> b2{ 2.0f, 1.0f };
+		const math::Vec2<> b3{ 3.0f, 0.0f };
 
 		const auto bezierLength = bezierArcLength( b0, b1, b2, b3, 64 );
 		REQUIRE( bezierLength > 0.0f );
@@ -208,7 +207,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 
 	SECTION( "Sample by Distance" )
 	{
-		const std::vector<Vec2<>> line = {
+		const std::vector<math::Vec2<>> line = {
 			{ 0.0f, 0.0f },
 			{ 10.0f, 0.0f }
 		};
@@ -234,7 +233,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( beyond.y, 0.0f ) );
 
 		// Test 3D sampling
-		const std::vector<Vec3<>> line3d = {
+		const std::vector<math::Vec3<>> line3d = {
 			{ 0.0f, 0.0f, 0.0f },
 			{ 0.0f, 0.0f, 10.0f }
 		};
@@ -245,13 +244,13 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( mid3d.z, 5.0f ) );
 
 		// Test empty curve
-		const std::vector<Vec2<>> empty;
+		const std::vector<math::Vec2<>> empty;
 		const auto emptyResult = sampleByDistance( empty, 5.0f );
 		REQUIRE( approxEqual( emptyResult.x, 0.0f ) );
 		REQUIRE( approxEqual( emptyResult.y, 0.0f ) );
 
 		// Test single point
-		const std::vector<Vec2<>> single = { { 5.0f, 3.0f } };
+		const std::vector<math::Vec2<>> single = { { 5.0f, 3.0f } };
 		const auto singleResult = sampleByDistance( single, 10.0f );
 		REQUIRE( approxEqual( singleResult.x, 5.0f ) );
 		REQUIRE( approxEqual( singleResult.y, 3.0f ) );
@@ -259,7 +258,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 
 	SECTION( "Curve Utilities" )
 	{
-		const std::vector<Vec2<>> curve = {
+		const std::vector<math::Vec2<>> curve = {
 			{ 0.0f, 0.0f },
 			{ 1.0f, 1.0f },
 			{ 2.0f, 0.0f },
@@ -267,8 +266,8 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		};
 
 		// Test closest point finding
-		const Vec2<> queryPoint{ 1.1f, 0.9f };
-		Vec2<> closestPoint;
+		const math::Vec2<> queryPoint{ 1.1f, 0.9f };
+		math::Vec2<> closestPoint;
 		int segmentIndex;
 
 		const auto distance = findClosestPointOnCurve( curve, queryPoint, closestPoint, segmentIndex );
@@ -278,7 +277,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( segmentIndex < static_cast<int>( curve.size() ) );
 
 		// Test smooth curve generation
-		const std::vector<Vec2<>> controlPoints = {
+		const std::vector<math::Vec2<>> controlPoints = {
 			{ 0.0f, 0.0f },
 			{ 1.0f, 1.0f },
 			{ 2.0f, 0.0f }
@@ -294,7 +293,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( smoothCurve.back().y, controlPoints.back().y ) );
 
 		// Test 3D curve generation
-		const std::vector<Vec3<>> controlPoints3d = {
+		const std::vector<math::Vec3<>> controlPoints3d = {
 			{ 0.0f, 0.0f, 0.0f },
 			{ 1.0f, 1.0f, 1.0f },
 			{ 2.0f, 0.0f, 2.0f }
@@ -307,7 +306,7 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 	SECTION( "Edge Cases and Robustness" )
 	{
 		// Test Bezier with identical points
-		const Vec2<> p{ 1.0f, 1.0f };
+		const math::Vec2<> p{ 1.0f, 1.0f };
 		const auto identical = cubicBezier( p, p, p, p, 0.5f );
 		REQUIRE( approxEqual( identical.x, p.x ) );
 		REQUIRE( approxEqual( identical.y, p.y ) );
@@ -318,18 +317,18 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( approxEqual( identicalSpline.y, p.y ) );
 
 		// Test arc length with single point
-		const std::vector<Vec2<>> singlePoint = { { 5.0f, 3.0f } };
+		const std::vector<math::Vec2<>> singlePoint = { { 5.0f, 3.0f } };
 		const auto singleLength = arcLength( singlePoint );
 		REQUIRE( approxEqual( singleLength, 0.0f ) );
 
 		// Test arc length with empty vector
-		const std::vector<Vec2<>> empty;
+		const std::vector<math::Vec2<>> empty;
 		const auto emptyLength = arcLength( empty );
 		REQUIRE( approxEqual( emptyLength, 0.0f ) );
 
 		// Test boundary conditions
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 1.0f, 1.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 1.0f, 1.0f };
 
 		const auto t_negative = linearBezier( p0, p1, -0.5f );
 		const auto t_beyond = linearBezier( p0, p1, 1.5f );
@@ -339,9 +338,9 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		REQUIRE( t_beyond.x > 1.0f );
 
 		// Test closest point with empty curve
-		const std::vector<Vec3<>> emptyCurve3d;
-		const Vec3<> queryPoint3d{ 1.0f, 1.0f, 1.0f };
-		Vec3<> closest3d;
+		const std::vector<math::Vec3<>> emptyCurve3d;
+		const math::Vec3<> queryPoint3d{ 1.0f, 1.0f, 1.0f };
+		math::Vec3<> closest3d;
 		int index3d;
 
 		const auto dist3d = findClosestPointOnCurve( emptyCurve3d, queryPoint3d, closest3d, index3d );
@@ -352,10 +351,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 	SECTION( "Mathematical Properties" )
 	{
 		// Test Bezier curve convex hull property
-		const Vec2<> p0{ 0.0f, 0.0f };
-		const Vec2<> p1{ 0.0f, 2.0f };
-		const Vec2<> p2{ 2.0f, 2.0f };
-		const Vec2<> p3{ 2.0f, 0.0f };
+		const math::Vec2<> p0{ 0.0f, 0.0f };
+		const math::Vec2<> p1{ 0.0f, 2.0f };
+		const math::Vec2<> p2{ 2.0f, 2.0f };
+		const math::Vec2<> p3{ 2.0f, 0.0f };
 
 		// Sample multiple points on cubic Bezier
 		for ( int i = 0; i <= 10; ++i )
@@ -371,10 +370,10 @@ TEST_CASE( "Curve and Spline Functions", "[curves]" )
 		}
 
 		// Test Catmull-Rom spline passes through intermediate points
-		const Vec2<> cp0{ -1.0f, 0.0f };
-		const Vec2<> cp1{ 0.0f, 1.0f };
-		const Vec2<> cp2{ 1.0f, 0.0f };
-		const Vec2<> cp3{ 2.0f, -1.0f };
+		const math::Vec2<> cp0{ -1.0f, 0.0f };
+		const math::Vec2<> cp1{ 0.0f, 1.0f };
+		const math::Vec2<> cp2{ 1.0f, 0.0f };
+		const math::Vec2<> cp3{ 2.0f, -1.0f };
 
 		const auto splineStart = catmullRom( cp0, cp1, cp2, cp3, 0.0f );
 		const auto splineEnd = catmullRom( cp0, cp1, cp2, cp3, 1.0f );

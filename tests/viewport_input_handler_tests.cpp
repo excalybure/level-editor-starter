@@ -14,12 +14,7 @@
 #include "engine/math/matrix.h"
 #include "engine/math/bounding_box_3d.h"
 
-using namespace math;
-using namespace editor;
-using namespace picking;
-using namespace components;
-using namespace ecs;
-using namespace systems;
+using Catch::Approx;
 
 // Mock viewport helper for testing
 class MockViewport : public editor::Viewport
@@ -31,48 +26,48 @@ public:
 	}
 
 	// Override picking ray to return predictable results for testing
-	editor::ViewportRay getPickingRay( const Vec2<> &screenPos ) const noexcept override
+	editor::ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept override
 	{
 		editor::ViewportRay ray;
-		ray.origin = Vec3<>{ screenPos.x / 100.0f, screenPos.y / 100.0f, -5.0f };
-		ray.direction = Vec3<>{ 0.0f, 0.0f, 1.0f };
+		ray.origin = math::Vec3<>{ screenPos.x / 100.0f, screenPos.y / 100.0f, -5.0f };
+		ray.direction = math::Vec3<>{ 0.0f, 0.0f, 1.0f };
 		ray.length = 1000.0f;
 		return ray;
 	}
 
 	// Override world to screen for rectangle selection testing
-	Vec2<> worldToScreen( const Vec3<> &worldPos ) const noexcept override
+	math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept override
 	{
 		// Simple projection for testing
-		return Vec2<>{ worldPos.x * 100.0f, worldPos.y * 100.0f };
+		return math::Vec2<>{ worldPos.x * 100.0f, worldPos.y * 100.0f };
 	}
 };
 
-TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
+TEST_CASE( "editor::ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity = scene.createEntity( "TestCube" );
-	scene.addComponent( entity, Transform{} );
+	scene.addComponent( entity, components::Transform{} );
 
 	// Mock mesh renderer with bounds for picking
-	MeshRenderer meshRenderer;
-	meshRenderer.bounds = BoundingBox3D<float>{
-		Vec3<>{ -1.0f, -1.0f, -1.0f },
-		Vec3<>{ 1.0f, 1.0f, 1.0f }
+	components::MeshRenderer meshRenderer;
+	meshRenderer.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 	};
 	scene.addComponent( entity, meshRenderer );
 
 	SECTION( "Left click selects object" )
 	{
-		const Vec2<> screenPos{ 0.0f, 0.0f }; // Center of entity in mock viewport
+		const math::Vec2<> screenPos{ 0.0f, 0.0f }; // Center of entity in mock viewport
 
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, // Left button only
 			false,
@@ -84,7 +79,7 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 
 	SECTION( "Right click does not select" )
 	{
-		const Vec2<> screenPos{ 0.0f, 0.0f };
+		const math::Vec2<> screenPos{ 0.0f, 0.0f };
 
 		inputHandler.handleMouseClick( scene, viewport, screenPos, false, true, // Right button only
 			false,
@@ -101,7 +96,7 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 		REQUIRE( selectionManager.isSelected( entity ) );
 
 		// Click far away from entity
-		const Vec2<> emptyPos{ 500.0f, 500.0f };
+		const math::Vec2<> emptyPos{ 500.0f, 500.0f };
 
 		inputHandler.handleMouseClick( scene, viewport, emptyPos, true, false, // Left button
 			false,
@@ -112,37 +107,37 @@ TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 	}
 }
 
-TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]" )
+TEST_CASE( "editor::ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity1 = scene.createEntity( "Cube1" );
 	const auto entity2 = scene.createEntity( "Cube2" );
 
 	// Setup entities with bounds at different positions
-	scene.addComponent( entity1, Transform{} );
-	MeshRenderer meshRenderer1;
-	meshRenderer1.bounds = BoundingBox3D<float>{
-		Vec3<>{ -1.0f, -1.0f, -1.0f },
-		Vec3<>{ 1.0f, 1.0f, 1.0f }
+	scene.addComponent( entity1, components::Transform{} );
+	components::MeshRenderer meshRenderer1;
+	meshRenderer1.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 	};
 	scene.addComponent( entity1, meshRenderer1 );
 
-	scene.addComponent( entity2, Transform{} );
-	auto *transform2 = scene.getComponent<Transform>( entity2 );
+	scene.addComponent( entity2, components::Transform{} );
+	auto *transform2 = scene.getComponent<components::Transform>( entity2 );
 	REQUIRE( transform2 != nullptr );
-	transform2->position = Vec3<>{ 2.0f, 0.0f, 0.0f }; // Offset position
-	MeshRenderer meshRenderer2;
-	meshRenderer2.bounds = BoundingBox3D<float>{
-		Vec3<>{ -1.0f, -1.0f, -1.0f },
-		Vec3<>{ 1.0f, 1.0f, 1.0f }
+	transform2->position = math::Vec3<>{ 2.0f, 0.0f, 0.0f }; // Offset position
+	components::MeshRenderer meshRenderer2;
+	meshRenderer2.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 	};
 	scene.addComponent( entity2, meshRenderer2 );
 
@@ -152,7 +147,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 		selectionManager.select( entity1 );
 
 		// Ctrl+Click entity2 to add (entity2 is at screen pos 200, 0 in mock viewport)
-		const Vec2<> screenPos{ 200.0f, 0.0f };
+		const math::Vec2<> screenPos{ 200.0f, 0.0f };
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, // Left button
 			true,
 			false ); // Ctrl pressed
@@ -169,7 +164,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 		REQUIRE( selectionManager.getSelectionCount() == 2 );
 
 		// Ctrl+Shift+Click entity1 to remove
-		const Vec2<> screenPos{ 0.0f, 0.0f };
+		const math::Vec2<> screenPos{ 0.0f, 0.0f };
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, // Left button
 			true,
 			true ); // Ctrl+Shift pressed
@@ -184,7 +179,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 		selectionManager.select( entity1 );
 
 		// Shift+Click entity2 to add
-		const Vec2<> screenPos{ 200.0f, 0.0f };
+		const math::Vec2<> screenPos{ 200.0f, 0.0f };
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, // Left button
 			false,
 			true ); // Shift pressed
@@ -194,7 +189,7 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 		REQUIRE( selectionManager.getSelectionCount() == 2 );
 
 		// Shift+Click entity1 to remove
-		const Vec2<> screenPos2{ 0.0f, 0.0f };
+		const math::Vec2<> screenPos2{ 0.0f, 0.0f };
 		inputHandler.handleMouseClick( scene, viewport, screenPos2, true, false, // Left button
 			false,
 			true ); // Shift pressed
@@ -205,22 +200,22 @@ TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]
 	}
 }
 
-TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect]" )
+TEST_CASE( "editor::ViewportInputHandler - Rectangle selection", "[viewport][input][rect]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 
 	SECTION( "Small drag does not start rectangle selection" )
 	{
-		const Vec2<> startPos{ 100.0f, 100.0f };
-		const Vec2<> endPos{ 102.0f, 103.0f }; // Less than 5 pixel threshold
+		const math::Vec2<> startPos{ 100.0f, 100.0f };
+		const math::Vec2<> endPos{ 102.0f, 103.0f }; // Less than 5 pixel threshold
 
 		inputHandler.handleMouseDrag( scene, viewport, startPos, endPos, false, false );
 
@@ -229,8 +224,8 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 
 	SECTION( "Drag creates rectangle selection" )
 	{
-		const Vec2<> startPos{ 100.0f, 100.0f };
-		const Vec2<> endPos{ 200.0f, 200.0f }; // More than 5 pixel threshold
+		const math::Vec2<> startPos{ 100.0f, 100.0f };
+		const math::Vec2<> endPos{ 200.0f, 200.0f }; // More than 5 pixel threshold
 
 		// Start drag
 		inputHandler.handleMouseDrag( scene, viewport, startPos, endPos, false, false );
@@ -242,7 +237,7 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 		REQUIRE( rectSel.startPos.y == Catch::Approx( 100.0f ) );
 		REQUIRE( rectSel.endPos.x == Catch::Approx( 200.0f ) );
 		REQUIRE( rectSel.endPos.y == Catch::Approx( 200.0f ) );
-		REQUIRE( rectSel.mode == SelectionMode::Replace );
+		REQUIRE( rectSel.mode == editor::SelectionMode::Replace );
 
 		// End drag
 		inputHandler.handleMouseRelease( scene, viewport, endPos );
@@ -252,47 +247,47 @@ TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect
 
 	SECTION( "Rectangle selection with modifiers" )
 	{
-		const Vec2<> startPos{ 50.0f, 50.0f };
-		const Vec2<> endPos{ 150.0f, 150.0f };
+		const math::Vec2<> startPos{ 50.0f, 50.0f };
+		const math::Vec2<> endPos{ 150.0f, 150.0f };
 
 		// Ctrl+Drag for additive selection
 		inputHandler.handleMouseDrag( scene, viewport, startPos, endPos, true, false );
 
 		REQUIRE( inputHandler.isRectSelectionActive() );
 		const auto &rectSel = inputHandler.getRectSelection();
-		REQUIRE( rectSel.mode == SelectionMode::Add );
+		REQUIRE( rectSel.mode == editor::SelectionMode::Add );
 
 		inputHandler.handleMouseRelease( scene, viewport, endPos );
 		REQUIRE_FALSE( inputHandler.isRectSelectionActive() );
 	}
 }
 
-TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" )
+TEST_CASE( "editor::ViewportInputHandler - Hover detection", "[viewport][input][hover]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 	const auto entity = scene.createEntity( "HoverCube" );
-	scene.addComponent( entity, Transform{} );
+	scene.addComponent( entity, components::Transform{} );
 
-	MeshRenderer meshRenderer;
-	meshRenderer.bounds = BoundingBox3D<float>{
-		Vec3<>{ -1.0f, -1.0f, -1.0f },
-		Vec3<>{ 1.0f, 1.0f, 1.0f }
+	components::MeshRenderer meshRenderer;
+	meshRenderer.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 	};
 	scene.addComponent( entity, meshRenderer );
 
 	SECTION( "Mouse move over entity sets hover" )
 	{
-		REQUIRE( inputHandler.getHoveredEntity() == Entity{} );
+		REQUIRE( inputHandler.getHoveredEntity() == ecs::Entity{} );
 
-		const Vec2<> screenPos{ 0.0f, 0.0f }; // Center of entity
+		const math::Vec2<> screenPos{ 0.0f, 0.0f }; // Center of entity
 		inputHandler.handleMouseMove( scene, viewport, screenPos );
 
 		REQUIRE( inputHandler.getHoveredEntity() == entity );
@@ -301,37 +296,37 @@ TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" 
 	SECTION( "Mouse move away from entity clears hover" )
 	{
 		// First hover over entity
-		const Vec2<> onEntity{ 0.0f, 0.0f };
+		const math::Vec2<> onEntity{ 0.0f, 0.0f };
 		inputHandler.handleMouseMove( scene, viewport, onEntity );
 		REQUIRE( inputHandler.getHoveredEntity() == entity );
 
 		// Move away from entity
-		const Vec2<> awayFromEntity{ 500.0f, 500.0f };
+		const math::Vec2<> awayFromEntity{ 500.0f, 500.0f };
 		inputHandler.handleMouseMove( scene, viewport, awayFromEntity );
 
-		REQUIRE( inputHandler.getHoveredEntity() == Entity{} );
+		REQUIRE( inputHandler.getHoveredEntity() == ecs::Entity{} );
 	}
 }
 
-TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input][mode]" )
+TEST_CASE( "editor::ViewportInputHandler - components::Selection mode detection", "[viewport][input][mode]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	// We can test selection mode indirectly through the behavior
 	MockViewport viewport;
 	const auto entity = scene.createEntity( "TestEntity" );
-	scene.addComponent( entity, Transform{} );
+	scene.addComponent( entity, components::Transform{} );
 
-	MeshRenderer meshRenderer;
-	meshRenderer.bounds = BoundingBox3D<float>{
-		Vec3<>{ -1.0f, -1.0f, -1.0f },
-		Vec3<>{ 1.0f, 1.0f, 1.0f }
+	components::MeshRenderer meshRenderer;
+	meshRenderer.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 	};
 	scene.addComponent( entity, meshRenderer );
 
@@ -342,7 +337,7 @@ TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input]
 		REQUIRE( selectionManager.isSelected( entity ) );
 
 		// Click empty space with no modifiers should clear selection
-		const Vec2<> emptyPos{ 500.0f, 500.0f };
+		const math::Vec2<> emptyPos{ 500.0f, 500.0f };
 		inputHandler.handleMouseClick( scene, viewport, emptyPos, true, false, // Left button
 			false,
 			false ); // No modifiers
@@ -353,38 +348,38 @@ TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input]
 	SECTION( "Ctrl modifier = Add mode" )
 	{
 		// Click empty space with Ctrl should not clear selection
-		const Vec2<> emptyPos{ 500.0f, 500.0f };
+		const math::Vec2<> emptyPos{ 500.0f, 500.0f };
 		inputHandler.handleMouseClick( scene, viewport, emptyPos, true, false, // Left button
 			true,
 			false ); // Ctrl pressed
 
-		// Selection should remain unchanged
+		// components::Selection should remain unchanged
 		REQUIRE( selectionManager.getSelectionCount() == 0 );
 	}
 }
 
-TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
+TEST_CASE( "editor::ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
-	PickingSystem pickingSystem( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
+	picking::PickingSystem pickingSystem( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, pickingSystem, systemManager );
 
 	MockViewport viewport;
 
 	SECTION( "Handle input with empty scene" )
 	{
-		const Vec2<> screenPos{ 100.0f, 100.0f };
+		const math::Vec2<> screenPos{ 100.0f, 100.0f };
 
 		// Should not crash with empty scene
 		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, false, false ) );
 
 		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, screenPos ) );
 
-		REQUIRE_NOTHROW( inputHandler.handleMouseDrag( scene, viewport, screenPos, Vec2<>{ 200.0f, 200.0f }, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseDrag( scene, viewport, screenPos, math::Vec2<>{ 200.0f, 200.0f }, false, false ) );
 
 		REQUIRE_NOTHROW( inputHandler.handleMouseRelease( scene, viewport, screenPos ) );
 	}
@@ -393,11 +388,11 @@ TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 	{
 		// Create entity then remove it to create invalid reference
 		const auto entity = scene.createEntity( "TempEntity" );
-		scene.addComponent( entity, Transform{} );
-		MeshRenderer meshRenderer;
-		meshRenderer.bounds = BoundingBox3D<float>{
-			Vec3<>{ -1.0f, -1.0f, -1.0f },
-			Vec3<>{ 1.0f, 1.0f, 1.0f }
+		scene.addComponent( entity, components::Transform{} );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.bounds = math::BoundingBox3D<float>{
+			math::Vec3<>{ -1.0f, -1.0f, -1.0f },
+			math::Vec3<>{ 1.0f, 1.0f, 1.0f }
 		};
 		scene.addComponent( entity, meshRenderer );
 
@@ -409,7 +404,7 @@ TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 		scene.destroyEntity( entity );
 
 		// Input handling should not crash with invalid entity in selection
-		const Vec2<> screenPos{ 0.0f, 0.0f };
+		const math::Vec2<> screenPos{ 0.0f, 0.0f };
 		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, false, false ) );
 
 		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, screenPos ) );
@@ -417,12 +412,12 @@ TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 
 	SECTION( "Very large screen coordinates" )
 	{
-		const Vec2<> largePos{ 1e6f, -1e6f };
+		const math::Vec2<> largePos{ 1e6f, -1e6f };
 
 		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, largePos, true, false, false, false ) );
 
 		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, largePos ) );
 
-		REQUIRE_NOTHROW( inputHandler.handleMouseDrag( scene, viewport, largePos, Vec2<>{ 2e6f, -2e6f }, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseDrag( scene, viewport, largePos, math::Vec2<>{ 2e6f, -2e6f }, false, false ) );
 	}
 }

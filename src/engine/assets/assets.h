@@ -21,8 +21,8 @@ enum class AssetType
 };
 
 // Handle types for index-based resource references
-using MeshHandle = std::size_t;
-using MaterialHandle = std::size_t;
+using MeshHandle = size_t;
+using MaterialHandle = size_t;
 
 // Invalid handle constants
 constexpr MeshHandle INVALID_MESH_HANDLE = std::numeric_limits<MeshHandle>::max();

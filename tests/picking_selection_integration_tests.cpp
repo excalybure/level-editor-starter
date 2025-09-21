@@ -17,63 +17,58 @@
 #include "engine/math/matrix.h"
 #include "engine/math/bounding_box_3d.h"
 
-using namespace math;
-using namespace picking;
-using namespace editor;
-using namespace components;
-using namespace ecs;
-using namespace systems;
+using Catch::Approx;
 using Catch::Matchers::WithinAbs;
 
 // Mock viewport for complete integration testing
-class IntegrationTestViewport : public Viewport
+class IntegrationTestViewport : public editor::Viewport
 {
 public:
 	IntegrationTestViewport()
-		: Viewport( ViewportType::Perspective ), m_viewMatrix( Mat4<>::identity() ), m_projMatrix( Mat4<>::perspective( 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f ) )
+		: editor::Viewport( editor::ViewportType::Perspective ), m_viewMatrix( math::Mat4<>::identity() ), m_projMatrix( math::Mat4<>::perspective( 45.0f, 16.0f / 9.0f, 0.1f, 1000.0f ) )
 	{
 		setRenderTargetSize( 800, 600 );
 	}
 
-	ViewportRay getPickingRay( const Vec2<> &screenPos ) const noexcept override
+	editor::ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept override
 	{
-		ViewportRay ray;
+		editor::ViewportRay ray;
 		// Convert screen coordinates to normalized device coordinates
 		const float ndcX = ( 2.0f * screenPos.x / 800.0f ) - 1.0f;
 		const float ndcY = 1.0f - ( 2.0f * screenPos.y / 600.0f );
 
 		// Simple perspective ray calculation
-		ray.origin = Vec3<>{ 0.0f, -10.0f, 0.0f };
-		ray.direction = normalize( Vec3<>{ ndcX * 5.0f, 10.0f, ndcY * 5.0f } );
+		ray.origin = math::Vec3<>{ 0.0f, -10.0f, 0.0f };
+		ray.direction = normalize( math::Vec3<>{ ndcX * 5.0f, 10.0f, ndcY * 5.0f } );
 		ray.length = 1000.0f;
 		return ray;
 	}
 
-	Vec2<> worldToScreen( const Vec3<> &worldPos ) const noexcept override
+	math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept override
 	{
 		// Simple orthographic projection for testing
-		return Vec2<>{ ( worldPos.x + 5.0f ) * 80.0f, 300.0f - worldPos.z * 60.0f };
+		return math::Vec2<>{ ( worldPos.x + 5.0f ) * 80.0f, 300.0f - worldPos.z * 60.0f };
 	}
 
-	const Mat4<> &getViewMatrix() const { return m_viewMatrix; }
-	const Mat4<> &getProjectionMatrix() const { return m_projMatrix; }
+	const math::Mat4<> &getViewMatrix() const { return m_viewMatrix; }
+	const math::Mat4<> &getProjectionMatrix() const { return m_projMatrix; }
 
 private:
-	Mat4<> m_viewMatrix;
-	Mat4<> m_projMatrix;
+	math::Mat4<> m_viewMatrix;
+	math::Mat4<> m_projMatrix;
 };
 
 // Helper to create test entities with mesh renderers
-Entity createTestCube( Scene &scene, const Vec3<> &position, const Vec3<> &size, const std::string &name )
+ecs::Entity createTestCube( ecs::Scene &scene, const math::Vec3<> &position, const math::Vec3<> &size, const std::string &name )
 {
 	auto entity = scene.createEntity( name );
 
-	Transform transform;
+	components::Transform transform;
 	transform.position = position;
 	scene.addComponent( entity, transform );
 
-	MeshRenderer meshRenderer;
-	meshRenderer.bounds = BoundingBox3D<float>{
+	components::MeshRenderer meshRenderer;
+	meshRenderer.bounds = math::BoundingBox3D<float>{
 		-size * 0.5f,
 		size * 0.5f
 	};
@@ -85,20 +80,20 @@ Entity createTestCube( Scene &scene, const Vec3<> &position, const Vec3<> &size,
 TEST_CASE( "Picking System - Complete workflow integration", "[picking][integration][complete]" )
 {
 	// Setup complete scene with multiple objects
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
+	picking::PickingSystem picker( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create test scene with multiple objects at different depths
-	const auto nearCube = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "NearCube" );
-	const auto farCube = createTestCube( scene, Vec3<>{ 0.0f, 10.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "FarCube" );
-	const auto sideObject = createTestCube( scene, Vec3<>{ 5.0f, 0.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "SideObject" );
-	const auto smallObject = createTestCube( scene, Vec3<>{ -3.0f, 5.0f, 2.0f }, Vec3<>{ 0.5f, 0.5f, 0.5f }, "SmallObject" );
+	const auto nearCube = createTestCube( scene, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 2.0f, 2.0f, 2.0f }, "NearCube" );
+	const auto farCube = createTestCube( scene, math::Vec3<>{ 0.0f, 10.0f, 0.0f }, math::Vec3<>{ 2.0f, 2.0f, 2.0f }, "FarCube" );
+	const auto sideObject = createTestCube( scene, math::Vec3<>{ 5.0f, 0.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "SideObject" );
+	const auto smallObject = createTestCube( scene, math::Vec3<>{ -3.0f, 5.0f, 2.0f }, math::Vec3<>{ 0.5f, 0.5f, 0.5f }, "SmallObject" );
 
 	IntegrationTestViewport viewport;
 
@@ -108,7 +103,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		systemManager.update( scene, 0.016f );
 
 		// Test 1: Click on near cube (center screen should hit it)
-		Vec2<> centerScreen{ 400.0f, 300.0f };
+		math::Vec2<> centerScreen{ 400.0f, 300.0f };
 		inputHandler.handleMouseClick( scene, viewport, centerScreen, true, false, false, false );
 
 		REQUIRE( selectionManager.isSelected( nearCube ) );
@@ -116,7 +111,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		REQUIRE( selectionManager.getSelectionCount() == 1 );
 
 		// Test 2: Ctrl+Click on side object (additive selection)
-		Vec2<> sideScreen{ 800.0f, 300.0f }; // Right side of screen
+		math::Vec2<> sideScreen{ 800.0f, 300.0f }; // Right side of screen
 		inputHandler.handleMouseClick( scene, viewport, sideScreen, true, false, true, false );
 
 		REQUIRE( selectionManager.getSelectionCount() == 2 );
@@ -133,8 +128,8 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		REQUIRE( selectionManager.getPrimarySelection() == sideObject ); // Primary transferred
 
 		// Test 4: Rectangle selection to get multiple objects
-		inputHandler.handleMouseDrag( scene, viewport, Vec2<>{ 0.0f, 0.0f }, Vec2<>{ 800.0f, 600.0f }, false, false );
-		inputHandler.handleMouseRelease( scene, viewport, Vec2<>{ 800.0f, 600.0f } );
+		inputHandler.handleMouseDrag( scene, viewport, math::Vec2<>{ 0.0f, 0.0f }, math::Vec2<>{ 800.0f, 600.0f }, false, false );
+		inputHandler.handleMouseRelease( scene, viewport, math::Vec2<>{ 800.0f, 600.0f } );
 
 		// Should select all visible objects in the rectangle
 		REQUIRE( selectionManager.getSelectionCount() >= 3 );
@@ -147,9 +142,9 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 	{
 		systemManager.update( scene, 0.016f );
 
-		// Ray that hits both near and far cube
-		Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
-		Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
+		// picking::Ray that hits both near and far cube
+		math::Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
+		math::Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
 
 		const auto results = picker.raycastAll( scene, rayOrigin, rayDirection );
 
@@ -163,7 +158,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		REQUIRE( results[1].distance == Catch::Approx( 14.0f ).margin( 1.0f ) ); // Far cube at z=10
 	}
 
-	SECTION( "Selection bounds and spatial queries" )
+	SECTION( "components::Selection bounds and spatial queries" )
 	{
 		selectionManager.select( { nearCube, farCube, sideObject } );
 		systemManager.update( scene, 0.016f );
@@ -189,35 +184,35 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		systemManager.update( scene, 0.016f );
 
 		// Test hover detection
-		Vec2<> hoverPos{ 400.0f, 300.0f }; // Center screen
+		math::Vec2<> hoverPos{ 400.0f, 300.0f }; // Center screen
 		inputHandler.handleMouseMove( scene, viewport, hoverPos );
 
 		auto hoveredEntity = inputHandler.getHoveredEntity();
 		REQUIRE( hoveredEntity == nearCube ); // Should detect near cube at center
 
 		// Move mouse away
-		inputHandler.handleMouseMove( scene, viewport, Vec2<>{ 50.0f, 50.0f } );
+		inputHandler.handleMouseMove( scene, viewport, math::Vec2<>{ 50.0f, 50.0f } );
 		hoveredEntity = inputHandler.getHoveredEntity();
 		// Hover state may or may not clear depending on what's at that position
 	}
 }
 
-TEST_CASE( "Selection Event System - Complete integration", "[selection][events][integration]" )
+TEST_CASE( "components::Selection Event System - Complete integration", "[selection][events][integration]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	SelectionManager selectionManager( scene, systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
 
-	auto entity1 = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity1" );
-	auto entity2 = createTestCube( scene, Vec3<>{ 3.0f, 0.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity2" );
-	auto entity3 = createTestCube( scene, Vec3<>{ 0.0f, 3.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity3" );
+	auto entity1 = createTestCube( scene, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity1" );
+	auto entity2 = createTestCube( scene, math::Vec3<>{ 3.0f, 0.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity2" );
+	auto entity3 = createTestCube( scene, math::Vec3<>{ 0.0f, 3.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "Entity3" );
 
 	// Event tracking
-	std::vector<SelectionChangedEvent> events;
-	selectionManager.registerListener( [&]( const SelectionChangedEvent &event ) {
+	std::vector<editor::SelectionChangedEvent> events;
+	selectionManager.registerListener( [&]( const editor::SelectionChangedEvent &event ) {
 		events.push_back( event );
 	} );
 
@@ -270,30 +265,30 @@ TEST_CASE( "Selection Event System - Complete integration", "[selection][events]
 		REQUIRE( events[4].currentSelection.empty() );
 		REQUIRE( events[4].added.empty() );
 		REQUIRE( events[4].removed.size() == 2 );
-		REQUIRE( events[4].newPrimarySelection == Entity{} );
+		REQUIRE( events[4].newPrimarySelection == ecs::Entity{} );
 	}
 }
 
-TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selection][integration]" )
+TEST_CASE( "Rectangle components::Selection - Comprehensive integration", "[rectangle][selection][integration]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
+	picking::PickingSystem picker( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create grid of objects for rectangle selection testing
-	std::vector<Entity> gridEntities;
+	std::vector<ecs::Entity> gridEntities;
 	for ( int x = 0; x < 3; ++x )
 	{
 		for ( int y = 0; y < 3; ++y )
 		{
 			auto entity = createTestCube( scene,
-				Vec3<>{ x * 2.0f - 2.0f, y * 2.0f - 2.0f, 0.0f },
-				Vec3<>{ 0.8f, 0.8f, 0.8f },
+				math::Vec3<>{ x * 2.0f - 2.0f, y * 2.0f - 2.0f, 0.0f },
+				math::Vec3<>{ 0.8f, 0.8f, 0.8f },
 				"Grid_" + std::to_string( x ) + "_" + std::to_string( y ) );
 			gridEntities.push_back( entity );
 		}
@@ -305,8 +300,8 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 	SECTION( "Rectangle selection behavior" )
 	{
 		// Test small rectangle selection
-		Vec2<> smallStart{ 350.0f, 250.0f };
-		Vec2<> smallEnd{ 450.0f, 350.0f };
+		math::Vec2<> smallStart{ 350.0f, 250.0f };
+		math::Vec2<> smallEnd{ 450.0f, 350.0f };
 
 		inputHandler.handleMouseDrag( scene, viewport, smallStart, smallEnd, false, false );
 
@@ -334,8 +329,8 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 		selectionManager.select( gridEntities[0] );
 
 		// Rectangle select with Ctrl (additive)
-		Vec2<> rectStart{ 200.0f, 200.0f };
-		Vec2<> rectEnd{ 600.0f, 400.0f };
+		math::Vec2<> rectStart{ 200.0f, 200.0f };
+		math::Vec2<> rectEnd{ 600.0f, 400.0f };
 
 		inputHandler.handleMouseDrag( scene, viewport, rectStart, rectEnd, true, false );
 		inputHandler.handleMouseRelease( scene, viewport, rectEnd );
@@ -348,8 +343,8 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 	SECTION( "Large rectangle selection" )
 	{
 		// Select entire viewport
-		Vec2<> fullStart{ 0.0f, 0.0f };
-		Vec2<> fullEnd{ 800.0f, 600.0f };
+		math::Vec2<> fullStart{ 0.0f, 0.0f };
+		math::Vec2<> fullEnd{ 800.0f, 600.0f };
 
 		inputHandler.handleMouseDrag( scene, viewport, fullStart, fullEnd, false, false );
 		inputHandler.handleMouseRelease( scene, viewport, fullEnd );
@@ -366,37 +361,37 @@ TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selec
 
 TEST_CASE( "Performance - Large scene selection", "[performance][selection][integration]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
+	picking::PickingSystem picker( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
 
 	// Create large number of objects for performance testing
-	std::vector<Entity> entities;
+	std::vector<ecs::Entity> entities;
 	const int objectCount = 1000;
 
 	for ( int i = 0; i < objectCount; ++i )
 	{
 		float x = ( i % 100 ) * 2.0f - 100.0f;
 		float z = ( i / 100 ) * 2.0f - 10.0f;
-		auto entity = createTestCube( scene, Vec3<>{ x, 0.0f, z }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "Perf_" + std::to_string( i ) );
+		auto entity = createTestCube( scene, math::Vec3<>{ x, 0.0f, z }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "Perf_" + std::to_string( i ) );
 		entities.push_back( entity );
 	}
 
 	systemManager.update( scene, 0.016f );
 
-	SECTION( "Ray casting performance with many objects" )
+	SECTION( "picking::Ray casting performance with many objects" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		// Perform 100 ray casts
 		for ( int i = 0; i < 100; ++i )
 		{
-			Vec3<> rayOrigin{ float( i % 10 ) * 2.0f, -20.0f, 0.0f };
-			Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
+			math::Vec3<> rayOrigin{ float( i % 10 ) * 2.0f, -20.0f, 0.0f };
+			math::Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
 
 			auto result = picker.raycast( scene, rayOrigin, rayDirection );
 			// Result validation not needed for performance test
@@ -409,12 +404,12 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 		REQUIRE( duration.count() < 200 );
 	}
 
-	SECTION( "Selection performance with many objects" )
+	SECTION( "components::Selection performance with many objects" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		// Select many objects
-		std::vector<Entity> toSelect;
+		std::vector<ecs::Entity> toSelect;
 		for ( int i = 0; i < 500; ++i )
 		{
 			toSelect.push_back( entities[i] );
@@ -430,7 +425,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 		REQUIRE( selectionManager.getSelectionCount() == 500 );
 	}
 
-	SECTION( "Selection bounds calculation performance" )
+	SECTION( "components::Selection bounds calculation performance" )
 	{
 		// Select all objects
 		selectionManager.select( entities, false );
@@ -454,18 +449,18 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 
 TEST_CASE( "Error Handling - Robustness integration", "[error][handling][integration]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
+	picking::PickingSystem picker( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	SECTION( "Invalid entity handling" )
 	{
-		Entity invalidEntity{ 999999 };
+		ecs::Entity invalidEntity{ 999999 };
 
 		// Should not crash or affect valid state
 		REQUIRE_NOTHROW( selectionManager.select( invalidEntity ) );
@@ -480,22 +475,22 @@ TEST_CASE( "Error Handling - Robustness integration", "[error][handling][integra
 	{
 		IntegrationTestViewport viewport;
 
-		// Ray cast in empty scene
-		Vec3<> rayOrigin{ 0.0f, 0.0f, -5.0f };
-		Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
+		// picking::Ray cast in empty scene
+		math::Vec3<> rayOrigin{ 0.0f, 0.0f, -5.0f };
+		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
 
 		auto result = picker.raycast( scene, rayOrigin, rayDirection );
 		REQUIRE_FALSE( result.hit );
-		REQUIRE( result.entity == Entity{} );
+		REQUIRE( result.entity == ecs::Entity{} );
 
 		// Input handling in empty scene
-		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, Vec2<>{ 400.0f, 300.0f }, true, false, false, false ) );
-		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, Vec2<>{ 400.0f, 300.0f } ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, math::Vec2<>{ 400.0f, 300.0f }, true, false, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, math::Vec2<>{ 400.0f, 300.0f } ) );
 	}
 
 	SECTION( "Destroyed entity cleanup" )
 	{
-		auto entity = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "TestCube" );
+		auto entity = createTestCube( scene, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "TestCube" );
 
 		selectionManager.select( entity );
 		REQUIRE( selectionManager.isSelected( entity ) );
@@ -512,46 +507,46 @@ TEST_CASE( "Error Handling - Robustness integration", "[error][handling][integra
 
 	SECTION( "Extreme values handling" )
 	{
-		auto entity = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 1.0f, 1.0f, 1.0f }, "TestCube" );
+		auto entity = createTestCube( scene, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 1.0f, 1.0f, 1.0f }, "TestCube" );
 
 		// Very large ray distances
-		Vec3<> rayOrigin{ 0.0f, 0.0f, -1000000.0f };
-		Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
+		math::Vec3<> rayOrigin{ 0.0f, 0.0f, -1000000.0f };
+		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
 
 		REQUIRE_NOTHROW( picker.raycast( scene, rayOrigin, rayDirection, 2000000.0f ) );
 
 		// Very small mouse movements
 		IntegrationTestViewport viewport;
-		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, Vec2<>{ 0.001f, 0.001f } ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseMove( scene, viewport, math::Vec2<>{ 0.001f, 0.001f } ) );
 
 		// Mouse at screen edges
-		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, Vec2<>{ -100.0f, -100.0f }, true, false, false, false ) );
-		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, Vec2<>{ 1000.0f, 1000.0f }, true, false, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, math::Vec2<>{ -100.0f, -100.0f }, true, false, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, math::Vec2<>{ 1000.0f, 1000.0f }, true, false, false, false ) );
 	}
 }
 
 TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria][integration]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	PickingSystem picker( systemManager );
-	SelectionManager selectionManager( scene, systemManager );
-	ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
+	picking::PickingSystem picker( systemManager );
+	editor::SelectionManager selectionManager( scene, systemManager );
+	editor::ViewportInputHandler inputHandler( selectionManager, picker, systemManager );
 
 	// Create test objects
-	auto testObject = createTestCube( scene, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "TestObject" );
-	auto secondObject = createTestCube( scene, Vec3<>{ 5.0f, 0.0f, 0.0f }, Vec3<>{ 2.0f, 2.0f, 2.0f }, "SecondObject" );
+	auto testObject = createTestCube( scene, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 2.0f, 2.0f, 2.0f }, "TestObject" );
+	auto secondObject = createTestCube( scene, math::Vec3<>{ 5.0f, 0.0f, 0.0f }, math::Vec3<>{ 2.0f, 2.0f, 2.0f }, "SecondObject" );
 
 	IntegrationTestViewport viewport;
 	systemManager.update( scene, 0.016f );
 
-	SECTION( "Ray-casting system: Accurate intersection testing" )
+	SECTION( "picking::Ray-casting system: Accurate intersection testing" )
 	{
-		Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
-		Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
+		math::Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
+		math::Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
 
 		auto result = picker.raycast( scene, rayOrigin, rayDirection );
 
@@ -563,7 +558,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 
 	SECTION( "Single object selection: Mouse click selects nearest object" )
 	{
-		Vec2<> screenPos{ 400.0f, 300.0f }; // Center screen
+		math::Vec2<> screenPos{ 400.0f, 300.0f }; // Center screen
 
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, false, false );
 
@@ -577,7 +572,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		selectionManager.select( testObject );
 
 		// Additive selection with Ctrl
-		Vec2<> sideScreen{ 800.0f, 300.0f };
+		math::Vec2<> sideScreen{ 800.0f, 300.0f };
 		inputHandler.handleMouseClick( scene, viewport, sideScreen, true, false, true, false );
 
 		REQUIRE( selectionManager.getSelectionCount() == 2 );
@@ -585,7 +580,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.isSelected( secondObject ) );
 
 		// Toggle with Shift
-		inputHandler.handleMouseClick( scene, viewport, Vec2<>{ 400.0f, 300.0f }, true, false, false, true );
+		inputHandler.handleMouseClick( scene, viewport, math::Vec2<>{ 400.0f, 300.0f }, true, false, false, true );
 
 		REQUIRE( selectionManager.getSelectionCount() == 1 );
 		REQUIRE_FALSE( selectionManager.isSelected( testObject ) );
@@ -594,8 +589,8 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 
 	SECTION( "Rectangle selection: Click and drag selects multiple objects" )
 	{
-		inputHandler.handleMouseDrag( scene, viewport, Vec2<>{ 0.0f, 0.0f }, Vec2<>{ 800.0f, 600.0f }, false, false );
-		inputHandler.handleMouseRelease( scene, viewport, Vec2<>{ 800.0f, 600.0f } );
+		inputHandler.handleMouseDrag( scene, viewport, math::Vec2<>{ 0.0f, 0.0f }, math::Vec2<>{ 800.0f, 600.0f }, false, false );
+		inputHandler.handleMouseRelease( scene, viewport, math::Vec2<>{ 800.0f, 600.0f } );
 
 		REQUIRE( selectionManager.getSelectionCount() >= 2 );
 		REQUIRE( selectionManager.isSelected( testObject ) );
@@ -613,16 +608,16 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.getPrimarySelection() == secondObject );
 
 		// ECS components should reflect primary state
-		REQUIRE_FALSE( scene.getComponent<Selected>( testObject )->isPrimary );
-		REQUIRE( scene.getComponent<Selected>( secondObject )->isPrimary );
+		REQUIRE_FALSE( scene.getComponent<components::Selected>( testObject )->isPrimary );
+		REQUIRE( scene.getComponent<components::Selected>( secondObject )->isPrimary );
 	}
 
-	SECTION( "Selection events: Notification system for selection changes" )
+	SECTION( "components::Selection events: Notification system for selection changes" )
 	{
 		bool eventReceived = false;
-		SelectionChangedEvent lastEvent;
+		editor::SelectionChangedEvent lastEvent;
 
-		selectionManager.registerListener( [&]( const SelectionChangedEvent &event ) {
+		selectionManager.registerListener( [&]( const editor::SelectionChangedEvent &event ) {
 			eventReceived = true;
 			lastEvent = event;
 		} );
@@ -637,31 +632,31 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 
 	SECTION( "ECS integration: Selected component automatically managed" )
 	{
-		// Selection adds component
+		// components::Selection adds component
 		selectionManager.select( testObject );
-		REQUIRE( scene.hasComponent<Selected>( testObject ) );
+		REQUIRE( scene.hasComponent<components::Selected>( testObject ) );
 
 		// Deselection removes component
 		selectionManager.deselect( testObject );
-		REQUIRE_FALSE( scene.hasComponent<Selected>( testObject ) );
+		REQUIRE_FALSE( scene.hasComponent<components::Selected>( testObject ) );
 
 		// Multi-selection manages components correctly
 		selectionManager.select( { testObject, secondObject } );
-		REQUIRE( scene.hasComponent<Selected>( testObject ) );
-		REQUIRE( scene.hasComponent<Selected>( secondObject ) );
+		REQUIRE( scene.hasComponent<components::Selected>( testObject ) );
+		REQUIRE( scene.hasComponent<components::Selected>( secondObject ) );
 
-		auto *primaryComp = scene.getComponent<Selected>( testObject );
-		auto *secondaryComp = scene.getComponent<Selected>( secondObject );
+		auto *primaryComp = scene.getComponent<components::Selected>( testObject );
+		auto *secondaryComp = scene.getComponent<components::Selected>( secondObject );
 		REQUIRE( primaryComp->isPrimary );
 		REQUIRE_FALSE( secondaryComp->isPrimary );
 	}
 
-	SECTION( "Input responsiveness: Selection responds quickly" )
+	SECTION( "Input responsiveness: components::Selection responds quickly" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		// Perform selection operation
-		Vec2<> screenPos{ 400.0f, 300.0f };
+		math::Vec2<> screenPos{ 400.0f, 300.0f };
 		inputHandler.handleMouseClick( scene, viewport, screenPos, true, false, false, false );
 
 		auto endTime = std::chrono::high_resolution_clock::now();
@@ -675,14 +670,14 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 	SECTION( "Error handling: Graceful handling of edge cases" )
 	{
 		// Invalid input coordinates
-		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, Vec2<>{ -999.0f, -999.0f }, true, false, false, false ) );
+		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, math::Vec2<>{ -999.0f, -999.0f }, true, false, false, false ) );
 
 		// Empty selection operations
 		REQUIRE_NOTHROW( selectionManager.deselectAll() );
 		REQUIRE_NOTHROW( selectionManager.validateSelection() );
 
 		// Invalid entity operations
-		Entity invalid{ 999999 };
+		ecs::Entity invalid{ 999999 };
 		REQUIRE_NOTHROW( selectionManager.select( invalid ) );
 		REQUIRE( selectionManager.getSelectionCount() == 0 );
 	}

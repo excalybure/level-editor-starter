@@ -5,12 +5,11 @@
 
 #include "platform/dx12/dx12_device.h"
 
-using namespace dx12;
 
-TEST_CASE( "CommandQueue Operations", "[dx12][command][queue]" )
+TEST_CASE( "dx12::CommandQueue Operations", "[dx12][command][queue]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "CommandQueue operations" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::CommandQueue operations" ) )
 		return;
 
 	SECTION( "Command queue creation and properties" )
@@ -109,7 +108,7 @@ TEST_CASE( "CommandQueue Operations", "[dx12][command][queue]" )
 
 TEST_CASE( "CommandAllocator Management", "[dx12][command][allocator]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "CommandAllocator management" ) )
 		return;
 
@@ -181,10 +180,10 @@ TEST_CASE( "CommandAllocator Management", "[dx12][command][allocator]" )
 	}
 }
 
-TEST_CASE( "CommandList Operations", "[dx12][command][list]" )
+TEST_CASE( "dx12::CommandList Operations", "[dx12][command][list]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "CommandList operations" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::CommandList operations" ) )
 		return;
 
 	SECTION( "Command list creation and basic operations" )
@@ -250,7 +249,7 @@ TEST_CASE( "CommandList Operations", "[dx12][command][list]" )
 		REQUIRE( SUCCEEDED( hr ) );
 	}
 
-	SECTION( "Resource barrier operations" )
+	SECTION( "dx12::Resource barrier operations" )
 	{
 		auto commandList = device.getCommandList();
 		REQUIRE( commandList != nullptr );
@@ -305,7 +304,7 @@ TEST_CASE( "CommandList Operations", "[dx12][command][list]" )
 
 TEST_CASE( "Fence and Synchronization", "[dx12][command][sync]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "Fence and synchronization" ) )
 		return;
 

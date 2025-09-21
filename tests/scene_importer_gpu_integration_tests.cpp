@@ -11,13 +11,9 @@
 #include "engine/math/vec.h"
 #include "platform/dx12/dx12_device.h"
 
-using namespace runtime;
-using namespace ecs;
-using namespace components;
-using namespace assets;
 using Catch::Approx;
 
-TEST_CASE( "SceneImporter GPU integration compiles and links correctly", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "runtime::SceneImporter GPU integration compiles and links correctly", "[scene_importer][gpu_integration][unit]" )
 {
 	// This is a basic compilation test to ensure the GPU integration
 	// methods are properly defined and can be called
@@ -28,12 +24,12 @@ TEST_CASE( "SceneImporter GPU integration compiles and links correctly", "[scene
 	scene->setLoaded( true );
 
 	// Create a simple node
-	auto rootNode = std::make_unique<SceneNode>( "GPUTestNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "GPUTestNode" );
 	scene->addRootNode( std::move( rootNode ) );
 
 	// Import scene using non-GPU path (basic test)
 	ecs::Scene targetScene;
-	const bool result = SceneImporter::importScene( scene, targetScene );
+	const bool result = runtime::SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
 	REQUIRE( result );
@@ -41,13 +37,13 @@ TEST_CASE( "SceneImporter GPU integration compiles and links correctly", "[scene
 	const auto entities = targetScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( entity.isValid() );
 }
 
-TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResourceManager", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "runtime::SceneImporter creates components::MeshRenderer with GPU resources using GPUResourceManager", "[scene_importer][gpu_integration][unit]" )
 {
-	// AF1: SceneImporter should use GPUResourceManager to create GPU resources
+	// AF1: runtime::SceneImporter should use GPUResourceManager to create GPU resources
 	// This test should fail initially because the implementation is stubbed
 
 	// Create a scene with a mesh node
@@ -58,10 +54,10 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	// Create mesh for testing (corrected constructor call)
 	auto mesh = std::make_shared<assets::Mesh>();
 	mesh->setPath( "TestMesh" );
-	const MeshHandle meshHandle = scene->addMesh( mesh );
+	const assets::MeshHandle meshHandle = scene->addMesh( mesh );
 
 	// Create a node with mesh handle
-	auto rootNode = std::make_unique<SceneNode>( "GPUMeshNode" );
+	auto rootNode = std::make_unique<assets::SceneNode>( "GPUMeshNode" );
 	rootNode->addMeshHandle( meshHandle );
 	scene->addRootNode( std::move( rootNode ) );
 
@@ -71,34 +67,34 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool result = SceneImporter::importScene( scene, targetScene );
+	const bool result = runtime::SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
 	REQUIRE( result );
 
 	// Create GPU resources separately
-	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	const bool gpuResult = runtime::SceneImporter::createGPUResources( scene, targetScene, resourceManager );
 	REQUIRE( gpuResult );
 
 	// Verify entity was created
 	const auto entities = targetScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( entity.isValid() );
 
-	// Verify MeshRenderer component exists (but GPU resources will be null for now)
-	REQUIRE( targetScene.hasComponent<MeshRenderer>( entity ) );
-	const auto *meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	// Verify components::MeshRenderer component exists (but GPU resources will be null for now)
+	REQUIRE( targetScene.hasComponent<components::MeshRenderer>( entity ) );
+	const auto *meshRenderer = targetScene.getComponent<components::MeshRenderer>( entity );
 
 	// Currently this should be null since GPU path is stubbed
 	// This test verifies the basic structure is in place
 	CHECK( meshRenderer->gpuMesh == nullptr );
 }
 
-TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "runtime::SceneImporter with GPUResourceManager creates actual GPU resources", "[scene_importer][gpu_integration][unit]" )
 {
-	// AF2: SceneImporter should actually create GPU resources when provided GPUResourceManager
+	// AF2: runtime::SceneImporter should actually create GPU resources when provided GPUResourceManager
 	// This test will fail until we implement real GPU resource creation
 
 	// Create a DX12 device and GPU resource manager
@@ -135,31 +131,31 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 
 	// Import scene using CPU-only path first
 	ecs::Scene targetScene;
-	const bool result = SceneImporter::importScene( scene, targetScene );
+	const bool result = runtime::SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
 	REQUIRE( result );
 
 	// Create GPU resources separately
-	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	const bool gpuResult = runtime::SceneImporter::createGPUResources( scene, targetScene, resourceManager );
 	REQUIRE( gpuResult );
 
 	// Verify entity was created
 	const auto entities = targetScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( entity.isValid() );
 
-	// Verify MeshRenderer component has actual GPU resources
-	REQUIRE( targetScene.hasComponent<MeshRenderer>( entity ) );
-	const auto *meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	// Verify components::MeshRenderer component has actual GPU resources
+	REQUIRE( targetScene.hasComponent<components::MeshRenderer>( entity ) );
+	const auto *meshRenderer = targetScene.getComponent<components::MeshRenderer>( entity );
 
 	// This should now have actual GPU resources - will fail until implemented
 	REQUIRE( meshRenderer->gpuMesh != nullptr );
 }
 
-TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scene", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "runtime::SceneImporter createGPUResources adds GPU resources to existing scene", "[scene_importer][gpu_integration][unit]" )
 {
 	// AF3: Test the new createGPUResources workflow: import CPU-only, then add GPU resources separately
 
@@ -192,18 +188,18 @@ TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scen
 
 	// Step 1: Import scene without GPU resources (CPU-only)
 	ecs::Scene targetScene;
-	const bool importResult = SceneImporter::importScene( scene, targetScene );
+	const bool importResult = runtime::SceneImporter::importScene( scene, targetScene );
 	REQUIRE( importResult );
 
-	// Verify entity was created with CPU-only MeshRenderer
+	// Verify entity was created with CPU-only components::MeshRenderer
 	const auto entities = targetScene.getAllEntities();
 	REQUIRE( entities.size() == 1 );
 
-	const Entity entity = entities[0];
+	const ecs::Entity entity = entities[0];
 	REQUIRE( entity.isValid() );
-	REQUIRE( targetScene.hasComponent<MeshRenderer>( entity ) );
+	REQUIRE( targetScene.hasComponent<components::MeshRenderer>( entity ) );
 
-	auto *meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	auto *meshRenderer = targetScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( meshRenderer != nullptr );
 	REQUIRE( meshRenderer->gpuMesh == nullptr ); // Should be null initially
 
@@ -211,12 +207,12 @@ TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scen
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 	engine::GPUResourceManager resourceManager( device );
-	const bool gpuResult = SceneImporter::createGPUResources( scene, targetScene, resourceManager );
+	const bool gpuResult = runtime::SceneImporter::createGPUResources( scene, targetScene, resourceManager );
 	REQUIRE( gpuResult );
 
 	// Step 3: Verify GPU resources were added
 	// Refresh the pointer in case component was moved
-	meshRenderer = targetScene.getComponent<MeshRenderer>( entity );
+	meshRenderer = targetScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( meshRenderer != nullptr );
 	REQUIRE( meshRenderer->gpuMesh != nullptr ); // Should now have GPU resources
 }

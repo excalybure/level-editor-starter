@@ -5,7 +5,6 @@
 #include "editor/ui.h"
 #include "editor/viewport/viewport.h"
 
-using namespace editor;
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE( "UI Layout Manipulation", "[ui][layout]" )

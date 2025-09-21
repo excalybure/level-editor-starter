@@ -1,22 +1,21 @@
-﻿// D3D12 Texture class comprehensive tests
+﻿// D3D12 dx12::Texture class comprehensive tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
 #include "platform/dx12/dx12_device.h"
 
-using namespace dx12;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
+TEST_CASE( "dx12::Texture Creation and Properties", "[dx12][texture][creation]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture creation" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture creation" ) )
 		return;
 
 	SECTION( "Default texture state" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Default values
 		REQUIRE( texture.getWidth() == 0 );
@@ -27,7 +26,7 @@ TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
 
 	SECTION( "Valid render target creation" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Test standard resolution
 		REQUIRE( texture.createRenderTarget( &device, 800, 600 ) );
@@ -36,7 +35,7 @@ TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
 		REQUIRE( texture.getResource() != nullptr );
 
 		// Test different resolution
-		Texture texture2;
+		dx12::Texture texture2;
 		REQUIRE( texture2.createRenderTarget( &device, 1024, 768 ) );
 		REQUIRE( texture2.getWidth() == 1024 );
 		REQUIRE( texture2.getHeight() == 768 );
@@ -48,7 +47,7 @@ TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
 
 	SECTION( "Format specification" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Test with specific format
 		REQUIRE( texture.createRenderTarget( &device, 512, 512, DXGI_FORMAT_R8G8B8A8_UNORM ) );
@@ -58,15 +57,15 @@ TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
 	}
 }
 
-TEST_CASE( "Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
+TEST_CASE( "dx12::Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture invalid parameters" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture invalid parameters" ) )
 		return;
 
 	SECTION( "Null device" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Should fail with null device
 		REQUIRE_FALSE( texture.createRenderTarget( nullptr, 800, 600 ) );
@@ -77,7 +76,7 @@ TEST_CASE( "Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
 
 	SECTION( "Zero dimensions" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Should fail with zero width
 		REQUIRE_FALSE( texture.createRenderTarget( &device, 0, 600 ) );
@@ -91,7 +90,7 @@ TEST_CASE( "Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
 
 	SECTION( "Extreme dimensions" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 
 		// Very large dimensions - may succeed or fail based on system limits
 		bool result = texture.createRenderTarget( &device, 16384, 16384 );
@@ -110,15 +109,15 @@ TEST_CASE( "Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
 	}
 }
 
-TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
+TEST_CASE( "dx12::Texture Resize Operations", "[dx12][texture][resize]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture resize" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture resize" ) )
 		return;
 
 	SECTION( "Valid resize operations" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 800, 600 ) );
 
 		auto originalResource = texture.getResource();
@@ -129,15 +128,15 @@ TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
 		REQUIRE( texture.getWidth() == 1024 );
 		REQUIRE( texture.getHeight() == 768 );
 
-		// Resource should have changed (recreated)
+		// dx12::Resource should have changed (recreated)
 		auto newResource = texture.getResource();
 		REQUIRE( newResource != nullptr );
-		// Note: Resource might be the same or different depending on implementation
+		// Note: dx12::Resource might be the same or different depending on implementation
 	}
 
 	SECTION( "Resize to same dimensions" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 640, 480 ) );
 
 		// Resize to same dimensions
@@ -149,7 +148,7 @@ TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
 
 	SECTION( "Invalid resize parameters" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 800, 600 ) );
 
 		// Resize with null device
@@ -169,7 +168,7 @@ TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
 
 	SECTION( "Multiple consecutive resizes" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 100, 100 ) );
 
 		// Chain of resizes
@@ -187,19 +186,19 @@ TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
 	}
 }
 
-TEST_CASE( "Texture Shader Resource View", "[dx12][texture][srv]" )
+TEST_CASE( "dx12::Texture Shader dx12::Resource View", "[dx12][texture][srv]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture SRV creation" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture SRV creation" ) )
 		return;
 
 	SECTION( "SRV creation with valid texture" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 512, 512 ) );
 
-		// Get SRV handle from TextureManager
-		TextureManager *manager = device.getTextureManager();
+		// Get SRV handle from dx12::TextureManager
+		dx12::TextureManager *manager = device.getTextureManager();
 		REQUIRE( manager->initialize( &device ) );
 
 		auto srvHandle = manager->getNextSrvHandle();
@@ -212,7 +211,7 @@ TEST_CASE( "Texture Shader Resource View", "[dx12][texture][srv]" )
 
 	SECTION( "SRV creation with invalid parameters" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Create SRV with null device
@@ -222,9 +221,9 @@ TEST_CASE( "Texture Shader Resource View", "[dx12][texture][srv]" )
 
 	SECTION( "SRV creation without render target" )
 	{
-		Texture texture; // No render target created
+		dx12::Texture texture; // No render target created
 
-		TextureManager *manager = device.getTextureManager();
+		dx12::TextureManager *manager = device.getTextureManager();
 		REQUIRE( manager->initialize( &device ) );
 
 		auto srvHandle = manager->getNextSrvHandle();
@@ -232,15 +231,15 @@ TEST_CASE( "Texture Shader Resource View", "[dx12][texture][srv]" )
 	}
 }
 
-TEST_CASE( "Texture Clear Operations", "[dx12][texture][clear]" )
+TEST_CASE( "dx12::Texture Clear Operations", "[dx12][texture][clear]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture clear operations" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture clear operations" ) )
 		return;
 
 	SECTION( "Clear with standard colors" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Clear with red
@@ -258,7 +257,7 @@ TEST_CASE( "Texture Clear Operations", "[dx12][texture][clear]" )
 
 	SECTION( "Clear with invalid parameters" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Clear with null device
@@ -271,22 +270,22 @@ TEST_CASE( "Texture Clear Operations", "[dx12][texture][clear]" )
 
 	SECTION( "Clear without render target" )
 	{
-		Texture texture; // No render target created
+		dx12::Texture texture; // No render target created
 
 		float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
 		REQUIRE_FALSE( texture.clearRenderTarget( &device, color ) );
 	}
 }
 
-TEST_CASE( "Texture Resource State Management", "[dx12][texture][state]" )
+TEST_CASE( "dx12::Texture dx12::Resource State Management", "[dx12][texture][state]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "Texture state management" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Texture state management" ) )
 		return;
 
-	SECTION( "Resource state transitions" )
+	SECTION( "dx12::Resource state transitions" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Get command list for state transitions
@@ -301,7 +300,7 @@ TEST_CASE( "Texture Resource State Management", "[dx12][texture][state]" )
 
 	SECTION( "State transition with null command list" )
 	{
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Should handle null command list gracefully
@@ -310,7 +309,7 @@ TEST_CASE( "Texture Resource State Management", "[dx12][texture][state]" )
 
 	SECTION( "State transition without resource" )
 	{
-		Texture texture; // No resource created
+		dx12::Texture texture; // No resource created
 
 		auto commandList = device.getCommandList();
 

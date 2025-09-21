@@ -6,20 +6,19 @@
 #include "runtime/systems.h"
 #include "engine/math/math.h"
 
-using namespace ecs;
-using namespace components;
-using namespace systems;
+using Catch::Approx;
+
 
 TEST_CASE( "TransformSystem basic world matrix calculation", "[systems][transform]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Create entity with transform
-	Entity entity = scene.createEntity( "Entity1" );
-	Transform t;
+	ecs::Entity entity = scene.createEntity( "Entity1" );
+	components::Transform t;
 	t.position = { 1.0f, 2.0f, 3.0f };
 	t.scale = { 2.0f, 2.0f, 2.0f };
 	REQUIRE( scene.addComponent( entity, t ) );
@@ -34,20 +33,20 @@ TEST_CASE( "TransformSystem basic world matrix calculation", "[systems][transfor
 
 TEST_CASE( "TransformSystem hierarchy updates", "[systems][transform][hierarchy]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Parent entity
-	Entity parent = scene.createEntity( "Parent" );
-	Transform parentTransform;
+	ecs::Entity parent = scene.createEntity( "Parent" );
+	components::Transform parentTransform;
 	parentTransform.position = { 10.0f, 0.0f, 0.0f };
 	REQUIRE( scene.addComponent( parent, parentTransform ) );
 
 	// Child entity
-	Entity child = scene.createEntity( "Child" );
-	Transform childTransform;
+	ecs::Entity child = scene.createEntity( "Child" );
+	components::Transform childTransform;
 	childTransform.position = { 1.0f, 2.0f, 3.0f };
 	REQUIRE( scene.addComponent( child, childTransform ) );
 	scene.setParent( child, parent );
@@ -65,23 +64,23 @@ TEST_CASE( "TransformSystem hierarchy updates", "[systems][transform][hierarchy]
 
 TEST_CASE( "SystemManager add/get/clear systems", "[systems][manager]" )
 {
-	SystemManager manager;
-	auto *sys1 = manager.addSystem<TransformSystem>();
-	auto *sys2 = manager.getSystem<TransformSystem>();
+	systems::SystemManager manager;
+	auto *sys1 = manager.addSystem<systems::TransformSystem>();
+	auto *sys2 = manager.getSystem<systems::TransformSystem>();
 	REQUIRE( sys1 == sys2 );
 	manager.clear();
-	REQUIRE( manager.getSystem<TransformSystem>() == nullptr );
+	REQUIRE( manager.getSystem<systems::TransformSystem>() == nullptr );
 }
 
 TEST_CASE( "TransformSystem markDirty only marks entity", "[systems][transform][markDirty]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	Entity entity = scene.createEntity( "Entity1" );
-	Transform t;
+	ecs::Entity entity = scene.createEntity( "Entity1" );
+	components::Transform t;
 	t.position = { 5.0f, 0.0f, 0.0f };
 	REQUIRE( scene.addComponent( entity, t ) );
 
@@ -94,26 +93,26 @@ TEST_CASE( "TransformSystem markDirty only marks entity", "[systems][transform][
 
 TEST_CASE( "TransformSystem shutdown does not throw", "[systems][shutdown]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 	REQUIRE_NOTHROW( systemManager.shutdown( scene ) );
 }
 
 TEST_CASE( "TransformSystem multiple entities", "[systems][transform][multiple]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Create multiple entities with transforms
-	Entity entity1 = scene.createEntity( "Entity1" );
-	Entity entity2 = scene.createEntity( "Entity2" );
-	Entity entity3 = scene.createEntity( "Entity3" );
+	ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	ecs::Entity entity2 = scene.createEntity( "Entity2" );
+	ecs::Entity entity3 = scene.createEntity( "Entity3" );
 
-	Transform t1, t2, t3;
+	components::Transform t1, t2, t3;
 	t1.position = { 1.0f, 0.0f, 0.0f };
 	t2.position = { 0.0f, 2.0f, 0.0f };
 	t3.position = { 0.0f, 0.0f, 3.0f };
@@ -138,18 +137,18 @@ TEST_CASE( "TransformSystem multiple entities", "[systems][transform][multiple]"
 
 TEST_CASE( "TransformSystem deep hierarchy", "[systems][transform][deep_hierarchy]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Create a deep hierarchy: grandparent -> parent -> child -> grandchild
-	Entity grandparent = scene.createEntity( "Grandparent" );
-	Entity parent = scene.createEntity( "Parent" );
-	Entity child = scene.createEntity( "Child" );
-	Entity grandchild = scene.createEntity( "Grandchild" );
+	ecs::Entity grandparent = scene.createEntity( "Grandparent" );
+	ecs::Entity parent = scene.createEntity( "Parent" );
+	ecs::Entity child = scene.createEntity( "Child" );
+	ecs::Entity grandchild = scene.createEntity( "Grandchild" );
 
-	Transform gpTransform, pTransform, cTransform, gcTransform;
+	components::Transform gpTransform, pTransform, cTransform, gcTransform;
 	gpTransform.position = { 10.0f, 0.0f, 0.0f };
 	pTransform.position = { 5.0f, 0.0f, 0.0f };
 	cTransform.position = { 2.0f, 0.0f, 0.0f };
@@ -181,7 +180,7 @@ TEST_CASE( "TransformSystem deep hierarchy", "[systems][transform][deep_hierarch
 }
 
 // Forward declare a system type that we won't add
-class DummySystem : public System
+class DummySystem : public systems::System
 {
 public:
 	void update( ecs::Scene & /*scene*/, float /*deltaTime*/ ) override {}
@@ -189,14 +188,14 @@ public:
 
 TEST_CASE( "SystemManager multiple system types", "[systems][manager][multiple]" )
 {
-	SystemManager manager;
+	systems::SystemManager manager;
 
 	// Add transform system
-	auto *transformSystem = manager.addSystem<TransformSystem>();
+	auto *transformSystem = manager.addSystem<systems::TransformSystem>();
 	REQUIRE( transformSystem != nullptr );
 
 	// Verify we can get it back
-	auto *retrievedTransform = manager.getSystem<TransformSystem>();
+	auto *retrievedTransform = manager.getSystem<systems::TransformSystem>();
 	REQUIRE( retrievedTransform == transformSystem );
 
 	// Test that we get nullptr for systems that don't exist
@@ -205,17 +204,17 @@ TEST_CASE( "SystemManager multiple system types", "[systems][manager][multiple]"
 
 TEST_CASE( "SystemManager initialize/update/shutdown flow", "[systems][manager][lifecycle]" )
 {
-	Scene scene;
-	SystemManager manager;
+	ecs::Scene scene;
+	systems::SystemManager manager;
 
-	manager.addSystem<TransformSystem>();
+	manager.addSystem<systems::TransformSystem>();
 
 	// Test initialization
 	REQUIRE_NOTHROW( manager.initialize( scene ) );
 
 	// Add an entity with transform to test update
-	Entity entity = scene.createEntity( "TestEntity" );
-	Transform t;
+	ecs::Entity entity = scene.createEntity( "TestEntity" );
+	components::Transform t;
 	t.position = { 1.0f, 2.0f, 3.0f };
 	REQUIRE( scene.addComponent( entity, t ) );
 
@@ -228,14 +227,14 @@ TEST_CASE( "SystemManager initialize/update/shutdown flow", "[systems][manager][
 
 TEST_CASE( "TransformSystem automatic marking on component addition", "[systems][transform][automatic]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Create entity and add transform - should automatically mark dirty
-	Entity entity = scene.createEntity( "AutoEntity" );
-	Transform t;
+	ecs::Entity entity = scene.createEntity( "AutoEntity" );
+	components::Transform t;
 	t.position = { 10.0f, 20.0f, 30.0f };
 	REQUIRE( scene.addComponent( entity, t ) );
 
@@ -251,20 +250,20 @@ TEST_CASE( "TransformSystem automatic marking on component addition", "[systems]
 
 TEST_CASE( "TransformSystem automatic marking on hierarchy changes", "[systems][transform][automatic][hierarchy]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
 	// Create parent and child entities
-	Entity parent = scene.createEntity( "AutoParent" );
-	Entity child = scene.createEntity( "AutoChild" );
+	ecs::Entity parent = scene.createEntity( "AutoParent" );
+	ecs::Entity child = scene.createEntity( "AutoChild" );
 
-	Transform parentTransform;
+	components::Transform parentTransform;
 	parentTransform.position = { 5.0f, 0.0f, 0.0f };
 	REQUIRE( scene.addComponent( parent, parentTransform ) );
 
-	Transform childTransform;
+	components::Transform childTransform;
 	childTransform.position = { 3.0f, 0.0f, 0.0f };
 	REQUIRE( scene.addComponent( child, childTransform ) );
 
@@ -284,13 +283,13 @@ TEST_CASE( "TransformSystem automatic marking on hierarchy changes", "[systems][
 
 TEST_CASE( "TransformSystem with rotation and scale", "[systems][transform][rotation_scale]" )
 {
-	Scene scene;
-	SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<TransformSystem>();
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	Entity entity = scene.createEntity( "RotScaleEntity" );
-	Transform transform;
+	ecs::Entity entity = scene.createEntity( "RotScaleEntity" );
+	components::Transform transform;
 	transform.position = math::Vec3<float>( 1.0f, 2.0f, 3.0f );
 	transform.rotation = math::Vec3<float>( 0.0f, math::pi<float> / 4.0f, 0.0f ); // 45 degrees around Y
 	transform.scale = math::Vec3<float>( 2.0f, 2.0f, 2.0f );

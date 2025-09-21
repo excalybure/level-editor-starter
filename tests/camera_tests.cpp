@@ -6,23 +6,23 @@
 #include "engine/math/matrix.h"
 #include "engine/math/math.h"
 
-using namespace camera;
-using namespace math;
+using Catch::Approx;
+
 
 constexpr float EPSILON = 0.001f;
 
-TEST_CASE( "Camera Base Class", "[camera]" )
+TEST_CASE( "camera::Camera Base Class", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
 		// Create a concrete camera implementation for testing
-		class TestCamera : public Camera
+		class TestCamera : public camera::Camera
 		{
 		public:
-			CameraType getType() const noexcept override { return CameraType::Perspective; }
-			Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
+			camera::CameraType getType() const noexcept override { return camera::CameraType::Perspective; }
+			math::Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
 			{
-				return Mat4<>::identity();
+				return math::Mat4<>::identity();
 			}
 		};
 
@@ -42,15 +42,15 @@ TEST_CASE( "Camera Base Class", "[camera]" )
 		REQUIRE( camera.getUp().z == Catch::Approx( 1.0f ).epsilon( EPSILON ) );
 	}
 
-	SECTION( "Camera vectors calculation" )
+	SECTION( "camera::Camera vectors calculation" )
 	{
-		class TestCamera : public Camera
+		class TestCamera : public camera::Camera
 		{
 		public:
-			CameraType getType() const noexcept override { return CameraType::Perspective; }
-			Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
+			camera::CameraType getType() const noexcept override { return camera::CameraType::Perspective; }
+			math::Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
 			{
-				return Mat4<>::identity();
+				return math::Mat4<>::identity();
 			}
 		};
 
@@ -58,7 +58,7 @@ TEST_CASE( "Camera Base Class", "[camera]" )
 
 		// Test forward vector (from position to target)
 		const auto forward = camera.getForwardVector();
-		const auto expectedForward = normalize( Vec3<>{ 0.0f, 5.0f, -5.0f } ); // From (0,-5,5) to (0,0,0)
+		const auto expectedForward = normalize( math::Vec3<>{ 0.0f, 5.0f, -5.0f } ); // From (0,-5,5) to (0,0,0)
 
 		REQUIRE( forward.x == Catch::Approx( expectedForward.x ).epsilon( EPSILON ) );
 		REQUIRE( forward.y == Catch::Approx( expectedForward.y ).epsilon( EPSILON ) );
@@ -78,23 +78,23 @@ TEST_CASE( "Camera Base Class", "[camera]" )
 		REQUIRE( distance == Catch::Approx( expectedDistance ).epsilon( EPSILON ) );
 	}
 
-	SECTION( "Camera positioning" )
+	SECTION( "camera::Camera positioning" )
 	{
-		class TestCamera : public Camera
+		class TestCamera : public camera::Camera
 		{
 		public:
-			CameraType getType() const noexcept override { return CameraType::Perspective; }
-			Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
+			camera::CameraType getType() const noexcept override { return camera::CameraType::Perspective; }
+			math::Mat4<> getProjectionMatrix( float /* aspectRatio */ ) const noexcept override
 			{
-				return Mat4<>::identity();
+				return math::Mat4<>::identity();
 			}
 		};
 
 		TestCamera camera;
 
-		const Vec3<> newPosition{ 10.0f, 20.0f, 30.0f };
-		const Vec3<> newTarget{ 1.0f, 2.0f, 3.0f };
-		const Vec3<> newUp{ 0.0f, 1.0f, 0.0f };
+		const math::Vec3<> newPosition{ 10.0f, 20.0f, 30.0f };
+		const math::Vec3<> newTarget{ 1.0f, 2.0f, 3.0f };
+		const math::Vec3<> newUp{ 0.0f, 1.0f, 0.0f };
 
 		camera.setPosition( newPosition );
 		camera.setTarget( newTarget );
@@ -116,13 +116,13 @@ TEST_CASE( "Camera Base Class", "[camera]" )
 	}
 }
 
-TEST_CASE( "Perspective Camera", "[camera]" )
+TEST_CASE( "Perspective camera::Camera", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
-		const PerspectiveCamera camera;
+		const camera::PerspectiveCamera camera;
 
-		REQUIRE( camera.getType() == CameraType::Perspective );
+		REQUIRE( camera.getType() == camera::CameraType::Perspective );
 		REQUIRE( camera.getFieldOfView() == Catch::Approx( 65.0f ).epsilon( EPSILON ) );
 		REQUIRE( camera.getNearPlane() == Catch::Approx( 0.1f ).epsilon( EPSILON ) );
 		REQUIRE( camera.getFarPlane() == Catch::Approx( 1000.0f ).epsilon( EPSILON ) );
@@ -130,7 +130,7 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 
 	SECTION( "Field of view constraints" )
 	{
-		PerspectiveCamera camera;
+		camera::PerspectiveCamera camera;
 
 		camera.setFieldOfView( 30.0f );
 		REQUIRE( camera.getFieldOfView() == Catch::Approx( 30.0f ).epsilon( EPSILON ) );
@@ -145,13 +145,13 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 
 	SECTION( "Projection matrix" )
 	{
-		const PerspectiveCamera camera( 60.0f );
+		const camera::PerspectiveCamera camera( 60.0f );
 		const float aspectRatio = 16.0f / 9.0f;
 
 		const auto projMatrix = camera.getProjectionMatrix( aspectRatio );
 
 		// Basic sanity checks - projection matrix should not be identity
-		const auto identityMatrix = Mat4<>::identity();
+		const auto identityMatrix = math::Mat4<>::identity();
 		REQUIRE_FALSE( ( projMatrix.m00() == identityMatrix.m00() && projMatrix.m11() == identityMatrix.m11() ) );
 
 		// Check that matrix has the expected structure for perspective projection
@@ -164,7 +164,7 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 
 	SECTION( "Orbit controls" )
 	{
-		PerspectiveCamera camera;
+		camera::PerspectiveCamera camera;
 		const auto initialPosition = camera.getPosition();
 		const auto initialTarget = camera.getTarget();
 		const float initialDistance = camera.getDistance();
@@ -187,7 +187,7 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 
 	SECTION( "Zoom functionality" )
 	{
-		PerspectiveCamera camera;
+		camera::PerspectiveCamera camera;
 		const float initialDistance = camera.getDistance();
 		const auto initialTarget = camera.getTarget();
 
@@ -206,8 +206,8 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 
 	SECTION( "Focus functionality" )
 	{
-		PerspectiveCamera camera;
-		const Vec3<> focusPoint{ 10.0f, 5.0f, -3.0f };
+		camera::PerspectiveCamera camera;
+		const math::Vec3<> focusPoint{ 10.0f, 5.0f, -3.0f };
 		const float focusDistance = 15.0f;
 
 		camera.focusOnPoint( focusPoint, focusDistance );
@@ -219,38 +219,38 @@ TEST_CASE( "Perspective Camera", "[camera]" )
 	}
 }
 
-TEST_CASE( "Orthographic Camera", "[camera]" )
+TEST_CASE( "Orthographic camera::Camera", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
-		const OrthographicCamera camera;
+		const camera::OrthographicCamera camera;
 
-		REQUIRE( camera.getType() == CameraType::Orthographic );
-		REQUIRE( camera.getViewType() == ViewType::Top );
+		REQUIRE( camera.getType() == camera::CameraType::Orthographic );
+		REQUIRE( camera.getViewType() == camera::ViewType::Top );
 		REQUIRE( camera.getOrthographicSize() == Catch::Approx( 10.0f ).epsilon( EPSILON ) );
 	}
 
 	SECTION( "View type setup" )
 	{
-		OrthographicCamera camera;
+		camera::OrthographicCamera camera;
 
 		// Test Top view (XY plane, looking down Z-axis)
-		camera.setupView( ViewType::Top );
-		REQUIRE( camera.getViewType() == ViewType::Top );
+		camera.setupView( camera::ViewType::Top );
+		REQUIRE( camera.getViewType() == camera::ViewType::Top );
 
 		// Position should be above target for top view
 		REQUIRE( camera.getPosition().z > camera.getTarget().z );
 
 		// Test Front view (XZ plane, looking down Y-axis)
-		camera.setupView( ViewType::Front );
-		REQUIRE( camera.getViewType() == ViewType::Front );
+		camera.setupView( camera::ViewType::Front );
+		REQUIRE( camera.getViewType() == camera::ViewType::Front );
 
 		// Position should be behind target for front view
 		REQUIRE( camera.getPosition().y < camera.getTarget().y );
 
 		// Test Side view (YZ plane, looking down X-axis)
-		camera.setupView( ViewType::Side );
-		REQUIRE( camera.getViewType() == ViewType::Side );
+		camera.setupView( camera::ViewType::Side );
+		REQUIRE( camera.getViewType() == camera::ViewType::Side );
 
 		// Position should be to the side of target
 		REQUIRE( camera.getPosition().x > camera.getTarget().x );
@@ -258,7 +258,7 @@ TEST_CASE( "Orthographic Camera", "[camera]" )
 
 	SECTION( "Orthographic size constraints" )
 	{
-		OrthographicCamera camera;
+		camera::OrthographicCamera camera;
 
 		camera.setOrthographicSize( 5.0f );
 		REQUIRE( camera.getOrthographicSize() == Catch::Approx( 5.0f ).epsilon( EPSILON ) );
@@ -270,13 +270,13 @@ TEST_CASE( "Orthographic Camera", "[camera]" )
 
 	SECTION( "Projection matrix" )
 	{
-		const OrthographicCamera camera;
+		const camera::OrthographicCamera camera;
 		const float aspectRatio = 16.0f / 9.0f;
 
 		const auto projMatrix = camera.getProjectionMatrix( aspectRatio );
 
 		// Basic sanity checks
-		const auto identityMatrix2 = Mat4<>::identity();
+		const auto identityMatrix2 = math::Mat4<>::identity();
 		REQUIRE_FALSE( ( projMatrix.m00() == identityMatrix2.m00() && projMatrix.m11() == identityMatrix2.m11() ) );
 
 		// For orthographic projection, M[3][3] should be 1
@@ -288,9 +288,9 @@ TEST_CASE( "Orthographic Camera", "[camera]" )
 
 	SECTION( "Frame bounds functionality" )
 	{
-		OrthographicCamera camera;
-		const Vec3<> boundsCenter{ 5.0f, -3.0f, 2.0f };
-		const Vec3<> boundsSize{ 20.0f, 10.0f, 8.0f };
+		camera::OrthographicCamera camera;
+		const math::Vec3<> boundsCenter{ 5.0f, -3.0f, 2.0f };
+		const math::Vec3<> boundsSize{ 20.0f, 10.0f, 8.0f };
 
 		camera.frameBounds( boundsCenter, boundsSize );
 
@@ -304,27 +304,27 @@ TEST_CASE( "Orthographic Camera", "[camera]" )
 	}
 }
 
-TEST_CASE( "Camera Utilities", "[camera]" )
+TEST_CASE( "camera::Camera Utilities", "[camera]" )
 {
 	SECTION( "Framing distance calculation" )
 	{
-		const Vec3<> boundsSize{ 10.0f, 8.0f, 6.0f };
+		const math::Vec3<> boundsSize{ 10.0f, 8.0f, 6.0f };
 		const float fov = 45.0f;
 		const float aspectRatio = 16.0f / 9.0f;
 
-		const float distance = CameraUtils::CalculateFramingDistance( boundsSize, fov, aspectRatio );
+		const float distance = camera::CameraUtils::CalculateFramingDistance( boundsSize, fov, aspectRatio );
 
 		REQUIRE( distance > 0.0f );
 
 		// Distance should increase with larger bounds
-		const Vec3<> largerBounds{ 20.0f, 16.0f, 12.0f };
-		const float largerDistance = CameraUtils::CalculateFramingDistance( largerBounds, fov, aspectRatio );
+		const math::Vec3<> largerBounds{ 20.0f, 16.0f, 12.0f };
+		const float largerDistance = camera::CameraUtils::CalculateFramingDistance( largerBounds, fov, aspectRatio );
 
 		REQUIRE( largerDistance > distance );
 
 		// Distance should decrease with wider field of view
 		const float widerFov = 90.0f;
-		const float widerDistance = CameraUtils::CalculateFramingDistance( boundsSize, widerFov, aspectRatio );
+		const float widerDistance = camera::CameraUtils::CalculateFramingDistance( boundsSize, widerFov, aspectRatio );
 
 		REQUIRE( widerDistance < distance );
 	}
@@ -332,13 +332,13 @@ TEST_CASE( "Camera Utilities", "[camera]" )
 	SECTION( "Screen to world ray" )
 	{
 		// Create simple view and projection matrices
-		const auto viewMatrix = Mat4<>::lookAt( Vec3<>{ 0.0f, -10.0f, 0.0f }, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 0.0f, 0.0f, 1.0f } );
-		const auto projMatrix = Mat4<>::perspective( 45.0f * 3.14159f / 180.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
+		const auto viewMatrix = math::Mat4<>::lookAt( math::Vec3<>{ 0.0f, -10.0f, 0.0f }, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 0.0f, 0.0f, 1.0f } );
+		const auto projMatrix = math::Mat4<>::perspective( 45.0f * 3.14159f / 180.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
 
-		const Vec2<> screenSize{ 1920.0f, 1080.0f };
-		const Vec2<> screenCenter = screenSize * 0.5f;
+		const math::Vec2<> screenSize{ 1920.0f, 1080.0f };
+		const math::Vec2<> screenCenter = screenSize * 0.5f;
 
-		const auto ray = CameraUtils::ScreenToWorldRay( screenCenter, screenSize, viewMatrix, projMatrix );
+		const auto ray = camera::CameraUtils::ScreenToWorldRay( screenCenter, screenSize, viewMatrix, projMatrix );
 
 		// Ray from center of screen should point roughly toward the target
 		REQUIRE( std::abs( ray.direction.y ) > 0.5f ); // Pointing in Y direction (either positive or negative)
@@ -350,13 +350,13 @@ TEST_CASE( "Camera Utilities", "[camera]" )
 
 	SECTION( "World to screen projection" )
 	{
-		const auto viewMatrix = Mat4<>::lookAt( Vec3<>{ 0.0f, -10.0f, 0.0f }, Vec3<>{ 0.0f, 0.0f, 0.0f }, Vec3<>{ 0.0f, 0.0f, 1.0f } );
-		const auto projMatrix = Mat4<>::perspective( 45.0f * 3.14159f / 180.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
+		const auto viewMatrix = math::Mat4<>::lookAt( math::Vec3<>{ 0.0f, -10.0f, 0.0f }, math::Vec3<>{ 0.0f, 0.0f, 0.0f }, math::Vec3<>{ 0.0f, 0.0f, 1.0f } );
+		const auto projMatrix = math::Mat4<>::perspective( 45.0f * 3.14159f / 180.0f, 16.0f / 9.0f, 0.1f, 1000.0f );
 
-		const Vec2<> screenSize{ 1920.0f, 1080.0f };
-		const Vec3<> worldOrigin{ 0.0f, 0.0f, 0.0f };
+		const math::Vec2<> screenSize{ 1920.0f, 1080.0f };
+		const math::Vec3<> worldOrigin{ 0.0f, 0.0f, 0.0f };
 
-		const auto screenPos = CameraUtils::WorldToScreen( worldOrigin, screenSize, viewMatrix, projMatrix );
+		const auto screenPos = camera::CameraUtils::WorldToScreen( worldOrigin, screenSize, viewMatrix, projMatrix );
 
 		// World origin should project to center of screen
 		REQUIRE( screenPos.x == Catch::Approx( screenSize.x * 0.5f ).margin( 10.0f ) ); // Allow some tolerance
@@ -366,38 +366,38 @@ TEST_CASE( "Camera Utilities", "[camera]" )
 
 	SECTION( "Smooth damping" )
 	{
-		const Vec3<> current{ 0.0f, 0.0f, 0.0f };
-		const Vec3<> target{ 10.0f, 5.0f, -3.0f };
-		Vec3<> velocity{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> current{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> target{ 10.0f, 5.0f, -3.0f };
+		math::Vec3<> velocity{ 0.0f, 0.0f, 0.0f };
 
 		const float smoothTime = 1.0f;
 		const float deltaTime = 0.1f; // Larger delta time for noticeable movement
 
-		const auto result = CameraUtils::SmoothDamp( current, target, velocity, smoothTime, deltaTime );
+		const auto result = camera::CameraUtils::SmoothDamp( current, target, velocity, smoothTime, deltaTime );
 
 		// Result should be between current and target
-		const float resultDistance = length( result - current );
-		const float targetDistance = length( target - current );
+		const float resultDistance = math::length( result - current );
+		const float targetDistance = math::length( target - current );
 
 		REQUIRE( resultDistance <= targetDistance ); // Should not overshoot target
 		REQUIRE( resultDistance >= 0.0f );			 // Should have moved or stayed in place
 
 		// Velocity should be updated (might be zero if already at target or very close)
-		REQUIRE( length( velocity ) >= 0.0f );
+		REQUIRE( math::length( velocity ) >= 0.0f );
 	}
 }
 
-TEST_CASE( "Camera Integration", "[camera]" )
+TEST_CASE( "camera::Camera Integration", "[camera]" )
 {
 	SECTION( "View matrix consistency" )
 	{
-		PerspectiveCamera perspCamera;
-		OrthographicCamera orthoCamera;
+		camera::PerspectiveCamera perspCamera;
+		camera::OrthographicCamera orthoCamera;
 
 		// Set same position, target, and up for both cameras
-		const Vec3<> position{ 5.0f, -10.0f, 8.0f };
-		const Vec3<> target{ 0.0f, 0.0f, 0.0f };
-		const Vec3<> up{ 0.0f, 0.0f, 1.0f };
+		const math::Vec3<> position{ 5.0f, -10.0f, 8.0f };
+		const math::Vec3<> target{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3<> up{ 0.0f, 0.0f, 1.0f };
 
 		perspCamera.setPosition( position );
 		perspCamera.setTarget( target );
@@ -432,12 +432,12 @@ TEST_CASE( "Camera Integration", "[camera]" )
 	SECTION( "Z-up coordinate system verification" )
 	{
 		// Test that our Z-up system is consistent
-		PerspectiveCamera camera;
+		camera::PerspectiveCamera camera;
 
 		// Set camera looking down Z-axis (top view)
-		camera.setPosition( Vec3<>{ 0.0f, 0.0f, 10.0f } );
-		camera.setTarget( Vec3<>{ 0.0f, 0.0f, 0.0f } );
-		camera.setUp( Vec3<>{ 0.0f, 1.0f, 0.0f } ); // Y is up in screen space for top view
+		camera.setPosition( math::Vec3<>{ 0.0f, 0.0f, 10.0f } );
+		camera.setTarget( math::Vec3<>{ 0.0f, 0.0f, 0.0f } );
+		camera.setUp( math::Vec3<>{ 0.0f, 1.0f, 0.0f } ); // Y is up in screen space for top view
 
 		const auto forward = camera.getForwardVector();
 

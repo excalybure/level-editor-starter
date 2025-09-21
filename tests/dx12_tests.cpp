@@ -5,18 +5,17 @@
 #include "platform/dx12/dx12_device.h"
 #include "test_dx12_helpers.h"
 
-using namespace dx12;
 
-TEST_CASE( "D3D12 Device Creation", "[dx12]" )
+TEST_CASE( "D3D12 dx12::Device Creation", "[dx12]" )
 {
-	SECTION( "Device can be created" )
+	SECTION( "dx12::Device can be created" )
 	{
 		// This test will verify that we can create a D3D12 device
 		// without crashing. On systems without D3D12 support, this may throw
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				Device device;
+				dx12::Device device;
 				if ( !requireHeadlessDevice( device, "D3D12 device creation" ) )
 					return; // Skip on unsupported
 				REQUIRE( device.get() != nullptr );
@@ -39,10 +38,10 @@ TEST_CASE( "D3D12 Command Queue", "[dx12]" )
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				Device device;
+				dx12::Device device;
 				if ( !requireHeadlessDevice( device, "D3D12 command queue" ) )
 					return;
-				CommandQueue queue( device );
+				dx12::CommandQueue queue( device );
 				REQUIRE( queue.get() != nullptr );
 			}
 			catch ( const std::runtime_error &e )
@@ -60,10 +59,10 @@ TEST_CASE( "D3D12 Fence", "[dx12]" )
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				Device device;
+				dx12::Device device;
 				if ( !requireHeadlessDevice( device, "D3D12 fence" ) )
 					return;
-				Fence fence( device );
+				dx12::Fence fence( device );
 				REQUIRE( fence.get() != nullptr );
 				REQUIRE( fence.getCurrentValue() == 0 );
 			}
@@ -82,10 +81,10 @@ TEST_CASE( "D3D12 Command Context", "[dx12]" )
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				Device device;
+				dx12::Device device;
 				if ( !requireHeadlessDevice( device, "D3D12 command context" ) )
 					return;
-				CommandContext context( device );
+				dx12::CommandContext context( device );
 				REQUIRE( context.get() != nullptr );
 
 				// Test reset functionality
@@ -102,7 +101,7 @@ TEST_CASE( "D3D12 Command Context", "[dx12]" )
 
 TEST_CASE( "D3D12 Headless Lifecycle & Idempotence", "[dx12]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "headless lifecycle" ) )
 		return;
 	// Double init should fail (return false) now
@@ -116,11 +115,11 @@ TEST_CASE( "D3D12 Headless Lifecycle & Idempotence", "[dx12]" )
 
 TEST_CASE( "D3D12 Fence Signal & Wait", "[dx12]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "fence signal/wait" ) )
 		return;
-	CommandQueue queue( device );
-	Fence fence( device );
+	dx12::CommandQueue queue( device );
+	dx12::Fence fence( device );
 	REQUIRE( fence.getCurrentValue() == 0 );
 	fence.signal( queue );
 	REQUIRE( fence.getCurrentValue() == 1 );
@@ -129,10 +128,10 @@ TEST_CASE( "D3D12 Fence Signal & Wait", "[dx12]" )
 
 TEST_CASE( "D3D12 CommandContext Reuse", "[dx12]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "command context reuse" ) )
 		return;
-	CommandContext ctx( device );
+	dx12::CommandContext ctx( device );
 	for ( int i = 0; i < 3; ++i )
 	{
 		REQUIRE_NOTHROW( ctx.reset() );
@@ -142,7 +141,7 @@ TEST_CASE( "D3D12 CommandContext Reuse", "[dx12]" )
 
 TEST_CASE( "D3D12 Headless Frame Functions Are No-Op", "[dx12]" )
 {
-	Device device;
+	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "headless frame no-op" ) )
 		return;
 	// Should not throw despite lack of swap chain
@@ -151,10 +150,10 @@ TEST_CASE( "D3D12 Headless Frame Functions Are No-Op", "[dx12]" )
 	REQUIRE_NOTHROW( device.present() );
 }
 
-TEST_CASE( "D3D12 Multi-Device Independence", "[dx12]" )
+TEST_CASE( "D3D12 Multi-dx12::Device Independence", "[dx12]" )
 {
-	Device a;
-	Device b;
+	dx12::Device a;
+	dx12::Device b;
 	if ( !requireHeadlessDevice( a, "multi-device A" ) )
 		return;
 	if ( !requireHeadlessDevice( b, "multi-device B" ) )
@@ -167,7 +166,7 @@ TEST_CASE( "D3D12 Multi-Device Independence", "[dx12]" )
 
 TEST_CASE( "D3D12 Pre-Initialization Safety", "[dx12]" )
 {
-	Device device; // not initialized
+	dx12::Device device; // not initialized
 	// These should just no-op (guards added) and not throw
 	REQUIRE_NOTHROW( device.beginFrame() );
 	REQUIRE_NOTHROW( device.endFrame() );
@@ -175,18 +174,18 @@ TEST_CASE( "D3D12 Pre-Initialization Safety", "[dx12]" )
 }
 
 // ============================================================================
-// Texture and TextureManager Tests
+// dx12::Texture and TextureManager Tests
 // ============================================================================
 
-TEST_CASE( "D3D12 Texture Creation", "[dx12][texture]" )
+TEST_CASE( "D3D12 dx12::Texture Creation", "[dx12][texture]" )
 {
-	SECTION( "Texture can be created with valid parameters" )
+	SECTION( "dx12::Texture can be created with valid parameters" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture creation" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 
 		// Test successful creation with valid parameters
 		REQUIRE( texture.createRenderTarget( &device, 256, 256, DXGI_FORMAT_R8G8B8A8_UNORM ) );
@@ -196,13 +195,13 @@ TEST_CASE( "D3D12 Texture Creation", "[dx12][texture]" )
 		REQUIRE( texture.getFormat() == DXGI_FORMAT_R8G8B8A8_UNORM );
 	}
 
-	SECTION( "Texture creation fails with invalid parameters" )
+	SECTION( "dx12::Texture creation fails with invalid parameters" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture invalid params" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 
 		// Test null device
 		REQUIRE_FALSE( texture.createRenderTarget( nullptr, 256, 256 ) );
@@ -214,15 +213,15 @@ TEST_CASE( "D3D12 Texture Creation", "[dx12][texture]" )
 	}
 }
 
-TEST_CASE( "D3D12 Texture Resize", "[dx12][texture]" )
+TEST_CASE( "D3D12 dx12::Texture Resize", "[dx12][texture]" )
 {
-	SECTION( "Texture resize with same dimensions is no-op" )
+	SECTION( "dx12::Texture resize with same dimensions is no-op" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture resize same" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		auto *originalResource = texture.getResource();
@@ -232,25 +231,25 @@ TEST_CASE( "D3D12 Texture Resize", "[dx12][texture]" )
 		REQUIRE( texture.getResource() == originalResource );
 	}
 
-	SECTION( "Texture resize fails with null device when no cached device" )
+	SECTION( "dx12::Texture resize fails with null device when no cached device" )
 	{
 		// Create texture without caching device reference
-		Texture texture;
+		dx12::Texture texture;
 
 		// Should fail with null device when no cached device
 		REQUIRE_FALSE( texture.resize( nullptr, 512, 512 ) );
 	}
 }
 
-TEST_CASE( "D3D12 Texture Shader Resource View", "[dx12][texture]" )
+TEST_CASE( "D3D12 dx12::Texture Shader dx12::Resource View", "[dx12][texture]" )
 {
 	SECTION( "SRV creation fails with invalid parameters" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture SRV invalid" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = {};
 
 		// Should fail with null device
@@ -265,17 +264,17 @@ TEST_CASE( "D3D12 TextureManager Initialization", "[dx12][texture]" )
 {
 	SECTION( "TextureManager initialization fails with null device" )
 	{
-		TextureManager manager;
+		dx12::TextureManager manager;
 		REQUIRE_FALSE( manager.initialize( nullptr ) );
 	}
 
 	SECTION( "TextureManager shutdown is safe to call multiple times" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture manager shutdown" ) )
 			return;
 
-		TextureManager manager;
+		dx12::TextureManager manager;
 		REQUIRE( manager.initialize( &device ) );
 
 		// Multiple shutdowns should be safe
@@ -288,11 +287,11 @@ TEST_CASE( "D3D12 TextureManager Viewport Render Target Creation", "[dx12][textu
 {
 	SECTION( "Viewport render target creation fails with invalid dimensions" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture manager invalid dimensions" ) )
 			return;
 
-		TextureManager manager;
+		dx12::TextureManager manager;
 		REQUIRE( manager.initialize( &device ) );
 
 		// Should fail with zero dimensions
@@ -305,7 +304,7 @@ TEST_CASE( "D3D12 TextureManager Viewport Render Target Creation", "[dx12][textu
 
 	SECTION( "Viewport render target creation fails when manager not initialized" )
 	{
-		TextureManager manager;
+		dx12::TextureManager manager;
 		// Don't initialize the manager
 
 		REQUIRE( manager.createViewportRenderTarget( 256, 256 ) == nullptr );
@@ -313,11 +312,11 @@ TEST_CASE( "D3D12 TextureManager Viewport Render Target Creation", "[dx12][textu
 
 	SECTION( "Can create multiple unique viewport render targets" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture manager multiple RT" ) )
 			return;
 
-		TextureManager manager;
+		dx12::TextureManager manager;
 		REQUIRE( manager.initialize( &device ) );
 
 		// Create render targets with different sizes
@@ -334,46 +333,46 @@ TEST_CASE( "D3D12 TextureManager Viewport Render Target Creation", "[dx12][textu
 		}
 		else
 		{
-			WARN( "Texture creation failed in headless mode - likely due to missing ImGui descriptor heap" );
+			WARN( "dx12::Texture creation failed in headless mode - likely due to missing ImGui descriptor heap" );
 		}
 
 		manager.shutdown();
 	}
 }
 
-TEST_CASE( "D3D12 Texture State Management", "[dx12][texture]" )
+TEST_CASE( "D3D12 dx12::Texture State Management", "[dx12][texture]" )
 {
-	SECTION( "Texture state transition handles null command list" )
+	SECTION( "dx12::Texture state transition handles null command list" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture null command list" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		// Should not crash with null command list
 		REQUIRE_NOTHROW( texture.transitionTo( nullptr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
 	}
 
-	SECTION( "Texture state transition handles null resource" )
+	SECTION( "dx12::Texture state transition handles null resource" )
 	{
-		Texture texture; // No resource created
+		dx12::Texture texture; // No resource created
 
 		// Should not crash with null resource
 		REQUIRE_NOTHROW( texture.transitionTo( nullptr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
 	}
 }
 
-TEST_CASE( "D3D12 Texture Clear Operations", "[dx12][texture]" )
+TEST_CASE( "D3D12 dx12::Texture Clear Operations", "[dx12][texture]" )
 {
-	SECTION( "Texture clear fails with invalid parameters" )
+	SECTION( "dx12::Texture clear fails with invalid parameters" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture clear invalid" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -385,13 +384,13 @@ TEST_CASE( "D3D12 Texture Clear Operations", "[dx12][texture]" )
 		REQUIRE_FALSE( texture.clearRenderTarget( &device, nullptr ) );
 	}
 
-	SECTION( "Texture clear fails without RTV handle" )
+	SECTION( "dx12::Texture clear fails without RTV handle" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture clear no RTV" ) )
 			return;
 
-		Texture texture;
+		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );
 
 		float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };

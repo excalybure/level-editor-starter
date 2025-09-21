@@ -1,43 +1,42 @@
-﻿// D3D12 TextureManager comprehensive tests
+﻿// D3D12 dx12::TextureManager comprehensive tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
 #include "platform/dx12/dx12_device.h"
 
-using namespace dx12;
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "TextureManager Initialization and Lifecycle", "[dx12][texture][manager]" )
+TEST_CASE( "dx12::TextureManager Initialization and Lifecycle", "[dx12][texture][manager]" )
 {
-	SECTION( "TextureManager initialization with valid device" )
+	SECTION( "dx12::TextureManager initialization with valid device" )
 	{
-		Device device;
-		if ( !requireHeadlessDevice( device, "TextureManager initialization" ) )
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "dx12::TextureManager initialization" ) )
 			return;
 
-		TextureManager *manager = device.getTextureManager();
+		dx12::TextureManager *manager = device.getTextureManager();
 		REQUIRE( manager != nullptr );
 
 		// Should be able to initialize successfully
 		REQUIRE( manager->initialize( &device ) );
 	}
 
-	SECTION( "TextureManager initialization with null device" )
+	SECTION( "dx12::TextureManager initialization with null device" )
 	{
-		TextureManager manager;
+		dx12::TextureManager manager;
 
 		// Should fail with null device
 		REQUIRE_FALSE( manager.initialize( nullptr ) );
 	}
 
-	SECTION( "TextureManager shutdown safety" )
+	SECTION( "dx12::TextureManager shutdown safety" )
 	{
-		Device device;
-		if ( !requireHeadlessDevice( device, "TextureManager shutdown" ) )
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "dx12::TextureManager shutdown" ) )
 			return;
 
-		TextureManager *manager = device.getTextureManager();
+		dx12::TextureManager *manager = device.getTextureManager();
 		REQUIRE( manager->initialize( &device ) );
 
 		// Should be safe to shut down multiple times
@@ -46,13 +45,13 @@ TEST_CASE( "TextureManager Initialization and Lifecycle", "[dx12][texture][manag
 	}
 }
 
-TEST_CASE( "TextureManager Viewport Render Target Creation", "[dx12][texture][viewport]" )
+TEST_CASE( "dx12::TextureManager Viewport Render Target Creation", "[dx12][texture][viewport]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "TextureManager viewport render targets" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::TextureManager viewport render targets" ) )
 		return;
 
-	TextureManager *manager = device.getTextureManager();
+	dx12::TextureManager *manager = device.getTextureManager();
 	REQUIRE( manager->initialize( &device ) );
 
 	SECTION( "Valid render target creation" )
@@ -75,7 +74,7 @@ TEST_CASE( "TextureManager Viewport Render Target Creation", "[dx12][texture][vi
 	SECTION( "Multiple render targets" )
 	{
 		// Create multiple render targets
-		std::vector<std::shared_ptr<Texture>> textures;
+		std::vector<std::shared_ptr<dx12::Texture>> textures;
 
 		for ( int i = 0; i < 8; ++i )
 		{
@@ -122,13 +121,13 @@ TEST_CASE( "TextureManager Viewport Render Target Creation", "[dx12][texture][vi
 	}
 }
 
-TEST_CASE( "TextureManager SRV Handle Management", "[dx12][texture][srv]" )
+TEST_CASE( "dx12::TextureManager SRV Handle Management", "[dx12][texture][srv]" )
 {
-	Device device;
-	if ( !requireHeadlessDevice( device, "TextureManager SRV handles" ) )
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::TextureManager SRV handles" ) )
 		return;
 
-	TextureManager *manager = device.getTextureManager();
+	dx12::TextureManager *manager = device.getTextureManager();
 	REQUIRE( manager->initialize( &device ) );
 
 	SECTION( "SRV handle allocation" )
@@ -171,7 +170,7 @@ TEST_CASE( "TextureManager SRV Handle Management", "[dx12][texture][srv]" )
 	}
 }
 
-TEST_CASE( "TextureManager Constants and Limits", "[dx12][texture][constants]" )
+TEST_CASE( "dx12::TextureManager Constants and Limits", "[dx12][texture][constants]" )
 {
 	SECTION( "Compile-time constants" )
 	{
@@ -187,15 +186,15 @@ TEST_CASE( "TextureManager Constants and Limits", "[dx12][texture][constants]" )
 
 	SECTION( "Maximum texture creation" )
 	{
-		Device device;
+		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "Maximum texture creation" ) )
 			return;
 
-		TextureManager *manager = device.getTextureManager();
+		dx12::TextureManager *manager = device.getTextureManager();
 		REQUIRE( manager->initialize( &device ) );
 
 		// Create up to the maximum number of textures
-		std::vector<std::shared_ptr<Texture>> textures;
+		std::vector<std::shared_ptr<dx12::Texture>> textures;
 
 		for ( UINT i = 0; i < TextureManager::kMaxTextures && i < 16; ++i ) // Limit to 16 for test performance
 		{

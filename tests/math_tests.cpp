@@ -19,7 +19,7 @@ TEST_CASE( "Vec2 basic arithmetic", "[math][vec2]" )
 	REQUIRE( d.y == 8.0f );
 }
 
-TEST_CASE( "Vec3 dot and cross", "[math][vec3]" )
+TEST_CASE( "math::Vec3 dot and cross", "[math][vec3]" )
 {
 	const math::Vec3<> x{ 1, 0, 0 }, y{ 0, 1, 0 };
 	REQUIRE_THAT( math::dot( x, x ), WithinRel( 1.0f ) );
@@ -27,14 +27,14 @@ TEST_CASE( "Vec3 dot and cross", "[math][vec3]" )
 	REQUIRE_THAT( c.z, WithinRel( 1.0f ) );
 }
 
-TEST_CASE( "Vec3 normalize", "[math][vec3]" )
+TEST_CASE( "math::Vec3 normalize", "[math][vec3]" )
 {
 	const math::Vec3<> v{ 3.0f, 0.0f, 4.0f };
 	const auto n = math::normalize( v );
 	REQUIRE_THAT( math::dot( n, n ), WithinRel( 1.0f ) );
 }
 
-TEST_CASE( "Vec4 arithmetic and dot", "[math][vec4]" )
+TEST_CASE( "math::Vec4 arithmetic and dot", "[math][vec4]" )
 {
 	const math::Vec4<> a{ 1, 2, 3, 4 }, b{ 2, 3, 4, 5 };
 	const auto s = a + b;

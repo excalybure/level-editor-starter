@@ -8,10 +8,8 @@
 #include "engine/assets/assets.h"
 #include "engine/assets/asset_manager.h"
 
-using namespace runtime;
-using namespace components;
-using namespace assets;
-using namespace ecs;
+using Catch::Approx;
+
 using Catch::Approx;
 
 TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][primitive]" )
@@ -31,7 +29,7 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	auto material1 = std::make_shared<assets::Material>();
 	material1->setName( "Material1" );
 	const auto material1Handle = scene->addMaterial( material1 );
-
+ 
 	auto material2 = std::make_shared<assets::Material>();
 	material2->setName( "Material2" );
 	const auto material2Handle = scene->addMaterial( material2 );
@@ -69,14 +67,14 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 
 	// Register a mock callback that uses SceneImporter
 	bool callbackCalled = false;
-	AssetManager::setImportSceneCallback( [&callbackCalled]( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
+	assets::AssetManager::setImportSceneCallback( [&callbackCalled]( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		callbackCalled = true;
 		// Use SceneImporter instead of manual import logic
-		SceneImporter::importScene( assetScene, targetScene );
+		runtime::SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Use AssetManager to import scene
-	AssetManager manager;
+	assets::AssetManager manager;
 	manager.store( "test_scene.gltf", scene );
 
 	const bool result = manager.importScene( "test_scene.gltf", ecsScene );
@@ -99,16 +97,16 @@ TEST_CASE( "ECS import creates entities for each scene node", "[ecs][import][pri
 	// Check Transform component
 	const auto *transformComp = ecsScene.getComponent<components::Transform>( entity );
 	REQUIRE( transformComp != nullptr );
-	REQUIRE( transformComp->position.x == Approx( 1.0f ) );
-	REQUIRE( transformComp->position.y == Approx( 2.0f ) );
-	REQUIRE( transformComp->position.z == Approx( 3.0f ) );
+	REQUIRE( transformComp->position.x == Catch::Approx( 1.0f ) );
+	REQUIRE( transformComp->position.y == Catch::Approx( 2.0f ) );
+	REQUIRE( transformComp->position.z == Catch::Approx( 3.0f ) );
 
 	// Check MeshRenderer component
 	const auto *rendererComp = ecsScene.getComponent<components::MeshRenderer>( entity );
 	REQUIRE( rendererComp != nullptr );
 
 	// Cleanup
-	AssetManager::clearImportSceneCallback();
+	assets::AssetManager::clearImportSceneCallback();
 }
 
 TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
@@ -119,13 +117,13 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	scene->setLoaded( true );
 
 	// Create parent node
-	auto parentNode = std::make_unique<SceneNode>( "ParentNode" );
+	auto parentNode = std::make_unique<assets::SceneNode>( "ParentNode" );
 	assets::Transform parentTransform;
 	parentTransform.position = { 0.0f, 0.0f, 0.0f };
 	parentNode->setTransform( parentTransform );
 
 	// Create child node
-	auto childNode = std::make_unique<SceneNode>( "ChildNode" );
+	auto childNode = std::make_unique<assets::SceneNode>( "ChildNode" );
 	assets::Transform childTransform;
 	childTransform.position = { 1.0f, 0.0f, 0.0f };
 	childNode->setTransform( childTransform );
@@ -138,13 +136,13 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	ecs::Scene ecsScene;
 
 	// Register callback that uses SceneImporter for hierarchy
-	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
+	assets::AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		// Use SceneImporter instead of manual import logic
-		SceneImporter::importScene( assetScene, targetScene );
+		runtime::SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Import scene
-	AssetManager manager;
+	assets::AssetManager manager;
 	manager.store( "hierarchy_scene.gltf", scene );
 
 	const bool result = manager.importScene( "hierarchy_scene.gltf", ecsScene );
@@ -185,7 +183,7 @@ TEST_CASE( "ECS import preserves scene hierarchy", "[ecs][import][hierarchy]" )
 	REQUIRE( children[0] == childEntity );
 
 	// Cleanup
-	AssetManager::clearImportSceneCallback();
+	assets::AssetManager::clearImportSceneCallback();
 }
 
 TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes]" )
@@ -195,7 +193,7 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	scene->setPath( "empty_node_scene.gltf" );
 	scene->setLoaded( true );
 
-	auto emptyNode = std::make_unique<SceneNode>( "EmptyNode" );
+	auto emptyNode = std::make_unique<assets::SceneNode>( "EmptyNode" );
 	assets::Transform transform;
 	transform.position = { 5.0f, 6.0f, 7.0f };
 	emptyNode->setTransform( transform );
@@ -207,13 +205,13 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	ecs::Scene ecsScene;
 
 	// Register callback that uses SceneImporter
-	AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
+	assets::AssetManager::setImportSceneCallback( []( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene ) {
 		// Use SceneImporter instead of manual import logic
-		SceneImporter::importScene( assetScene, targetScene );
+		runtime::SceneImporter::importScene( assetScene, targetScene );
 	} );
 
 	// Import scene
-	AssetManager manager;
+	assets::AssetManager manager;
 	manager.store( "empty_node_scene.gltf", scene );
 
 	const bool result = manager.importScene( "empty_node_scene.gltf", ecsScene );
@@ -233,5 +231,5 @@ TEST_CASE( "ECS import handles nodes without meshes", "[ecs][import][empty-nodes
 	REQUIRE_FALSE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 
 	// Cleanup
-	AssetManager::clearImportSceneCallback();
+	assets::AssetManager::clearImportSceneCallback();
 }
