@@ -15,461 +15,122 @@ find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
-# Libraries (modules)
-add_library(runtime.console)
-target_sources(runtime.console PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/console.ixx
-  PRIVATE
-    src/runtime/console.cpp
-)
-target_compile_features(runtime.console PUBLIC cxx_std_23)
+# Libraries
 
-add_library(engine.math)
-target_sources(engine.math PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/math.ixx
-)
-target_compile_features(engine.math PUBLIC cxx_std_23)
-
-add_library(engine.vec)
-target_sources(engine.vec PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/vec.ixx
-)
-target_compile_features(engine.vec PUBLIC cxx_std_23)
-target_link_libraries(engine.vec PUBLIC engine.math)
-
-add_library(engine.matrix)
-target_sources(engine.matrix PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/matrix.ixx
-)
-target_compile_features(engine.matrix PUBLIC cxx_std_23)
-target_link_libraries(engine.matrix PUBLIC engine.vec engine.math)
-
-add_library(engine.quat)
-target_sources(engine.quat PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/quat.ixx
-)
-target_compile_features(engine.quat PUBLIC cxx_std_23)
-target_link_libraries(engine.quat PUBLIC engine.vec engine.math)
-
-add_library(engine.color)
-target_sources(engine.color PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/color.ixx
-)
-target_compile_features(engine.color PUBLIC cxx_std_23)
-target_link_libraries(engine.color PUBLIC engine.math)
-
-add_library(engine.random)
-target_sources(engine.random PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/random.ixx
-)
-target_compile_features(engine.random PUBLIC cxx_std_23)
-target_link_libraries(engine.random PUBLIC engine.math engine.vec)
-
-add_library(engine.animation)
-target_sources(engine.animation PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/animation.ixx
-)
-target_compile_features(engine.animation PUBLIC cxx_std_23)
-target_link_libraries(engine.animation PUBLIC engine.math)
-
-add_library(engine.curves)
-target_sources(engine.curves PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/curves.ixx
-)
-target_compile_features(engine.curves PUBLIC cxx_std_23)
-target_link_libraries(engine.curves PUBLIC engine.math engine.vec)
-
-add_library(engine.bounding_box_2d)
-target_sources(engine.bounding_box_2d PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/bounding_box_2d.ixx
-)
-target_compile_features(engine.bounding_box_2d PUBLIC cxx_std_23)
-target_link_libraries(engine.bounding_box_2d PUBLIC engine.vec)
-
-add_library(engine.bounding_box_3d)
-target_sources(engine.bounding_box_3d PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/bounding_box_3d.ixx
-)
-target_compile_features(engine.bounding_box_3d PUBLIC cxx_std_23)
-target_link_libraries(engine.bounding_box_3d PUBLIC engine.vec)
-
-add_library(engine.bounding_sphere)
-target_sources(engine.bounding_sphere PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/bounding_sphere.ixx
-)
-target_compile_features(engine.bounding_sphere PUBLIC cxx_std_23)
-target_link_libraries(engine.bounding_sphere PUBLIC engine.vec engine.math)
-
-add_library(engine.oriented_bounding_box)
-target_sources(engine.oriented_bounding_box PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/oriented_bounding_box.ixx
-)
-target_compile_features(engine.oriented_bounding_box PUBLIC cxx_std_23)
-target_link_libraries(engine.oriented_bounding_box PUBLIC engine.vec)
-
-add_library(engine.plane)
-target_sources(engine.plane PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/plane.ixx
-)
-target_compile_features(engine.plane PUBLIC cxx_std_23)
-target_link_libraries(engine.plane PUBLIC engine.vec)
-
-add_library(engine.frustum)
-target_sources(engine.frustum PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/frustum.ixx
-)
-target_compile_features(engine.frustum PUBLIC cxx_std_23)
-target_link_libraries(engine.frustum PUBLIC engine.vec engine.plane engine.bounding_box_3d engine.bounding_sphere)
-
-add_library(engine.bounding_volumes)
-target_sources(engine.bounding_volumes PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/bounding_volumes.ixx
-)
-target_compile_features(engine.bounding_volumes PUBLIC cxx_std_23)
-target_link_libraries(engine.bounding_volumes PUBLIC 
-  engine.bounding_box_2d 
-  engine.bounding_box_3d 
-  engine.bounding_sphere 
-  engine.oriented_bounding_box 
-  engine.plane 
-  engine.frustum)
-
-add_library(engine.math_2d)
-target_sources(engine.math_2d PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/math_2d.ixx
-)
-target_compile_features(engine.math_2d PUBLIC cxx_std_23)
-target_link_libraries(engine.math_2d PUBLIC engine.math engine.vec engine.bounding_box_2d)
-
-add_library(engine.math_3d)
-target_sources(engine.math_3d PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/math/math_3d.ixx
-)
-target_compile_features(engine.math_3d PUBLIC cxx_std_23)
-target_link_libraries(engine.math_3d PUBLIC engine.math engine.vec engine.bounding_volumes)
-
-add_library(engine.picking)
-target_sources(engine.picking PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/picking.ixx
-  PRIVATE
-    src/engine/picking.cpp
-)
-target_compile_features(engine.picking PUBLIC cxx_std_23)
-target_link_libraries(engine.picking PUBLIC engine.math_3d engine.bounding_volumes engine.vec engine.matrix runtime.ecs runtime.components runtime.entity editor.viewport)
-
-add_library(engine.assets)
-target_sources(engine.assets PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/assets/assets.ixx
-    src/engine/assets/asset_manager.ixx
-  PRIVATE
-    src/engine/assets/assets.cpp
-    src/engine/assets/asset_manager.cpp
-)
-target_compile_features(engine.assets PUBLIC cxx_std_23)
-target_link_libraries(engine.assets PUBLIC engine.vec engine.bounding_box_3d)
-
-add_library(engine.gpu.mesh_gpu)
-target_sources(engine.gpu.mesh_gpu PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/gpu/mesh_gpu.ixx
-  PRIVATE
-    src/engine/gpu/mesh_gpu.cpp
-)
-target_compile_features(engine.gpu.mesh_gpu PUBLIC cxx_std_23)
-target_link_libraries(engine.gpu.mesh_gpu PUBLIC engine.assets platform.dx12 engine.gpu.material_gpu runtime.console)
-
-add_library(engine.gpu.material_gpu)
-target_sources(engine.gpu.material_gpu PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/gpu/material_gpu.ixx
-  PRIVATE
-    src/engine/gpu/material_gpu.cpp
-)
-target_compile_features(engine.gpu.material_gpu PUBLIC cxx_std_23)
-target_link_libraries(engine.gpu.material_gpu PUBLIC engine.assets engine.vec platform.dx12 engine.shader_manager runtime.console)
-
-add_library(engine.gpu.gpu_resource_manager)
-target_sources(engine.gpu.gpu_resource_manager PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/gpu/gpu_resource_manager.ixx
-  PRIVATE
-    src/engine/gpu/gpu_resource_manager.cpp
-)
-target_compile_features(engine.gpu.gpu_resource_manager PUBLIC cxx_std_23)
-target_link_libraries(engine.gpu.gpu_resource_manager PUBLIC platform.dx12 engine.assets engine.gpu.mesh_gpu engine.gpu.material_gpu runtime.console)
-
-add_library(engine.gltf_loader)
-target_sources(engine.gltf_loader PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/gltf_loader/gltf_loader.ixx
-  PRIVATE
-    src/engine/gltf_loader/gltf_loader.cpp
-)
-target_compile_features(engine.gltf_loader PUBLIC cxx_std_23)
-target_link_libraries(engine.gltf_loader PUBLIC engine.assets engine.vec engine.quat engine.matrix runtime.console)
-target_include_directories(engine.gltf_loader PRIVATE ${CGLTF_INCLUDE_DIRS})
-
-add_library(engine.integration.asset_gltf)
-target_sources(engine.integration.asset_gltf PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/integration/asset_gltf_integration.ixx
-)
-target_compile_features(engine.integration.asset_gltf PUBLIC cxx_std_23)
-target_link_libraries(engine.integration.asset_gltf PUBLIC engine.assets engine.gltf_loader)
-
-add_library(runtime.entity)
-target_sources(runtime.entity PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/entity.ixx
-)
-target_compile_features(runtime.entity PUBLIC cxx_std_23)
-
-add_library(runtime.time)
-target_sources(runtime.time PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/time.ixx
-  PRIVATE
-    src/runtime/time.cpp
-)
-target_compile_features(runtime.time PUBLIC cxx_std_23)
-
-add_library(runtime.components)
-target_sources(runtime.components PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/components.ixx
-)
-target_compile_features(runtime.components PUBLIC cxx_std_23)
-target_link_libraries(runtime.components PUBLIC runtime.entity runtime.time engine.math engine.matrix engine.vec engine.bounding_box_3d engine.gpu.mesh_gpu)
-
-add_library(runtime.ecs)
-target_sources(runtime.ecs PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/ecs.ixx
-)
-target_compile_features(runtime.ecs PUBLIC cxx_std_23)
-target_link_libraries(runtime.ecs PUBLIC runtime.entity runtime.components engine.math engine.matrix engine.vec engine.bounding_box_3d)
-
-add_library(runtime.scene_importer)
-target_sources(runtime.scene_importer PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/scene_importer.ixx
-  PRIVATE
-    src/runtime/scene_importer.cpp
-)
-target_compile_features(runtime.scene_importer PUBLIC cxx_std_23)
-target_link_libraries(runtime.scene_importer PUBLIC runtime.ecs runtime.entity runtime.components engine.assets engine.gpu.gpu_resource_manager)
-
-add_library(runtime.systems)
-target_sources(runtime.systems PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/systems.ixx
-)
-target_compile_features(runtime.systems PUBLIC cxx_std_23)
-target_link_libraries(runtime.systems PUBLIC runtime.entity runtime.ecs runtime.components engine.matrix)
-
-add_library(runtime.mesh_rendering_system)
-target_sources(runtime.mesh_rendering_system PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/mesh_rendering_system.ixx
-  PRIVATE
-    src/runtime/mesh_rendering_system.cpp
-)
-target_compile_features(runtime.mesh_rendering_system PUBLIC cxx_std_23)
-target_link_libraries(runtime.mesh_rendering_system PUBLIC runtime.systems runtime.ecs runtime.components engine.renderer engine.camera engine.gpu.mesh_gpu engine.matrix)
-
-add_library(runtime.app)
-target_sources(runtime.app PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/runtime/app.ixx
-)
-target_compile_features(runtime.app PUBLIC cxx_std_23)
-
-add_library(platform.win32)
-target_sources(platform.win32 PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/platform/win32/win32_window.ixx
-  PRIVATE
-    src/platform/win32/win32_window.cpp
-)
-target_compile_features(platform.win32 PUBLIC cxx_std_23)
-target_link_libraries(platform.win32 PRIVATE 
-  imgui::imgui
+# Engine library
+add_library(engine STATIC
+  src/engine/assets/asset_manager.cpp
+  src/engine/assets/assets.cpp
+  src/engine/camera/camera.cpp
+  src/engine/camera/camera_controller.cpp
+  src/engine/gltf_loader/gltf_loader.cpp
+  src/engine/gpu/gpu_resource_manager.cpp
+  src/engine/gpu/material_gpu.cpp
+  src/engine/gpu/mesh_gpu.cpp
+  src/engine/grid/grid.cpp
+  src/engine/renderer/renderer.cpp
+  src/engine/shader_manager/shader_manager.cpp
+  src/engine/picking.cpp
 )
 
-add_library(editor.ui)
-target_sources(editor.ui PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/ui.ixx
-  PRIVATE
-    src/editor/ui.cpp
+target_include_directories(engine PUBLIC 
+  src
+  ${CGLTF_INCLUDE_DIRS}
 )
-target_compile_features(editor.ui PUBLIC cxx_std_23)
-target_link_libraries(editor.ui PRIVATE 
-  imgui::imgui
-  imguizmo::imguizmo
+target_compile_features(engine PUBLIC cxx_std_23)
+target_compile_definitions(engine PUBLIC NOMINMAX)
+if (MSVC)
+  target_compile_options(engine PRIVATE /W4 /permissive- /std:c++latest)
+endif()
+
+
+# Runtime library - contains core runtime systems
+add_library(runtime STATIC
+  src/runtime/console.cpp
+  src/runtime/mesh_rendering_system.cpp
+  src/runtime/scene_importer.cpp
+  src/runtime/time.cpp
+)
+
+target_include_directories(runtime PUBLIC 
+  src
+)
+target_compile_features(runtime PUBLIC cxx_std_23)
+target_compile_definitions(runtime PUBLIC NOMINMAX)
+if (MSVC)
+  target_compile_options(runtime PRIVATE /W4 /permissive- /std:c++latest)
+endif()
+
+
+# Platform library - contains core platform systems
+add_library(platform STATIC
+  src/platform/dx12/dx12_device.cpp
+  src/platform/dx12/dx12_texture.cpp
+  src/platform/win32/win32_window.cpp
+)
+
+target_include_directories(platform PUBLIC 
+  src
+  vcpkg_installed/x64-windows/include
+)
+target_compile_features(platform PUBLIC cxx_std_23)
+target_compile_definitions(platform PUBLIC NOMINMAX PIX_AVAILABLE)
+target_link_libraries(platform PUBLIC 
   Microsoft::DirectX-Headers
+  Microsoft::WinPixEventRuntime
   d3d12
-  platform.win32
-)
-target_link_libraries(editor.ui PUBLIC 
-  editor.viewport
-  runtime.ecs
-  runtime.systems
-  engine.assets
-  engine.gpu.gpu_resource_manager
-  runtime.scene_importer
-  runtime.console
+  dxgi
+  d3dcompiler
 )
 
-add_library(platform.dx12)
-target_sources(platform.dx12 PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/platform/dx12/dx12_device.ixx
-  PRIVATE
-    src/platform/dx12/dx12_device.cpp
-    src/platform/dx12/dx12_texture.cpp
-)
-target_compile_features(platform.dx12 PUBLIC cxx_std_23)
-# Link DirectX 12 libraries
-target_link_libraries(platform.dx12 PUBLIC d3d12 dxgi d3dcompiler runtime.console platform.pix)
+if (MSVC)
+  target_compile_options(platform PRIVATE /W4 /permissive- /std:c++latest)
+endif()
 
-# PIX debugging utilities
-add_library(platform.pix)
-target_sources(platform.pix PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/platform/pix/pix.ixx
+add_library(editor STATIC
+  src/editor/gizmos.cpp
+  src/editor/selection.cpp
+  src/editor/selection_renderer.cpp
+  src/editor/ui.cpp
+  src/editor/viewport_input.cpp
+  src/editor/viewport/viewport.cpp
 )
-target_compile_features(platform.pix PUBLIC cxx_std_23)
-target_link_libraries(platform.pix PUBLIC Microsoft::WinPixEventRuntime)
 
-add_library(engine.renderer)
-target_sources(engine.renderer PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/renderer/renderer.ixx
-  PRIVATE
-    src/engine/renderer/renderer.cpp
+target_include_directories(editor PUBLIC 
+  src
+  vcpkg_installed/x64-windows/include
 )
-target_compile_features(engine.renderer PUBLIC cxx_std_23)
-target_link_libraries(engine.renderer PUBLIC platform.dx12 engine.vec engine.matrix engine.color d3d12 dxgi d3dcompiler)
+target_compile_features(editor PUBLIC cxx_std_23)
+target_compile_definitions(editor PUBLIC NOMINMAX PIX_AVAILABLE)
+# target_link_libraries(editor PUBLIC 
+# imgui::imgui
+# imguizmo::imguizmo
+#  Microsoft::DirectX-Headers
+#  Microsoft::WinPixEventRuntime
+#  d3d12
+#  dxgi
+#  d3dcompiler
+#  runtime
+#  platform
+#)
 
-add_library(engine.camera)
-target_sources(engine.camera PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/camera/camera.ixx
-    src/engine/camera/camera_controller.ixx
-  PRIVATE
-    src/engine/camera/camera.cpp
-    src/engine/camera/camera_controller.cpp
-)
-target_compile_features(engine.camera PUBLIC cxx_std_23)
-target_link_libraries(engine.camera PUBLIC engine.vec engine.matrix engine.math runtime.console)
-
-add_library(engine.shader_manager)
-target_sources(engine.shader_manager PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/shader_manager/shader_manager.ixx
-  PRIVATE
-    src/engine/shader_manager/shader_manager.cpp
-)
-target_compile_features(engine.shader_manager PUBLIC cxx_std_23)
-target_link_libraries(engine.shader_manager PUBLIC engine.renderer d3dcompiler)
-
-add_library(engine.grid)
-target_sources(engine.grid PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/engine/grid/grid.ixx
-  PRIVATE
-    src/engine/grid/grid.cpp
-)
-target_compile_features(engine.grid PUBLIC cxx_std_23)
-target_link_libraries(engine.grid PUBLIC engine.vec engine.matrix engine.camera engine.renderer engine.shader_manager platform.dx12 engine.color d3d12 dxgi d3dcompiler)
-
-add_library(editor.viewport)
-target_sources(editor.viewport PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/viewport/viewport.ixx
-  PRIVATE
-    src/editor/viewport/viewport.cpp
-)
-target_compile_features(editor.viewport PUBLIC cxx_std_23)
-target_link_libraries(editor.viewport PUBLIC engine.vec engine.matrix engine.camera platform.dx12 engine.grid runtime.console runtime.ecs runtime.systems runtime.mesh_rendering_system platform.pix)
-
-add_library(editor.selection)
-target_sources(editor.selection PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/selection.ixx
-  PRIVATE
-    src/editor/selection.cpp
-)
-target_compile_features(editor.selection PUBLIC cxx_std_23)
-target_link_libraries(editor.selection PUBLIC runtime.ecs runtime.entity runtime.components runtime.systems engine.bounding_box_3d engine.vec engine.math runtime.time)
-
-add_library(editor.selection_renderer)
-target_sources(editor.selection_renderer PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/selection_renderer.ixx
-  PRIVATE
-    src/editor/selection_renderer.cpp
-)
-target_compile_features(editor.selection_renderer PUBLIC cxx_std_23)
-target_link_libraries(editor.selection_renderer PUBLIC runtime.ecs runtime.entity runtime.components platform.dx12 engine.math engine.vec engine.matrix engine.renderer engine.shader_manager runtime.console runtime.time)
-
-add_library(editor.viewport_input)
-target_sources(editor.viewport_input PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/viewport_input.ixx
-  PRIVATE
-    src/editor/viewport_input.cpp
-)
-target_compile_features(editor.viewport_input PUBLIC cxx_std_23)
-target_link_libraries(editor.viewport_input PUBLIC editor.selection engine.picking editor.viewport runtime.ecs engine.vec engine.math)
-
-add_library(editor.gizmos)
-target_sources(editor.gizmos PUBLIC
-  FILE_SET CXX_MODULES FILES
-    src/editor/gizmos.ixx
-  PRIVATE
-    src/editor/gizmos.cpp
-)
-target_compile_features(editor.gizmos PUBLIC cxx_std_23)
-target_link_libraries(editor.gizmos PUBLIC editor.selection runtime.ecs runtime.entity runtime.components engine.vec engine.matrix imgui::imgui imguizmo::imguizmo)
+if (MSVC)
+  target_compile_options(editor PRIVATE /W4 /permissive- /std:c++latest)
+endif()
 
 # Executable
 add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
-  engine.vec engine.matrix engine.assets engine.integration.asset_gltf engine.gpu.gpu_resource_manager runtime.ecs runtime.app runtime.console runtime.systems runtime.mesh_rendering_system engine.renderer platform.win32 platform.dx12 editor.ui platform.pix
+  editor
+  engine
+  platform
+  runtime
+  imgui::imgui
 )
 target_compile_features(level_editor PUBLIC cxx_std_23)
 
 if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
-  foreach(tgt IN ITEMS 
-    engine.math engine.vec engine.matrix engine.quat engine.color engine.random engine.animation 
-    engine.bounding_box_2d engine.bounding_box_3d engine.bounding_sphere engine.oriented_bounding_box engine.plane engine.frustum engine.bounding_volumes
-    engine.math_2d engine.math_3d engine.renderer engine.camera engine.grid
-    runtime.ecs runtime.app runtime.console platform.win32 platform.dx12 editor.ui editor.viewport editor.selection editor.viewport_input editor.gizmos)
-    target_compile_options(${tgt} PRIVATE /W4 /permissive- /std:c++latest)
-  endforeach()
 endif()
 
 # -----------------------------------------------------------------------------
@@ -546,50 +207,11 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmos_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
-    engine.math
-    engine.vec 
-    engine.matrix 
-    engine.quat 
-    engine.color
-    engine.random
-    engine.animation
-    engine.curves
-    engine.bounding_volumes
-    engine.bounding_box_2d
-    engine.math_2d
-    engine.math_3d
-    engine.picking
-    platform.dx12
-    engine.renderer
-    engine.shader_manager
-    engine.camera
-    engine.grid
-    editor.viewport
-    editor.selection
-    editor.selection_renderer
-    editor.viewport_input
-    editor.gizmos
-    runtime.entity
-    runtime.time
-    runtime.ecs
-    runtime.scene_importer
-    runtime.components
-    runtime.systems
-    runtime.mesh_rendering_system
-    runtime.app
-    runtime.console
-    editor.ui
-    platform.win32
-    engine.assets
-    engine.gpu.gpu_resource_manager
-    engine.gpu.mesh_gpu
-    engine.gpu.material_gpu
-    engine.gpu.mesh_gpu
-    engine.gpu.material_gpu
-    engine.gpu.gpu_resource_manager
-    engine.gltf_loader
+    editor
+    engine
+    platform
+    runtime
     imgui::imgui
-    imguizmo::imguizmo
     Catch2::Catch2WithMain
   )
   target_compile_features(unit_test_runner PUBLIC cxx_std_23)

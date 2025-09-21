@@ -1,15 +1,11 @@
-// Global module fragment - headers go here
-module;
+#include "dx12_device.h"
 
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
 
-module platform.dx12;
-
-import std;
-import runtime.console;
-import platform.pix;
+#include "runtime/console.h"
+#include "platform/pix/pix.h"
 
 namespace dx12
 {

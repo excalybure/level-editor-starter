@@ -1,9 +1,10 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <vector>
 #include <cmath>
-import engine.vec;
-import engine.math_2d;
+#include "engine/math/vec.h"
+#include "engine/math/math_2d.h"
+#include "engine/math/bounding_box_2d.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Matchers::WithinAbs;

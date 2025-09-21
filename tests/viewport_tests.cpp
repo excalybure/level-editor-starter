@@ -1,4 +1,4 @@
-// Viewport Management tests
+﻿// Viewport Management tests
 // Tests for multi-viewport system with cameras, input handling, and utility functions
 
 #include <catch2/catch_test_macros.hpp>
@@ -6,11 +6,11 @@
 #include <memory>
 #include <vector>
 
-import editor.viewport;
-import platform.dx12;
-import platform.win32.win32_window;
-import engine.shader_manager;
-
+#include "editor/viewport/viewport.h"
+#include "platform/dx12/dx12_device.h"
+#include "platform/win32/win32_window.h"
+#include "engine/camera/camera.h"
+#include "engine/shader_manager/shader_manager.h"
 #include "test_dx12_helpers.h"
 
 using namespace editor;

@@ -1,13 +1,13 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
 // We'll start by testing the basic module can be imported
-import runtime.mesh_rendering_system;
-import runtime.ecs;
-import runtime.components;
-import engine.renderer;
-import engine.camera;
-import platform.dx12;
-import engine.shader_manager;
+#include "runtime/mesh_rendering_system.h"
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "engine/renderer/renderer.h"
+#include "engine/camera/camera.h"
+#include "platform/dx12/dx12_device.h"
+#include "engine/shader_manager/shader_manager.h"
 
 TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager", "[mesh_rendering_system][unit]" )
 {
@@ -19,7 +19,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 
 	// Act & Assert - should compile and create without error
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 }
 
 TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
@@ -30,7 +30,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
@@ -46,7 +46,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 	ecs::Scene scene;
 
 	// Create an entity with both Transform and MeshRenderer components
@@ -69,7 +69,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 
 	components::Transform transform;  // Default: identity transform
 	camera::PerspectiveCamera camera; // Default camera
@@ -94,7 +94,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 
 	components::Transform transform;	   // Default transform
 	components::MeshRenderer meshRenderer; // Empty mesh renderer (no GPU mesh)
@@ -112,7 +112,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 	ecs::Scene scene;
 
 	// Create multiple entities with different component combinations
@@ -141,7 +141,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	runtime::systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager );
 
 	components::Transform transform;
 	transform.position = { 1.0f, 2.0f, 3.0f }; // Non-identity transform

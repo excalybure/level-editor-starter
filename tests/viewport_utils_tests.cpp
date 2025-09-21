@@ -1,9 +1,9 @@
-// Viewport Utility Functions tests
+﻿// Viewport Utility Functions tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <string>
 
-import editor.viewport;
+#include "editor/viewport/viewport.h"
 
 using namespace editor;
 

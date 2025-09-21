@@ -1,11 +1,11 @@
-// Camera Controller Tests
+﻿// Camera Controller Tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import engine.camera.controller;
-import engine.camera;
-import engine.vec;
-import engine.math;
+#include "engine/camera/camera_controller.h"
+#include "engine/camera/camera.h"
+#include "engine/math/vec.h"
+#include "engine/math/math.h"
 
 using namespace camera;
 using namespace math;

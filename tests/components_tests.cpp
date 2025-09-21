@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import runtime.ecs;
-import runtime.components;
-import engine.math;
-import engine.matrix;
-import engine.vec;
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "engine/math/math.h"
+#include "engine/math/matrix.h"
+#include "engine/math/vec.h"
 
 using namespace ecs;
 using namespace components;

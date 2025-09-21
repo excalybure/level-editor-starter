@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-import runtime.app;
+#include "runtime/app.h"
 
 using namespace app;
 

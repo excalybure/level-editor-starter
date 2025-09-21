@@ -1,9 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <string>
 
-import engine.assets;
-import engine.bounding_box_3d;
+#include "engine/assets/assets.h"
+#include "engine/math/bounding_box_3d.h"
 
 TEST_CASE( "Asset System Tests", "[assets]" )
 {

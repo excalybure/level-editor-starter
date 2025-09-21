@@ -1,9 +1,10 @@
-#include <catch2/catch_all.hpp>
+﻿#include <catch2/catch_all.hpp>
 
 #if defined( _WIN32 )
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-import platform.win32.win32_window;
+#include "platform/win32/win32_window.h"
+
 using platform::Win32Window;
 using Catch::Approx;
 

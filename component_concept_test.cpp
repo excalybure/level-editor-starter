@@ -1,8 +1,8 @@
-// Test file to verify that our relaxed Component concept works with real components
+﻿// Test file to verify that our relaxed Component concept works with real components
 #include <iostream>
 
-import runtime.ecs;
-import runtime.components;
+#include "src/runtime/ecs.h"
+#include "src/runtime/components.h"
 
 using namespace ecs;
 

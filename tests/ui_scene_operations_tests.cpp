@@ -1,12 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import editor.ui;
-import runtime.ecs;
-import runtime.systems;
-import engine.asset_manager;
-import engine.gpu.gpu_resource_manager;
-import platform.dx12;
-import std;
+#include "editor/ui.h"
+#include "runtime/ecs.h"
+#include "runtime/systems.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "platform/dx12/dx12_device.h"
 
 // Mock GPUResourceManager for testing
 class MockGPUResourceManager : public engine::GPUResourceManager

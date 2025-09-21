@@ -1,10 +1,10 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <numbers>
-import engine.math;
-import engine.matrix;
-import engine.vec;
+#include "engine/math/math.h"
+#include "engine/math/matrix.h"
+#include "engine/math/vec.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Approx;

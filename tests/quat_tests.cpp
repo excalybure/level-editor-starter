@@ -1,9 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import engine.math;
-import engine.quat;
-import std;
+#include "engine/math/math.h"
+#include "engine/math/quat.h"
 
 using namespace math;
 

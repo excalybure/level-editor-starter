@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <memory>
 #include <string>
@@ -6,10 +6,9 @@
 #include <cstdio>
 #include <cgltf.h>
 
-import engine.assets;
-import engine.asset_manager;
-import engine.gltf_loader;
-import std;
+#include "engine/assets/assets.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/gltf_loader/gltf_loader.h"
 
 using Catch::Approx;
 

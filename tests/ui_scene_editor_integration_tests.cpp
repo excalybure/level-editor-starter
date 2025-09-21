@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import editor.ui;
-import editor.scene_editor;
+#include "editor/ui.h"
+// import editor.scene_editor;
 
 TEST_CASE( "UI SceneEditor integration basic functionality", "[integration][ui][scene_editor]" )
 {

@@ -1,15 +1,18 @@
-module;
+#include "runtime/mesh_rendering_system.h"
+#include "engine/renderer/renderer.h"
+#include "engine/gpu/material_gpu.h"
+#include "runtime/console.h"
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "engine/camera/camera.h"
+#include "engine/gpu/mesh_gpu.h"
+#include "engine/assets/assets.h"
 
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstring>
 
-module runtime.mesh_rendering_system;
-
-import engine.gpu.material_gpu;
-import runtime.console;
-
-namespace runtime::systems
+namespace systems
 {
 
 MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
@@ -367,4 +370,4 @@ void MeshRenderingSystem::setRootSignature( ID3D12GraphicsCommandList *commandLi
 	}
 }
 
-} // namespace runtime::systems
+} // namespace systems

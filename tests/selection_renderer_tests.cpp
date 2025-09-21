@@ -1,13 +1,13 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import editor.selection_renderer;
-import runtime.ecs;
-import runtime.components;
-import platform.dx12;
-import engine.shader_manager;
-import engine.math;
-import engine.vec;
-import engine.matrix;
+#include "editor/selection_renderer.h"
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "platform/dx12/dx12_device.h"
+#include "engine/shader_manager/shader_manager.h"
+#include "engine/math/math.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
 
 namespace
 {

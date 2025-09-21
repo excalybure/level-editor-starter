@@ -1,15 +1,13 @@
-module engine.picking;
+#include "picking.h"
 
-import engine.math_3d;
-import engine.bounding_volumes;
-import engine.vec;
-import engine.matrix;
-import runtime.ecs;
-import runtime.components;
-import runtime.entity;
-import runtime.systems;
-import editor.viewport;
-import std;
+#include "engine/math/math_3d.h"
+#include "engine/math/bounding_volumes.h"
+#include "engine/math/matrix.h"
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "runtime/entity.h"
+#include "runtime/systems.h"
+#include "editor/viewport/viewport.h"
 
 namespace picking
 {

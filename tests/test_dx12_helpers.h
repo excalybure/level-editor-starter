@@ -5,9 +5,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-import platform.dx12;
-import runtime.console;
-import platform.win32.win32_window;
+#include "platform/dx12/dx12_device.h"
+#include "runtime/console.h"
+#include "platform/win32/win32_window.h"
 
 #include <utility> // for std::pair
 

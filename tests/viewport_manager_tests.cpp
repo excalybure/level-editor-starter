@@ -1,10 +1,10 @@
-// ViewportManager specific tests
+﻿// ViewportManager specific tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
-import editor.viewport;
-import platform.dx12;
+#include "editor/viewport/viewport.h"
+#include "platform/dx12/dx12_device.h"
 
 using namespace editor;
 using Catch::Matchers::WithinAbs;

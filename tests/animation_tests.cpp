@@ -1,8 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <vector>
 #include <cmath>
-import engine.animation;
+#include "engine/math/animation.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Matchers::WithinAbs;

@@ -1,15 +1,15 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import engine.picking;
-import engine.math_3d;
-import runtime.ecs;
-import runtime.components;
-import runtime.entity;
-import runtime.systems;
-import engine.vec;
-import engine.matrix;
-import engine.bounding_box_3d;
+#include "engine/picking.h"
+#include "engine/math/math_3d.h"
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "runtime/entity.h"
+#include "runtime/systems.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/math/bounding_box_3d.h"
 
 using namespace math;
 using namespace picking;

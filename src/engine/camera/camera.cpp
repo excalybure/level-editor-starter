@@ -1,9 +1,12 @@
 // Camera implementation
-module engine.camera;
-
-import std;
-import engine.math;
-import runtime.console;
+#include "camera.h"
+#include "engine/math/math.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "runtime/console.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 namespace camera
 {

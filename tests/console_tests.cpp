@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import runtime.console;
+#include "runtime/console.h"
 #include <sstream>
 #include <iostream>
 #include <stdexcept>

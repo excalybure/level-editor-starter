@@ -1,13 +1,13 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import editor.selection;
-import runtime.ecs;
-import runtime.entity;
-import runtime.components;
-import runtime.systems;
-import engine.vec;
-import engine.bounding_box_3d;
+#include "editor/selection.h"
+#include "runtime/ecs.h"
+#include "runtime/entity.h"
+#include "runtime/components.h"
+#include "runtime/systems.h"
+#include "engine/math/vec.h"
+#include "engine/math/bounding_box_3d.h"
 
 using namespace ecs;
 using namespace components;

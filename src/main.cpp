@@ -1,17 +1,17 @@
-import runtime.app;
-import runtime.console;
-import runtime.ecs;
-import runtime.systems;
-import runtime.mesh_rendering_system;
-import engine.renderer;
-import engine.asset_manager;
-import engine.integration.asset_gltf;
-import engine.gpu.gpu_resource_manager;
-import platform.win32.win32_window;
-import platform.dx12;
-import platform.pix;
-import editor.ui;
-import engine.shader_manager;
+#include "editor/ui.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "engine/integration/asset_gltf_integration.h"
+#include "engine/renderer/renderer.h"
+#include "engine/shader_manager/shader_manager.h"
+#include "platform/dx12/dx12_device.h"
+#include "platform/pix/pix.h"
+#include "platform/win32/win32_window.h"
+#include "runtime/app.h"
+#include "runtime/console.h"
+#include "runtime/ecs.h"
+#include "runtime/mesh_rendering_system.h"
+#include "runtime/systems.h"
 
 #include <iostream>
 #include <filesystem>
@@ -109,7 +109,7 @@ int main()
 	systemManager.addSystem<systems::TransformSystem>();
 
 	// Add MeshRenderingSystem to handle 3D mesh rendering
-	systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer, shaderManager );
+	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );

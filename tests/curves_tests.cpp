@@ -1,8 +1,8 @@
-#include <catch2/catch_all.hpp>
+﻿#include <catch2/catch_all.hpp>
 
-import engine.curves;
-import engine.vec;
-import engine.math;
+#include "engine/math/curves.h"
+#include "engine/math/vec.h"
+#include "engine/math/math.h"
 
 using namespace math;
 

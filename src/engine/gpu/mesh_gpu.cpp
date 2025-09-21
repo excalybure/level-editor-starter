@@ -1,15 +1,11 @@
-// Global module fragment - headers go here
-module;
+#include "mesh_gpu.h"
 
 #include <comdef.h>
 
-module engine.gpu.mesh_gpu;
-
-import std;
-import platform.dx12;
-import engine.assets;
-import engine.gpu.material_gpu;
-import runtime.console;
+#include "platform/dx12/dx12_device.h"
+#include "engine/assets/assets.h"
+#include "engine/gpu/material_gpu.h"
+#include "runtime/console.h"
 
 namespace engine::gpu
 {

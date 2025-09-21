@@ -1,9 +1,8 @@
-module editor.selection;
-
-import runtime.entity;
-import runtime.components;
-import runtime.systems;
-import engine.math;
+﻿#include "selection.h"
+#include "runtime/entity.h"
+#include "runtime/components.h"
+#include "runtime/systems.h"
+#include "engine/math/math.h"
 
 namespace editor
 {
@@ -209,7 +208,6 @@ math::BoundingBox3Df SelectionManager::getSelectionBounds() const
 	}
 
 	math::BoundingBox3Df combinedBounds;
-	bool firstBounds = true;
 
 	for ( const auto entity : m_selection )
 	{

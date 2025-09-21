@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <numbers>
-import engine.math;
+#include "engine/math/math.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Matchers::WithinAbs;

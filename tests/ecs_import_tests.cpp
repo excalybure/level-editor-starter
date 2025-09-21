@@ -1,13 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <memory>
 
-import std;
-import runtime.ecs;
-import runtime.components;
-import runtime.scene_importer;
-import engine.assets;
-import engine.asset_manager;
+#include "runtime/ecs.h"
+#include "runtime/components.h"
+#include "runtime/scene_importer.h"
+#include "engine/assets/assets.h"
+#include "engine/assets/asset_manager.h"
 
 using namespace runtime;
 using namespace components;

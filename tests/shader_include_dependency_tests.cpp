@@ -1,8 +1,8 @@
-#include "catch2/catch_all.hpp"
+﻿#include "catch2/catch_all.hpp"
+#include <fstream>
 
-import engine.shader_manager;
-import engine.renderer;
-import std;
+#include "engine/shader_manager/shader_manager.h"
+#include "engine/renderer/renderer.h"
 
 using namespace shader_manager;
 

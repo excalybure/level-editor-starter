@@ -1,9 +1,9 @@
-// UI Menu and Exit Handling tests
+﻿// UI Menu and Exit Handling tests
 #include <catch2/catch_test_macros.hpp>
 #include "test_dx12_helpers.h"
 
-import editor.ui;
-import platform.dx12;
+#include "editor/ui.h"
+#include "platform/dx12/dx12_device.h"
 
 #if defined( _WIN32 )
 #define WIN32_LEAN_AND_MEAN

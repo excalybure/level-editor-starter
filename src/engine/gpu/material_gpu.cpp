@@ -1,15 +1,14 @@
-// Global module fragment - headers go here
-module;
+#include "material_gpu.h"
 
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstring>
 
-module engine.gpu.material_gpu;
-
-import runtime.console;
-import engine.matrix;
-import engine.vec;
+#include "engine/assets/assets.h"
+#include "engine/math/matrix.h"
+#include "engine/math/vec.h"
+#include "platform/dx12/dx12_device.h"
+#include "runtime/console.h"
 
 namespace engine::gpu
 {

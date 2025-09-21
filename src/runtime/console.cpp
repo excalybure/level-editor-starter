@@ -1,5 +1,4 @@
-// Global module fragment - headers go here
-module;
+#include "runtime/console.h"
 
 #include <iostream>
 #include <string>
@@ -10,8 +9,6 @@ module;
 #include <windows.h>
 #include <io.h>
 #endif
-
-module runtime.console;
 
 #ifndef _WIN32
 // Define WORD type for non-Windows platforms

@@ -1,5 +1,4 @@
-// Global module fragment - headers go here
-module;
+#include "win32_window.h"
 
 #if defined( _WIN32 )
 #define WIN32_LEAN_AND_MEAN
@@ -9,8 +8,6 @@ module;
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #endif
-
-module platform.win32.win32_window;
 
 #if defined( _WIN32 )
 // Forward declare the ImGui Win32 message handler

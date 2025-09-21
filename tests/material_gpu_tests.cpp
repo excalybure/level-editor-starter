@@ -1,9 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import engine.gpu.material_gpu;
-import engine.assets;
-import platform.dx12;
-import std;
+#include "engine/gpu/material_gpu.h"
+#include "engine/assets/assets.h"
+#include "platform/dx12/dx12_device.h"
 
 TEST_CASE( "MaterialGPU can be created from assets::Material", "[MaterialGPU][unit]" )
 {

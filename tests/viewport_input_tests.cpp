@@ -1,8 +1,8 @@
-// Viewport Input Event System tests
+﻿// Viewport Input Event System tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-import editor.viewport;
+#include "editor/viewport/viewport.h"
 
 using namespace editor;
 using Catch::Matchers::WithinAbs;

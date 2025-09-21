@@ -1,15 +1,14 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import engine.math_3d;
-import engine.bounding_volumes;
-import engine.vec;
-import engine.math;
+#include "engine/math/math_3d.h"
+#include "engine/math/bounding_volumes.h"
+#include "engine/math/vec.h"
+#include "engine/math/math.h"
 
 using namespace math;
 
 // Type aliases for convenience
-using Vec3f = Vec3<float>;
 using BoundingBox3Df = BoundingBox3D<float>;
 using BoundingSpheref = BoundingSphere<float>;
 using Planef = Plane<float>;

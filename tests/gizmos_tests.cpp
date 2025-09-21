@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-import editor.gizmos;
-import engine.vec;
-import engine.matrix;
+#include "editor/gizmos.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
 
 using namespace editor;
 using namespace math;

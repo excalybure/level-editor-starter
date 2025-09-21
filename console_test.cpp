@@ -1,4 +1,4 @@
-import runtime.console;
+﻿#include "src/runtime/console.h"
 #include <iostream>
 #include <string>
 #include <vector>

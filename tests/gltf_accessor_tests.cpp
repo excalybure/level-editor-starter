@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <span>
 #include <vector>
 #include <array>
 #include <cstdint>
 
-import engine.gltf_loader;
-import engine.vec;
+#include "engine/gltf_loader/gltf_loader.h"
+#include "engine/math/vec.h"
 
 // RED Phase: Tests for accessor & buffer view handling (should fail initially)
 TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )

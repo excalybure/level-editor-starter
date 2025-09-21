@@ -1,8 +1,13 @@
-// Camera Controller implementation
-module engine.camera.controller;
-
-import std;
-import engine.math;
+﻿// Camera Controller implementation
+#include "camera_controller.h"
+#include "camera.h"
+#include "engine/math/math.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
 
 namespace camera
 {

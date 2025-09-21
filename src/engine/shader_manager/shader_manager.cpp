@@ -1,16 +1,10 @@
-// Shader Manager implementation
-// Copyright (c) 2025 Level Editor Project
+#include "shader_manager.h"
 
-module; // global module fragment
-
-#include <windows.h>
 #include <shared_mutex>
+#include <windows.h>
 
-module engine.shader_manager;
-
-import std;
-import engine.renderer;
-import runtime.console;
+#include "engine/renderer/renderer.h"
+#include "runtime/console.h"
 
 namespace shader_manager
 {

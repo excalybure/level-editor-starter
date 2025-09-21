@@ -1,14 +1,14 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import runtime.ecs;
-import runtime.systems;
-import runtime.mesh_rendering_system;
-import engine.renderer;
-import engine.asset_manager;
-import engine.gpu.gpu_resource_manager;
-import editor.ui;
-import platform.dx12;
-import engine.shader_manager;
+#include "runtime/ecs.h"
+#include "runtime/systems.h"
+#include "runtime/mesh_rendering_system.h"
+#include "engine/renderer/renderer.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "editor/ui.h"
+#include "platform/dx12/dx12_device.h"
+#include "engine/shader_manager/shader_manager.h"
 
 TEST_CASE( "Asset loading to rendering integration initializes correctly", "[integration][asset-rendering]" )
 {
@@ -56,7 +56,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 
 		// Act - create MeshRenderingSystem
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		auto meshRenderingSystem = std::make_unique<runtime::systems::MeshRenderingSystem>( renderer, shaderManager );
+		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, shaderManager );
 
 		// Assert
 		REQUIRE( meshRenderingSystem != nullptr );
@@ -74,7 +74,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		ecs::Scene scene;
 
 		// Act - add system to manager
-		auto *meshRenderingSystem = systemManager.addSystem<runtime::systems::MeshRenderingSystem>( renderer );
+		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer );
 
 		// Assert
 		REQUIRE( meshRenderingSystem != nullptr );

@@ -1,9 +1,9 @@
-// Viewport 3D Picking and Ray Casting tests
+﻿// Viewport 3D Picking and Ray Casting tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-import editor.viewport;
-import engine.vec;
+#include "editor/viewport/viewport.h"
+#include "engine/math/vec.h"
 
 using namespace editor;
 using namespace math;

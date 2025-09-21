@@ -1,14 +1,11 @@
-// Global module fragment - headers go here
-module;
+#include "renderer.h"
 
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <wrl.h>
+#include <fstream>
 
-module engine.renderer;
-
-import std;
-import runtime.console;
+#include "runtime/console.h"
 
 namespace renderer
 {

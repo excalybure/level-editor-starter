@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
-import engine.assets;
+#include "engine/assets/assets.h"
 
 TEST_CASE( "Primitive Basic Operations", "[primitive][tdd]" )
 {

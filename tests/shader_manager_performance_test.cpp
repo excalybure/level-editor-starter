@@ -1,13 +1,13 @@
-// Performance test for shader manager hash-based optimization
+﻿// Performance test for shader manager hash-based optimization
 // This test demonstrates the performance improvement from O(n) to O(1) lookup
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <chrono>
 #include <random>
+#include <fstream>
 
-import engine.shader_manager;
-import std;
+#include "engine/shader_manager/shader_manager.h"
 
 using namespace shader_manager;
 

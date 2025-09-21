@@ -1,22 +1,19 @@
 // Grid rendering system implementation
 // Copyright (c) 2025 Level Editor Project
 
-module; // global module fragment
+#include "grid.h"
 
 #include <cstring>
 #include <d3d12.h>
 #include <wrl.h>
 
-module engine.grid;
-
-import std;
-import platform.dx12;
-import engine.renderer;
-import engine.vec;
-import engine.matrix;
-import engine.camera;
-import engine.color;
-import runtime.console;
+#include "platform/dx12/dx12_device.h"
+#include "engine/camera/camera.h"
+#include "engine/math/color.h"
+#include "engine/math/matrix.h"
+#include "engine/math/vec.h"
+#include "engine/renderer/renderer.h"
+#include "runtime/console.h"
 
 using namespace grid;
 using namespace Microsoft::WRL;

@@ -1,9 +1,9 @@
-// UI Layout Management tests
+﻿// UI Layout Management tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-import editor.ui;
-import editor.viewport;
+#include "editor/ui.h"
+#include "editor/viewport/viewport.h"
 
 using namespace editor;
 using Catch::Matchers::WithinAbs;

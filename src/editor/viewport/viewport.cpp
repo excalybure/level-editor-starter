@@ -1,22 +1,24 @@
+#include "viewport.h"
+
 // Viewport Management implementation for multi-viewport 3D editor
 // Implements viewport instances with cameras, render targets, and input handling
-module;
-
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstring>
+#include <memory>
+#include <vector>
+#include <array>
 
-module editor.viewport;
-
-import std;
-import engine.vec;
-import engine.matrix;
-import engine.camera;
-import engine.camera.controller;
-import platform.dx12;
-import platform.pix;
-import engine.grid;
-import runtime.console;
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/camera/camera.h"
+#include "engine/camera/camera_controller.h"
+#include "platform/dx12/dx12_device.h"
+#include "platform/pix/pix.h"
+#include "engine/grid/grid.h"
+#include "runtime/console.h"
+#include "runtime/systems.h"
+#include "runtime/mesh_rendering_system.h"
 
 namespace editor
 {
@@ -32,19 +34,6 @@ struct FrameConstants
 
 	FrameConstants() = default;
 };
-
-} // namespace editor
-import engine.vec;
-import engine.matrix;
-import engine.camera;
-import engine.camera.controller;
-import platform.dx12;
-import platform.pix;
-import engine.grid;
-import runtime.console;
-
-namespace editor
-{
 
 //=============================================================================
 // Viewport Implementation
@@ -787,7 +776,7 @@ void ViewportManager::render()
 			if ( m_scene && m_systemManager && viewport->getCamera() )
 			{
 				// Get the MeshRenderingSystem and call its render method
-				if ( auto *meshRenderingSystem = m_systemManager->getSystem<runtime::systems::MeshRenderingSystem>() )
+				if ( auto *meshRenderingSystem = m_systemManager->getSystem<systems::MeshRenderingSystem>() )
 				{
 					pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
 

@@ -1,16 +1,231 @@
-// Global module fragment for C headers
-module;
-#include <cgltf.h>
+// GLTF Loader implementation with stub functionality
+#define CGLTF_IMPLEMENTATION
+#include "gltf_loader.h"
+
+#include <memory>
+#include <vector>
+#include <string>
+#include <span>
 #include <cstring>
 
-module engine.gltf_loader;
-
-import std;
-import engine.assets;
-import runtime.console;
+#include "engine/assets/assets.h"
+#include "engine/math/math.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/math/quat.h"
+#include "runtime/console.h"
 
 namespace gltf_loader
 {
+
+// Utility function implementations for accessor data extraction
+
+std::vector<math::Vec3f> extractFloat3Positions( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	// Calculate effective stride (minimum of 12 bytes for float3 or specified stride)
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
+
+	std::vector<math::Vec3f> positions;
+	positions.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *vertexBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *vertex = reinterpret_cast<const float *>( vertexBytes );
+		positions.push_back( { vertex[0], vertex[1], vertex[2] } );
+	}
+
+	return positions;
+}
+
+std::vector<math::Vec3f> extractFloat3Normals( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	// Use the same logic as positions since they're both float3, but implemented directly for clarity
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
+
+	std::vector<math::Vec3f> normals;
+	normals.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *normalBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *normal = reinterpret_cast<const float *>( normalBytes );
+		normals.push_back( { normal[0], normal[1], normal[2] } );
+	}
+
+	return normals;
+}
+
+std::vector<math::Vec2f> extractFloat2UVs( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 2 * sizeof( float ) );
+
+	std::vector<math::Vec2f> uvs;
+	uvs.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *uvBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *uv = reinterpret_cast<const float *>( uvBytes );
+		uvs.push_back( { uv[0], uv[1] } );
+	}
+
+	return uvs;
+}
+
+std::vector<math::Vec4f> extractFloat4Tangents( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 4 * sizeof( float ) );
+
+	std::vector<math::Vec4f> tangents;
+	tangents.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *tangentBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *tangent = reinterpret_cast<const float *>( tangentBytes );
+		tangents.push_back( { tangent[0], tangent[1], tangent[2], tangent[3] } );
+	}
+
+	return tangents;
+}
+
+std::vector<math::Vec4f> extractFloat4Colors( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 4 * sizeof( float ) );
+
+	std::vector<math::Vec4f> colors;
+	colors.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *colorBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *color = reinterpret_cast<const float *>( colorBytes );
+		colors.push_back( { color[0], color[1], color[2], color[3] } );
+	}
+
+	return colors;
+}
+
+std::vector<math::Vec4f> extractFloat3ColorsAsVec4( const float *buffer, size_t count, size_t byteOffset, size_t byteStride )
+{
+	const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : ( 3 * sizeof( float ) );
+
+	std::vector<math::Vec4f> colors;
+	colors.reserve( count );
+
+	// Work with byte-level addressing to handle unaligned offsets
+	const std::uint8_t *byteBuffer = reinterpret_cast<const std::uint8_t *>( buffer );
+
+	for ( size_t i = 0; i < count; ++i )
+	{
+		const std::uint8_t *colorBytes = byteBuffer + byteOffset + ( i * effectiveStride );
+		const float *color = reinterpret_cast<const float *>( colorBytes );
+		colors.push_back( { color[0], color[1], color[2], 1.0f } ); // Default alpha = 1.0
+	}
+
+	return colors;
+}
+
+std::vector<uint32_t> extractIndicesAsUint32( const std::uint8_t *buffer, size_t count, ComponentType componentType, size_t byteOffset, size_t byteStride )
+{
+	std::vector<uint32_t> indices;
+	indices.reserve( count );
+
+	const std::uint8_t *data = buffer + byteOffset;
+
+	switch ( componentType )
+	{
+	case ComponentType::UnsignedByte: {
+		const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : sizeof( std::uint8_t );
+		for ( size_t i = 0; i < count; ++i )
+		{
+			const std::uint8_t *indexPtr = data + ( i * effectiveStride );
+			std::uint8_t indexValue = *indexPtr;
+			indices.push_back( static_cast<std::uint32_t>( indexValue ) );
+		}
+		break;
+	}
+	case ComponentType::UnsignedShort: {
+		const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : sizeof( std::uint16_t );
+		for ( size_t i = 0; i < count; ++i )
+		{
+			const std::uint8_t *indexPtr = data + ( i * effectiveStride );
+			const std::uint16_t indexValue = *reinterpret_cast<const std::uint16_t *>( indexPtr );
+			indices.push_back( static_cast<std::uint32_t>( indexValue ) );
+		}
+		break;
+	}
+	case ComponentType::UnsignedInt: {
+		const size_t effectiveStride = ( byteStride > 0 ) ? byteStride : sizeof( std::uint32_t );
+		for ( size_t i = 0; i < count; ++i )
+		{
+			const std::uint8_t *indexPtr = data + ( i * effectiveStride );
+			const std::uint32_t indexValue = *reinterpret_cast<const std::uint32_t *>( indexPtr );
+			indices.push_back( indexValue );
+		}
+		break;
+	}
+	default:
+		throw std::invalid_argument( "Unsupported component type for indices" );
+	}
+
+	return indices;
+}
+
+void validateComponentType( ComponentType componentType, AttributeType attributeType )
+{
+	// Define valid component type combinations based on glTF 2.0 specification
+	switch ( attributeType )
+	{
+	case AttributeType::Position:
+	case AttributeType::Normal:
+		if ( componentType != ComponentType::Float )
+		{
+			throw std::invalid_argument( "Position and Normal attributes must use FLOAT component type" );
+		}
+		break;
+
+	case AttributeType::TexCoord:
+		if ( componentType != ComponentType::Float && componentType != ComponentType::UnsignedByte && componentType != ComponentType::UnsignedShort )
+		{
+			throw std::invalid_argument( "TexCoord attributes must use FLOAT, UNSIGNED_BYTE, or UNSIGNED_SHORT component type" );
+		}
+		break;
+
+	case AttributeType::Tangent:
+		if ( componentType != ComponentType::Float )
+		{
+			throw std::invalid_argument( "Tangent attributes must use FLOAT component type" );
+		}
+		break;
+
+	case AttributeType::Indices:
+		if ( componentType != ComponentType::UnsignedByte && componentType != ComponentType::UnsignedShort && componentType != ComponentType::UnsignedInt )
+		{
+			throw std::invalid_argument( "Indices must use UNSIGNED_BYTE, UNSIGNED_SHORT, or UNSIGNED_INT component type" );
+		}
+		break;
+
+	default:
+		throw std::invalid_argument( "Unknown attribute type" );
+	}
+}
 
 GLTFLoader::GLTFLoader()
 {
@@ -352,7 +567,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						bufferView->offset + positionAccessor->offset,
 						bufferView->stride );
 
-					std::vector<Vec3f> normals;
+					std::vector<math::Vec3f> normals;
 					if ( normalAccessor && normalAccessor->component_type == cgltf_component_type_r_32f && normalAccessor->type == cgltf_type_vec3 )
 					{
 						cgltf_buffer_view *normalBufferView = normalAccessor->buffer_view;
@@ -373,7 +588,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 					}
 
 					// Extract UVs if available
-					std::vector<Vec2f> uvs;
+					std::vector<math::Vec2f> uvs;
 					if ( texCoordAccessor && texCoordAccessor->component_type == cgltf_component_type_r_32f && texCoordAccessor->type == cgltf_type_vec2 )
 					{
 						cgltf_buffer_view *uvBufferView = texCoordAccessor->buffer_view;
@@ -394,7 +609,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 					}
 
 					// Extract tangents if available
-					std::vector<Vec4f> tangents;
+					std::vector<math::Vec4f> tangents;
 					if ( tangentAccessor && tangentAccessor->component_type == cgltf_component_type_r_32f && tangentAccessor->type == cgltf_type_vec4 )
 					{
 						cgltf_buffer_view *tangentBufferView = tangentAccessor->buffer_view;
@@ -415,7 +630,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 					}
 
 					// Extract colors if available
-					std::vector<Vec4f> colors;
+					std::vector<math::Vec4f> colors;
 					if ( colorAccessor && colorAccessor->component_type == cgltf_component_type_r_32f )
 					{
 						cgltf_buffer_view *colorBufferView = colorAccessor->buffer_view;
@@ -448,7 +663,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 					}
 
 					// Create vertices with extracted data
-					for ( std::size_t i = 0; i < positions.size(); ++i )
+					for ( size_t i = 0; i < positions.size(); ++i )
 					{
 						assets::Vertex vertex;
 						vertex.position = positions[i];
@@ -460,7 +675,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						}
 						else
 						{
-							vertex.normal = Vec3f{ 0.0f, 0.0f, 1.0f };
+							vertex.normal = math::Vec3f{ 0.0f, 0.0f, 1.0f };
 						}
 
 						// Use extracted UVs or default
@@ -470,7 +685,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						}
 						else
 						{
-							vertex.texCoord = Vec2f{ 0.0f, 0.0f };
+							vertex.texCoord = math::Vec2f{ 0.0f, 0.0f };
 						}
 
 						// Use extracted tangents or default
@@ -480,7 +695,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						}
 						else
 						{
-							vertex.tangent = Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f };
+							vertex.tangent = math::Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f };
 						}
 
 						// Use extracted colors or default (white)
@@ -490,7 +705,7 @@ std::unique_ptr<assets::Primitive> GLTFLoader::extractPrimitive( cgltf_primitive
 						}
 						else
 						{
-							vertex.color = Vec4f{ 1.0f, 1.0f, 1.0f, 1.0f };
+							vertex.color = math::Vec4f{ 1.0f, 1.0f, 1.0f, 1.0f };
 						}
 
 						primitiveObj->addVertex( vertex );
@@ -723,11 +938,8 @@ std::string GLTFLoader::extractTextureURI( void *textureInfoPtr, void *dataPtr )
 	return std::string( image->uri );
 }
 
-std::span<const std::uint8_t> GLTFLoader::getAccessorData( void *accessorPtr, void *dataPtr ) const
+std::span<const std::uint8_t> GLTFLoader::getAccessorData( cgltf_accessor *accessor, cgltf_data * /*data*/ ) const
 {
-	cgltf_accessor *accessor = static_cast<cgltf_accessor *>( accessorPtr );
-	cgltf_data *data = static_cast<cgltf_data *>( dataPtr );
-
 	if ( !accessor || !accessor->buffer_view )
 		return {};
 
@@ -738,7 +950,7 @@ std::span<const std::uint8_t> GLTFLoader::getAccessorData( void *accessorPtr, vo
 		return {};
 
 	const std::uint8_t *start = reinterpret_cast<const std::uint8_t *>( buffer->data ) + bufferView->offset + accessor->offset;
-	std::size_t dataSize = accessor->count * cgltf_num_components( accessor->type ) * cgltf_component_size( accessor->component_type );
+	size_t dataSize = accessor->count * cgltf_num_components( accessor->type ) * cgltf_component_size( accessor->component_type );
 
 	return std::span<const std::uint8_t>( start, dataSize );
 }

@@ -1,6 +1,5 @@
-module runtime.time;
-
-import <chrono>;
+#include "time.h"
+#include <chrono>
 
 namespace runtime::time::detail
 {

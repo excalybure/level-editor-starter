@@ -1,5 +1,4 @@
 // Include ImGui implementation in the global module fragment to avoid conflicts
-module; // start global module fragment so we can include headers before the module declaration
 #include "imgui.h"
 #include "imgui_internal.h" // For DockBuilder API
 #include "imgui_impl_win32.h"
@@ -8,12 +7,23 @@ module; // start global module fragment so we can include headers before the mod
 #include <windows.h>
 #include <commdlg.h> // For GetOpenFileName
 
-module editor.ui;
+#include "ui.h"
 
-import std;
-import engine.grid;
-import runtime.scene_importer;
-import runtime.console;
+#include <memory>
+#include <string>
+#include <array>
+#include <filesystem>
+
+#include "engine/assets/asset_manager.h"
+#include "engine/camera/camera.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "engine/shader_manager/shader_manager.h"
+#include "runtime/ecs.h"
+#include "runtime/systems.h"
+#include "runtime/scene_importer.h"
+#include "runtime/console.h"
+#include "platform/dx12/dx12_device.h"
+#include "platform/win32/win32_window.h"
 
 namespace editor
 {

@@ -1,17 +1,17 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-import editor.viewport_input;
-import editor.selection;
-import engine.picking;
-import editor.viewport;
-import runtime.ecs;
-import runtime.entity;
-import runtime.components;
-import runtime.systems;
-import engine.vec;
-import engine.matrix;
-import std;
+#include "editor/viewport_input.h"
+#include "editor/selection.h"
+#include "engine/picking.h"
+#include "editor/viewport/viewport.h"
+#include "runtime/ecs.h"
+#include "runtime/entity.h"
+#include "runtime/components.h"
+#include "runtime/systems.h"
+#include "engine/camera/camera.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
 
 namespace
 {

@@ -1,16 +1,16 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
 // Test the integration between UI and Viewport systems
-import editor.ui;
-import editor.viewport;
-import engine.vec;
-import platform.dx12;
-import platform.win32.win32_window;
-import engine.shader_manager;
-import engine.grid;
-import engine.camera;
+#include "editor/ui.h"
+#include "editor/viewport/viewport.h"
+#include "engine/math/vec.h"
+#include "platform/dx12/dx12_device.h"
+#include "platform/win32/win32_window.h"
+#include "engine/shader_manager/shader_manager.h"
+#include "engine/grid/grid.h"
+#include "engine/camera/camera.h"
 
 using namespace editor;
 using namespace math;

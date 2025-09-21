@@ -1,15 +1,14 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
 // Need D3D12 headers for constants
 #include <d3d12.h>
 
-import engine.renderer;
-import platform.dx12;
-import engine.vec;
-import engine.matrix;
-import engine.color;
-
+#include "engine/renderer/renderer.h"
+#include "platform/dx12/dx12_device.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/math/color.h"
 #include "test_dx12_helpers.h"
 
 using namespace renderer;

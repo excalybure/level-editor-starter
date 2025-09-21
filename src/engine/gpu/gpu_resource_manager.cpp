@@ -1,6 +1,8 @@
-module engine.gpu.gpu_resource_manager;
+#include "gpu_resource_manager.h"
 
-import runtime.console;
+#include "engine/assets/assets.h"
+#include "engine/gpu/material_gpu.h"
+#include "runtime/console.h"
 
 namespace engine
 {

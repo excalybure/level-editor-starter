@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <string>
 
-import engine.gltf_loader;
+#include "engine/gltf_loader/gltf_loader.h"
 
 TEST_CASE( "Mesh Extraction Base Triangle", "[mesh-extraction][tdd]" )
 {

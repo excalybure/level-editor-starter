@@ -1,4 +1,4 @@
-// Tests for editor.ui module (layout & capture queries without full ImGui backend init)
+﻿// Tests for editor.ui module (layout & capture queries without full ImGui backend init)
 #include <catch2/catch_all.hpp>
 #if defined( _WIN32 )
 #define WIN32_LEAN_AND_MEAN
@@ -7,10 +7,12 @@
 
 #include "test_dx12_helpers.h"
 
-import editor.ui;
-import editor.viewport; // For ViewportType enum
-import platform.dx12;
-import engine.shader_manager;
+#include "editor/ui.h"
+#include "editor/viewport/viewport.h"
+
+// For ViewportType enum
+#include "platform/dx12/dx12_device.h"
+#include "engine/shader_manager/shader_manager.h"
 
 using editor::UI;
 using editor::ViewportType;

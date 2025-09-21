@@ -1,12 +1,12 @@
-// Shader Manager comprehensive unit tests
+﻿// Shader Manager comprehensive unit tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <fstream>
 #include "test_dx12_helpers.h"
 
-import engine.shader_manager;
-import engine.renderer;
-import runtime.console;
-import std;
+#include "engine/shader_manager/shader_manager.h"
+#include "engine/renderer/renderer.h"
+#include "runtime/console.h"
 
 using namespace shader_manager;
 

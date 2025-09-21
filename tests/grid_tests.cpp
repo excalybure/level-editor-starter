@@ -1,13 +1,13 @@
-// Grid system comprehensive tests
+﻿// Grid system comprehensive tests
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
-import engine.grid;
-import engine.camera;
-import engine.vec;
-import engine.matrix;
-import engine.shader_manager;
+#include "engine/grid/grid.h"
+#include "engine/camera/camera.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/shader_manager/shader_manager.h"
 
 using namespace grid;
 using namespace math;

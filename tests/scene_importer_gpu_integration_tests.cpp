@@ -1,16 +1,15 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <memory>
 
-import std;
-import runtime.ecs;
-import runtime.entity;
-import runtime.components;
-import runtime.scene_importer;
-import engine.gpu.gpu_resource_manager;
-import engine.assets;
-import engine.vec;
-import platform.dx12;
+#include "runtime/ecs.h"
+#include "runtime/entity.h"
+#include "runtime/components.h"
+#include "runtime/scene_importer.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "engine/assets/assets.h"
+#include "engine/math/vec.h"
+#include "platform/dx12/dx12_device.h"
 
 using namespace runtime;
 using namespace ecs;

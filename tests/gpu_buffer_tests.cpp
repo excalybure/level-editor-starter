@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 
-import engine.assets;
-import engine.gpu.mesh_gpu;
-import engine.gpu.material_gpu;
-import engine.gpu.gpu_resource_manager;
-import platform.dx12;
+#include "engine/assets/assets.h"
+#include "engine/gpu/mesh_gpu.h"
+#include "engine/gpu/material_gpu.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "platform/dx12/dx12_device.h"
 
 using namespace assets;
 using namespace engine::gpu;

@@ -1,15 +1,17 @@
-module editor.viewport_input;
+#include "viewport_input.h"
 
-import editor.selection;
-import engine.picking;
-import editor.viewport;
-import runtime.ecs;
-import runtime.entity;
-import runtime.components;
-import runtime.systems;
-import engine.vec;
-import engine.matrix;
-import std;
+#include <vector>
+#include <algorithm>
+
+#include "editor/selection.h"
+#include "engine/picking.h"
+#include "editor/viewport/viewport.h"
+#include "runtime/ecs.h"
+#include "runtime/entity.h"
+#include "runtime/components.h"
+#include "runtime/systems.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
 
 namespace editor
 {
@@ -23,7 +25,7 @@ ViewportInputHandler::ViewportInputHandler( SelectionManager &selectionManager,
 
 void ViewportInputHandler::handleMouseClick( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2<> &screenPos,
+	const math::Vec2f &screenPos,
 	bool leftButton,
 	bool rightButton,
 	bool ctrlPressed,
@@ -76,8 +78,8 @@ void ViewportInputHandler::handleMouseClick( ecs::Scene &scene,
 
 void ViewportInputHandler::handleMouseDrag( ecs::Scene & /*scene*/,
 	const Viewport & /*viewport*/,
-	const math::Vec2<> &startPos,
-	const math::Vec2<> &currentPos,
+	const math::Vec2f &startPos,
+	const math::Vec2f &currentPos,
 	bool ctrlPressed,
 	bool shiftPressed )
 {
@@ -101,7 +103,7 @@ void ViewportInputHandler::handleMouseDrag( ecs::Scene & /*scene*/,
 
 void ViewportInputHandler::handleMouseRelease( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2<> & /*releasePos*/ )
+	const math::Vec2f & /*releasePos*/ )
 {
 	if ( m_rectSelection.active )
 	{
@@ -115,7 +117,7 @@ void ViewportInputHandler::handleMouseRelease( ecs::Scene &scene,
 
 void ViewportInputHandler::handleMouseMove( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2<> &screenPos )
+	const math::Vec2f &screenPos )
 {
 	// Update hover state
 	updateHoverState( scene, viewport, screenPos );
@@ -146,8 +148,8 @@ SelectionMode ViewportInputHandler::getSelectionMode( bool ctrlPressed, bool shi
 
 std::vector<ecs::Entity> ViewportInputHandler::getEntitiesInRect( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2<> &minPos,
-	const math::Vec2<> &maxPos ) const
+	const math::Vec2f &minPos,
+	const math::Vec2f &maxPos ) const
 {
 	std::vector<ecs::Entity> entitiesInRect;
 
@@ -169,7 +171,7 @@ std::vector<ecs::Entity> ViewportInputHandler::getEntitiesInRect( ecs::Scene &sc
 		{
 			// Get entity world position using TransformSystem for proper hierarchical transforms
 			const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
-			const auto worldPos = math::Vec3<>{ worldMatrix.m30(), worldMatrix.m31(), worldMatrix.m32() }; // Extract translation
+			const auto worldPos = math::Vec3f{ worldMatrix.m30(), worldMatrix.m31(), worldMatrix.m32() }; // Extract translation
 
 			// Project to screen coordinates
 			const auto screenPos = viewport.worldToScreen( worldPos );
@@ -189,12 +191,12 @@ std::vector<ecs::Entity> ViewportInputHandler::getEntitiesInRect( ecs::Scene &sc
 void ViewportInputHandler::applyRectSelection( ecs::Scene &scene, const Viewport &viewport )
 {
 	// Calculate rectangle bounds
-	const auto minPos = math::Vec2<>{
+	const auto minPos = math::Vec2f{
 		std::min( m_rectSelection.startPos.x, m_rectSelection.endPos.x ),
 		std::min( m_rectSelection.startPos.y, m_rectSelection.endPos.y )
 	};
 
-	const auto maxPos = math::Vec2<>{
+	const auto maxPos = math::Vec2f{
 		std::max( m_rectSelection.startPos.x, m_rectSelection.endPos.x ),
 		std::max( m_rectSelection.startPos.y, m_rectSelection.endPos.y )
 	};
@@ -240,7 +242,7 @@ void ViewportInputHandler::applyRectSelection( ecs::Scene &scene, const Viewport
 	}
 }
 
-void ViewportInputHandler::updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2<> &screenPos )
+void ViewportInputHandler::updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2f &screenPos )
 {
 	// Perform picking using viewport's ray casting
 	const auto viewportRay = viewport.getPickingRay( screenPos );

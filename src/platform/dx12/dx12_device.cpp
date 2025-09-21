@@ -1,18 +1,13 @@
-// Global module fragment - headers go here
-module;
+#include "dx12_device.h"
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <vector>
 #include <wrl.h>
 #ifdef _DEBUG
 #include <d3d12sdklayers.h> // For ID3D12InfoQueue
 #endif
-// ImGui headers (render integration moved here so we can issue draw calls on the active command list)
-
-module platform.dx12;
-
-import std;
-import runtime.console;
+#include "runtime/console.h"
 
 namespace dx12
 {

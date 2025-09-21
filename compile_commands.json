@@ -1,745 +1,457 @@
 [
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime.console.dir\\src\\runtime\\console.cpp.obj.modmap /FoCMakeFiles\\runtime.console.dir\\src\\runtime\\console.cpp.obj /FdCMakeFiles\\runtime.console.dir\\runtime.console.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\console.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime_core.dir\\src\\runtime\\console.cpp.obj.modmap /FoCMakeFiles\\runtime_core.dir\\src\\runtime\\console.cpp.obj /FdCMakeFiles\\runtime_core.dir\\runtime_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\console.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\console.cpp",
-  "output": "CMakeFiles\\runtime.console.dir\\src\\runtime\\console.cpp.obj"
+  "output": "CMakeFiles\\runtime_core.dir\\src\\runtime\\console.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime.console.dir\\src\\runtime\\console.ixx.obj.modmap /FoCMakeFiles\\runtime.console.dir\\src\\runtime\\console.ixx.obj /FdCMakeFiles\\runtime.console.dir\\runtime.console.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\console.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\console.ixx",
-  "output": "CMakeFiles\\runtime.console.dir\\src\\runtime\\console.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.math.dir\\src\\engine\\math\\math.ixx.obj.modmap /FoCMakeFiles\\engine.math.dir\\src\\engine\\math\\math.ixx.obj /FdCMakeFiles\\engine.math.dir\\engine.math.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math.ixx",
-  "output": "CMakeFiles\\engine.math.dir\\src\\engine\\math\\math.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.vec.dir\\src\\engine\\math\\vec.ixx.obj.modmap /FoCMakeFiles\\engine.vec.dir\\src\\engine\\math\\vec.ixx.obj /FdCMakeFiles\\engine.vec.dir\\engine.vec.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\vec.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\vec.ixx",
-  "output": "CMakeFiles\\engine.vec.dir\\src\\engine\\math\\vec.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.matrix.dir\\src\\engine\\math\\matrix.ixx.obj.modmap /FoCMakeFiles\\engine.matrix.dir\\src\\engine\\math\\matrix.ixx.obj /FdCMakeFiles\\engine.matrix.dir\\engine.matrix.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\matrix.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\matrix.ixx",
-  "output": "CMakeFiles\\engine.matrix.dir\\src\\engine\\math\\matrix.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.quat.dir\\src\\engine\\math\\quat.ixx.obj.modmap /FoCMakeFiles\\engine.quat.dir\\src\\engine\\math\\quat.ixx.obj /FdCMakeFiles\\engine.quat.dir\\engine.quat.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\quat.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\quat.ixx",
-  "output": "CMakeFiles\\engine.quat.dir\\src\\engine\\math\\quat.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.color.dir\\src\\engine\\math\\color.ixx.obj.modmap /FoCMakeFiles\\engine.color.dir\\src\\engine\\math\\color.ixx.obj /FdCMakeFiles\\engine.color.dir\\engine.color.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\color.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\color.ixx",
-  "output": "CMakeFiles\\engine.color.dir\\src\\engine\\math\\color.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.random.dir\\src\\engine\\math\\random.ixx.obj.modmap /FoCMakeFiles\\engine.random.dir\\src\\engine\\math\\random.ixx.obj /FdCMakeFiles\\engine.random.dir\\engine.random.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\random.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\random.ixx",
-  "output": "CMakeFiles\\engine.random.dir\\src\\engine\\math\\random.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.animation.dir\\src\\engine\\math\\animation.ixx.obj.modmap /FoCMakeFiles\\engine.animation.dir\\src\\engine\\math\\animation.ixx.obj /FdCMakeFiles\\engine.animation.dir\\engine.animation.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\animation.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\animation.ixx",
-  "output": "CMakeFiles\\engine.animation.dir\\src\\engine\\math\\animation.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.curves.dir\\src\\engine\\math\\curves.ixx.obj.modmap /FoCMakeFiles\\engine.curves.dir\\src\\engine\\math\\curves.ixx.obj /FdCMakeFiles\\engine.curves.dir\\engine.curves.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\curves.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\curves.ixx",
-  "output": "CMakeFiles\\engine.curves.dir\\src\\engine\\math\\curves.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.bounding_box_2d.dir\\src\\engine\\math\\bounding_box_2d.ixx.obj.modmap /FoCMakeFiles\\engine.bounding_box_2d.dir\\src\\engine\\math\\bounding_box_2d.ixx.obj /FdCMakeFiles\\engine.bounding_box_2d.dir\\engine.bounding_box_2d.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_box_2d.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_box_2d.ixx",
-  "output": "CMakeFiles\\engine.bounding_box_2d.dir\\src\\engine\\math\\bounding_box_2d.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.bounding_box_3d.dir\\src\\engine\\math\\bounding_box_3d.ixx.obj.modmap /FoCMakeFiles\\engine.bounding_box_3d.dir\\src\\engine\\math\\bounding_box_3d.ixx.obj /FdCMakeFiles\\engine.bounding_box_3d.dir\\engine.bounding_box_3d.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_box_3d.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_box_3d.ixx",
-  "output": "CMakeFiles\\engine.bounding_box_3d.dir\\src\\engine\\math\\bounding_box_3d.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.bounding_sphere.dir\\src\\engine\\math\\bounding_sphere.ixx.obj.modmap /FoCMakeFiles\\engine.bounding_sphere.dir\\src\\engine\\math\\bounding_sphere.ixx.obj /FdCMakeFiles\\engine.bounding_sphere.dir\\engine.bounding_sphere.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_sphere.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_sphere.ixx",
-  "output": "CMakeFiles\\engine.bounding_sphere.dir\\src\\engine\\math\\bounding_sphere.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.oriented_bounding_box.dir\\src\\engine\\math\\oriented_bounding_box.ixx.obj.modmap /FoCMakeFiles\\engine.oriented_bounding_box.dir\\src\\engine\\math\\oriented_bounding_box.ixx.obj /FdCMakeFiles\\engine.oriented_bounding_box.dir\\engine.oriented_bounding_box.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\oriented_bounding_box.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\oriented_bounding_box.ixx",
-  "output": "CMakeFiles\\engine.oriented_bounding_box.dir\\src\\engine\\math\\oriented_bounding_box.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.plane.dir\\src\\engine\\math\\plane.ixx.obj.modmap /FoCMakeFiles\\engine.plane.dir\\src\\engine\\math\\plane.ixx.obj /FdCMakeFiles\\engine.plane.dir\\engine.plane.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\plane.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\plane.ixx",
-  "output": "CMakeFiles\\engine.plane.dir\\src\\engine\\math\\plane.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.frustum.dir\\src\\engine\\math\\frustum.ixx.obj.modmap /FoCMakeFiles\\engine.frustum.dir\\src\\engine\\math\\frustum.ixx.obj /FdCMakeFiles\\engine.frustum.dir\\engine.frustum.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\frustum.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\frustum.ixx",
-  "output": "CMakeFiles\\engine.frustum.dir\\src\\engine\\math\\frustum.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.bounding_volumes.dir\\src\\engine\\math\\bounding_volumes.ixx.obj.modmap /FoCMakeFiles\\engine.bounding_volumes.dir\\src\\engine\\math\\bounding_volumes.ixx.obj /FdCMakeFiles\\engine.bounding_volumes.dir\\engine.bounding_volumes.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_volumes.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\bounding_volumes.ixx",
-  "output": "CMakeFiles\\engine.bounding_volumes.dir\\src\\engine\\math\\bounding_volumes.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.math_2d.dir\\src\\engine\\math\\math_2d.ixx.obj.modmap /FoCMakeFiles\\engine.math_2d.dir\\src\\engine\\math\\math_2d.ixx.obj /FdCMakeFiles\\engine.math_2d.dir\\engine.math_2d.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math_2d.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math_2d.ixx",
-  "output": "CMakeFiles\\engine.math_2d.dir\\src\\engine\\math\\math_2d.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.math_3d.dir\\src\\engine\\math\\math_3d.ixx.obj.modmap /FoCMakeFiles\\engine.math_3d.dir\\src\\engine\\math\\math_3d.ixx.obj /FdCMakeFiles\\engine.math_3d.dir\\engine.math_3d.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math_3d.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\math\\math_3d.ixx",
-  "output": "CMakeFiles\\engine.math_3d.dir\\src\\engine\\math\\math_3d.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.picking.dir\\src\\engine\\picking.cpp.obj.modmap /FoCMakeFiles\\engine.picking.dir\\src\\engine\\picking.cpp.obj /FdCMakeFiles\\engine.picking.dir\\engine.picking.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.cpp",
-  "output": "CMakeFiles\\engine.picking.dir\\src\\engine\\picking.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.picking.dir\\src\\engine\\picking.ixx.obj.modmap /FoCMakeFiles\\engine.picking.dir\\src\\engine\\picking.ixx.obj /FdCMakeFiles\\engine.picking.dir\\engine.picking.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.ixx",
-  "output": "CMakeFiles\\engine.picking.dir\\src\\engine\\picking.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.cpp.obj.modmap /FoCMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.cpp.obj /FdCMakeFiles\\engine.assets.dir\\engine.assets.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.cpp",
-  "output": "CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.cpp.obj.modmap /FoCMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.cpp.obj /FdCMakeFiles\\engine.assets.dir\\engine.assets.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.cpp",
-  "output": "CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.ixx.obj.modmap /FoCMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.ixx.obj /FdCMakeFiles\\engine.assets.dir\\engine.assets.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.ixx",
-  "output": "CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\assets.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.ixx.obj.modmap /FoCMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.ixx.obj /FdCMakeFiles\\engine.assets.dir\\engine.assets.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.ixx",
-  "output": "CMakeFiles\\engine.assets.dir\\src\\engine\\assets\\asset_manager.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj.modmap /FoCMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj /FdCMakeFiles\\engine.gpu.mesh_gpu.dir\\engine.gpu.mesh_gpu.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.cpp",
-  "output": "CMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.ixx.obj.modmap /FoCMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.ixx.obj /FdCMakeFiles\\engine.gpu.mesh_gpu.dir\\engine.gpu.mesh_gpu.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.ixx",
-  "output": "CMakeFiles\\engine.gpu.mesh_gpu.dir\\src\\engine\\gpu\\mesh_gpu.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.cpp.obj.modmap /FoCMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.cpp.obj /FdCMakeFiles\\engine.gpu.material_gpu.dir\\engine.gpu.material_gpu.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.cpp",
-  "output": "CMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.ixx.obj.modmap /FoCMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.ixx.obj /FdCMakeFiles\\engine.gpu.material_gpu.dir\\engine.gpu.material_gpu.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.ixx",
-  "output": "CMakeFiles\\engine.gpu.material_gpu.dir\\src\\engine\\gpu\\material_gpu.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj.modmap /FoCMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj /FdCMakeFiles\\engine.gpu.gpu_resource_manager.dir\\engine.gpu.gpu_resource_manager.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.cpp",
-  "output": "CMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.ixx.obj.modmap /FoCMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.ixx.obj /FdCMakeFiles\\engine.gpu.gpu_resource_manager.dir\\engine.gpu.gpu_resource_manager.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.ixx",
-  "output": "CMakeFiles\\engine.gpu.gpu_resource_manager.dir\\src\\engine\\gpu\\gpu_resource_manager.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD @CMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj.modmap /FoCMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj /FdCMakeFiles\\engine.gltf_loader.dir\\engine.gltf_loader.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.cpp",
-  "output": "CMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD @CMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.ixx.obj.modmap /FoCMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.ixx.obj /FdCMakeFiles\\engine.gltf_loader.dir\\engine.gltf_loader.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.ixx",
-  "output": "CMakeFiles\\engine.gltf_loader.dir\\src\\engine\\gltf_loader\\gltf_loader.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\engine.integration.asset_gltf.dir\\src\\engine\\integration\\asset_gltf_integration.ixx.obj.modmap /FoCMakeFiles\\engine.integration.asset_gltf.dir\\src\\engine\\integration\\asset_gltf_integration.ixx.obj /FdCMakeFiles\\engine.integration.asset_gltf.dir\\engine.integration.asset_gltf.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\integration\\asset_gltf_integration.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\integration\\asset_gltf_integration.ixx",
-  "output": "CMakeFiles\\engine.integration.asset_gltf.dir\\src\\engine\\integration\\asset_gltf_integration.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\runtime.entity.dir\\src\\runtime\\entity.ixx.obj.modmap /FoCMakeFiles\\runtime.entity.dir\\src\\runtime\\entity.ixx.obj /FdCMakeFiles\\runtime.entity.dir\\runtime.entity.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\entity.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\entity.ixx",
-  "output": "CMakeFiles\\runtime.entity.dir\\src\\runtime\\entity.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\runtime.time.dir\\src\\runtime\\time.cpp.obj.modmap /FoCMakeFiles\\runtime.time.dir\\src\\runtime\\time.cpp.obj /FdCMakeFiles\\runtime.time.dir\\runtime.time.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\time.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime_core.dir\\src\\runtime\\time.cpp.obj.modmap /FoCMakeFiles\\runtime_core.dir\\src\\runtime\\time.cpp.obj /FdCMakeFiles\\runtime_core.dir\\runtime_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\time.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\time.cpp",
-  "output": "CMakeFiles\\runtime.time.dir\\src\\runtime\\time.cpp.obj"
+  "output": "CMakeFiles\\runtime_core.dir\\src\\runtime\\time.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD @CMakeFiles\\runtime.time.dir\\src\\runtime\\time.ixx.obj.modmap /FoCMakeFiles\\runtime.time.dir\\src\\runtime\\time.ixx.obj /FdCMakeFiles\\runtime.time.dir\\runtime.time.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\time.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\time.ixx",
-  "output": "CMakeFiles\\runtime.time.dir\\src\\runtime\\time.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.components.dir\\src\\runtime\\components.ixx.obj.modmap /FoCMakeFiles\\runtime.components.dir\\src\\runtime\\components.ixx.obj /FdCMakeFiles\\runtime.components.dir\\runtime.components.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\components.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\components.ixx",
-  "output": "CMakeFiles\\runtime.components.dir\\src\\runtime\\components.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime.ecs.dir\\src\\runtime\\ecs.ixx.obj.modmap /FoCMakeFiles\\runtime.ecs.dir\\src\\runtime\\ecs.ixx.obj /FdCMakeFiles\\runtime.ecs.dir\\runtime.ecs.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\ecs.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\ecs.ixx",
-  "output": "CMakeFiles\\runtime.ecs.dir\\src\\runtime\\ecs.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.cpp.obj.modmap /FoCMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.cpp.obj /FdCMakeFiles\\runtime.scene_importer.dir\\runtime.scene_importer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.cpp",
-  "output": "CMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.ixx.obj.modmap /FoCMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.ixx.obj /FdCMakeFiles\\runtime.scene_importer.dir\\runtime.scene_importer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.ixx",
-  "output": "CMakeFiles\\runtime.scene_importer.dir\\src\\runtime\\scene_importer.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.systems.dir\\src\\runtime\\systems.ixx.obj.modmap /FoCMakeFiles\\runtime.systems.dir\\src\\runtime\\systems.ixx.obj /FdCMakeFiles\\runtime.systems.dir\\runtime.systems.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\systems.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\systems.ixx",
-  "output": "CMakeFiles\\runtime.systems.dir\\src\\runtime\\systems.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.cpp.obj.modmap /FoCMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.cpp.obj /FdCMakeFiles\\runtime.mesh_rendering_system.dir\\runtime.mesh_rendering_system.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.cpp",
-  "output": "CMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.ixx.obj.modmap /FoCMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.ixx.obj /FdCMakeFiles\\runtime.mesh_rendering_system.dir\\runtime.mesh_rendering_system.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.ixx",
-  "output": "CMakeFiles\\runtime.mesh_rendering_system.dir\\src\\runtime\\mesh_rendering_system.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\runtime.app.dir\\src\\runtime\\app.ixx.obj.modmap /FoCMakeFiles\\runtime.app.dir\\src\\runtime\\app.ixx.obj /FdCMakeFiles\\runtime.app.dir\\runtime.app.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\app.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\app.ixx",
-  "output": "CMakeFiles\\runtime.app.dir\\src\\runtime\\app.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.cpp.obj.modmap /FoCMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.cpp.obj /FdCMakeFiles\\platform.win32.dir\\platform.win32.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\win32\\win32_window.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform_win32.dir\\src\\platform\\win32\\win32_window.cpp.obj.modmap /FoCMakeFiles\\platform_win32.dir\\src\\platform\\win32\\win32_window.cpp.obj /FdCMakeFiles\\platform_win32.dir\\platform_win32.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\win32\\win32_window.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\win32\\win32_window.cpp",
-  "output": "CMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.cpp.obj"
+  "output": "CMakeFiles\\platform_win32.dir\\src\\platform\\win32\\win32_window.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.ixx.obj.modmap /FoCMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.ixx.obj /FdCMakeFiles\\platform.win32.dir\\platform.win32.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\win32\\win32_window.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\win32\\win32_window.ixx",
-  "output": "CMakeFiles\\platform.win32.dir\\src\\platform\\win32\\win32_window.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.ui.dir\\src\\editor\\ui.cpp.obj.modmap /FoCMakeFiles\\editor.ui.dir\\src\\editor\\ui.cpp.obj /FdCMakeFiles\\editor.ui.dir\\editor.ui.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.cpp",
-  "output": "CMakeFiles\\editor.ui.dir\\src\\editor\\ui.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.ui.dir\\src\\editor\\ui.ixx.obj.modmap /FoCMakeFiles\\editor.ui.dir\\src\\editor\\ui.ixx.obj /FdCMakeFiles\\editor.ui.dir\\editor.ui.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.ixx",
-  "output": "CMakeFiles\\editor.ui.dir\\src\\editor\\ui.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj.modmap /FoCMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj /FdCMakeFiles\\platform.dx12.dir\\platform.dx12.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_device.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj.modmap /FoCMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj /FdCMakeFiles\\platform_dx12.dir\\platform_dx12.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_device.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_device.cpp",
-  "output": "CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj"
+  "output": "CMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_device.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj.modmap /FoCMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj /FdCMakeFiles\\platform.dx12.dir\\platform.dx12.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_texture.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj.modmap /FoCMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj /FdCMakeFiles\\platform_dx12.dir\\platform_dx12.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_texture.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_texture.cpp",
-  "output": "CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj"
+  "output": "CMakeFiles\\platform_dx12.dir\\src\\platform\\dx12\\dx12_texture.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.ixx.obj.modmap /FoCMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.ixx.obj /FdCMakeFiles\\platform.dx12.dir\\platform.dx12.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_device.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\dx12\\dx12_device.ixx",
-  "output": "CMakeFiles\\platform.dx12.dir\\src\\platform\\dx12\\dx12_device.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\assets\\assets.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\assets\\assets.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\assets.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\assets\\assets.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\platform.pix.dir\\src\\platform\\pix\\pix.ixx.obj.modmap /FoCMakeFiles\\platform.pix.dir\\src\\platform\\pix\\pix.ixx.obj /FdCMakeFiles\\platform.pix.dir\\platform.pix.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\pix\\pix.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\platform\\pix\\pix.ixx",
-  "output": "CMakeFiles\\platform.pix.dir\\src\\platform\\pix\\pix.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\assets\\asset_manager.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\assets\\asset_manager.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\assets\\asset_manager.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\assets\\asset_manager.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.cpp.obj.modmap /FoCMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.cpp.obj /FdCMakeFiles\\engine.renderer.dir\\engine.renderer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.cpp",
-  "output": "CMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.ixx.obj.modmap /FoCMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.ixx.obj /FdCMakeFiles\\engine.renderer.dir\\engine.renderer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.ixx",
-  "output": "CMakeFiles\\engine.renderer.dir\\src\\engine\\renderer\\renderer.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.cpp.obj.modmap /FoCMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.cpp.obj /FdCMakeFiles\\engine.camera.dir\\engine.camera.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera.cpp",
-  "output": "CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.cpp.obj"
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.cpp.obj.modmap /FoCMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.cpp.obj /FdCMakeFiles\\engine.camera.dir\\engine.camera.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera_controller.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera_controller.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera_controller.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera_controller.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera_controller.cpp",
-  "output": "CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.cpp.obj"
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\camera\\camera_controller.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.ixx.obj.modmap /FoCMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.ixx.obj /FdCMakeFiles\\engine.camera.dir\\engine.camera.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera.ixx",
-  "output": "CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\picking.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\picking.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\picking.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\picking.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.ixx.obj.modmap /FoCMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.ixx.obj /FdCMakeFiles\\engine.camera.dir\\engine.camera.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera_controller.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\camera\\camera_controller.ixx",
-  "output": "CMakeFiles\\engine.camera.dir\\src\\engine\\camera\\camera_controller.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\renderer\\renderer.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\renderer\\renderer.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\renderer\\renderer.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\renderer\\renderer.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj.modmap /FoCMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj /FdCMakeFiles\\engine.shader_manager.dir\\engine.shader_manager.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\shader_manager\\shader_manager.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\shader_manager\\shader_manager.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\shader_manager\\shader_manager.cpp",
-  "output": "CMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj"
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\shader_manager\\shader_manager.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.ixx.obj.modmap /FoCMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.ixx.obj /FdCMakeFiles\\engine.shader_manager.dir\\engine.shader_manager.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\shader_manager\\shader_manager.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\shader_manager\\shader_manager.ixx",
-  "output": "CMakeFiles\\engine.shader_manager.dir\\src\\engine\\shader_manager\\shader_manager.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.cpp.obj.modmap /FoCMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.cpp.obj /FdCMakeFiles\\engine.grid.dir\\engine.grid.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\grid\\grid.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\grid\\grid.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\grid\\grid.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\grid\\grid.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\grid\\grid.cpp",
-  "output": "CMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.cpp.obj"
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\grid\\grid.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.ixx.obj.modmap /FoCMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.ixx.obj /FdCMakeFiles\\engine.grid.dir\\engine.grid.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\grid\\grid.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\grid\\grid.ixx",
-  "output": "CMakeFiles\\engine.grid.dir\\src\\engine\\grid\\grid.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gltf_loader\\gltf_loader.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\gltf_loader\\gltf_loader.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.cpp.obj.modmap /FoCMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.cpp.obj /FdCMakeFiles\\editor.viewport.dir\\editor.viewport.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.cpp",
-  "output": "CMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.cpp.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\mesh_gpu.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\mesh_gpu.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.ixx.obj.modmap /FoCMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.ixx.obj /FdCMakeFiles\\editor.viewport.dir\\editor.viewport.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.ixx",
-  "output": "CMakeFiles\\editor.viewport.dir\\src\\editor\\viewport\\viewport.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\material_gpu.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\gpu\\material_gpu.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\material_gpu.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\material_gpu.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.selection.dir\\src\\editor\\selection.cpp.obj.modmap /FoCMakeFiles\\editor.selection.dir\\src\\editor\\selection.cpp.obj /FdCMakeFiles\\editor.selection.dir\\editor.selection.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.cpp",
-  "output": "CMakeFiles\\editor.selection.dir\\src\\editor\\selection.cpp.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\engine\\gpu\\gpu_resource_manager.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\engine\\gpu\\gpu_resource_manager.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.selection.dir\\src\\editor\\selection.ixx.obj.modmap /FoCMakeFiles\\editor.selection.dir\\src\\editor\\selection.ixx.obj /FdCMakeFiles\\editor.selection.dir\\editor.selection.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.ixx",
-  "output": "CMakeFiles\\editor.selection.dir\\src\\editor\\selection.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\runtime\\mesh_rendering_system.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\runtime\\mesh_rendering_system.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\mesh_rendering_system.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\runtime\\mesh_rendering_system.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.cpp.obj.modmap /FoCMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.cpp.obj /FdCMakeFiles\\editor.selection_renderer.dir\\editor.selection_renderer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.cpp",
-  "output": "CMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.cpp.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\engine_core.dir\\src\\runtime\\scene_importer.cpp.obj.modmap /FoCMakeFiles\\engine_core.dir\\src\\runtime\\scene_importer.cpp.obj /FdCMakeFiles\\engine_core.dir\\engine_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\runtime\\scene_importer.cpp",
+  "output": "CMakeFiles\\engine_core.dir\\src\\runtime\\scene_importer.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD @CMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.ixx.obj.modmap /FoCMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.ixx.obj /FdCMakeFiles\\editor.selection_renderer.dir\\editor.selection_renderer.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.ixx",
-  "output": "CMakeFiles\\editor.selection_renderer.dir\\src\\editor\\selection_renderer.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.cpp.obj.modmap /FoCMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.cpp.obj /FdCMakeFiles\\editor.viewport_input.dir\\editor.viewport_input.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.cpp",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.cpp",
-  "output": "CMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.cpp.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.ixx.obj.modmap /FoCMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.ixx.obj /FdCMakeFiles\\editor.viewport_input.dir\\editor.viewport_input.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.ixx",
-  "output": "CMakeFiles\\editor.viewport_input.dir\\src\\editor\\viewport_input.ixx.obj"
-},
-{
-  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.cpp.obj.modmap /FoCMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.cpp.obj /FdCMakeFiles\\editor.gizmos.dir\\editor.gizmos.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\gizmos.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\gizmos.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\gizmos.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\gizmos.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\gizmos.cpp",
-  "output": "CMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.cpp.obj"
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\gizmos.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.ixx.obj.modmap /FoCMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.ixx.obj /FdCMakeFiles\\editor.gizmos.dir\\editor.gizmos.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\gizmos.ixx",
-  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\gizmos.ixx",
-  "output": "CMakeFiles\\editor.gizmos.dir\\src\\editor\\gizmos.ixx.obj"
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\selection.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\selection.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection.cpp",
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\selection.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\level_editor.dir\\src\\main.cpp.obj.modmap /FoCMakeFiles\\level_editor.dir\\src\\main.cpp.obj /FdCMakeFiles\\level_editor.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\main.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\selection_renderer.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\selection_renderer.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\selection_renderer.cpp",
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\selection_renderer.cpp.obj"
+},
+{
+  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\viewport\\viewport.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\viewport\\viewport.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport\\viewport.cpp",
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\viewport\\viewport.cpp.obj"
+},
+{
+  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\viewport_input.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\viewport_input.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\viewport_input.cpp",
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\viewport_input.cpp.obj"
+},
+{
+  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\editor_core.dir\\src\\editor\\ui.cpp.obj.modmap /FoCMakeFiles\\editor_core.dir\\src\\editor\\ui.cpp.obj /FdCMakeFiles\\editor_core.dir\\editor_core.pdb /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.cpp",
+  "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\editor\\ui.cpp",
+  "output": "CMakeFiles\\editor_core.dir\\src\\editor\\ui.cpp.obj"
+},
+{
+  "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\level_editor.dir\\src\\main.cpp.obj.modmap /FoCMakeFiles\\level_editor.dir\\src\\main.cpp.obj /FdCMakeFiles\\level_editor.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\src\\main.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\src\\main.cpp",
   "output": "CMakeFiles\\level_editor.dir\\src\\main.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\vec_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\vec_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\vec_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\vec_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\vec_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\vec_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\vec_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\vec_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\matrix_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\matrix_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\matrix_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\matrix_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\matrix_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\matrix_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\matrix_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\matrix_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\quat_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\quat_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\quat_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\quat_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\quat_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\quat_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\quat_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\quat_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_utils_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_utils_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_utils_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_utils_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_utils_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_utils_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_utils_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\math_utils_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\random_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\random_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\random_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\random_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\random_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\random_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\random_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\random_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\animation_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\animation_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\animation_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\animation_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\animation_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\animation_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\animation_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\animation_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\curves_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\curves_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\curves_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\curves_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\curves_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\curves_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\curves_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\curves_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_2d_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_2d_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_2d_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_2d_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_2d_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_2d_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_2d_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\math_2d_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_3d_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_3d_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_3d_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\math_3d_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\math_3d_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_3d_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\math_3d_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\math_3d_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\picking_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\picking_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\picking_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\picking_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\picking_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\picking_selection_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\picking_selection_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_selection_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\picking_selection_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\picking_selection_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_selection_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\picking_selection_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\picking_selection_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\dx12_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\dx12_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\dx12_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\dx12_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\dx12_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\dx12_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\dx12_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\dx12_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\renderer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\renderer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\renderer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\renderer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\renderer_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\camera_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\camera_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\camera_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\camera_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\camera_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\camera_controller_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\camera_controller_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_controller_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\camera_controller_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\camera_controller_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_controller_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\camera_controller_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\camera_controller_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\viewport_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_handler_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_handler_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_handler_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_handler_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_handler_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_handler_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_handler_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_handler_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\viewport_input_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\viewport_input_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\grid_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\grid_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\grid_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\grid_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\grid_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\grid_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\grid_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\grid_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ecs_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ecs_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ecs_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ecs_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\ecs_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\systems_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\systems_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\systems_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\systems_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\systems_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\systems_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\systems_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\systems_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\components_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\components_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\components_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\components_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\components_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\components_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\components_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\components_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\selection_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\selection_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\selection_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\selection_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\selection_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\selection_renderer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\selection_renderer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_renderer_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\selection_renderer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\selection_renderer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_renderer_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\selection_renderer_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\selection_renderer_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\app_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\app_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\app_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\app_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\app_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\app_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\app_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\app_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\renderer_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\renderer_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\renderer_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\renderer_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\renderer_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\renderer_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ui_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ui_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ui_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ui_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\ui_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ui_scene_operations_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ui_scene_operations_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_scene_operations_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ui_scene_operations_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ui_scene_operations_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_scene_operations_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\ui_scene_operations_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\ui_scene_operations_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\win32_window_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\win32_window_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\win32_window_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\win32_window_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\win32_window_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\win32_window_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\win32_window_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\win32_window_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\console_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\console_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\console_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\console_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\console_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\console_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\console_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\console_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_performance_test.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_performance_test.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_performance_test.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_performance_test.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_performance_test.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_performance_test.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_manager_performance_test.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\shader_manager_performance_test.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_include_dependency_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_include_dependency_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_include_dependency_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\shader_include_dependency_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\shader_include_dependency_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_include_dependency_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\shader_include_dependency_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\shader_include_dependency_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\assets_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\assets_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\assets_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\assets_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\assets_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\assets_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\assets_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\assets_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\asset_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\asset_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_manager_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\asset_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\asset_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_manager_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_manager_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\asset_manager_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ecs_import_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ecs_import_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_import_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\ecs_import_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\ecs_import_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_import_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\ecs_import_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\ecs_import_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_gpu_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_gpu_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_gpu_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_gpu_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_gpu_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_gpu_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\scene_importer_gpu_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\scene_importer_gpu_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gltf_loader_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gltf_loader_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_loader_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gltf_loader_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gltf_loader_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_loader_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_loader_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\gltf_loader_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gltf_accessor_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gltf_accessor_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_accessor_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gltf_accessor_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gltf_accessor_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_accessor_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\gltf_accessor_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\gltf_accessor_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\mesh_extraction_tdd_test.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\mesh_extraction_tdd_test.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_extraction_tdd_test.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\mesh_extraction_tdd_test.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\mesh_extraction_tdd_test.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_extraction_tdd_test.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_extraction_tdd_test.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\mesh_extraction_tdd_test.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\primitive_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\primitive_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\primitive_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\primitive_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\primitive_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\primitive_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\primitive_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\primitive_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gpu_buffer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gpu_buffer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_buffer_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gpu_buffer_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gpu_buffer_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_buffer_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_buffer_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\gpu_buffer_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\material_gpu_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\material_gpu_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\material_gpu_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\material_gpu_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\material_gpu_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\material_gpu_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\material_gpu_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\material_gpu_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gpu_resource_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gpu_resource_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_resource_manager_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gpu_resource_manager_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gpu_resource_manager_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_resource_manager_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\gpu_resource_manager_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\gpu_resource_manager_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\mesh_rendering_system_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\mesh_rendering_system_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_rendering_system_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\mesh_rendering_system_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\mesh_rendering_system_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_rendering_system_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\mesh_rendering_system_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\mesh_rendering_system_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\asset_rendering_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\asset_rendering_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_rendering_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\asset_rendering_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\asset_rendering_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_rendering_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\asset_rendering_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\asset_rendering_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\imguizmo_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\imguizmo_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\imguizmo_integration_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\imguizmo_integration_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\imguizmo_integration_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\imguizmo_integration_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\imguizmo_integration_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\imguizmo_integration_tests.cpp.obj"
 },
 {
   "directory": "D:/cod_users/setienne/level-editor-starter/build/ninja-msvc",
-  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gizmos_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gizmos_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gizmos_tests.cpp",
+  "command": "C:\\PROGRA~1\\MIB055~1\\2022\\PROFES~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -ID:\\cod_users\\setienne\\level-editor-starter\\src -external:ID:\\cod_users\\setienne\\level-editor-starter\\build\\ninja-msvc\\vcpkg_installed\\x64-windows\\include -external:W0 -std:c++latest -MD /W4 /permissive- /std:c++latest @CMakeFiles\\unit_test_runner.dir\\tests\\gizmos_tests.cpp.obj.modmap /FoCMakeFiles\\unit_test_runner.dir\\tests\\gizmos_tests.cpp.obj /FdCMakeFiles\\unit_test_runner.dir\\ /FS -c D:\\cod_users\\setienne\\level-editor-starter\\tests\\gizmos_tests.cpp",
   "file": "D:\\cod_users\\setienne\\level-editor-starter\\tests\\gizmos_tests.cpp",
   "output": "CMakeFiles\\unit_test_runner.dir\\tests\\gizmos_tests.cpp.obj"
 }

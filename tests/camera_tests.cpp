@@ -1,10 +1,10 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import engine.camera;
-import engine.vec;
-import engine.matrix;
-import engine.math;
+#include "engine/camera/camera.h"
+#include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+#include "engine/math/math.h"
 
 using namespace camera;
 using namespace math;

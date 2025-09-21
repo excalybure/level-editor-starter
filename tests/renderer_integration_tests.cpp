@@ -1,10 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-import platform.win32.win32_window;
-import platform.dx12;
-import engine.renderer;
-
+#include "platform/win32/win32_window.h"
+#include "platform/dx12/dx12_device.h"
+#include "engine/renderer/renderer.h"
 #include "test_dx12_helpers.h"
 
 using namespace platform;

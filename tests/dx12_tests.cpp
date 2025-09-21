@@ -1,9 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
 // We need to import the module for testing
-import platform.dx12;
-
+#include "platform/dx12/dx12_device.h"
 #include "test_dx12_helpers.h"
 
 using namespace dx12;

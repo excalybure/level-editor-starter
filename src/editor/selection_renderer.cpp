@@ -1,14 +1,20 @@
-module; // global module fragment
+#include "selection_renderer.h"
 
 #include <d3d12.h>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <exception>
+#include <cstring>
+#include <cstdint>
+#include <cmath>
 #include <wrl.h>
 
-module editor.selection_renderer;
-
-import runtime.console;
-import runtime.time;
-import engine.shader_manager;
-import std;
+#include "runtime/console.h"
+#include "runtime/ecs.h"
+#include "runtime/time.h"
+#include "engine/shader_manager/shader_manager.h"
+#include "engine/gpu/mesh_gpu.h"
 
 namespace editor
 {

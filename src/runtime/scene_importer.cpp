@@ -1,10 +1,10 @@
-module runtime.scene_importer;
-
-import runtime.ecs;
-import runtime.entity;
-import runtime.components;
-import engine.assets;
-import engine.gpu.mesh_gpu;
+#include "scene_importer.h"
+#include "entity.h"
+#include "ecs.h"
+#include "components.h"
+#include "engine/assets/assets.h"
+#include "engine/gpu/mesh_gpu.h"
+#include "engine/gpu/gpu_resource_manager.h"
 
 using namespace runtime;
 using namespace ecs;
