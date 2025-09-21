@@ -110,8 +110,8 @@ VSOutput VSMain(VSInput input)
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - start );
 
-		INFO( "Found " << numShaders << " duplicate shaders in " << duration.count() << "μs" );
-		INFO( "Average time per duplicate lookup: " << ( duration.count() / numShaders ) << "μs" );
+		INFO( "Found " << numShaders << " duplicate shaders in " << duration.count() << "us" );
+		INFO( "Average time per duplicate lookup: " << ( duration.count() / numShaders ) << "us" );
 
 		// With hash-based lookup, this should be very fast (O(1) per lookup)
 		// Without optimization, this would be O(n) per lookup, getting slower as more shaders are registered
@@ -157,8 +157,8 @@ VSOutput VSMain(VSInput input)
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - start );
 
-		INFO( "Performed " << numRandomAccess << " random duplicate lookups in " << duration.count() << "μs" );
-		INFO( "Average time per random lookup: " << ( duration.count() / numRandomAccess ) << "μs" );
+		INFO( "Performed " << numRandomAccess << " random duplicate lookups in " << duration.count() << "us" );
+		INFO( "Average time per random lookup: " << ( duration.count() / numRandomAccess ) << "us" );
 
 		// Should be consistently fast regardless of number of registered shaders
 		REQUIRE( duration.count() < 100000 ); // Should complete in less than 100ms

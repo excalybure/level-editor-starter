@@ -600,6 +600,11 @@ struct Mat4
 		};
 	}
 
+	static constexpr Mat4 translation( const Vec3<T> &v )
+	{
+		return translation( v.x, v.y, v.z );
+	}
+
 	// Perspective projection matrix
 	static Mat4 perspective( T fovY, T aspect, T zNear, T zFar )
 	{

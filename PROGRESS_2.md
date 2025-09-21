@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025‑09‑20 — Task 2: Core Gizmo System Complete (M2-P4-T02)
+**Summary:** Completed the core gizmo system implementation by adding the remaining atomic functionalities via strict TDD. Extended GizmoSystem with SelectionManager integration, selection center calculation, gizmo matrix computation, and transform delta application. The system now supports snap-to-grid functionality, visibility control, and full transform manipulation for single and multi-entity selections.
+
+**Atomic functionalities completed:**
+- AF2.6: SelectionManager integration with snap-to-grid functionality and visibility toggle
+- AF2.7: Selection center calculation for both single and multi-selection scenarios  
+- AF2.8: Gizmo matrix calculation that positions transform matrix at selection center
+- AF2.9: Transform delta application with additive translation/rotation and multiplicative scale
+
+**Tests:** 11 test cases, 110 assertions total; comprehensive coverage including new functionality: selection center calculation, matrix positioning, and transform delta application to selected entities; filtered commands: `unit_test_runner.exe "[gizmos]"`
+**Notes:** Used strict Red→Green→Refactor TDD for each atomic functionality. Updated GizmoSystem constructor to take both SelectionManager and Scene dependencies. Implemented proper transform application that marks entities dirty for matrix recalculation. All acceptance criteria now complete, preparing foundation for ImGuizmo integration in Task 3.
+
 ## 2024‑12‑28 — Task 2: Core Gizmo System Module (M2-P4-T02)
 **Summary:** Implemented complete core gizmo system module via strict TDD, creating foundational enums, structs, and classes for gizmo manipulation with comprehensive test coverage.
 **Atomic functionalities completed:**

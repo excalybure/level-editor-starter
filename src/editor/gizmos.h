@@ -1,6 +1,18 @@
 ﻿#pragma once
 
 #include "engine/math/vec.h"
+#include "engine/math/matrix.h"
+
+// Forward declarations
+namespace ecs
+{
+class Scene;
+}
+
+namespace editor
+{
+class SelectionManager; // Forward declaration
+}
 
 namespace editor
 {
@@ -38,8 +50,11 @@ struct GizmoResult
 class GizmoSystem
 {
 public:
-	// Constructor with default operation and mode
+	// Default constructor
 	GizmoSystem() noexcept = default;
+
+	// Constructor with SelectionManager and Scene dependencies
+	GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene ) noexcept;
 
 	// Accessors for current state
 	constexpr GizmoOperation getCurrentOperation() const noexcept
@@ -62,6 +77,30 @@ public:
 	{
 		m_currentMode = mode;
 	}
+
+	// Snap-to-grid functionality
+	constexpr float getTranslationSnap() const noexcept { return m_translationSnap; }
+	constexpr float getRotationSnap() const noexcept { return m_rotationSnap; }
+	constexpr float getScaleSnap() const noexcept { return m_scaleSnap; }
+	constexpr bool isSnapEnabled() const noexcept { return m_snapEnabled; }
+
+	constexpr void setTranslationSnap( float snap ) noexcept { m_translationSnap = snap; }
+	constexpr void setRotationSnap( float snap ) noexcept { m_rotationSnap = snap; }
+	constexpr void setScaleSnap( float snap ) noexcept { m_scaleSnap = snap; }
+	constexpr void setSnapEnabled( bool enabled ) noexcept { m_snapEnabled = enabled; }
+
+	// Visibility control
+	constexpr bool isVisible() const noexcept { return m_visible; }
+	constexpr void setVisible( bool visible ) noexcept { m_visible = visible; }
+
+	// Selection center calculation
+	math::Vec3<> calculateSelectionCenter() const;
+
+	// Gizmo matrix calculation
+	math::Mat4<> calculateGizmoMatrix() const;
+
+	// Transform delta application
+	void applyTransformDelta( const GizmoResult &delta );
 
 	// State management for manipulation tracking
 	constexpr bool isManipulating() const noexcept
@@ -93,10 +132,21 @@ public:
 	}
 
 private:
+	SelectionManager *m_selectionManager = nullptr;
+	ecs::Scene *m_scene = nullptr;
 	GizmoOperation m_currentOperation = GizmoOperation::Translate;
 	GizmoMode m_currentMode = GizmoMode::World;
 	bool m_isManipulating = false;
 	bool m_wasManipulated = false;
+
+	// Snap-to-grid settings
+	float m_translationSnap = 1.0f; // 1 unit
+	float m_rotationSnap = 15.0f;	// 15 degrees
+	float m_scaleSnap = 0.1f;		// 0.1 scale increment
+	bool m_snapEnabled = false;
+
+	// Visibility state
+	bool m_visible = true;
 };
 
 } // namespace editor

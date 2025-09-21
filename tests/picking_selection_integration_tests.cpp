@@ -548,7 +548,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 	IntegrationTestViewport viewport;
 	systemManager.update( scene, 0.016f );
 
-	SECTION( "✅ Ray-casting system: Accurate intersection testing" )
+	SECTION( "Ray-casting system: Accurate intersection testing" )
 	{
 		Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
 		Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
@@ -561,7 +561,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( result.distance < 10.0f );
 	}
 
-	SECTION( "✅ Single object selection: Mouse click selects nearest object" )
+	SECTION( "Single object selection: Mouse click selects nearest object" )
 	{
 		Vec2<> screenPos{ 400.0f, 300.0f }; // Center screen
 
@@ -571,7 +571,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.isSelected( testObject ) );
 	}
 
-	SECTION( "✅ Multi-object selection: Ctrl/Shift modifier keys" )
+	SECTION( "Multi-object selection: Ctrl/Shift modifier keys" )
 	{
 		// Initial selection
 		selectionManager.select( testObject );
@@ -592,7 +592,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.isSelected( secondObject ) );
 	}
 
-	SECTION( "✅ Rectangle selection: Click and drag selects multiple objects" )
+	SECTION( "Rectangle selection: Click and drag selects multiple objects" )
 	{
 		inputHandler.handleMouseDrag( scene, viewport, Vec2<>{ 0.0f, 0.0f }, Vec2<>{ 800.0f, 600.0f }, false, false );
 		inputHandler.handleMouseRelease( scene, viewport, Vec2<>{ 800.0f, 600.0f } );
@@ -602,7 +602,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.isSelected( secondObject ) );
 	}
 
-	SECTION( "✅ Primary selection: Distinguished primary for gizmo operations" )
+	SECTION( "Primary selection: Distinguished primary for gizmo operations" )
 	{
 		selectionManager.select( { testObject, secondObject } );
 
@@ -617,7 +617,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( scene.getComponent<Selected>( secondObject )->isPrimary );
 	}
 
-	SECTION( "✅ Selection events: Notification system for selection changes" )
+	SECTION( "Selection events: Notification system for selection changes" )
 	{
 		bool eventReceived = false;
 		SelectionChangedEvent lastEvent;
@@ -635,7 +635,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( lastEvent.removed.empty() );
 	}
 
-	SECTION( "✅ ECS integration: Selected component automatically managed" )
+	SECTION( "ECS integration: Selected component automatically managed" )
 	{
 		// Selection adds component
 		selectionManager.select( testObject );
@@ -656,7 +656,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE_FALSE( secondaryComp->isPrimary );
 	}
 
-	SECTION( "✅ Input responsiveness: Selection responds quickly" )
+	SECTION( "Input responsiveness: Selection responds quickly" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -672,7 +672,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( selectionManager.isSelected( testObject ) );
 	}
 
-	SECTION( "✅ Error handling: Graceful handling of edge cases" )
+	SECTION( "Error handling: Graceful handling of edge cases" )
 	{
 		// Invalid input coordinates
 		REQUIRE_NOTHROW( inputHandler.handleMouseClick( scene, viewport, Vec2<>{ -999.0f, -999.0f }, true, false, false, false ) );
