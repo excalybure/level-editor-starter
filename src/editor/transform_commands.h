@@ -7,6 +7,12 @@
 #include "runtime/components.h"
 #include "engine/math/vec.h"
 
+// Forward declarations
+namespace editor
+{
+struct GizmoResult;
+}
+
 namespace editor
 {
 
@@ -112,5 +118,56 @@ private:
 	std::vector<std::unique_ptr<TransformEntityCommand>> m_commands;
 	ecs::Scene *m_scene;
 };
+
+/**
+ * @brief Factory class for creating transform commands
+ * 
+ * Provides static methods to create appropriate command types based on selection and context.
+ */
+class TransformCommandFactory
+{
+public:
+	/**
+	 * @brief Create appropriate command for the given entities
+	 * @param entities The entities to create a command for
+	 * @param scene The scene containing the entities
+	 * @return Unique pointer to the created command (single or batch)
+	 */
+	static std::unique_ptr<Command> createCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
+
+	/**
+	 * @brief Create command from GizmoResult manipulation
+	 * @param gizmoResult The result of gizmo manipulation
+	 * @param entities The entities affected by the manipulation
+	 * @param scene The scene containing the entities
+	 * @return Unique pointer to the created command with before/after states
+	 */
+	static std::unique_ptr<Command> createFromGizmoResult( const struct GizmoResult &gizmoResult,
+		const std::vector<ecs::Entity> &entities,
+		ecs::Scene &scene );
+};
+
+/**
+ * @brief Utility functions for transform capture and manipulation
+ */
+namespace TransformUtils
+{
+/**
+	 * @brief Capture current transforms from a list of entities
+	 * @param entities The entities to capture transforms from
+	 * @param scene The scene containing the entities
+	 * @return Vector of captured transforms (parallel to entities vector)
+	 */
+std::vector<components::Transform> captureTransforms( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
+
+/**
+	 * @brief Apply transform deltas to current transforms
+	 * @param currentTransforms The current transform states
+	 * @param gizmoResult The manipulation deltas to apply
+	 * @return Vector of new transform states after applying deltas
+	 */
+std::vector<components::Transform> applyGizmoDeltas( const std::vector<components::Transform> &currentTransforms,
+	const struct GizmoResult &gizmoResult );
+} // namespace TransformUtils
 
 } // namespace editor
