@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <string>
 #include "engine/math/vec.h"
 #include "engine/math/matrix.h"
 
@@ -158,6 +159,39 @@ private:
 	math::Mat4<> m_viewMatrix = math::Mat4<>::identity();
 	math::Mat4<> m_projectionMatrix = math::Mat4<>::identity();
 	math::Vec4<> m_viewportRect{ 0.0f, 0.0f, 0.0f, 0.0f };
+};
+
+// UI class for gizmo controls and settings
+class GizmoUI
+{
+public:
+	// Constructor with GizmoSystem reference
+	explicit GizmoUI( GizmoSystem &gizmoSystem ) noexcept;
+
+	// Accessors
+	constexpr GizmoSystem &getGizmoSystem() noexcept { return m_gizmoSystem; }
+	constexpr const GizmoSystem &getGizmoSystem() const noexcept { return m_gizmoSystem; }
+
+	// UI rendering methods
+	void renderToolbar();
+	void renderSettings();
+
+	// Keyboard shortcut handling
+	void handleKeyboardShortcuts();
+
+	// Testing/mock functionality
+	void setMockButtonClicked( const std::string &buttonName );
+	void setMockSliderValue( const std::string &sliderName, float value );
+	void setMockKeyPressed( const std::string &key );
+
+private:
+	GizmoSystem &m_gizmoSystem;
+
+	// Mock state for testing
+	std::string m_mockClickedButton;
+	std::string m_mockSliderName;
+	float m_mockSliderValue = 0.0f;
+	std::string m_mockPressedKey;
 };
 
 } // namespace editor

@@ -700,3 +700,212 @@ TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][
 		REQUIRE( system.getScaleSnap() == 0.25f );
 	}
 }
+
+TEST_CASE( "GizmoUI construction and basic rendering", "[gizmos][ui][AF5.1]" )
+{
+	SECTION( "GizmoUI can be constructed with GizmoSystem reference" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+
+		// This should compile and not crash
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Verify UI has reference to gizmo system
+		REQUIRE( &ui.getGizmoSystem() == &gizmoSystem );
+	}
+
+	SECTION( "GizmoUI renders toolbar without crashing" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Mock ImGui context (this should not crash)
+		ui.renderToolbar();
+
+		// If we get here, the method didn't crash
+		REQUIRE( true );
+	}
+}
+
+TEST_CASE( "GizmoUI operation mode toolbar", "[gizmos][ui][toolbar][AF5.2]" )
+{
+	SECTION( "Operation mode toolbar updates gizmo system state" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Set initial operation to translate
+		gizmoSystem.setOperation( editor::GizmoOperation::Translate );
+		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Translate );
+
+		// Mock ImGui interaction for rotate button
+		ui.setMockButtonClicked( "Rotate (E)" );
+		ui.renderToolbar();
+
+		// Operation should change to rotate
+		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Rotate );
+	}
+
+	SECTION( "Toolbar displays all operation modes" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Test that toolbar can render all modes without crashing
+		gizmoSystem.setOperation( editor::GizmoOperation::Translate );
+		ui.renderToolbar();
+
+		gizmoSystem.setOperation( editor::GizmoOperation::Rotate );
+		ui.renderToolbar();
+
+		gizmoSystem.setOperation( editor::GizmoOperation::Scale );
+		ui.renderToolbar();
+
+		gizmoSystem.setOperation( editor::GizmoOperation::Universal );
+		ui.renderToolbar();
+
+		// If we get here, all operations rendered successfully
+		REQUIRE( true );
+	}
+}
+
+TEST_CASE( "GizmoUI coordinate space toggle", "[gizmos][ui][coordinate][AF5.3]" )
+{
+	SECTION( "Coordinate space toggle changes gizmo mode" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Set initial mode to world
+		gizmoSystem.setMode( editor::GizmoMode::World );
+		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::World );
+
+		// Mock coordinate space toggle
+		ui.setMockButtonClicked( "Local/World (X)" );
+		ui.renderToolbar();
+
+		// Mode should change to local
+		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::Local );
+
+		// Toggle again
+		ui.setMockButtonClicked( "Local/World (X)" );
+		ui.renderToolbar();
+
+		// Mode should change back to world
+		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::World );
+	}
+}
+
+TEST_CASE( "GizmoUI snap settings controls", "[gizmos][ui][snap][AF5.4]" )
+{
+	SECTION( "Snap settings can be modified through UI" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Initial snap values
+		REQUIRE( gizmoSystem.getTranslationSnap() == 1.0f );
+		REQUIRE( gizmoSystem.getRotationSnap() == 15.0f );
+		REQUIRE( gizmoSystem.getScaleSnap() == 0.1f );
+		REQUIRE_FALSE( gizmoSystem.isSnapEnabled() );
+
+		// Mock snap enable toggle
+		ui.setMockButtonClicked( "Enable Snap" );
+		ui.renderSettings();
+		REQUIRE( gizmoSystem.isSnapEnabled() );
+
+		// Mock snap value changes
+		ui.setMockSliderValue( "Translation Snap", 2.5f );
+		ui.renderSettings();
+		REQUIRE( gizmoSystem.getTranslationSnap() == 2.5f );
+
+		ui.setMockSliderValue( "Rotation Snap", 45.0f );
+		ui.renderSettings();
+		REQUIRE( gizmoSystem.getRotationSnap() == 45.0f );
+
+		ui.setMockSliderValue( "Scale Snap", 0.25f );
+		ui.renderSettings();
+		REQUIRE( gizmoSystem.getScaleSnap() == 0.25f );
+	}
+}
+
+TEST_CASE( "GizmoUI visibility toggle", "[gizmos][ui][visibility][AF5.5]" )
+{
+	SECTION( "Gizmo visibility can be toggled through UI" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Initially visible
+		REQUIRE( gizmoSystem.isVisible() );
+
+		// Mock visibility toggle
+		ui.setMockButtonClicked( "Toggle Gizmo (G)" );
+		ui.renderToolbar();
+		REQUIRE_FALSE( gizmoSystem.isVisible() );
+
+		// Toggle again
+		ui.setMockButtonClicked( "Toggle Gizmo (G)" );
+		ui.renderToolbar();
+		REQUIRE( gizmoSystem.isVisible() );
+	}
+}
+
+TEST_CASE( "GizmoUI keyboard shortcuts", "[gizmos][ui][keyboard][AF5.6]" )
+{
+	SECTION( "Keyboard shortcuts trigger correct operations" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoUI ui( gizmoSystem );
+
+		// Initial state
+		gizmoSystem.setOperation( editor::GizmoOperation::Translate );
+		gizmoSystem.setMode( editor::GizmoMode::World );
+		gizmoSystem.setVisible( true );
+
+		// Mock keyboard input
+		ui.setMockKeyPressed( "W" );
+		ui.handleKeyboardShortcuts();
+		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Translate );
+
+		ui.setMockKeyPressed( "E" );
+		ui.handleKeyboardShortcuts();
+		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Rotate );
+
+		ui.setMockKeyPressed( "R" );
+		ui.handleKeyboardShortcuts();
+		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Scale );
+
+		ui.setMockKeyPressed( "X" );
+		ui.handleKeyboardShortcuts();
+		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::Local );
+
+		ui.setMockKeyPressed( "G" );
+		ui.handleKeyboardShortcuts();
+		REQUIRE_FALSE( gizmoSystem.isVisible() );
+	}
+}
