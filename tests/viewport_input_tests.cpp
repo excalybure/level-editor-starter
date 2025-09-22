@@ -69,7 +69,7 @@ TEST_CASE( "ViewportInputEvent Creation and Properties", "[viewport][input][even
 	}
 }
 
-TEST_CASE( "editor::Viewport Input Handling States", "[viewport][input][state]" )
+TEST_CASE( "Viewport Input Handling States", "[viewport][input][state]" )
 {
 	SECTION( "Focused viewport receives input" )
 	{
@@ -124,7 +124,7 @@ TEST_CASE( "editor::Viewport Input Handling States", "[viewport][input][state]" 
 	}
 }
 
-TEST_CASE( "editor::Viewport Input Event Edge Cases", "[viewport][input][edge]" )
+TEST_CASE( "Viewport Input Event Edge Cases", "[viewport][input][edge]" )
 {
 	SECTION( "Large coordinate values" )
 	{

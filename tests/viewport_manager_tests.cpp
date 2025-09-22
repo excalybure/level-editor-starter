@@ -8,7 +8,7 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "editor::ViewportManager Creation and Management", "[viewport][manager]" )
+TEST_CASE( "ViewportManager Creation and Management", "[viewport][manager]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "editor::ViewportManager Creation and Management" ) )
@@ -82,7 +82,7 @@ TEST_CASE( "editor::ViewportManager Creation and Management", "[viewport][manage
 		REQUIRE( manager.getFocusedViewport() == nullptr );
 	}
 
-	SECTION( "editor::Viewport destruction" )
+	SECTION( "Viewport destruction" )
 	{
 		auto *viewport = manager.createViewport( ViewportType::Perspective );
 		REQUIRE( manager.getViewports().size() == 1 );
@@ -106,7 +106,7 @@ TEST_CASE( "editor::ViewportManager Creation and Management", "[viewport][manage
 	}
 }
 
-TEST_CASE( "editor::ViewportManager Update and Render", "[viewport][manager]" )
+TEST_CASE( "ViewportManager Update and Render", "[viewport][manager]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "editor::ViewportManager Update and Render" ) )

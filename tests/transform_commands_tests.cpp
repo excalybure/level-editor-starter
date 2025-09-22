@@ -17,6 +17,6 @@ TEST_CASE( "Command interface exists and is pure virtual", "[AF4.1][unit]" )
 		editor::Command *basePtr = command.get();
 
 		REQUIRE( basePtr != nullptr );
-		REQUIRE( command->getDescription() == "components::Transform ecs::Entity" );
+		REQUIRE( command->getDescription() == "Transform Entity" );
 	}
 }

@@ -37,7 +37,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 		}
 	}
 
-	SECTION( "win32::Window activation and focus events" )
+	SECTION( "Window activation and focus events" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Focus Test", 800, 600, false );
@@ -100,7 +100,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 		}
 	}
 
-	SECTION( "win32::Window state transitions" )
+	SECTION( "Window state transitions" )
 	{
 		Win32Window window;
 		bool result = window.create( L"State Transition Test", 800, 600, false );
@@ -135,7 +135,7 @@ TEST_CASE( "Win32Window Advanced Event Handling", "[win32][events][advanced]" )
 
 TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styling]" )
 {
-	SECTION( "win32::Window styles and extended styles" )
+	SECTION( "Window styles and extended styles" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Style Test", 800, 600, false );
@@ -164,7 +164,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "win32::Window class information" )
+	SECTION( "Window class information" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Class Info Test", 800, 600, false );
@@ -193,7 +193,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "win32::Window hierarchy and parent-child relationships" )
+	SECTION( "Window hierarchy and parent-child relationships" )
 	{
 		Win32Window parentWindow;
 		bool parentResult = parentWindow.create( L"Parent win32::Window", 1000, 800, false );
@@ -246,7 +246,7 @@ TEST_CASE( "Win32Window Advanced Properties and Styling", "[win32][window][styli
 		}
 	}
 
-	SECTION( "win32::Window transparency and layering" )
+	SECTION( "Window transparency and layering" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Transparency Test", 800, 600, false );
@@ -368,7 +368,7 @@ TEST_CASE( "Win32Window Performance and Resource Management", "[win32][window][p
 		REQUIRE( memoryDiff < 10 * 1024 * 1024 ); // Less than 10MB increase
 	}
 
-	SECTION( "win32::Window handle reuse safety" )
+	SECTION( "Window handle reuse safety" )
 	{
 		std::vector<HWND> usedHandles;
 
@@ -400,7 +400,7 @@ TEST_CASE( "Win32Window Performance and Resource Management", "[win32][window][p
 		REQUIRE( usedHandles.size() >= 50 ); // Should create a reasonable number
 	}
 
-	SECTION( "win32::Window message queue stress test" )
+	SECTION( "Window message queue stress test" )
 	{
 		Win32Window window;
 		bool result = window.create( L"Message Queue Stress", 800, 600, false );

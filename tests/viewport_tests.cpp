@@ -15,7 +15,7 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "editor::Viewport Basic Properties", "[viewport]" )
+TEST_CASE( "Viewport Basic Properties", "[viewport]" )
 {
 	SECTION( "Perspective viewport creation" )
 	{
@@ -61,7 +61,7 @@ TEST_CASE( "editor::Viewport Basic Properties", "[viewport]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport State Management", "[viewport]" )
+TEST_CASE( "Viewport State Management", "[viewport]" )
 {
 	editor::Viewport viewport( editor::ViewportType::Perspective );
 
@@ -111,7 +111,7 @@ TEST_CASE( "editor::Viewport State Management", "[viewport]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Input Handling", "[viewport]" )
+TEST_CASE( "Viewport Input Handling", "[viewport]" )
 {
 	editor::Viewport viewport( editor::ViewportType::Perspective );
 	viewport.setFocused( true ); // Enable input handling
@@ -176,7 +176,7 @@ TEST_CASE( "editor::Viewport Input Handling", "[viewport]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport View Operations", "[viewport]" )
+TEST_CASE( "Viewport View Operations", "[viewport]" )
 {
 	editor::Viewport viewport( editor::ViewportType::Perspective );
 
@@ -350,9 +350,9 @@ TEST_CASE( "ViewportFactory Standard Layout", "[viewport][factory]" )
 	}
 }
 
-TEST_CASE( "editor::ViewportUtils Utility Functions", "[viewport][utils]" )
+TEST_CASE( "ViewportUtils Utility Functions", "[viewport][utils]" )
 {
-	SECTION( "editor::Viewport type names" )
+	SECTION( "Viewport type names" )
 	{
 		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Perspective ) ) == "Perspective" );
 		REQUIRE( std::string( editor::ViewportUtils::getViewportTypeName( editor::ViewportType::Top ) ) == "Top" );
@@ -369,7 +369,7 @@ TEST_CASE( "editor::ViewportUtils Utility Functions", "[viewport][utils]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Input Event Creation", "[viewport][input]" )
+TEST_CASE( "Viewport Input Event Creation", "[viewport][input]" )
 {
 	SECTION( "Mouse events" )
 	{
@@ -420,7 +420,7 @@ TEST_CASE( "editor::Viewport Input Event Creation", "[viewport][input]" )
 	}
 }
 
-TEST_CASE( "editor::ViewportInputEvent Structure", "[viewport][input][structure]" )
+TEST_CASE( "ViewportInputEvent Structure", "[viewport][input][structure]" )
 {
 	SECTION( "Default values" )
 	{
@@ -447,9 +447,9 @@ TEST_CASE( "editor::ViewportInputEvent Structure", "[viewport][input][structure]
 	}
 }
 
-TEST_CASE( "editor::Viewport Edge Cases", "[viewport][edge]" )
+TEST_CASE( "Viewport Edge Cases", "[viewport][edge]" )
 {
-	SECTION( "editor::Viewport with zero size" )
+	SECTION( "Viewport with zero size" )
 	{
 		editor::Viewport viewport( editor::ViewportType::Perspective );
 		viewport.setRenderTargetSize( 0, 0 );
@@ -497,7 +497,7 @@ TEST_CASE( "editor::Viewport Edge Cases", "[viewport][edge]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Types Coverage", "[viewport][types]" )
+TEST_CASE( "Viewport Types Coverage", "[viewport][types]" )
 {
 	SECTION( "All viewport types can be created" )
 	{
@@ -522,7 +522,7 @@ TEST_CASE( "editor::Viewport Types Coverage", "[viewport][types]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Camera Positioning Accuracy", "[viewport][camera]" )
+TEST_CASE( "Viewport Camera Positioning Accuracy", "[viewport][camera]" )
 {
 	SECTION( "Perspective camera positioning" )
 	{
@@ -625,7 +625,7 @@ TEST_CASE( "editor::Viewport Camera Positioning Accuracy", "[viewport][camera]" 
 	}
 }
 
-TEST_CASE( "editor::Viewport Picking Ray Generation", "[viewport][picking]" )
+TEST_CASE( "Viewport Picking Ray Generation", "[viewport][picking]" )
 {
 	SECTION( "Picking ray from center of viewport" )
 	{
@@ -679,7 +679,7 @@ TEST_CASE( "editor::Viewport Picking Ray Generation", "[viewport][picking]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Grid Settings Management", "[viewport][grid]" )
+TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 {
 	SECTION( "Default grid settings values" )
 	{

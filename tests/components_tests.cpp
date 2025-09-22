@@ -9,7 +9,7 @@
 
 using Catch::Approx;
 
-TEST_CASE( "components::Transform component basic functionality", "[components][transform]" )
+TEST_CASE( "Transform component basic functionality", "[components][transform]" )
 {
 	components::Transform transform;
 
@@ -28,7 +28,7 @@ TEST_CASE( "components::Transform component basic functionality", "[components][
 	REQUIRE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "components::Transform component local matrix calculation", "[components][transform][matrix]" )
+TEST_CASE( "Transform component local matrix calculation", "[components][transform][matrix]" )
 {
 	components::Transform transform;
 	transform.position = math::Vec3<float>( 5.0f, 10.0f, 15.0f );
@@ -45,7 +45,7 @@ TEST_CASE( "components::Transform component local matrix calculation", "[compone
 	REQUIRE_FALSE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "components::Transform component rotation matrix", "[components][transform][rotation]" )
+TEST_CASE( "Transform component rotation matrix", "[components][transform][rotation]" )
 {
 	components::Transform transform;
 	transform.rotation = math::Vec3<float>( math::pi<float> / 2.0f, 0.0f, 0.0f ); // 90 degrees around X-axis
@@ -60,7 +60,7 @@ TEST_CASE( "components::Transform component rotation matrix", "[components][tran
 	REQUIRE( localMatrix.m22() == Catch::Approx( 0.0f ).margin( 0.0001f ) );
 }
 
-TEST_CASE( "components::Transform component scale matrix", "[components][transform][scale]" )
+TEST_CASE( "Transform component scale matrix", "[components][transform][scale]" )
 {
 	components::Transform transform;
 	transform.scale = math::Vec3<float>( 2.0f, 3.0f, 4.0f );
@@ -73,7 +73,7 @@ TEST_CASE( "components::Transform component scale matrix", "[components][transfo
 	REQUIRE( localMatrix.m22() == Catch::Approx( 4.0f ) );
 }
 
-TEST_CASE( "components::Transform component markDirty", "[components][transform][dirty]" )
+TEST_CASE( "Transform component markDirty", "[components][transform][dirty]" )
 {
 	components::Transform transform;
 
@@ -86,7 +86,7 @@ TEST_CASE( "components::Transform component markDirty", "[components][transform]
 	REQUIRE( transform.localMatrixDirty );
 }
 
-TEST_CASE( "components::Name component functionality", "[components][name]" )
+TEST_CASE( "Name component functionality", "[components][name]" )
 {
 	SECTION( "Default constructor" )
 	{
@@ -127,7 +127,7 @@ TEST_CASE( "Visible component functionality", "[components][visible]" )
 	REQUIRE_FALSE( visible.receiveShadows );
 }
 
-TEST_CASE( "components::MeshRenderer component functionality", "[components][meshrenderer]" )
+TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" )
 {
 	SECTION( "Default constructor" )
 	{
@@ -219,7 +219,7 @@ TEST_CASE( "Component concept validation", "[components][concepts]" )
 	REQUIRE( components::Component<components::Selected> );
 }
 
-TEST_CASE( "components::Transform component with ecs::Scene integration", "[components][transform][integration]" )
+TEST_CASE( "Transform component with Scene integration", "[components][transform][integration]" )
 {
 	ecs::Scene scene;
 	ecs::Entity entity = scene.createEntity( "TransformTest" );

@@ -16,7 +16,7 @@ using runtime::SceneImporter;
 // Note: Not using "using namespace components" or "using namespace assets" to avoid Transform type ambiguity
 using Catch::Approx;
 
-TEST_CASE( "runtime::SceneImporter imports scene with single mesh node", "[scene_importer][basic]" )
+TEST_CASE( "SceneImporter imports scene with single mesh node", "[scene_importer][basic]" )
 {
 	// Create a scene with a single node containing a mesh
 	auto scene = std::make_shared<assets::Scene>();
@@ -76,7 +76,7 @@ TEST_CASE( "runtime::SceneImporter imports scene with single mesh node", "[scene
 	REQUIRE( rendererComp != nullptr );
 }
 
-TEST_CASE( "runtime::SceneImporter preserves hierarchy correctly", "[scene_importer][hierarchy]" )
+TEST_CASE( "SceneImporter preserves hierarchy correctly", "[scene_importer][hierarchy]" )
 {
 	// Create a scene with parent-child hierarchy
 	auto scene = std::make_shared<assets::Scene>();
@@ -139,7 +139,7 @@ TEST_CASE( "runtime::SceneImporter preserves hierarchy correctly", "[scene_impor
 	REQUIRE( children[0] == childEntity );
 }
 
-TEST_CASE( "runtime::SceneImporter handles nodes without meshes", "[scene_importer][empty_nodes]" )
+TEST_CASE( "SceneImporter handles nodes without meshes", "[scene_importer][empty_nodes]" )
 {
 	// Create a scene with a node that has no mesh data
 	auto scene = std::make_shared<assets::Scene>();
@@ -173,7 +173,7 @@ TEST_CASE( "runtime::SceneImporter handles nodes without meshes", "[scene_import
 	REQUIRE_FALSE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
 }
 
-TEST_CASE( "runtime::SceneImporter GPU and non-GPU paths produce identical results", "[scene_importer][gpu_comparison]" )
+TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[scene_importer][gpu_comparison]" )
 {
 	// Create a test scene
 	auto scene = std::make_shared<assets::Scene>();
@@ -248,7 +248,7 @@ TEST_CASE( "runtime::SceneImporter GPU and non-GPU paths produce identical resul
 	REQUIRE( gpuRenderer != nullptr );
 }
 
-TEST_CASE( "runtime::SceneImporter handles invalid scene gracefully", "[scene_importer][error_handling]" )
+TEST_CASE( "SceneImporter handles invalid scene gracefully", "[scene_importer][error_handling]" )
 {
 	ecs::Scene ecsScene;
 
@@ -266,7 +266,7 @@ TEST_CASE( "runtime::SceneImporter handles invalid scene gracefully", "[scene_im
 	REQUIRE( entities.empty() );
 }
 
-TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with single primitive", "[scene_importer][bounds]" )
+TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with single primitive", "[scene_importer][bounds]" )
 {
 	// Create a scene with a mesh that has bounds data
 	auto scene = std::make_shared<assets::Scene>();
@@ -333,7 +333,7 @@ TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with singl
 	REQUIRE( rendererComp->bounds.max.z == Catch::Approx( meshBounds.max.z ) );
 }
 
-TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with multiple primitives", "[scene_importer][bounds]" )
+TEST_CASE( "SceneImporter sets MeshRenderer bounds from mesh with multiple primitives", "[scene_importer][bounds]" )
 {
 	// Create a scene with a mesh containing multiple primitives
 	auto scene = std::make_shared<assets::Scene>();
@@ -388,7 +388,7 @@ TEST_CASE( "runtime::SceneImporter sets MeshRenderer bounds from mesh with multi
 	REQUIRE( rendererComp->bounds.max.z >= 6.0f );
 }
 
-TEST_CASE( "runtime::SceneImporter handles mesh without bounds gracefully", "[scene_importer][bounds]" )
+TEST_CASE( "SceneImporter handles mesh without bounds gracefully", "[scene_importer][bounds]" )
 {
 	// Create a scene with an empty mesh (no primitives/vertices)
 	auto scene = std::make_shared<assets::Scene>();
@@ -423,7 +423,7 @@ TEST_CASE( "runtime::SceneImporter handles mesh without bounds gracefully", "[sc
 	REQUIRE_FALSE( rendererComp->bounds.isValid() );
 }
 
-TEST_CASE( "runtime::SceneImporter bounds calculation matches mesh getBoundsCenter and getBoundsSize", "[scene_importer][bounds]" )
+TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and getBoundsSize", "[scene_importer][bounds]" )
 {
 	// Test that bounds are correctly calculated using center and size approach
 	auto scene = std::make_shared<assets::Scene>();

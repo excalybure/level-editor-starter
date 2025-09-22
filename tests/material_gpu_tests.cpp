@@ -4,7 +4,7 @@
 #include "engine/assets/assets.h"
 #include "platform/dx12/dx12_device.h"
 
-TEST_CASE( "MaterialGPU can be created from assets::Material", "[MaterialGPU][unit]" )
+TEST_CASE( "MaterialGPU can be created from Material", "[MaterialGPU][unit]" )
 {
 	// Arrange
 	auto material = std::make_shared<assets::Material>();

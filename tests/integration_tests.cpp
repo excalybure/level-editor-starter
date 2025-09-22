@@ -14,7 +14,7 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "UI editor::Viewport Integration - Full System Test", "[integration][ui][viewport]" )
+TEST_CASE( "UI Viewport Integration - Full System Test", "[integration][ui][viewport]" )
 {
 	SECTION( "UI basic functionality in headless mode" )
 	{
@@ -141,7 +141,7 @@ TEST_CASE( "UI editor::Viewport Integration - Full System Test", "[integration][
 		}
 	}
 
-	SECTION( "editor::Viewport state changes persist through UI access" )
+	SECTION( "Viewport state changes persist through UI access" )
 	{
 		dx12::Device device;
 		REQUIRE( requireHeadlessDevice( device, "editor::Viewport state changes persist through UI access" ) );
@@ -198,7 +198,7 @@ TEST_CASE( "UI editor::Viewport Integration - Full System Test", "[integration][
 	}
 }
 
-TEST_CASE( "editor::Viewport camera::Camera Type Consistency", "[integration][viewport][camera]" )
+TEST_CASE( "Viewport Camera Type Consistency", "[integration][viewport][camera]" )
 {
 	SECTION( "Perspective viewport has perspective camera" )
 	{
@@ -247,7 +247,7 @@ TEST_CASE( "editor::Viewport camera::Camera Type Consistency", "[integration][vi
 	}
 }
 
-TEST_CASE( "editor::Viewport Render Target Management Integration", "[integration][viewport][rendering]" )
+TEST_CASE( "Viewport Render Target Management Integration", "[integration][viewport][rendering]" )
 {
 	editor::Viewport viewport( editor::ViewportType::Perspective );
 
@@ -294,7 +294,7 @@ TEST_CASE( "editor::Viewport Render Target Management Integration", "[integratio
 	}
 }
 
-TEST_CASE( "editor::Viewport Utility Functions Integration", "[integration][viewport][utils]" )
+TEST_CASE( "Viewport Utility Functions Integration", "[integration][viewport][utils]" )
 {
 	SECTION( "ViewportUtils functions work with actual viewports" )
 	{
@@ -316,9 +316,9 @@ TEST_CASE( "editor::Viewport Utility Functions Integration", "[integration][view
 	}
 }
 
-TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewport]" )
+TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 {
-	SECTION( "grid::Grid settings window management without initialization" )
+	SECTION( "Grid settings window management without initialization" )
 	{
 		// Test grid settings functionality that doesn't require full UI initialization
 		editor::UI ui;
@@ -345,20 +345,20 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 	}
 
 #if defined( _WIN32 )
-	SECTION( "Full UI grid::Grid Settings Integration with D3D12" )
+	SECTION( "Full UI Grid Settings Integration with D3D12" )
 	{
 		// Create test window and D3D12 device
 		platform::Win32Window window;
-		if ( !window.create( "grid::Grid Settings Integration Test", 800, 600 ) )
+		if ( !window.create( "Grid Settings Integration Test", 800, 600 ) )
 		{
-			WARN( "Skipping grid::Grid Settings integration: failed to create Win32 window" );
+			WARN( "Skipping Grid Settings integration: failed to create Win32 window" );
 			return;
 		}
 
 		dx12::Device device;
 		if ( !device.initialize( static_cast<HWND>( window.getHandle() ) ) )
 		{
-			WARN( "Skipping grid::Grid Settings integration: D3D12 initialize failed" );
+			WARN( "Skipping Grid Settings integration: D3D12 initialize failed" );
 			return;
 		}
 
@@ -367,7 +367,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 		REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
 
 		// Test grid settings window functionality with fully initialized UI
-		SECTION( "grid::Grid settings window with initialized viewports" )
+		SECTION( "Grid settings window with initialized viewports" )
 		{
 			// Verify all viewports are accessible
 			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
@@ -393,7 +393,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 			REQUIRE_NOTHROW( sideViewport->getGridSettings() );
 		}
 
-		SECTION( "grid::Grid settings modification through UI integration" )
+		SECTION( "Grid settings modification through UI integration" )
 		{
 			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
 			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
@@ -428,7 +428,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 			REQUIRE_THAT( updatedTop.majorGridAlpha, WithinAbs( 0.9f, 0.001f ) );
 		}
 
-		SECTION( "grid::Grid visibility toggle through UI integration" )
+		SECTION( "Grid visibility toggle through UI integration" )
 		{
 			auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );
 			auto *topViewport = ui.getViewport( editor::ViewportType::Top );
@@ -450,7 +450,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 			REQUIRE( perspectiveViewport->isGridVisible() );
 		}
 
-		SECTION( "grid::Grid settings window state with frame operations" )
+		SECTION( "Grid settings window state with frame operations" )
 		{
 			// Test that grid settings window state persists through frame operations
 			REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
@@ -571,7 +571,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 			REQUIRE( zeroSpacing > 0.0f );
 		}
 
-		SECTION( "grid::Grid visibility and camera distance interaction" )
+		SECTION( "Grid visibility and camera distance interaction" )
 		{
 			auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );
@@ -652,7 +652,7 @@ TEST_CASE( "UI grid::Grid Settings Integration", "[integration][ui][grid][viewpo
 			REQUIRE_THAT( verifySide.majorGridColor.y, WithinAbs( 1.0f, 0.001f ) );		   // Yellow (green component)
 		}
 
-		SECTION( "grid::Grid settings persistence through UI operations" )
+		SECTION( "Grid settings persistence through UI operations" )
 		{
 			auto *viewport = ui.getViewport( editor::ViewportType::Perspective );
 			REQUIRE( viewport != nullptr );

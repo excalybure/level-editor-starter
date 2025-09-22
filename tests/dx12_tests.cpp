@@ -6,9 +6,9 @@
 #include "test_dx12_helpers.h"
 
 
-TEST_CASE( "D3D12 dx12::Device Creation", "[dx12]" )
+TEST_CASE( "D3D12 Device Creation", "[dx12]" )
 {
-	SECTION( "dx12::Device can be created" )
+	SECTION( "Device can be created" )
 	{
 		// This test will verify that we can create a D3D12 device
 		// without crashing. On systems without D3D12 support, this may throw
@@ -150,7 +150,7 @@ TEST_CASE( "D3D12 Headless Frame Functions Are No-Op", "[dx12]" )
 	REQUIRE_NOTHROW( device.present() );
 }
 
-TEST_CASE( "D3D12 Multi-dx12::Device Independence", "[dx12]" )
+TEST_CASE( "D3D12 Multi-Device Independence", "[dx12]" )
 {
 	dx12::Device a;
 	dx12::Device b;
@@ -177,9 +177,9 @@ TEST_CASE( "D3D12 Pre-Initialization Safety", "[dx12]" )
 // dx12::Texture and TextureManager Tests
 // ============================================================================
 
-TEST_CASE( "D3D12 dx12::Texture Creation", "[dx12][texture]" )
+TEST_CASE( "D3D12 Texture Creation", "[dx12][texture]" )
 {
-	SECTION( "dx12::Texture can be created with valid parameters" )
+	SECTION( "Texture can be created with valid parameters" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture creation" ) )
@@ -195,7 +195,7 @@ TEST_CASE( "D3D12 dx12::Texture Creation", "[dx12][texture]" )
 		REQUIRE( texture.getFormat() == DXGI_FORMAT_R8G8B8A8_UNORM );
 	}
 
-	SECTION( "dx12::Texture creation fails with invalid parameters" )
+	SECTION( "Texture creation fails with invalid parameters" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture invalid params" ) )
@@ -213,9 +213,9 @@ TEST_CASE( "D3D12 dx12::Texture Creation", "[dx12][texture]" )
 	}
 }
 
-TEST_CASE( "D3D12 dx12::Texture Resize", "[dx12][texture]" )
+TEST_CASE( "D3D12 Texture Resize", "[dx12][texture]" )
 {
-	SECTION( "dx12::Texture resize with same dimensions is no-op" )
+	SECTION( "Texture resize with same dimensions is no-op" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture resize same" ) )
@@ -231,7 +231,7 @@ TEST_CASE( "D3D12 dx12::Texture Resize", "[dx12][texture]" )
 		REQUIRE( texture.getResource() == originalResource );
 	}
 
-	SECTION( "dx12::Texture resize fails with null device when no cached device" )
+	SECTION( "Texture resize fails with null device when no cached device" )
 	{
 		// Create texture without caching device reference
 		dx12::Texture texture;
@@ -241,7 +241,7 @@ TEST_CASE( "D3D12 dx12::Texture Resize", "[dx12][texture]" )
 	}
 }
 
-TEST_CASE( "D3D12 dx12::Texture Shader dx12::Resource View", "[dx12][texture]" )
+TEST_CASE( "D3D12 Texture Shader Resource View", "[dx12][texture]" )
 {
 	SECTION( "SRV creation fails with invalid parameters" )
 	{
@@ -340,9 +340,9 @@ TEST_CASE( "D3D12 TextureManager Viewport Render Target Creation", "[dx12][textu
 	}
 }
 
-TEST_CASE( "D3D12 dx12::Texture State Management", "[dx12][texture]" )
+TEST_CASE( "D3D12 Texture State Management", "[dx12][texture]" )
 {
-	SECTION( "dx12::Texture state transition handles null command list" )
+	SECTION( "Texture state transition handles null command list" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture null command list" ) )
@@ -355,7 +355,7 @@ TEST_CASE( "D3D12 dx12::Texture State Management", "[dx12][texture]" )
 		REQUIRE_NOTHROW( texture.transitionTo( nullptr, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
 	}
 
-	SECTION( "dx12::Texture state transition handles null resource" )
+	SECTION( "Texture state transition handles null resource" )
 	{
 		dx12::Texture texture; // No resource created
 
@@ -364,9 +364,9 @@ TEST_CASE( "D3D12 dx12::Texture State Management", "[dx12][texture]" )
 	}
 }
 
-TEST_CASE( "D3D12 dx12::Texture Clear Operations", "[dx12][texture]" )
+TEST_CASE( "D3D12 Texture Clear Operations", "[dx12][texture]" )
 {
-	SECTION( "dx12::Texture clear fails with invalid parameters" )
+	SECTION( "Texture clear fails with invalid parameters" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture clear invalid" ) )
@@ -384,7 +384,7 @@ TEST_CASE( "D3D12 dx12::Texture Clear Operations", "[dx12][texture]" )
 		REQUIRE_FALSE( texture.clearRenderTarget( &device, nullptr ) );
 	}
 
-	SECTION( "dx12::Texture clear fails without RTV handle" )
+	SECTION( "Texture clear fails without RTV handle" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "texture clear no RTV" ) )

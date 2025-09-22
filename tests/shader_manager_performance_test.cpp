@@ -11,7 +11,7 @@
 
 using shader_manager::INVALID_SHADER_HANDLE;
 
-TEST_CASE( "shader_manager::ShaderManager Performance - Hash-based lookup optimization", "[shader_manager::ShaderManager][Performance]" )
+TEST_CASE( "ShaderManager Performance - Hash-based lookup optimization", "[ShaderManager][Performance]" )
 {
 	// Create a temporary directory for test shaders
 	auto tempDir = std::filesystem::temp_directory_path() / "shader_manager_perf_tests";

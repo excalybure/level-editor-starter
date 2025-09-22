@@ -13,7 +13,7 @@
 
 using Catch::Approx;
 
-TEST_CASE( "runtime::SceneImporter GPU integration compiles and links correctly", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "SceneImporter GPU integration compiles and links correctly", "[scene_importer][gpu_integration][unit]" )
 {
 	// This is a basic compilation test to ensure the GPU integration
 	// methods are properly defined and can be called
@@ -41,7 +41,7 @@ TEST_CASE( "runtime::SceneImporter GPU integration compiles and links correctly"
 	REQUIRE( entity.isValid() );
 }
 
-TEST_CASE( "runtime::SceneImporter creates components::MeshRenderer with GPU resources using GPUResourceManager", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResourceManager", "[scene_importer][gpu_integration][unit]" )
 {
 	// AF1: runtime::SceneImporter should use GPUResourceManager to create GPU resources
 	// This test should fail initially because the implementation is stubbed
@@ -92,7 +92,7 @@ TEST_CASE( "runtime::SceneImporter creates components::MeshRenderer with GPU res
 	CHECK( meshRenderer->gpuMesh == nullptr );
 }
 
-TEST_CASE( "runtime::SceneImporter with GPUResourceManager creates actual GPU resources", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources", "[scene_importer][gpu_integration][unit]" )
 {
 	// AF2: runtime::SceneImporter should actually create GPU resources when provided GPUResourceManager
 	// This test will fail until we implement real GPU resource creation
@@ -155,7 +155,7 @@ TEST_CASE( "runtime::SceneImporter with GPUResourceManager creates actual GPU re
 	REQUIRE( meshRenderer->gpuMesh != nullptr );
 }
 
-TEST_CASE( "runtime::SceneImporter createGPUResources adds GPU resources to existing scene", "[scene_importer][gpu_integration][unit]" )
+TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scene", "[scene_importer][gpu_integration][unit]" )
 {
 	// AF3: Test the new createGPUResources workflow: import CPU-only, then add GPU resources separately
 

@@ -6,7 +6,7 @@
 #include "platform/dx12/dx12_device.h"
 
 
-TEST_CASE( "dx12::CommandQueue Operations", "[dx12][command][queue]" )
+TEST_CASE( "CommandQueue Operations", "[dx12][command][queue]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::CommandQueue operations" ) )
@@ -180,7 +180,7 @@ TEST_CASE( "CommandAllocator Management", "[dx12][command][allocator]" )
 	}
 }
 
-TEST_CASE( "dx12::CommandList Operations", "[dx12][command][list]" )
+TEST_CASE( "CommandList Operations", "[dx12][command][list]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::CommandList operations" ) )
@@ -249,7 +249,7 @@ TEST_CASE( "dx12::CommandList Operations", "[dx12][command][list]" )
 		REQUIRE( SUCCEEDED( hr ) );
 	}
 
-	SECTION( "dx12::Resource barrier operations" )
+	SECTION( "Resource barrier operations" )
 	{
 		auto commandList = device.getCommandList();
 		REQUIRE( commandList != nullptr );

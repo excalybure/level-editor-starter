@@ -20,7 +20,7 @@ camera::InputState createTestInput()
 	return input;
 }
 
-TEST_CASE( "camera::Camera Controller Creation", "[camera][controller]" )
+TEST_CASE( "Camera Controller Creation", "[camera][controller]" )
 {
 	SECTION( "Create controller for perspective camera" )
 	{
@@ -73,7 +73,7 @@ TEST_CASE( "camera::Camera Controller Creation", "[camera][controller]" )
 	}
 }
 
-TEST_CASE( "Perspective camera::Camera Controller", "[camera][controller][perspective]" )
+TEST_CASE( "Perspective Camera Controller", "[camera][controller][perspective]" )
 {
 	auto camera = std::make_unique<camera::PerspectiveCamera>();
 	auto controller = std::make_unique<camera::PerspectiveCameraController>( camera.get() );
@@ -243,7 +243,7 @@ TEST_CASE( "Perspective camera::Camera Controller", "[camera][controller][perspe
 	}
 }
 
-TEST_CASE( "Orthographic camera::Camera Controller", "[camera][controller][orthographic]" )
+TEST_CASE( "Orthographic Camera Controller", "[camera][controller][orthographic]" )
 {
 	auto camera = std::make_unique<camera::OrthographicCamera>();
 	auto controller = std::make_unique<camera::OrthographicCameraController>( camera.get() );

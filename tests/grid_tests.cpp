@@ -9,7 +9,7 @@
 #include "engine/math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 
-TEST_CASE( "grid::Grid Settings Configuration", "[grid][settings]" )
+TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 {
 	SECTION( "Default grid settings" )
 	{
@@ -49,7 +49,7 @@ TEST_CASE( "grid::Grid Settings Configuration", "[grid][settings]" )
 		REQUIRE( settings.showAxes == true );
 	}
 
-	SECTION( "grid::Grid settings modification" )
+	SECTION( "Grid settings modification" )
 	{
 		grid::GridSettings settings;
 
@@ -80,9 +80,9 @@ TEST_CASE( "grid::Grid Settings Configuration", "[grid][settings]" )
 	}
 }
 
-TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization]" )
+TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 {
-	SECTION( "grid::GridRenderer creation" )
+	SECTION( "GridRenderer creation" )
 	{
 		grid::GridRenderer renderer;
 
@@ -93,7 +93,7 @@ TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization
 		REQUIRE( settings.showAxes == true );
 	}
 
-	SECTION( "grid::GridRenderer settings management" )
+	SECTION( "GridRenderer settings management" )
 	{
 		grid::GridRenderer renderer;
 
@@ -111,7 +111,7 @@ TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization
 		REQUIRE_FALSE( retrievedSettings.showGrid );
 	}
 
-	SECTION( "grid::GridRenderer D3D12 initialization" )
+	SECTION( "GridRenderer D3D12 initialization" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "grid::GridRenderer D3D12 initialization" ) )
@@ -127,7 +127,7 @@ TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization
 		REQUIRE_NOTHROW( renderer.shutdown() );
 	}
 
-	SECTION( "grid::GridRenderer initialization error cases" )
+	SECTION( "GridRenderer initialization error cases" )
 	{
 		grid::GridRenderer renderer;
 
@@ -143,7 +143,7 @@ TEST_CASE( "grid::GridRenderer Initialization", "[grid][renderer][initialization
 	}
 }
 
-TEST_CASE( "grid::Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
+TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 {
 	SECTION( "Optimal spacing calculation" )
 	{
@@ -230,7 +230,7 @@ TEST_CASE( "grid::Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 
 TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 {
-	SECTION( "grid::Grid snapping functions" )
+	SECTION( "Grid snapping functions" )
 	{
 		float spacing = 1.0f;
 
@@ -256,7 +256,7 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 		REQUIRE( exactSnapped.y == exactPoint.y );
 	}
 
-	SECTION( "grid::Grid line detection" )
+	SECTION( "Grid line detection" )
 	{
 		float spacing = 1.0f;
 		float tolerance = 0.01f;
@@ -314,7 +314,7 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 		// REQUIRE(invalidColor.z == Catch::Matchers::WithinAbs(0.5f, 0.001f));
 	}
 
-	SECTION( "grid::Grid fade calculations" )
+	SECTION( "Grid fade calculations" )
 	{
 		math::Vec3<> cameraPos( 0, 0, 0 );
 		float fadeDistance = 10.0f;
@@ -341,7 +341,7 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 		REQUIRE( beyondFade == 0.0f );
 	}
 
-	SECTION( "grid::Grid bounds calculation" )
+	SECTION( "Grid bounds calculation" )
 	{
 		camera::PerspectiveCamera camera;
 		camera.setPosition( math::Vec3<>( 5, 5, 10 ) );
@@ -366,9 +366,9 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 	}
 }
 
-TEST_CASE( "grid::Grid Rendering Integration", "[grid][render][integration]" )
+TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 {
-	SECTION( "grid::Grid rendering with valid setup" )
+	SECTION( "Grid rendering with valid setup" )
 	{
 		platform::Win32Window window;
 		dx12::Device device;
@@ -394,7 +394,7 @@ TEST_CASE( "grid::Grid Rendering Integration", "[grid][render][integration]" )
 		renderer.shutdown();
 	}
 
-	SECTION( "grid::Grid rendering error cases" )
+	SECTION( "Grid rendering error cases" )
 	{
 		grid::GridRenderer renderer;
 
@@ -407,7 +407,7 @@ TEST_CASE( "grid::Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE_FALSE( renderResult );
 	}
 
-	SECTION( "grid::Grid rendering with different settings" )
+	SECTION( "Grid rendering with different settings" )
 	{
 		platform::Win32Window window;
 		dx12::Device device;

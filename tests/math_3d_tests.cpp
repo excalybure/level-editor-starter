@@ -16,9 +16,9 @@ TEST_CASE( "3D Point-in-Shape Tests", "[3d][geometry]" )
 		math::Vec3f center( 0.0f, 0.0f, 0.0f );
 		float radius = 5.0f;
 
-		REQUIRE( pointInSphere( math::Vec3f( 0.0f, 0.0f, 0.0f ), center, radius ) );		 // Center
-		REQUIRE( pointInSphere( math::Vec3f( 3.0f, 0.0f, 0.0f ), center, radius ) );		 // Inside
-		REQUIRE( pointInSphere( math::Vec3f( 5.0f, 0.0f, 0.0f ), center, radius ) );		 // On surface
+		REQUIRE( pointInSphere( math::Vec3f( 0.0f, 0.0f, 0.0f ), center, radius ) );	   // Center
+		REQUIRE( pointInSphere( math::Vec3f( 3.0f, 0.0f, 0.0f ), center, radius ) );	   // Inside
+		REQUIRE( pointInSphere( math::Vec3f( 5.0f, 0.0f, 0.0f ), center, radius ) );	   // On surface
 		REQUIRE_FALSE( pointInSphere( math::Vec3f( 6.0f, 0.0f, 0.0f ), center, radius ) ); // Outside
 		REQUIRE_FALSE( pointInSphere( math::Vec3f( 4.0f, 4.0f, 0.0f ), center, radius ) ); // Outside diagonal
 	}
@@ -28,12 +28,12 @@ TEST_CASE( "3D Point-in-Shape Tests", "[3d][geometry]" )
 		math::Vec3f min( -2.0f, -3.0f, -1.0f );
 		math::Vec3f max( 2.0f, 3.0f, 1.0f );
 
-		REQUIRE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 0.0f ), min, max ) );		  // Center
-		REQUIRE( pointInAABB( math::Vec3f( -2.0f, -3.0f, -1.0f ), min, max ) );	  // Min corner
-		REQUIRE( pointInAABB( math::Vec3f( 2.0f, 3.0f, 1.0f ), min, max ) );		  // Max corner
+		REQUIRE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 0.0f ), min, max ) );		// Center
+		REQUIRE( pointInAABB( math::Vec3f( -2.0f, -3.0f, -1.0f ), min, max ) );		// Min corner
+		REQUIRE( pointInAABB( math::Vec3f( 2.0f, 3.0f, 1.0f ), min, max ) );		// Max corner
 		REQUIRE_FALSE( pointInAABB( math::Vec3f( -3.0f, 0.0f, 0.0f ), min, max ) ); // Outside X
-		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 4.0f, 0.0f ), min, max ) );  // Outside Y
-		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 2.0f ), min, max ) );  // Outside Z
+		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 4.0f, 0.0f ), min, max ) );	// Outside Y
+		REQUIRE_FALSE( pointInAABB( math::Vec3f( 0.0f, 0.0f, 2.0f ), min, max ) );	// Outside Z
 	}
 
 	SECTION( "Point in Tetrahedron" )
@@ -43,9 +43,9 @@ TEST_CASE( "3D Point-in-Shape Tests", "[3d][geometry]" )
 		math::Vec3f c( 0.0f, 1.0f, 0.0f );
 		math::Vec3f d( 0.0f, 0.0f, 1.0f );
 
-		REQUIRE( pointInTetrahedron( math::Vec3f( 0.1f, 0.1f, 0.1f ), a, b, c, d ) );		   // Inside
-		REQUIRE( pointInTetrahedron( math::Vec3f( 0.0f, 0.0f, 0.0f ), a, b, c, d ) );		   // On vertex
-		REQUIRE_FALSE( pointInTetrahedron( math::Vec3f( 0.5f, 0.5f, 0.5f ), a, b, c, d ) );  // Outside
+		REQUIRE( pointInTetrahedron( math::Vec3f( 0.1f, 0.1f, 0.1f ), a, b, c, d ) );		 // Inside
+		REQUIRE( pointInTetrahedron( math::Vec3f( 0.0f, 0.0f, 0.0f ), a, b, c, d ) );		 // On vertex
+		REQUIRE_FALSE( pointInTetrahedron( math::Vec3f( 0.5f, 0.5f, 0.5f ), a, b, c, d ) );	 // Outside
 		REQUIRE_FALSE( pointInTetrahedron( math::Vec3f( -0.1f, 0.1f, 0.1f ), a, b, c, d ) ); // Outside
 	}
 }
@@ -284,7 +284,7 @@ TEST_CASE( "3D Bounding Volumes", "[3d][bounding]" )
 		REQUIRE( defaultBox.min.z > defaultBox.max.z );
 	}
 
-	SECTION( "math::BoundingSphere Operations" )
+	SECTION( "BoundingSphere Operations" )
 	{
 		math::BoundingSphere<float> sphere( math::Vec3f( 0.0f, 0.0f, 0.0f ), 2.0f );
 

@@ -43,7 +43,7 @@ public:
 	}
 };
 
-TEST_CASE( "editor::ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
+TEST_CASE( "ViewportInputHandler - Basic clicking", "[viewport][input][click]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -107,7 +107,7 @@ TEST_CASE( "editor::ViewportInputHandler - Basic clicking", "[viewport][input][c
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]" )
+TEST_CASE( "ViewportInputHandler - Modifier keys", "[viewport][input][modifiers]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -200,7 +200,7 @@ TEST_CASE( "editor::ViewportInputHandler - Modifier keys", "[viewport][input][mo
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Rectangle selection", "[viewport][input][rect]" )
+TEST_CASE( "ViewportInputHandler - Rectangle selection", "[viewport][input][rect]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -262,7 +262,7 @@ TEST_CASE( "editor::ViewportInputHandler - Rectangle selection", "[viewport][inp
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Hover detection", "[viewport][input][hover]" )
+TEST_CASE( "ViewportInputHandler - Hover detection", "[viewport][input][hover]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -308,7 +308,7 @@ TEST_CASE( "editor::ViewportInputHandler - Hover detection", "[viewport][input][
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - components::Selection mode detection", "[viewport][input][mode]" )
+TEST_CASE( "ViewportInputHandler - Selection mode detection", "[viewport][input][mode]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -358,7 +358,7 @@ TEST_CASE( "editor::ViewportInputHandler - components::Selection mode detection"
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
+TEST_CASE( "ViewportInputHandler - Edge cases", "[viewport][input][edge]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;

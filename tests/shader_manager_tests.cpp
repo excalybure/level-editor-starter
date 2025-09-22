@@ -102,7 +102,7 @@ private:
 	std::string m_invalidShaderContent;
 };
 
-TEST_CASE( "shader_manager::ShaderManager Basic Construction", "[shader_manager][construction]" )
+TEST_CASE( "ShaderManager Basic Construction", "[shader_manager][construction]" )
 {
 	SECTION( "Default construction" )
 	{
@@ -114,7 +114,7 @@ TEST_CASE( "shader_manager::ShaderManager Basic Construction", "[shader_manager]
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Shader Registration", "[shader_manager][registration]" )
+TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -259,7 +259,7 @@ TEST_CASE( "shader_manager::ShaderManager Shader Registration", "[shader_manager
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Shader Unregistration", "[shader_manager][unregistration]" )
+TEST_CASE( "ShaderManager Shader Unregistration", "[shader_manager][unregistration]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -314,7 +314,7 @@ TEST_CASE( "shader_manager::ShaderManager Shader Unregistration", "[shader_manag
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Shader Compilation", "[shader_manager][compilation]" )
+TEST_CASE( "ShaderManager Shader Compilation", "[shader_manager][compilation]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -355,7 +355,7 @@ TEST_CASE( "shader_manager::ShaderManager Shader Compilation", "[shader_manager]
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Force Recompilation", "[shader_manager][force_recompile]" )
+TEST_CASE( "ShaderManager Force Recompilation", "[shader_manager][force_recompile]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -402,7 +402,7 @@ TEST_CASE( "shader_manager::ShaderManager Force Recompilation", "[shader_manager
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Callback System", "[shader_manager][callbacks]" )
+TEST_CASE( "ShaderManager Callback System", "[shader_manager][callbacks]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -450,7 +450,7 @@ TEST_CASE( "shader_manager::ShaderManager Callback System", "[shader_manager][ca
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager File Change Detection", "[shader_manager][file_watching]" )
+TEST_CASE( "ShaderManager File Change Detection", "[shader_manager][file_watching]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -487,7 +487,7 @@ TEST_CASE( "shader_manager::ShaderManager File Change Detection", "[shader_manag
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Multiple Callbacks", "[shader_manager][callbacks]" )
+TEST_CASE( "ShaderManager Multiple Callbacks", "[shader_manager][callbacks]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -546,7 +546,7 @@ TEST_CASE( "shader_manager::ShaderManager Multiple Callbacks", "[shader_manager]
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Shader Type Utilities", "[shader_manager][types]" )
+TEST_CASE( "ShaderManager Shader Type Utilities", "[shader_manager][types]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -581,7 +581,7 @@ TEST_CASE( "shader_manager::ShaderManager Shader Type Utilities", "[shader_manag
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Edge Cases", "[shader_manager][edge_cases]" )
+TEST_CASE( "ShaderManager Edge Cases", "[shader_manager][edge_cases]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;
@@ -636,7 +636,7 @@ TEST_CASE( "shader_manager::ShaderManager Edge Cases", "[shader_manager][edge_ca
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Memory Management", "[shader_manager][memory]" )
+TEST_CASE( "ShaderManager Memory Management", "[shader_manager][memory]" )
 {
 	ShaderManagerTestFixture fixture;
 
@@ -663,7 +663,7 @@ TEST_CASE( "shader_manager::ShaderManager Memory Management", "[shader_manager][
 	}
 }
 
-TEST_CASE( "shader_manager::ShaderManager Thread Safety", "[shader_manager][threading]" )
+TEST_CASE( "ShaderManager Thread Safety", "[shader_manager][threading]" )
 {
 	ShaderManagerTestFixture fixture;
 	shader_manager::ShaderManager manager;

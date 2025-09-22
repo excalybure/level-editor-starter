@@ -7,7 +7,7 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "dx12::Texture Creation and Properties", "[dx12][texture][creation]" )
+TEST_CASE( "Texture Creation and Properties", "[dx12][texture][creation]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Texture creation" ) )
@@ -57,7 +57,7 @@ TEST_CASE( "dx12::Texture Creation and Properties", "[dx12][texture][creation]" 
 	}
 }
 
-TEST_CASE( "dx12::Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
+TEST_CASE( "Texture Invalid Creation Parameters", "[dx12][texture][invalid]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Texture invalid parameters" ) )
@@ -109,7 +109,7 @@ TEST_CASE( "dx12::Texture Invalid Creation Parameters", "[dx12][texture][invalid
 	}
 }
 
-TEST_CASE( "dx12::Texture Resize Operations", "[dx12][texture][resize]" )
+TEST_CASE( "Texture Resize Operations", "[dx12][texture][resize]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Texture resize" ) )
@@ -186,10 +186,10 @@ TEST_CASE( "dx12::Texture Resize Operations", "[dx12][texture][resize]" )
 	}
 }
 
-TEST_CASE( "dx12::Texture Shader dx12::Resource View", "[dx12][texture][srv]" )
+TEST_CASE( "Texture Shader Resource View", "[dx12][texture][srv]" )
 {
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "dx12::Texture SRV creation" ) )
+	if ( !requireHeadlessDevice( device, "Texture SRV creation" ) )
 		return;
 
 	SECTION( "SRV creation with valid texture" )
@@ -231,7 +231,7 @@ TEST_CASE( "dx12::Texture Shader dx12::Resource View", "[dx12][texture][srv]" )
 	}
 }
 
-TEST_CASE( "dx12::Texture Clear Operations", "[dx12][texture][clear]" )
+TEST_CASE( "Texture Clear Operations", "[dx12][texture][clear]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Texture clear operations" ) )
@@ -277,13 +277,13 @@ TEST_CASE( "dx12::Texture Clear Operations", "[dx12][texture][clear]" )
 	}
 }
 
-TEST_CASE( "dx12::Texture dx12::Resource State Management", "[dx12][texture][state]" )
+TEST_CASE( "Texture Resource State Management", "[dx12][texture][state]" )
 {
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "dx12::Texture state management" ) )
+	if ( !requireHeadlessDevice( device, "Texture state management" ) )
 		return;
 
-	SECTION( "dx12::Resource state transitions" )
+	SECTION( "Resource state transitions" )
 	{
 		dx12::Texture texture;
 		REQUIRE( texture.createRenderTarget( &device, 256, 256 ) );

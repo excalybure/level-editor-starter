@@ -7,9 +7,9 @@
 
 using Catch::Matchers::WithinAbs;
 
-TEST_CASE( "dx12::TextureManager Initialization and Lifecycle", "[dx12][texture][manager]" )
+TEST_CASE( "TextureManager Initialization and Lifecycle", "[dx12][texture][manager]" )
 {
-	SECTION( "dx12::TextureManager initialization with valid device" )
+	SECTION( "TextureManager initialization with valid device" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "dx12::TextureManager initialization" ) )
@@ -22,7 +22,7 @@ TEST_CASE( "dx12::TextureManager Initialization and Lifecycle", "[dx12][texture]
 		REQUIRE( manager->initialize( &device ) );
 	}
 
-	SECTION( "dx12::TextureManager initialization with null device" )
+	SECTION( "TextureManager initialization with null device" )
 	{
 		dx12::TextureManager manager;
 
@@ -30,7 +30,7 @@ TEST_CASE( "dx12::TextureManager Initialization and Lifecycle", "[dx12][texture]
 		REQUIRE_FALSE( manager.initialize( nullptr ) );
 	}
 
-	SECTION( "dx12::TextureManager shutdown safety" )
+	SECTION( "TextureManager shutdown safety" )
 	{
 		dx12::Device device;
 		if ( !requireHeadlessDevice( device, "dx12::TextureManager shutdown" ) )
@@ -45,7 +45,7 @@ TEST_CASE( "dx12::TextureManager Initialization and Lifecycle", "[dx12][texture]
 	}
 }
 
-TEST_CASE( "dx12::TextureManager Viewport Render Target Creation", "[dx12][texture][viewport]" )
+TEST_CASE( "TextureManager Viewport Render Target Creation", "[dx12][texture][viewport]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::TextureManager viewport render targets" ) )
@@ -121,7 +121,7 @@ TEST_CASE( "dx12::TextureManager Viewport Render Target Creation", "[dx12][textu
 	}
 }
 
-TEST_CASE( "dx12::TextureManager SRV Handle Management", "[dx12][texture][srv]" )
+TEST_CASE( "TextureManager SRV Handle Management", "[dx12][texture][srv]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::TextureManager SRV handles" ) )
@@ -170,7 +170,7 @@ TEST_CASE( "dx12::TextureManager SRV Handle Management", "[dx12][texture][srv]" 
 	}
 }
 
-TEST_CASE( "dx12::TextureManager Constants and Limits", "[dx12][texture][constants]" )
+TEST_CASE( "TextureManager Constants and Limits", "[dx12][texture][constants]" )
 {
 	SECTION( "Compile-time constants" )
 	{

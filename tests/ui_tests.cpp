@@ -93,9 +93,9 @@ TEST_CASE( "UI begin/end frame safety when not initialized", "[ui]" )
 	REQUIRE_FALSE( ui.wantsCaptureKeyboard() );
 }
 
-TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
+TEST_CASE( "UI Viewport Integration", "[ui][viewport]" )
 {
-	SECTION( "editor::Viewport access returns nullptr for uninitialized UI" )
+	SECTION( "Viewport access returns nullptr for uninitialized UI" )
 	{
 		// Test that uninitialized UI safely returns nullptr for viewport access
 		editor::UI ui;
@@ -117,7 +117,7 @@ TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
 		REQUIRE( constUI.getViewport( editor::ViewportType::Side ) == nullptr );
 	}
 
-	SECTION( "editor::Viewport consistency between calls for uninitialized UI" )
+	SECTION( "Viewport consistency between calls for uninitialized UI" )
 	{
 		// Multiple calls to getViewport should consistently return nullptr
 		editor::UI ui;
@@ -137,7 +137,7 @@ TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
 		REQUIRE( constViewport1 == viewport1 ); // Should be the same (both nullptr)
 	}
 
-	SECTION( "editor::Viewport cameras would be initialized if UI was initialized" )
+	SECTION( "Viewport cameras would be initialized if UI was initialized" )
 	{
 		// Test that uninitialized UI safely handles camera access attempts
 		editor::UI ui;
@@ -150,7 +150,7 @@ TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
 		// This test validates safe behavior when UI is not properly initialized
 	}
 
-	SECTION( "editor::Viewport layout correspondence" )
+	SECTION( "Viewport layout correspondence" )
 	{
 		editor::UI ui;
 		const auto &layout = ui.getLayout();
@@ -186,7 +186,7 @@ TEST_CASE( "UI editor::Viewport Integration", "[ui][viewport]" )
 	}
 }
 
-TEST_CASE( "UI editor::Viewport State Management", "[ui][viewport]" )
+TEST_CASE( "UI Viewport State Management", "[ui][viewport]" )
 {
 	SECTION( "Uninitialized UI viewport access is safe" )
 	{
@@ -374,7 +374,7 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 		REQUIRE_FALSE( ui.isGridSettingsWindowOpen() );
 	}
 
-	SECTION( "editor::Viewport grid settings access through UI" )
+	SECTION( "Viewport grid settings access through UI" )
 	{
 		// Verify we can access viewports for grid settings
 		const auto *perspectiveViewport = ui.getViewport( editor::ViewportType::Perspective );

@@ -11,7 +11,7 @@ using Catch::Approx;
 
 constexpr float EPSILON = 0.001f;
 
-TEST_CASE( "camera::Camera Base Class", "[camera]" )
+TEST_CASE( "Camera Base Class", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
@@ -42,7 +42,7 @@ TEST_CASE( "camera::Camera Base Class", "[camera]" )
 		REQUIRE( camera.getUp().z == Catch::Approx( 1.0f ).epsilon( EPSILON ) );
 	}
 
-	SECTION( "camera::Camera vectors calculation" )
+	SECTION( "Camera vectors calculation" )
 	{
 		class TestCamera : public camera::Camera
 		{
@@ -78,7 +78,7 @@ TEST_CASE( "camera::Camera Base Class", "[camera]" )
 		REQUIRE( distance == Catch::Approx( expectedDistance ).epsilon( EPSILON ) );
 	}
 
-	SECTION( "camera::Camera positioning" )
+	SECTION( "Camera positioning" )
 	{
 		class TestCamera : public camera::Camera
 		{
@@ -116,7 +116,7 @@ TEST_CASE( "camera::Camera Base Class", "[camera]" )
 	}
 }
 
-TEST_CASE( "Perspective camera::Camera", "[camera]" )
+TEST_CASE( "Perspective Camera", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
@@ -219,7 +219,7 @@ TEST_CASE( "Perspective camera::Camera", "[camera]" )
 	}
 }
 
-TEST_CASE( "Orthographic camera::Camera", "[camera]" )
+TEST_CASE( "Orthographic Camera", "[camera]" )
 {
 	SECTION( "Default construction" )
 	{
@@ -304,7 +304,7 @@ TEST_CASE( "Orthographic camera::Camera", "[camera]" )
 	}
 }
 
-TEST_CASE( "camera::Camera Utilities", "[camera]" )
+TEST_CASE( "Camera Utilities", "[camera]" )
 {
 	SECTION( "Framing distance calculation" )
 	{
@@ -387,7 +387,7 @@ TEST_CASE( "camera::Camera Utilities", "[camera]" )
 	}
 }
 
-TEST_CASE( "camera::Camera Integration", "[camera]" )
+TEST_CASE( "Camera Integration", "[camera]" )
 {
 	SECTION( "View matrix consistency" )
 	{

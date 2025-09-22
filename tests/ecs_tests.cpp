@@ -49,7 +49,7 @@ struct Velocity
 	Velocity( float dx, float dy, float dz ) : dx( dx ), dy( dy ), dz( dz ) {}
 };
 
-TEST_CASE( "ecs::Entity creation and management", "[ecs]" )
+TEST_CASE( "Entity creation and management", "[ecs]" )
 {
 	ecs::EntityManager entityManager;
 
@@ -85,7 +85,7 @@ TEST_CASE( "ecs::Entity creation and management", "[ecs]" )
 		REQUIRE_FALSE( entityManager.isValid( entity ) );
 	}
 
-	SECTION( "ecs::Entity recycling and generation" )
+	SECTION( "Entity recycling and generation" )
 	{
 		const ecs::Entity entity1 = entityManager.create();
 		const uint32_t firstId = entity1.id;
@@ -158,11 +158,11 @@ TEST_CASE( "Component Storage", "[ecs]" )
 	}
 }
 
-TEST_CASE( "Enhanced ECS ecs::Scene", "[ecs][scene]" )
+TEST_CASE( "Enhanced ECS Scene", "[ecs][scene]" )
 {
 	ecs::Scene scene;
 
-	SECTION( "ecs::Entity creation" )
+	SECTION( "Entity creation" )
 	{
 		const ecs::Entity entity = scene.createEntity();
 		REQUIRE( scene.isValid( entity ) );
@@ -171,16 +171,16 @@ TEST_CASE( "Enhanced ECS ecs::Scene", "[ecs][scene]" )
 		REQUIRE_FALSE( scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "ecs::Entity creation with default name parameter" )
+	SECTION( "Entity creation with default name parameter" )
 	{
-		const ecs::Entity entity = scene.createEntity( "ecs::Entity" );
+		const ecs::Entity entity = scene.createEntity( "Entity" );
 		REQUIRE( scene.isValid( entity ) );
 
-		// Verify components::Name component is NOT added when using "ecs::Entity" as name
+		// Verify components::Name component is NOT added when using "Entity" as name
 		REQUIRE_FALSE( scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "ecs::Entity creation with name" )
+	SECTION( "Entity creation with name" )
 	{
 		const ecs::Entity entity = scene.createEntity( "TestEntity" );
 		REQUIRE( entity.id != 0 );
@@ -193,7 +193,7 @@ TEST_CASE( "Enhanced ECS ecs::Scene", "[ecs][scene]" )
 		REQUIRE( namePtr->name == "TestEntity" );
 	}
 
-	SECTION( "ecs::Entity destruction" )
+	SECTION( "Entity destruction" )
 	{
 		ecs::Entity entity = scene.createEntity();
 		REQUIRE( scene.isValid( entity ) );
@@ -296,11 +296,11 @@ TEST_CASE( "Component concept validation", "[ecs][concepts]" )
 	REQUIRE( components::Component<Velocity> );
 }
 
-TEST_CASE( "Enhanced ECS ecs::Scene Management", "[ecs]" )
+TEST_CASE( "Enhanced ECS Scene Management", "[ecs]" )
 {
 	ecs::Scene scene;
 
-	SECTION( "ecs::Entity creation and destruction" )
+	SECTION( "Entity creation and destruction" )
 	{
 		const ecs::Entity e1 = scene.createEntity( "TestEntity" );
 		REQUIRE( e1.isValid() );
@@ -385,7 +385,7 @@ TEST_CASE( "Enhanced ECS ecs::Scene Management", "[ecs]" )
 		REQUIRE( newParentChildren[0] == child2 );
 	}
 
-	SECTION( "ecs::Entity recycling" )
+	SECTION( "Entity recycling" )
 	{
 		// Create and destroy entities to test ID recycling
 		const ecs::Entity e1 = scene.createEntity();
@@ -405,7 +405,7 @@ TEST_CASE( "Enhanced ECS ecs::Scene Management", "[ecs]" )
 	}
 }
 
-TEST_CASE( "components::Transform System", "[ecs][systems]" )
+TEST_CASE( "Transform System", "[ecs][systems]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -572,29 +572,29 @@ TEST_CASE( "Hierarchy Safety - Cycle Prevention", "[ecs][hierarchy][safety]" )
 	}
 }
 
-TEST_CASE( "components::Name Component Auto-Add on Creation", "[ecs][name][creation]" )
+TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 {
 	ecs::Scene scene;
 
-	SECTION( "Default name creates entity without components::Name component" )
+	SECTION( "Default name creates entity without Name component" )
 	{
-		const ecs::Entity entity = scene.createEntity(); // Using default name "ecs::Entity"
+		const ecs::Entity entity = scene.createEntity(); // Using default name "Entity"
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "Empty string creates entity without components::Name component" )
+	SECTION( "Empty string creates entity without Name component" )
 	{
 		const ecs::Entity entity = scene.createEntity( "" );
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "Empty string creates entity without components::Name component" )
+	SECTION( "Empty string creates entity without Name component" )
 	{
 		ecs::Entity entity = scene.createEntity( "" );
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "Custom name auto-adds components::Name component" )
+	SECTION( "Custom name auto-adds Name component" )
 	{
 		const ecs::Entity entity = scene.createEntity( "TestEntity" );
 		REQUIRE( scene.hasComponent<components::Name>( entity ) );
@@ -604,7 +604,7 @@ TEST_CASE( "components::Name Component Auto-Add on Creation", "[ecs][name][creat
 		REQUIRE( nameComp->name == "TestEntity" );
 	}
 
-	SECTION( "Different custom names create correct components::Name components" )
+	SECTION( "Different custom names create correct Name components" )
 	{
 		const ecs::Entity player = scene.createEntity( "Player" );
 		const ecs::Entity enemy = scene.createEntity( "Enemy" );
@@ -619,15 +619,15 @@ TEST_CASE( "components::Name Component Auto-Add on Creation", "[ecs][name][creat
 		REQUIRE( scene.getComponent<components::Name>( world )->name == "World" );
 	}
 
-	SECTION( "components::Name component not added when name matches default" )
+	SECTION( "Name component not added when name matches default" )
 	{
-		const ecs::Entity entity = scene.createEntity( "ecs::Entity" ); // Explicit default name
+		const ecs::Entity entity = scene.createEntity( "Entity" ); // Explicit default name
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 
-	SECTION( "Explicit default name creates entity without components::Name component" )
+	SECTION( "Explicit default name creates entity without Name component" )
 	{
-		const ecs::Entity entity = scene.createEntity( "ecs::Entity" );
+		const ecs::Entity entity = scene.createEntity( "Entity" );
 		REQUIRE( !scene.hasComponent<components::Name>( entity ) );
 	}
 }
@@ -642,7 +642,7 @@ TEST_CASE( "Component Types Validation", "[ecs][components]" )
 	REQUIRE( components::Component<components::Selected> );
 }
 
-TEST_CASE( "components::Transform Cache Invalidation on Component Removal", "[ecs][systems][cache]" )
+TEST_CASE( "Transform Cache Invalidation on Component Removal", "[ecs][systems][cache]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -650,7 +650,7 @@ TEST_CASE( "components::Transform Cache Invalidation on Component Removal", "[ec
 	auto *const transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	SECTION( "Removing components::Transform component clears cached world matrix and dirty state" )
+	SECTION( "Removing Transform component clears cached world matrix and dirty state" )
 	{
 		const ecs::Entity entity = scene.createEntity( "CacheTest" );
 
@@ -692,7 +692,7 @@ TEST_CASE( "components::Transform Cache Invalidation on Component Removal", "[ec
 		// and not having unexpected values
 	}
 
-	SECTION( "Removing components::Transform component on parent with children" )
+	SECTION( "Removing Transform component on parent with children" )
 	{
 		const ecs::Entity parent = scene.createEntity( "Parent" );
 		ecs::Entity child = scene.createEntity( "Child" );
@@ -1042,7 +1042,7 @@ TEST_CASE( "Reparenting Preserves Sub-hierarchy", "[ecs][hierarchy][reparenting]
 	}
 }
 
-TEST_CASE( "components::Transform System Edge Cases", "[ecs][systems][transform][edge-cases]" )
+TEST_CASE( "Transform System Edge Cases", "[ecs][systems][transform][edge-cases]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -1050,11 +1050,11 @@ TEST_CASE( "components::Transform System Edge Cases", "[ecs][systems][transform]
 	auto *const transformSystem = systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 
-	SECTION( "Getting world matrix after components::Transform component removal" )
+	SECTION( "Getting world matrix after Transform component removal" )
 	{
 		const ecs::Entity entity = scene.createEntity( "TransformEdgeTest" );
 
-		// Add components::Transform component
+		// Add Transform component
 		components::Transform transform;
 		transform.position = { 5.0f, 10.0f, 15.0f };
 		scene.addComponent( entity, transform );
@@ -1117,7 +1117,7 @@ TEST_CASE( "components::Transform System Edge Cases", "[ecs][systems][transform]
 		REQUIRE( childWorld.m23() == Catch::Approx( 3.0f ) ); // parent.z + child.z
 	}
 
-	SECTION( "components::Transform system behavior with orphaned entities" )
+	SECTION( "Transform system behavior with orphaned entities" )
 	{
 		const ecs::Entity parent = scene.createEntity( "Parent" );
 		const ecs::Entity child = scene.createEntity( "Child" );
@@ -1159,7 +1159,7 @@ TEST_CASE( "components::Transform System Edge Cases", "[ecs][systems][transform]
 		REQUIRE( parentWorldFinal.m23() == Catch::Approx( 30.0f ) );
 	}
 
-	SECTION( "ecs::Entity destruction clears transform cache properly" )
+	SECTION( "Entity destruction clears transform cache properly" )
 	{
 		const ecs::Entity entity1 = scene.createEntity( "Entity1" );
 		const ecs::Entity entity2 = scene.createEntity( "Entity2" );
@@ -1261,15 +1261,15 @@ TEST_CASE( "forEach Utility Comprehensive Coverage", "[ecs][iteration][forEach]"
 		REQUIRE( totalX == Catch::Approx( 6.0f ) );
 	}
 
-	SECTION( "forEach with components::Name components" )
+	SECTION( "forEach with Name components" )
 	{
-		// Create entities, some with custom names (auto-add components::Name), some without
+		// Create entities, some with custom names (auto-add Name), some without
 		const ecs::Entity withName1 = scene.createEntity( "CustomName1" );
 		const ecs::Entity withName2 = scene.createEntity( "CustomName2" );
-		const ecs::Entity withoutName = scene.createEntity();			   // No components::Name component added
-		const ecs::Entity explicitDefault = scene.createEntity( "ecs::Entity" ); // No components::Name component added
+		const ecs::Entity withoutName = scene.createEntity();				// No Name component added
+		const ecs::Entity explicitDefault = scene.createEntity( "Entity" ); // No Name component added
 
-		// Test forEach with components::Name - should find exactly 2 entities
+		// Test forEach with Name - should find exactly 2 entities
 		std::vector<ecs::Entity> nameEntities;
 		std::vector<std::string> names;
 		scene.forEach<components::Name>( [&nameEntities, &names]( ecs::Entity entity, const components::Name &name ) {
@@ -1575,7 +1575,7 @@ TEST_CASE( "Large Hierarchy Performance and Correctness", "[ecs][hierarchy][perf
 		std::vector<ecs::Entity> entities;
 		for ( int i = 0; i < 200; ++i )
 		{
-			const ecs::Entity entity = scene.createEntity( "ecs::Entity" + std::to_string( i ) );
+			const ecs::Entity entity = scene.createEntity( "Entity" + std::to_string( i ) );
 			entities.push_back( entity );
 
 			// Add components::Transform to every other entity

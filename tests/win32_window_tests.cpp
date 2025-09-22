@@ -17,7 +17,7 @@ static void drainAllEvents( platform::Win32Window &window )
 }
 #endif
 
-TEST_CASE( "platform::Win32Window create and basic properties", "[win32][window]" )
+TEST_CASE( "Win32Window create and basic properties", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -33,7 +33,7 @@ TEST_CASE( "platform::Win32Window create and basic properties", "[win32][window]
 #endif
 }
 
-TEST_CASE( "platform::Win32Window empty event queue", "[win32][window]" )
+TEST_CASE( "Win32Window empty event queue", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -48,7 +48,7 @@ TEST_CASE( "platform::Win32Window empty event queue", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window resize event", "[win32][window]" )
+TEST_CASE( "Win32Window resize event", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -84,7 +84,7 @@ TEST_CASE( "platform::Win32Window resize event", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window mouse move and button events", "[win32][window]" )
+TEST_CASE( "Win32Window mouse move and button events", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -144,7 +144,7 @@ TEST_CASE( "platform::Win32Window mouse move and button events", "[win32][window
 #endif
 }
 
-TEST_CASE( "platform::Win32Window key press/release events", "[win32][window]" )
+TEST_CASE( "Win32Window key press/release events", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -180,7 +180,7 @@ TEST_CASE( "platform::Win32Window key press/release events", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window close event and poll result", "[win32][window]" )
+TEST_CASE( "Win32Window close event and poll result", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -204,7 +204,7 @@ TEST_CASE( "platform::Win32Window close event and poll result", "[win32][window]
 #endif
 }
 
-TEST_CASE( "platform::Win32Window focus and lost focus events", "[win32][window]" )
+TEST_CASE( "Win32Window focus and lost focus events", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -232,7 +232,7 @@ TEST_CASE( "platform::Win32Window focus and lost focus events", "[win32][window]
 #endif
 }
 
-TEST_CASE( "platform::Win32Window event FIFO ordering", "[win32][window]" )
+TEST_CASE( "Win32Window event FIFO ordering", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -262,7 +262,7 @@ TEST_CASE( "platform::Win32Window event FIFO ordering", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window multiple windows independence", "[win32][window]" )
+TEST_CASE( "Win32Window multiple windows independence", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window a, b;
@@ -310,7 +310,7 @@ TEST_CASE( "platform::Win32Window multiple windows independence", "[win32][windo
 #endif
 }
 
-TEST_CASE( "platform::Win32Window negative mouse wheel", "[win32][window]" )
+TEST_CASE( "Win32Window negative mouse wheel", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -335,7 +335,7 @@ TEST_CASE( "platform::Win32Window negative mouse wheel", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window right and middle mouse buttons", "[win32][window]" )
+TEST_CASE( "Win32Window right and middle mouse buttons", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -372,7 +372,7 @@ TEST_CASE( "platform::Win32Window right and middle mouse buttons", "[win32][wind
 #endif
 }
 
-TEST_CASE( "platform::Win32Window getInstance non-null and idle poll", "[win32][window]" )
+TEST_CASE( "Win32Window getInstance non-null and idle poll", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -388,7 +388,7 @@ TEST_CASE( "platform::Win32Window getInstance non-null and idle poll", "[win32][
 #endif
 }
 
-TEST_CASE( "platform::Win32Window WM_QUIT sets shouldClose", "[win32][window]" )
+TEST_CASE( "Win32Window WM_QUIT sets shouldClose", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -410,7 +410,7 @@ TEST_CASE( "platform::Win32Window WM_QUIT sets shouldClose", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window double create prevented", "[win32][window]" )
+TEST_CASE( "Win32Window double create prevented", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -423,7 +423,7 @@ TEST_CASE( "platform::Win32Window double create prevented", "[win32][window]" )
 #endif
 }
 
-TEST_CASE( "platform::Win32Window no duplicate resize events when size unchanged", "[win32][window]" )
+TEST_CASE( "Win32Window no duplicate resize events when size unchanged", "[win32][window]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -449,7 +449,7 @@ TEST_CASE( "platform::Win32Window no duplicate resize events when size unchanged
 #endif
 }
 
-TEST_CASE( "platform::Win32Window ImGui input integration", "[win32][window][imgui]" )
+TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 {
 #if defined( _WIN32 )
 	platform::Win32Window window;
@@ -524,7 +524,7 @@ TEST_CASE( "platform::Win32Window ImGui input integration", "[win32][window][img
 		REQUIRE( keyUpCount >= 1 );
 	}
 
-	SECTION( "win32::Window procedure calls ImGui handler safely" )
+	SECTION( "Window procedure calls ImGui handler safely" )
 	{
 		// This test ensures that calling ImGui_ImplWin32_WndProcHandler
 		// doesn't crash or interfere with normal message processing

@@ -24,7 +24,7 @@ TEST_CASE( "Console module functionality", "[console]" )
 		REQUIRE_NOTHROW( console::error( "C-string error" ) );
 	}
 
-	SECTION( "Console functions accept std::string" )
+	SECTION( "Console functions accept string" )
 	{
 		std::string testMessage = "Test string message";
 		REQUIRE_NOTHROW( console::info( testMessage ) );
@@ -33,7 +33,7 @@ TEST_CASE( "Console module functionality", "[console]" )
 		REQUIRE_NOTHROW( console::error( testMessage ) );
 	}
 
-	SECTION( "Variadic template functions with std::format" )
+	SECTION( "Variadic template functions with format" )
 	{
 		int value = 42;
 		float floatValue = 3.14f;

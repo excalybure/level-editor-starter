@@ -8,7 +8,7 @@
 
 
 // Simple integration: create window + device (windowed) then ensure renderer begin/end frame works without crash.
-TEST_CASE( "renderer::Renderer windowed integration begin/end", "[renderer][integration]" )
+TEST_CASE( "Renderer windowed integration begin/end", "[renderer][integration]" )
 {
 	platform::Win32Window window;
 	if ( !window.create( "Test", 320, 240 ) )
@@ -38,7 +38,7 @@ TEST_CASE( "renderer::Renderer windowed integration begin/end", "[renderer][inte
 }
 
 // Negative shader compile scenario using ShaderCompiler::CompileFromSource with intentional error.
-TEST_CASE( "renderer::Renderer shader compile failure path", "[renderer][shader][error]" )
+TEST_CASE( "Renderer shader compile failure path", "[renderer][shader][error]" )
 {
 	const std::string badShader = R"(float4 main(float3 pos : POSITION) : SV_POSITION { return float4(pos, 1.0f) )"; // missing semicolon & brace
 	bool threw = false;

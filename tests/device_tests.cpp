@@ -6,7 +6,7 @@
 #include "platform/dx12/dx12_device.h"
 
 
-TEST_CASE( "dx12::Device Initialization Methods", "[dx12][device][initialization]" )
+TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 {
 	SECTION( "Headless initialization" )
 	{
@@ -73,7 +73,7 @@ TEST_CASE( "dx12::Device Initialization Methods", "[dx12][device][initialization
 	}
 }
 
-TEST_CASE( "dx12::Device Component Access", "[dx12][device][components]" )
+TEST_CASE( "Device Component Access", "[dx12][device][components]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Device component access" ) )
@@ -110,7 +110,7 @@ TEST_CASE( "dx12::Device Component Access", "[dx12][device][components]" )
 		// (Exact state depends on implementation)
 	}
 
-	SECTION( "dx12::Texture manager integration" )
+	SECTION( "Texture manager integration" )
 	{
 		auto textureManager = device.getTextureManager();
 		REQUIRE( textureManager != nullptr );
@@ -120,7 +120,7 @@ TEST_CASE( "dx12::Device Component Access", "[dx12][device][components]" )
 	}
 }
 
-TEST_CASE( "dx12::Device Frame Operations", "[dx12][device][frame]" )
+TEST_CASE( "Device Frame Operations", "[dx12][device][frame]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Device frame operations" ) )
@@ -164,9 +164,9 @@ TEST_CASE( "dx12::Device Frame Operations", "[dx12][device][frame]" )
 	}
 }
 
-TEST_CASE( "dx12::Device Error Handling and Edge Cases", "[dx12][device][error]" )
+TEST_CASE( "Device Error Handling and Edge Cases", "[dx12][device][error]" )
 {
-	SECTION( "dx12::Device creation on unsupported systems" )
+	SECTION( "Device creation on unsupported systems" )
 	{
 		dx12::Device device;
 
@@ -214,7 +214,7 @@ TEST_CASE( "dx12::Device Error Handling and Edge Cases", "[dx12][device][error]"
 		// Test that destructor handles all states safely
 		{
 			dx12::Device device; // Uninitialized
-						   // Should destruct safely
+								 // Should destruct safely
 		}
 
 		{
@@ -236,7 +236,7 @@ TEST_CASE( "dx12::Device Error Handling and Edge Cases", "[dx12][device][error]"
 	}
 }
 
-TEST_CASE( "dx12::Device Helper Functions", "[dx12][device][helpers]" )
+TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
 {
 	SECTION( "throwIfFailed with success" )
 	{
@@ -267,7 +267,7 @@ TEST_CASE( "dx12::Device Helper Functions", "[dx12][device][helpers]" )
 	}
 }
 
-TEST_CASE( "dx12::Device dx12::Resource Management", "[dx12][device][resources]" )
+TEST_CASE( "Device Resource Management", "[dx12][device][resources]" )
 {
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "dx12::Device resource management" ) )
@@ -287,7 +287,7 @@ TEST_CASE( "dx12::Device dx12::Resource Management", "[dx12][device][resources]"
 		REQUIRE( adapter != nullptr );
 	}
 
-	SECTION( "dx12::Device capabilities" )
+	SECTION( "Device capabilities" )
 	{
 		auto d3dDevice = device.get();
 		REQUIRE( d3dDevice != nullptr );

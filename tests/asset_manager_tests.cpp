@@ -6,13 +6,13 @@
 #include "engine/gltf_loader/gltf_loader.h"
 
 
-TEST_CASE( "assets::AssetManager can be instantiated", "[assets::AssetManager][unit]" )
+TEST_CASE( "AssetManager can be instantiated", "[AssetManager][unit]" )
 {
 	assets::AssetManager manager;
 	REQUIRE( true ); // Basic instantiation test
 }
 
-TEST_CASE( "assets::AssetManager caches assets correctly", "[assets::AssetManager][unit]" )
+TEST_CASE( "AssetManager caches assets correctly", "[AssetManager][unit]" )
 {
 	assets::AssetManager manager;
 
@@ -58,7 +58,7 @@ TEST_CASE( "assets::AssetManager caches assets correctly", "[assets::AssetManage
 	}
 }
 
-TEST_CASE( "assets::AssetManager store functionality", "[assets::AssetManager][unit]" )
+TEST_CASE( "AssetManager store functionality", "[AssetManager][unit]" )
 {
 	assets::AssetManager manager;
 
@@ -84,7 +84,7 @@ TEST_CASE( "assets::AssetManager store functionality", "[assets::AssetManager][u
 	}
 }
 
-TEST_CASE( "assets::AssetManager unload functionality", "[assets::AssetManager][unit]" )
+TEST_CASE( "AssetManager unload functionality", "[AssetManager][unit]" )
 {
 	assets::AssetManager manager;
 
@@ -120,7 +120,7 @@ TEST_CASE( "assets::AssetManager unload functionality", "[assets::AssetManager][
 	}
 }
 
-TEST_CASE( "assets::AssetManager clearCache functionality", "[assets::AssetManager][unit]" )
+TEST_CASE( "AssetManager clearCache functionality", "[AssetManager][unit]" )
 {
 	assets::AssetManager manager;
 
@@ -151,7 +151,7 @@ TEST_CASE( "assets::AssetManager clearCache functionality", "[assets::AssetManag
 	assets::AssetManager::clearSceneLoaderCallback();
 }
 
-TEST_CASE( "assets::AssetManager integration with GLTFLoader", "[assets::AssetManager][integration]" )
+TEST_CASE( "AssetManager integration with GLTFLoader", "[AssetManager][integration]" )
 {
 	assets::AssetManager manager;
 	gltf_loader::GLTFLoader gltfLoader;
@@ -188,7 +188,7 @@ TEST_CASE( "assets::AssetManager integration with GLTFLoader", "[assets::AssetMa
 	}
 }
 
-TEST_CASE( "assets::AssetManager ECS import callback mechanism", "[assets::AssetManager][ecs][callback]" )
+TEST_CASE( "AssetManager ECS import callback mechanism", "[AssetManager][ecs][callback]" )
 {
 	assets::AssetManager manager;
 
@@ -239,7 +239,7 @@ TEST_CASE( "assets::AssetManager ECS import callback mechanism", "[assets::Asset
 	assets::AssetManager::clearImportSceneCallback();
 }
 
-TEST_CASE( "assets::AssetManager loadScene loads actual glTF content", "[assets::AssetManager][loadScene][integration]" )
+TEST_CASE( "AssetManager loadScene loads actual glTF content", "[AssetManager][loadScene][integration]" )
 {
 	assets::AssetManager manager;
 

@@ -182,7 +182,7 @@ TEST_CASE( "SelectionManager - Events", "[selection][events]" )
 		eventReceived = true;
 	} );
 
-	SECTION( "components::Selection event" )
+	SECTION( "Selection event" )
 	{
 		selection.select( entity1 );
 
@@ -264,7 +264,7 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 
 	selection.select( { entity1, entity2 } );
 
-	SECTION( "components::Selection bounds calculation" )
+	SECTION( "Selection bounds calculation" )
 	{
 		auto bounds = selection.getSelectionBounds();
 
@@ -276,7 +276,7 @@ TEST_CASE( "SelectionManager - Spatial queries", "[selection][spatial]" )
 		REQUIRE( center.x == Catch::Approx( 2.5f ) ); // Midpoint
 	}
 
-	SECTION( "components::Selection radius" )
+	SECTION( "Selection radius" )
 	{
 		auto radius = selection.getSelectionRadius();
 		REQUIRE( radius > 0.0f );

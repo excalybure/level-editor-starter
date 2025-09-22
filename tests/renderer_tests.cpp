@@ -12,7 +12,7 @@
 #include "test_dx12_helpers.h"
 
 
-TEST_CASE( "renderer::Renderer Vertex Format", "[renderer]" )
+TEST_CASE( "Renderer Vertex Format", "[renderer]" )
 {
 	SECTION( "Vertex can be constructed" )
 	{
@@ -325,9 +325,9 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 	}
 }
 
-TEST_CASE( "renderer::Renderer Creation", "[renderer]" )
+TEST_CASE( "Renderer Creation", "[renderer]" )
 {
-	SECTION( "renderer::Renderer can be created with valid device" )
+	SECTION( "Renderer can be created with valid device" )
 	{
 		REQUIRE_NOTHROW( []() {
 			try

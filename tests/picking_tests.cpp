@@ -31,7 +31,7 @@ TEST_CASE( "HitResult - Basic functionality", "[picking][hit-result]" )
 	REQUIRE( hits[1].distance == 10.0f );
 }
 
-TEST_CASE( "picking::PickingSystem - picking::Ray-AABB intersection", "[picking][aabb]" )
+TEST_CASE( "PickingSystem - Ray-AABB intersection", "[picking][aabb]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -51,7 +51,7 @@ TEST_CASE( "picking::PickingSystem - picking::Ray-AABB intersection", "[picking]
 	};
 	scene.addComponent( entity, meshRenderer );
 
-	SECTION( "picking::Ray hits center of AABB" )
+	SECTION( "Ray hits center of AABB" )
 	{
 		math::Vec3<> rayOrigin{ 0.0f, 0.0f, -5.0f };
 		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
@@ -63,7 +63,7 @@ TEST_CASE( "picking::PickingSystem - picking::Ray-AABB intersection", "[picking]
 		REQUIRE( result.distance == Catch::Approx( 4.0f ) ); // Hits front face at z=-1
 	}
 
-	SECTION( "picking::Ray misses AABB" )
+	SECTION( "Ray misses AABB" )
 	{
 		math::Vec3<> rayOrigin{ 5.0f, 0.0f, -5.0f }; // Way off to the side
 		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
@@ -75,7 +75,7 @@ TEST_CASE( "picking::PickingSystem - picking::Ray-AABB intersection", "[picking]
 	}
 }
 
-TEST_CASE( "picking::PickingSystem - Multiple entities distance sorting", "[picking][multiple]" )
+TEST_CASE( "PickingSystem - Multiple entities distance sorting", "[picking][multiple]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;

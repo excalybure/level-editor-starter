@@ -10,7 +10,7 @@ using Catch::Approx;
 
 TEST_CASE( "ViewportUtils Name Functions", "[viewport][utils][names]" )
 {
-	SECTION( "editor::Viewport type name mapping" )
+	SECTION( "Viewport type name mapping" )
 	{
 		// Test all viewport type names
 		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Perspective ) ) == "Perspective" );
@@ -19,7 +19,7 @@ TEST_CASE( "ViewportUtils Name Functions", "[viewport][utils][names]" )
 		REQUIRE( std::string( ViewportUtils::getViewportTypeName( ViewportType::Side ) ) == "Side" );
 	}
 
-	SECTION( "editor::Viewport type names are consistent" )
+	SECTION( "Viewport type names are consistent" )
 	{
 		// Names should be non-empty and consistent between calls
 		const char *perspective1 = ViewportUtils::getViewportTypeName( ViewportType::Perspective );
@@ -100,7 +100,7 @@ TEST_CASE( "ViewportUtils Input Event Creation", "[viewport][utils][input]" )
 	}
 }
 
-TEST_CASE( "editor::Viewport Display Name Functionality", "[viewport][utils][display]" )
+TEST_CASE( "Viewport Display Name Functionality", "[viewport][utils][display]" )
 {
 	SECTION( "Individual viewport display names" )
 	{
@@ -162,7 +162,7 @@ TEST_CASE( "editor::Viewport Display Name Functionality", "[viewport][utils][dis
 	}
 }
 
-TEST_CASE( "editor::Viewport Camera Type Mapping", "[viewport][utils][camera]" )
+TEST_CASE( "Viewport Camera Type Mapping", "[viewport][utils][camera]" )
 {
 	SECTION( "Camera view type consistency" )
 	{

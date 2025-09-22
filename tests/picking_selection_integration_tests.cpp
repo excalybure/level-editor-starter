@@ -158,7 +158,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 		REQUIRE( results[1].distance == Catch::Approx( 14.0f ).margin( 1.0f ) ); // Far cube at z=10
 	}
 
-	SECTION( "components::Selection bounds and spatial queries" )
+	SECTION( "Selection bounds and spatial queries" )
 	{
 		selectionManager.select( { nearCube, farCube, sideObject } );
 		systemManager.update( scene, 0.016f );
@@ -197,7 +197,7 @@ TEST_CASE( "Picking System - Complete workflow integration", "[picking][integrat
 	}
 }
 
-TEST_CASE( "components::Selection Event System - Complete integration", "[selection][events][integration]" )
+TEST_CASE( "Selection Event System - Complete integration", "[selection][events][integration]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -269,7 +269,7 @@ TEST_CASE( "components::Selection Event System - Complete integration", "[select
 	}
 }
 
-TEST_CASE( "Rectangle components::Selection - Comprehensive integration", "[rectangle][selection][integration]" )
+TEST_CASE( "Rectangle Selection - Comprehensive integration", "[rectangle][selection][integration]" )
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -383,7 +383,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 
 	systemManager.update( scene, 0.016f );
 
-	SECTION( "picking::Ray casting performance with many objects" )
+	SECTION( "Ray casting performance with many objects" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -404,7 +404,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 		REQUIRE( duration.count() < 200 );
 	}
 
-	SECTION( "components::Selection performance with many objects" )
+	SECTION( "Selection performance with many objects" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -425,7 +425,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 		REQUIRE( selectionManager.getSelectionCount() == 500 );
 	}
 
-	SECTION( "components::Selection bounds calculation performance" )
+	SECTION( "Selection bounds calculation performance" )
 	{
 		// Select all objects
 		selectionManager.select( entities, false );
@@ -543,7 +543,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 	IntegrationTestViewport viewport;
 	systemManager.update( scene, 0.016f );
 
-	SECTION( "picking::Ray-casting system: Accurate intersection testing" )
+	SECTION( "Ray-casting system: Accurate intersection testing" )
 	{
 		math::Vec3<> rayOrigin{ 0.0f, -5.0f, 0.0f };
 		math::Vec3<> rayDirection{ 0.0f, 1.0f, 0.0f };
@@ -612,7 +612,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE( scene.getComponent<components::Selected>( secondObject )->isPrimary );
 	}
 
-	SECTION( "components::Selection events: Notification system for selection changes" )
+	SECTION( "Selection events: Notification system for selection changes" )
 	{
 		bool eventReceived = false;
 		editor::SelectionChangedEvent lastEvent;
@@ -651,7 +651,7 @@ TEST_CASE( "Integration Acceptance Criteria Validation", "[acceptance][criteria]
 		REQUIRE_FALSE( secondaryComp->isPrimary );
 	}
 
-	SECTION( "Input responsiveness: components::Selection responds quickly" )
+	SECTION( "Input responsiveness: Selection responds quickly" )
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 

@@ -44,7 +44,7 @@ public:
 
 } // anonymous namespace
 
-TEST_CASE( "editor::ViewportInputHandler - Basic functionality", "[viewport_input][integration]" )
+TEST_CASE( "ViewportInputHandler - Basic functionality", "[viewport_input][integration]" )
 {
 	// Setup test environment
 	auto scene = ecs::Scene{};
@@ -96,7 +96,7 @@ TEST_CASE( "editor::ViewportInputHandler - Basic functionality", "[viewport_inpu
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Rectangle selection bounds", "[viewport_input][integration]" )
+TEST_CASE( "ViewportInputHandler - Rectangle selection bounds", "[viewport_input][integration]" )
 {
 	auto scene = ecs::Scene{};
 	auto systemManager = systems::SystemManager{};
@@ -135,7 +135,7 @@ TEST_CASE( "editor::ViewportInputHandler - Rectangle selection bounds", "[viewpo
 	}
 }
 
-TEST_CASE( "editor::ViewportInputHandler - Integration with SelectionManager", "[viewport_input][integration]" )
+TEST_CASE( "ViewportInputHandler - Integration with SelectionManager", "[viewport_input][integration]" )
 {
 	auto scene = ecs::Scene{};
 	auto systemManager = systems::SystemManager{};
