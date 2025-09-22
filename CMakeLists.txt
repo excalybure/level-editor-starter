@@ -206,6 +206,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/asset_rendering_integration_tests.cpp
     tests/imguizmo_integration_tests.cpp
     tests/gizmos_tests.cpp
+    tests/gizmo_integration_tests.cpp
     tests/transform_commands_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 

@@ -72,6 +72,31 @@ math::Mat4<> GizmoSystem::calculateGizmoMatrix() const
 	return math::Mat4<>::translation( center );
 }
 
+bool GizmoSystem::hasValidSelection() const noexcept
+{
+	if ( !m_selectionManager || !m_scene )
+	{
+		return false;
+	}
+
+	const auto &selectedEntities = m_selectionManager->getSelectedEntities();
+	if ( selectedEntities.empty() )
+	{
+		return false;
+	}
+
+	// Check if any selected entity has a transform component
+	for ( const auto entity : selectedEntities )
+	{
+		if ( m_scene->hasComponent<components::Transform>( entity ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void GizmoSystem::applyTransformDelta( const GizmoResult &delta )
 {
 	if ( !m_selectionManager || !m_scene )
@@ -220,6 +245,18 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 	}
 
 	return result;
+}
+
+GizmoResult GizmoSystem::renderGizmo( const math::Mat4<> &viewMatrix, const math::Mat4<> &projectionMatrix, const math::Vec4<> &viewport ) noexcept
+{
+	// Setup ImGuizmo with provided matrices and viewport
+	if ( !setupImGuizmo( viewMatrix, projectionMatrix, viewport ) )
+	{
+		return GizmoResult{}; // Return default result if setup fails
+	}
+
+	// Call the existing renderGizmo method
+	return renderGizmo();
 }
 
 int GizmoSystem::getImGuizmoMode() const noexcept
