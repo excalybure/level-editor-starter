@@ -25,7 +25,7 @@ ViewportInputHandler::ViewportInputHandler( SelectionManager &selectionManager,
 
 void ViewportInputHandler::handleMouseClick( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2f &screenPos,
+	const math::Vec2f &viewportPos,
 	bool leftButton,
 	bool rightButton,
 	bool ctrlPressed,
@@ -41,7 +41,7 @@ void ViewportInputHandler::handleMouseClick( ecs::Scene &scene,
 	const auto mode = getSelectionMode( ctrlPressed, shiftPressed );
 
 	// Perform picking using viewport's ray casting
-	const auto viewportRay = viewport.getPickingRay( screenPos );
+	const auto viewportRay = viewport.getPickingRay( viewportPos );
 	const auto hitResult = m_pickingSystem.raycast( scene, viewportRay.origin, viewportRay.direction, viewportRay.length );
 
 	if ( hitResult.hit && scene.isValid( hitResult.entity ) )
@@ -117,13 +117,13 @@ void ViewportInputHandler::handleMouseRelease( ecs::Scene &scene,
 
 void ViewportInputHandler::handleMouseMove( ecs::Scene &scene,
 	const Viewport &viewport,
-	const math::Vec2f &screenPos )
+	const math::Vec2f &viewportPos )
 {
 	// Update hover state
-	updateHoverState( scene, viewport, screenPos );
+	updateHoverState( scene, viewport, viewportPos );
 
 	// Store last mouse position for delta calculations
-	m_lastMousePos = screenPos;
+	m_lastMousePos = viewportPos;
 }
 
 SelectionMode ViewportInputHandler::getSelectionMode( bool ctrlPressed, bool shiftPressed ) const
@@ -242,10 +242,10 @@ void ViewportInputHandler::applyRectSelection( ecs::Scene &scene, const Viewport
 	}
 }
 
-void ViewportInputHandler::updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2f &screenPos )
+void ViewportInputHandler::updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2f &viewportPos )
 {
 	// Perform picking using viewport's ray casting
-	const auto viewportRay = viewport.getPickingRay( screenPos );
+	const auto viewportRay = viewport.getPickingRay( viewportPos );
 	const auto hitResult = m_pickingSystem.raycast( scene, viewportRay.origin, viewportRay.direction, viewportRay.length );
 
 	if ( hitResult.hit && scene.isValid( hitResult.entity ) )

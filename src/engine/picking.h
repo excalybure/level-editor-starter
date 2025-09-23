@@ -53,11 +53,11 @@ public:
 	// Viewport integration for mouse picking
 	HitResult pickFromScreen( ecs::Scene &scene,
 		const editor::Viewport &viewport,
-		const math::Vec2<> &screenPos ) const;
+		const math::Vec2<> &viewportPos ) const;
 
 	std::vector<HitResult> pickAllFromScreen( ecs::Scene &scene,
 		const editor::Viewport &viewport,
-		const math::Vec2<> &screenPos ) const;
+		const math::Vec2<> &viewportPos ) const;
 
 private:
 	systems::SystemManager &m_systemManager;

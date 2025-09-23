@@ -416,10 +416,22 @@ void UI::Impl::renderViewportWindows( ViewportLayout &layout )
 
 void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 {
+	const ImVec2 windowPos = ImGui::GetWindowPos();               // Window position in screen space
+
 	ImGui::SetNextWindowSizeConstraints( to_imgui_vec2( pane.minSize ), ImVec2( FLT_MAX, FLT_MAX ) );
 
 	if ( ImGui::Begin( pane.name, const_cast<bool *>( &pane.isOpen ) ) )
 	{
+		// Get ImGui content positioning information for coordinate conversion
+		// Use recommended functions instead of GetWindowPos which is in screen space
+		const ImVec2 contentRegionMin = ImGui::GetCursorScreenPos();  // Top-left of content area in screen space
+
+		// Calculate content offset relative to window
+		const ImVec2 offsetFromWindow = ImVec2(
+			contentRegionMin.x - windowPos.x,
+			contentRegionMin.y - windowPos.y
+		);
+
 		// Get the content region size
 		const ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
@@ -428,7 +440,8 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 
 		if ( viewport )
 		{
-			// Update viewport size if it has changed and is valid
+			viewport->setOffsetFromWindow( math::Vec2<>{ offsetFromWindow.x, offsetFromWindow.y } );
+
 			const auto &currentSize = viewport->getSize();
 			const int newWidth = static_cast<int>( contentSize.x );
 			const int newHeight = static_cast<int>( contentSize.y );

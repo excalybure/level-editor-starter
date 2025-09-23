@@ -805,3 +805,65 @@ TEST_CASE( "Viewport Grid Settings Management", "[viewport][grid]" )
 		REQUIRE_THAT( updatedTop.majorGridColor.y, WithinAbs( 1.0f, 0.001f ) );
 	}
 }
+
+TEST_CASE( "Viewport Coordinate Conversion", "[viewport][coordinates]" )
+{
+	SECTION( "windowToViewport without position data" )
+	{
+		editor::Viewport viewport( editor::ViewportType::Perspective );
+		viewport.setRenderTargetSize( 800, 600 );
+
+		// Without position data, should return input unchanged (backward compatibility)
+		const auto result = viewport.windowToViewport( { 150.0f, 100.0f } );
+		REQUIRE_THAT( result.x, WithinAbs( 150.0f, 0.001f ) );
+		REQUIRE_THAT( result.y, WithinAbs( 100.0f, 0.001f ) );
+	}
+
+	SECTION( "windowToViewport with valid position data" )
+	{
+		editor::Viewport viewport( editor::ViewportType::Perspective );
+		viewport.setRenderTargetSize( 800, 600 );
+
+		// Set ImGui content offset
+		viewport.setOffsetFromWindow( { 10.0f, 25.0f } );
+
+		// Test coordinate conversion
+		// Formula: viewportPos = screenPos - contentOffset
+		const auto result = viewport.windowToViewport( { 50.0f, 0.0f } );
+		REQUIRE_THAT( result.x, WithinAbs( 40.0f, 0.001f ) ); // 50 - 10 = 40
+		REQUIRE_THAT( result.y, WithinAbs( -25.0f, 0.001f ) ); // 0 - 25 = -25
+	}
+
+	SECTION( "windowToViewport edge cases" )
+	{
+		editor::Viewport viewport( editor::ViewportType::Perspective );
+
+		// Test zero offsets
+		viewport.setOffsetFromWindow( { 0.0f, 0.0f } );
+		auto result = viewport.windowToViewport( { 100.0f, 200.0f } );
+		REQUIRE_THAT( result.x, WithinAbs( 100.0f, 0.001f ) );
+		REQUIRE_THAT( result.y, WithinAbs( 200.0f, 0.001f ) );
+
+		// Test negative coordinates
+		viewport.setOffsetFromWindow( { 5.0f, 10.0f } );
+		result = viewport.windowToViewport( { 25.0f, 15.0f } );
+		REQUIRE_THAT( result.x, WithinAbs( 20.0f, 0.001f ) ); // 25 - 5 = 20
+		REQUIRE_THAT( result.y, WithinAbs( 5.0f, 0.001f ) ); // 15 - 10 = 5
+	}
+
+	SECTION( "setWindowPosition updates position validity" )
+	{
+		editor::Viewport viewport( editor::ViewportType::Perspective );
+
+		// Initially, coordinates should pass through unchanged
+		auto result1 = viewport.windowToViewport( { 100.0f, 200.0f } );
+		REQUIRE_THAT( result1.x, WithinAbs( 100.0f, 0.001f ) );
+		REQUIRE_THAT( result1.y, WithinAbs( 200.0f, 0.001f ) );
+
+		// After setting position, conversion should work
+		viewport.setOffsetFromWindow( { 15.0f, 25.0f } );
+		auto result2 = viewport.windowToViewport( { 100.0f, 200.0f } );
+		REQUIRE_THAT( result2.x, WithinAbs( 85.0f, 0.001f ) );	// 100 - 15 = 85
+		REQUIRE_THAT( result2.y, WithinAbs( 175.0f, 0.001f ) ); // 200 - 25 = 175
+	}
+}

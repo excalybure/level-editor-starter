@@ -55,7 +55,7 @@ public:
 	// Mouse input handling
 	void handleMouseClick( ecs::Scene &scene,
 		const Viewport &viewport,
-		const math::Vec2f &screenPos,
+		const math::Vec2f &viewportPos,
 		bool leftButton,
 		bool rightButton,
 		bool ctrlPressed,
@@ -75,7 +75,7 @@ public:
 	// Hover detection for visual feedback
 	void handleMouseMove( ecs::Scene &scene,
 		const Viewport &viewport,
-		const math::Vec2f &screenPos );
+		const math::Vec2f &viewportPos );
 
 	// Rectangle selection
 	const RectSelection &getRectSelection() const { return m_rectSelection; }
@@ -101,7 +101,7 @@ private:
 		const math::Vec2f &maxPos ) const;
 
 	void applyRectSelection( ecs::Scene &scene, const Viewport &viewport );
-	void updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2f &screenPos );
+	void updateHoverState( ecs::Scene &scene, const Viewport &viewport, const math::Vec2f &viewportPos );
 };
 
 } // namespace editor

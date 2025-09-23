@@ -328,13 +328,16 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 		{
 			if ( event.mouse.pressed )
 			{
+				// Convert from window coordinates to viewport coordinates
+				const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+				const math::Vec2f viewportPos = windowToViewport( windowPos );
+
 				// Store mouse position for potential drag operation
-				m_lastMousePos = { event.mouse.x, event.mouse.y };
+				m_lastMousePos = viewportPos;
 				m_mouseTracking = true;
 
 				// Handle mouse click for object selection
-				const math::Vec2f screenPos{ event.mouse.x, event.mouse.y };
-				m_inputHandler->handleMouseClick( *m_scene, *this, screenPos, true, false, // leftButton, rightButton
+				m_inputHandler->handleMouseClick( *m_scene, *this, viewportPos, true, false, // leftButton, rightButton
 					m_currentInput.keyboard.ctrl,
 					m_currentInput.keyboard.shift );
 			}
@@ -343,8 +346,10 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 				// Handle mouse release
 				if ( m_mouseTracking )
 				{
-					math::Vec2f releasePos{ event.mouse.x, event.mouse.y };
-					m_inputHandler->handleMouseRelease( *m_scene, *this, releasePos );
+					// Convert from screen/window coordinates to viewport coordinates
+					const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+					const math::Vec2f viewportPos = windowToViewport( windowPos );
+					m_inputHandler->handleMouseRelease( *m_scene, *this, viewportPos );
 					m_mouseTracking = false;
 				}
 			}
@@ -353,17 +358,19 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 		break;
 
 	case ViewportInputEvent::Type::MouseMove: {
-		const math::Vec2f currentPos{ event.mouse.x, event.mouse.y };
+		// Convert from screen/window coordinates to viewport coordinates
+		const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+		const math::Vec2f viewportPos = windowToViewport( windowPos );
 
 		// Handle mouse drag if we're tracking
 		if ( m_mouseTracking )
 		{
-			m_inputHandler->handleMouseDrag( *m_scene, *this, m_lastMousePos, currentPos, m_currentInput.keyboard.ctrl, m_currentInput.keyboard.shift );
+			m_inputHandler->handleMouseDrag( *m_scene, *this, m_lastMousePos, viewportPos, m_currentInput.keyboard.ctrl, m_currentInput.keyboard.shift );
 		}
 		else
 		{
 			// Handle hover detection
-			m_inputHandler->handleMouseMove( *m_scene, *this, currentPos );
+			m_inputHandler->handleMouseMove( *m_scene, *this, viewportPos );
 		}
 		return false; // Allow camera to also handle mouse move for camera controls
 	}
@@ -412,15 +419,16 @@ void Viewport::handleCameraInput( const ViewportInputEvent &event )
 	}
 }
 
-ViewportRay Viewport::getPickingRay( const math::Vec2<> &screenPos ) const noexcept
+ViewportRay Viewport::getPickingRay( const math::Vec2<> &viewportPos ) const noexcept
 {
 	if ( !m_camera )
 	{
 		return { { 0, 0, 0 }, { 0, 0, -1 }, 1000.0f };
 	}
 
-	// Convert screen coordinates to normalized device coordinates
-	const math::Vec2<> ndc = ViewportUtils::pixelToNormalized( screenPos, m_size );
+	// Convert viewport pixel coordinates to normalized device coordinates
+	// viewportPos should be in viewport space: (0,0) = top-left, (width,height) = bottom-right
+	const math::Vec2<> ndc = ViewportUtils::pixelToNormalized( viewportPos, m_size );
 
 	// Get camera matrices
 	const auto viewMatrix = m_camera->getViewMatrix();
@@ -474,14 +482,27 @@ ViewportRay Viewport::getPickingRay( const math::Vec2<> &screenPos ) const noexc
 	return { rayOrigin, rayDirection, 1000.0f };
 }
 
-math::Vec3<> Viewport::screenToWorld( const math::Vec2<> &screenPos, float depth ) const noexcept
+math::Vec3<> Viewport::screenToWorld( const math::Vec2<> &viewportPos, float depth ) const noexcept
 {
 	if ( !m_camera )
 		return { 0, 0, 0 };
 
 	// Get picking ray and extend to specified depth
-	const auto ray = getPickingRay( screenPos );
+	const auto ray = getPickingRay( viewportPos );
 	return ray.origin + ray.direction * depth;
+}
+
+math::Vec2<> Viewport::windowToViewport( const math::Vec2<> &windowPos ) const noexcept
+{
+	return {
+		windowPos.x - m_offsetFromWindow.x,
+		windowPos.y - m_offsetFromWindow.y
+	};
+}
+
+void Viewport::setOffsetFromWindow( const math::Vec2<> &offset ) noexcept
+{
+	m_offsetFromWindow = offset;
 }
 
 math::Vec2<> Viewport::worldToScreen( const math::Vec3<> &worldPos ) const noexcept

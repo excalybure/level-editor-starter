@@ -156,9 +156,17 @@ public:
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
-	virtual ViewportRay getPickingRay( const math::Vec2<> &screenPos ) const noexcept; // Virtual for unit test mocking
-	math::Vec3<> screenToWorld( const math::Vec2<> &screenPos, float depth = 0.0f ) const noexcept;
+	// Note: viewportPos should be in viewport coordinates (0,0 to viewport width/height)
+	virtual ViewportRay getPickingRay( const math::Vec2<> &viewportPos ) const noexcept; // Virtual for unit test mocking
+	math::Vec3<> screenToWorld( const math::Vec2<> &viewportPos, float depth = 0.0f ) const noexcept;
 	virtual math::Vec2<> worldToScreen( const math::Vec3<> &worldPos ) const noexcept; // Virtual for unit test mocking
+
+	// Coordinate space conversion
+	// screenToViewport: converts from application window coordinates to viewport coordinates
+	math::Vec2<> windowToViewport( const math::Vec2<> &windowPos ) const noexcept;
+	
+	// setOffsetFromWindow: sets viewport position relative to application window (not screen)
+	void setOffsetFromWindow( const math::Vec2<> &offset ) noexcept;
 
 	// View operations
 	void frameAll() noexcept;
@@ -235,6 +243,9 @@ private:
 	// Mouse tracking for input deltas
 	math::Vec2<> m_lastMousePos{ 0.0f, 0.0f };
 	bool m_mouseTracking = false;
+
+	// ImGui window positioning for coordinate conversion
+	math::Vec2<> m_offsetFromWindow{ 0.0f, 0.0f };
 
 	// Initialize camera based on viewport type
 	void initializeCamera();

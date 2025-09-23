@@ -173,10 +173,10 @@ bool PickingSystem::testEntityMesh( ecs::Scene &scene, ecs::Entity entity, const
 
 HitResult PickingSystem::pickFromScreen( ecs::Scene &scene,
 	const editor::Viewport &viewport,
-	const Vec2<> &screenPos ) const
+	const Vec2<> &viewportPos ) const
 {
-	// Get ray from viewport screen coordinate
-	const auto viewportRay = viewport.getPickingRay( screenPos );
+	// Get ray from viewport coordinates (relative to viewport, not window)
+	const auto viewportRay = viewport.getPickingRay( viewportPos );
 
 	// Use existing raycast functionality
 	return raycast( scene, viewportRay.origin, viewportRay.direction, viewportRay.length );
@@ -184,10 +184,10 @@ HitResult PickingSystem::pickFromScreen( ecs::Scene &scene,
 
 std::vector<HitResult> PickingSystem::pickAllFromScreen( ecs::Scene &scene,
 	const editor::Viewport &viewport,
-	const Vec2<> &screenPos ) const
+	const Vec2<> &viewportPos ) const
 {
-	// Get ray from viewport screen coordinate
-	const auto viewportRay = viewport.getPickingRay( screenPos );
+	// Get ray from viewport coordinates (relative to viewport, not window)
+	const auto viewportRay = viewport.getPickingRay( viewportPos );
 
 	// Use existing raycastAll functionality
 	return raycastAll( scene, viewportRay.origin, viewportRay.direction, viewportRay.length );
