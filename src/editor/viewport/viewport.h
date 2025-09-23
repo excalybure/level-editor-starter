@@ -26,6 +26,15 @@ namespace systems
 {
 class SystemManager;
 }
+namespace picking
+{
+class PickingSystem;
+}
+namespace editor
+{
+class SelectionManager;
+class ViewportInputHandler;
+} // namespace editor
 
 namespace editor
 {
@@ -94,7 +103,7 @@ class Viewport
 {
 public:
 	explicit Viewport( ViewportType type );
-	~Viewport() = default;
+	~Viewport();
 
 	// No copy/move for now (render targets are not copyable)
 	Viewport( const Viewport & ) = delete;
@@ -134,7 +143,11 @@ public:
 	void update( float deltaTime );
 	void render( dx12::Device *device );
 
+	// Scene access for object selection
+	void setScene( ecs::Scene *scene ) { m_scene = scene; }
+
 	// Input handling
+	void setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager );
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
@@ -194,9 +207,19 @@ private:
 	std::unique_ptr<grid::GridRenderer> m_gridRenderer;
 	grid::GridSettings m_gridSettings;
 
+	// Object selection input handler
+	std::unique_ptr<editor::ViewportInputHandler> m_inputHandler;
+
+	// Scene reference for object selection
+	ecs::Scene *m_scene = nullptr;
+
 	// Input state conversion
 	camera::InputState convertToInputState( const ViewportInputEvent &event ) const;
 	void updateInputState( const ViewportInputEvent &event );
+
+	// Selection input handling helpers
+	bool handleSelectionInput( const ViewportInputEvent &event );
+	void handleCameraInput( const ViewportInputEvent &event );
 
 	// Current input state for controller
 	camera::InputState m_currentInput;
@@ -226,7 +249,7 @@ public:
 	void shutdown();
 
 	// Set scene and system manager for 3D content rendering
-	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager );
+	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem );
 
 	// Viewport management
 	Viewport *createViewport( ViewportType type );
@@ -274,6 +297,10 @@ private:
 	// Scene and system manager for 3D content rendering
 	ecs::Scene *m_scene = nullptr;
 	systems::SystemManager *m_systemManager = nullptr;
+
+	// Selection and picking systems for object interaction
+	editor::SelectionManager *m_selectionManager = nullptr;
+	picking::PickingSystem *m_pickingSystem = nullptr;
 
 	// Find viewport by pointer
 	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );

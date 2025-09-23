@@ -1,7 +1,9 @@
 #include "editor/ui.h"
+#include "editor/selection.h"
 #include "engine/assets/asset_manager.h"
 #include "engine/gpu/gpu_resource_manager.h"
 #include "engine/integration/asset_gltf_integration.h"
+#include "engine/picking.h"
 #include "engine/renderer/renderer.h"
 #include "engine/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"
@@ -114,6 +116,12 @@ int main()
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );
 
+	// Create picking system for object selection
+	picking::PickingSystem pickingSystem( systemManager );
+
+	// Create selection manager for selection state management
+	editor::SelectionManager selectionManager( scene, systemManager );
+
 	// Initialize UI system with D3D12 device
 	editor::UI ui;
 	if ( !ui.initialize(
@@ -129,7 +137,7 @@ int main()
 	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager );
 
 	// Connect scene and systems to viewport manager for 3D rendering
-	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager );
+	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager, &selectionManager, &pickingSystem );
 
 	// Create application
 	app::App app;

@@ -19,6 +19,7 @@
 #include "runtime/console.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
+#include "editor/viewport_input.h"
 
 namespace editor
 {
@@ -48,6 +49,8 @@ Viewport::Viewport( ViewportType type )
 	m_currentInput = {};
 	m_currentInput.deltaTime = 0.0f;
 }
+
+Viewport::~Viewport() = default;
 
 float Viewport::getAspectRatio() const noexcept
 {
@@ -261,6 +264,14 @@ void Viewport::render( dx12::Device *device )
 	}
 }
 
+void Viewport::setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager )
+{
+	if ( selectionManager && pickingSystem && systemManager )
+	{
+		m_inputHandler = std::make_unique<editor::ViewportInputHandler>( *selectionManager, *pickingSystem, *systemManager );
+	}
+}
+
 void Viewport::handleInput( const ViewportInputEvent &event )
 {
 	if ( !m_isFocused || !m_controller )
@@ -268,7 +279,79 @@ void Viewport::handleInput( const ViewportInputEvent &event )
 
 	updateInputState( event );
 
-	// Handle view-specific operations
+	// Try selection input first (for left mouse button and selection operations)
+	bool selectionHandled = handleSelectionInput( event );
+
+	// If selection didn't handle it (e.g., right click, keyboard), handle camera controls
+	if ( !selectionHandled )
+	{
+		handleCameraInput( event );
+	}
+}
+
+bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
+{
+	if ( !m_inputHandler || !m_scene )
+		return false;
+
+	switch ( event.type )
+	{
+	case ViewportInputEvent::Type::MouseButton:
+		if ( event.mouse.button == 0 ) // Left mouse button for selection
+		{
+			if ( event.mouse.pressed )
+			{
+				// Store mouse position for potential drag operation
+				m_lastMousePos = { event.mouse.x, event.mouse.y };
+				m_mouseTracking = true;
+
+				// Handle mouse click for object selection
+				const math::Vec2f screenPos{ event.mouse.x, event.mouse.y };
+				m_inputHandler->handleMouseClick( *m_scene, *this, screenPos, true, false, // leftButton, rightButton
+					m_currentInput.keyboard.ctrl,
+					m_currentInput.keyboard.shift );
+			}
+			else
+			{
+				// Handle mouse release
+				if ( m_mouseTracking )
+				{
+					math::Vec2f releasePos{ event.mouse.x, event.mouse.y };
+					m_inputHandler->handleMouseRelease( *m_scene, *this, releasePos );
+					m_mouseTracking = false;
+				}
+			}
+			return true; // Left click events are always handled by selection
+		}
+		break;
+
+	case ViewportInputEvent::Type::MouseMove: {
+		const math::Vec2f currentPos{ event.mouse.x, event.mouse.y };
+
+		// Handle mouse drag if we're tracking
+		if ( m_mouseTracking )
+		{
+			m_inputHandler->handleMouseDrag( *m_scene, *this, m_lastMousePos, currentPos, m_currentInput.keyboard.ctrl, m_currentInput.keyboard.shift );
+		}
+		else
+		{
+			// Handle hover detection
+			m_inputHandler->handleMouseMove( *m_scene, *this, currentPos );
+		}
+		return false; // Allow camera to also handle mouse move for camera controls
+	}
+	break;
+
+	default:
+		break;
+	}
+
+	return false; // Event not handled by selection
+}
+
+void Viewport::handleCameraInput( const ViewportInputEvent &event )
+{
+	// Handle view-specific operations and camera controls
 	switch ( event.type )
 	{
 	case ViewportInputEvent::Type::MouseButton:
@@ -625,10 +708,12 @@ void ViewportManager::shutdown()
 	m_shaderManager.reset(); // Properly release the shared_ptr
 }
 
-void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager )
+void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem )
 {
 	m_scene = scene;
 	m_systemManager = systemManager;
+	m_selectionManager = selectionManager;
+	m_pickingSystem = pickingSystem;
 }
 
 Viewport *ViewportManager::createViewport( ViewportType type )
@@ -658,7 +743,13 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 		console::warning( "Failed to initialize grid for viewport, grid rendering will not be available" );
 	}
 
-	m_viewports.push_back( std::move( viewport ) );
+	// Setup input handler for object selection if dependencies are available
+	if ( m_selectionManager && m_pickingSystem && m_systemManager )
+	{
+		ptr->setupInputHandler( m_selectionManager, m_pickingSystem, m_systemManager );
+	}
+
+	// Set scene reference for object selection\n	if ( m_scene )\n	{\n		ptr->setScene( m_scene );\n	}\n\n	m_viewports.push_back( std::move( viewport ) );
 
 	// If this is the first viewport, make it active
 	if ( m_viewports.size() == 1 )
