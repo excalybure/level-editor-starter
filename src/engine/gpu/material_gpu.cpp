@@ -148,7 +148,6 @@ void MaterialGPU::createConstantBuffer()
 	{
 		memcpy( mappedData, &m_materialConstants, sizeof( MaterialConstants ) );
 		m_constantBuffer->Unmap( 0, nullptr );
-		console::info( "MaterialGPU: Constant buffer created and mapped successfully" );
 	}
 	else
 	{
@@ -232,8 +231,6 @@ void MaterialGPU::loadTextures()
 		console::info( "MaterialGPU: Loading emissive texture: " + pbr.emissiveTexture );
 		// TODO: Implement actual texture loading
 	}
-
-	console::info( "MaterialGPU: Texture loading preparation completed" );
 }
 
 } // namespace engine::gpu

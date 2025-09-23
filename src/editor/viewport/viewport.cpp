@@ -292,7 +292,6 @@ void Viewport::setupSelectionRenderer( dx12::Device *device, std::shared_ptr<sha
 	if ( device && shaderManager )
 	{
 		m_selectionRenderer = std::make_unique<editor::SelectionRenderer>( *device, *shaderManager );
-		console::info( "SelectionRenderer created for viewport visual feedback" );
 	}
 	else
 	{
@@ -744,6 +743,30 @@ void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemMana
 	m_pickingSystem = pickingSystem;
 }
 
+void ViewportManager::setupInputHandlersForExistingViewports()
+{
+	// Setup input handlers for all existing viewports now that we have the required systems
+	if ( m_selectionManager && m_pickingSystem && m_systemManager )
+	{
+		for ( auto &viewport : m_viewports )
+		{
+			if ( viewport )
+			{
+				viewport->setupInputHandler( m_selectionManager, m_pickingSystem, m_systemManager );
+				viewport->setupSelectionRenderer( m_device, m_shaderManager );
+				if ( m_scene )
+				{
+					viewport->setScene( m_scene );
+				}
+			}
+		}
+	}
+	else
+	{
+		console::warning( "Cannot setup input handlers: missing selection/picking systems" );
+	}
+}
+
 Viewport *ViewportManager::createViewport( ViewportType type )
 {
 	if ( !m_device )
@@ -771,20 +794,8 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 		console::warning( "Failed to initialize grid for viewport, grid rendering will not be available" );
 	}
 
-	// Setup input handler for object selection if dependencies are available
-	if ( m_selectionManager && m_pickingSystem && m_systemManager )
-	{
-		ptr->setupInputHandler( m_selectionManager, m_pickingSystem, m_systemManager );
-	}
-
-	// Setup selection renderer for visual feedback
-	ptr->setupSelectionRenderer( m_device, m_shaderManager );
-
-	// Set scene reference for object selection
-	if ( m_scene )
-	{
-		ptr->setScene( m_scene );
-	}
+	// Note: Input handler setup is deferred until setSceneAndSystems is called
+	// This will be handled by setupInputHandlersForExistingViewports()
 
 	m_viewports.push_back( std::move( viewport ) );
 

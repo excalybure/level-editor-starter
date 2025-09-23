@@ -1201,8 +1201,6 @@ void UI::clearScene()
 
 	m_impl->currentScenePath.clear();
 	m_impl->lastError.clear();
-
-	console::info( "UI: Scene cleared" );
 }
 
 void UI::openFileDialog()

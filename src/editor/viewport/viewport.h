@@ -259,6 +259,9 @@ public:
 	// Set scene and system manager for 3D content rendering
 	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem );
 
+	// Setup input handlers for all existing viewports (called after setSceneAndSystems)
+	void setupInputHandlersForExistingViewports();
+
 	// Viewport management
 	Viewport *createViewport( ViewportType type );
 	void destroyViewport( Viewport *viewport );

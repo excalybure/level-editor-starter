@@ -139,6 +139,9 @@ int main()
 	// Connect scene and systems to viewport manager for 3D rendering
 	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager, &selectionManager, &pickingSystem );
 
+	// Setup input handlers for existing viewports now that systems are available
+	ui.getViewportManager().setupInputHandlersForExistingViewports();
+
 	// Create application
 	app::App app;
 
