@@ -20,6 +20,7 @@
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
 #include "editor/viewport_input.h"
+#include "editor/selection_renderer.h"
 
 namespace editor
 {
@@ -262,6 +263,20 @@ void Viewport::render( dx12::Device *device )
 	{
 		pix::SetMarker( commandList, pix::MarkerColor::Orange, m_showGrid ? "Grid Renderer Missing" : "Grid Disabled" );
 	}
+
+	// Render selection outlines and highlights if available
+	if ( m_selectionRenderer && m_scene )
+	{
+		pix::ScopedEvent pixSelection( commandList, pix::MarkerColor::Purple, "Selection Rendering" );
+
+		// Get camera matrices
+		const auto viewMatrix = m_camera->getViewMatrix();
+		const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
+		const math::Vec2<> viewportSize{ static_cast<float>( m_size.x ), static_cast<float>( m_size.y ) };
+
+		// Render selection visual feedback
+		m_selectionRenderer->render( *m_scene, commandList, viewMatrix, projMatrix, viewportSize );
+	}
 }
 
 void Viewport::setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager )
@@ -269,6 +284,19 @@ void Viewport::setupInputHandler( editor::SelectionManager *selectionManager, pi
 	if ( selectionManager && pickingSystem && systemManager )
 	{
 		m_inputHandler = std::make_unique<editor::ViewportInputHandler>( *selectionManager, *pickingSystem, *systemManager );
+	}
+}
+
+void Viewport::setupSelectionRenderer( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+{
+	if ( device && shaderManager )
+	{
+		m_selectionRenderer = std::make_unique<editor::SelectionRenderer>( *device, *shaderManager );
+		console::info( "SelectionRenderer created for viewport visual feedback" );
+	}
+	else
+	{
+		console::warning( "Cannot setup selection renderer: missing device or shader manager" );
 	}
 }
 
@@ -749,7 +777,16 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 		ptr->setupInputHandler( m_selectionManager, m_pickingSystem, m_systemManager );
 	}
 
-	// Set scene reference for object selection\n	if ( m_scene )\n	{\n		ptr->setScene( m_scene );\n	}\n\n	m_viewports.push_back( std::move( viewport ) );
+	// Setup selection renderer for visual feedback
+	ptr->setupSelectionRenderer( m_device, m_shaderManager );
+
+	// Set scene reference for object selection
+	if ( m_scene )
+	{
+		ptr->setScene( m_scene );
+	}
+
+	m_viewports.push_back( std::move( viewport ) );
 
 	// If this is the first viewport, make it active
 	if ( m_viewports.size() == 1 )

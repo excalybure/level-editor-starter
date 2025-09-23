@@ -34,6 +34,7 @@ namespace editor
 {
 class SelectionManager;
 class ViewportInputHandler;
+class SelectionRenderer;
 } // namespace editor
 
 namespace editor
@@ -147,7 +148,11 @@ public:
 	void setScene( ecs::Scene *scene ) { m_scene = scene; }
 
 	// Input handling
+	// Setup input handler for object selection
 	void setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager );
+
+	// Setup selection renderer for visual feedback
+	void setupSelectionRenderer( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
@@ -209,6 +214,9 @@ private:
 
 	// Object selection input handler
 	std::unique_ptr<editor::ViewportInputHandler> m_inputHandler;
+
+	// Selection visual feedback renderer
+	std::unique_ptr<editor::SelectionRenderer> m_selectionRenderer;
 
 	// Scene reference for object selection
 	ecs::Scene *m_scene = nullptr;

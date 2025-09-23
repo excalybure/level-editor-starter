@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-23 — ViewportInputHandler Integration for Object Selection Complete
+**Summary:** Successfully integrated ViewportInputHandler into the main application's input pipeline following TDD methodology. Completed full integration of object selection and picking systems with visual feedback through SelectionRenderer. The editor now supports left-click object selection, Ctrl+click multi-selection, drag selection, and hover highlighting with proper input priority handling.
+
+**Atomic functionalities completed:**
+- AF6.1: Integrated ViewportInputHandler into Viewport class with proper dependency injection from ViewportManager
+- AF6.2: Implemented input event routing with selection priority (left-click → selection, other events → camera)
+- AF6.3: Added SelectionRenderer integration for visual feedback with outline rendering and hover highlights
+- AF6.4: Connected ECS Scene access to enable ViewportInputHandler to perform selection and picking operations
+- AF6.5: Ensured proper input event translation from ViewportInputEvent to ViewportInputHandler API format
+- AF6.6: Validated integration compatibility with existing camera controls and UI input handling
+
+**Tests:** All selection tests (24 cases, 354 assertions) and input tests (14 cases, 180 assertions) passing. Application launches successfully with functional object selection.
+**Commands:** `unit_test_runner.exe "*selection*"` and `unit_test_runner.exe "*input*"`
+**Notes:** Object selection now works in the live editor with proper visual feedback. Input priority ensures ImGui → Selection → Camera handling. Selection system ready for use in production workflow.
+
 ## 2025-09-21 — Task 5: Gizmo UI Controls Complete Implementation
 **Summary:** Successfully implemented complete gizmo UI control system following TDD methodology with comprehensive toolbar, settings controls, and keyboard shortcuts. Created GizmoUI class with full testing framework including mock input system for reliable unit testing.
 
