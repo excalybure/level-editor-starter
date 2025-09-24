@@ -442,33 +442,41 @@ ViewportRay Viewport::getPickingRay( const math::Vec2<> &viewportPos ) const noe
 		// Perspective projection - ray starts from camera position
 		rayOrigin = m_camera->getPosition();
 
-		// Calculate ray direction through screen point
-		// Inverse transform from NDC back to world space
-		const auto invViewProj = ( projMatrix * viewMatrix ).inverse();
+		// For right-handed coordinate system (X right, Y forward, Z up):
+		// Use direct calculation with camera vectors
 
-		// Point on near plane in NDC
-		const math::Vec4<> nearPoint{ ndc.x, ndc.y, -1.0f, 1.0f };
-		// Point on far plane in NDC
-		const math::Vec4<> farPoint{ ndc.x, ndc.y, 1.0f, 1.0f };
+		// Get camera basis vectors for right-handed system
+		const auto forward = m_camera->getForwardVector(); // Direction camera is looking
+		const auto right = m_camera->getRightVector();	   // X direction in view space
+		const auto up = m_camera->getUpVector();		   // Z direction in view space (world up)
 
-		// Transform to world space
-		auto worldNear = invViewProj * nearPoint;
-		auto worldFar = invViewProj * farPoint;
+		// Get field of view from perspective camera
+		const auto *perspCam = static_cast<const camera::PerspectiveCamera *>( m_camera.get() );
+		const float fovRadians = math::radians( perspCam->getFieldOfView() );
 
-		// Perspective divide
-		if ( worldNear.w != 0.0f )
-			worldNear = worldNear * ( 1.0f / worldNear.w );
-		if ( worldFar.w != 0.0f )
-			worldFar = worldFar * ( 1.0f / worldFar.w );
+		// Calculate the point on the near plane in world space
+		const float halfHeight = tanf( fovRadians * 0.5f );
+		const float halfWidth = halfHeight * getAspectRatio();
 
-		rayDirection = math::normalize( worldFar.xyz() - worldNear.xyz() );
+		// Near plane distance (use camera's near plane)
+		const float nearDistance = m_camera->getNearPlane();
+
+		// Calculate point on near plane in world space
+		// NDC coordinates: ndc.x in [-1,1], ndc.y in [-1,1]
+		const math::Vec3<> nearPlaneCenter = rayOrigin + forward * nearDistance;
+		const math::Vec3<> nearPlanePoint = nearPlaneCenter +
+			right * ( ndc.x * halfWidth * nearDistance ) +
+			up * ( ndc.y * halfHeight * nearDistance );
+
+		// Ray direction from camera position to point on near plane
+		rayDirection = math::normalize( nearPlanePoint - rayOrigin );
 	}
 	else
 	{
 		// Orthographic projection - ray is parallel to view direction
-		rayDirection = -m_camera->getForwardVector(); // Camera looks down -Z, so forward is camera's -Z
+		rayDirection = m_camera->getForwardVector(); // Use forward vector directly for right-handed system
 
-		// Ray origin is on the near plane at the screen position
+		// Ray origin is at the screen position projected onto the near plane
 		const auto invViewProj = ( projMatrix * viewMatrix ).inverse();
 
 		const math::Vec4<> nearPoint{ ndc.x, ndc.y, -1.0f, 1.0f };

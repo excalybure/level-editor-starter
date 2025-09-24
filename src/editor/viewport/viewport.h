@@ -164,7 +164,7 @@ public:
 	// Coordinate space conversion
 	// screenToViewport: converts from application window coordinates to viewport coordinates
 	math::Vec2<> windowToViewport( const math::Vec2<> &windowPos ) const noexcept;
-	
+
 	// setOffsetFromWindow: sets viewport position relative to application window (not screen)
 	void setOffsetFromWindow( const math::Vec2<> &offset ) noexcept;
 
