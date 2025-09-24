@@ -663,11 +663,11 @@ void SelectionRenderer::createOutlinePipelineState()
 		rasterizerDesc.ForcedSampleCount = 0;
 		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-		// Enable depth testing for 3D outline rendering
+		// Disable depth testing for selection outline rendering (viewport render targets don't have depth buffers)
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		depthStencilDesc.DepthEnable = FALSE;
+		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		depthStencilDesc.StencilEnable = FALSE;
 
 		// Create pipeline state
@@ -683,7 +683,7 @@ void SelectionRenderer::createOutlinePipelineState()
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		psoDesc.NumRenderTargets = 1;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT; // Depth buffer
+		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer - viewport render targets don't have depth buffers
 		psoDesc.SampleDesc.Count = 1;
 		psoDesc.SampleDesc.Quality = 0;
 
