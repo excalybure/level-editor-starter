@@ -764,12 +764,13 @@ void ViewportManager::shutdown()
 	m_shaderManager.reset(); // Properly release the shared_ptr
 }
 
-void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem )
+void ViewportManager::setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, editor::GizmoSystem *gizmoSystem )
 {
 	m_scene = scene;
 	m_systemManager = systemManager;
 	m_selectionManager = selectionManager;
 	m_pickingSystem = pickingSystem;
+	m_gizmoSystem = gizmoSystem;
 }
 
 void ViewportManager::setupInputHandlersForExistingViewports()

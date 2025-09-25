@@ -1,6 +1,7 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "editor/ui.h"
+#include "editor/selection.h"
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "engine/assets/asset_manager.h"
@@ -40,11 +41,13 @@ TEST_CASE( "UI Scene Operations - Constructor and initialization", "[ui][scene][
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+
 
 		editor::UI ui;
 
 		// Initialize UI with scene dependencies
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Test initial state after initialization
 		REQUIRE( ui.getCurrentScenePath().empty() );
@@ -62,9 +65,11 @@ TEST_CASE( "UI Scene Operations - Scene loading functionality", "[ui][scene][loa
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Test loading nonexistent file
 		REQUIRE_FALSE( ui.loadScene( "nonexistent_file.gltf" ) );
@@ -89,9 +94,10 @@ TEST_CASE( "UI Scene Operations - Scene clearing", "[ui][scene][clear][unit]" )
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Add some entities to the scene
 		scene.createEntity( "Entity1" );
@@ -118,9 +124,10 @@ TEST_CASE( "UI Scene Operations - File dialog functionality", "[ui][scene][dialo
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Native Windows dialog is modal and would block tests
 		// In test mode (no ImGui context), openFileDialog() should return immediately
@@ -136,9 +143,10 @@ TEST_CASE( "UI Scene Operations - Entity counting", "[ui][scene][entities][unit]
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Initially should have no entities
 		REQUIRE( ui.getEntityCount() == 0 );
@@ -173,9 +181,10 @@ TEST_CASE( "UI Scene Operations Integration", "[ui][scene][integration]" )
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Initially no error
 		REQUIRE( ui.getLastError().empty() );
@@ -200,9 +209,10 @@ TEST_CASE( "UI Scene Operations Integration", "[ui][scene][integration]" )
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Initially no scene path
 		REQUIRE( ui.getCurrentScenePath().empty() );
@@ -219,9 +229,10 @@ TEST_CASE( "UI Scene Operations Integration", "[ui][scene][integration]" )
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// Create entities
 		const auto entity = scene.createEntity( "TestEntity" );
@@ -254,9 +265,10 @@ TEST_CASE( "UI Scene Operations - Integration test with native Windows dialog", 
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		MockGPUResourceManager gpuManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
 
 		editor::UI ui;
-		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager );
+		ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
 
 		// In test mode (no ImGui context), openFileDialog() will skip the modal dialog
 		ui.openFileDialog(); // Should return immediately without blocking

@@ -7,6 +7,7 @@
 #include "engine/assets/asset_manager.h"
 #include "engine/gpu/gpu_resource_manager.h"
 #include "editor/ui.h"
+#include "editor/selection.h"
 #include "platform/dx12/dx12_device.h"
 #include "engine/shader_manager/shader_manager.h"
 
@@ -33,13 +34,12 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
 		engine::GPUResourceManager gpuResourceManager( device );
+		editor::SelectionManager selectionManager( scene, systemManager );
 		editor::UI ui;
 
 		// Act - test initializeSceneOperations method exists and can be called
-		REQUIRE_NOTHROW( ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager ) );
-
-		// Assert
-		REQUIRE( true ); // If we get here without exceptions, the wiring is correct
+		REQUIRE_NOTHROW( ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager, selectionManager ) ); // Assert
+		REQUIRE( true );																											 // If we get here without exceptions, the wiring is correct
 	}
 }
 

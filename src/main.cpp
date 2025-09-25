@@ -134,10 +134,10 @@ int main()
 	}
 
 	// Initialize Scene Operations with required managers
-	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager );
+	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager, selectionManager );
 
 	// Connect scene and systems to viewport manager for 3D rendering
-	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager, &selectionManager, &pickingSystem );
+	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager, &selectionManager, &pickingSystem, ui.getGizmoSystem() );
 
 	// Setup input handlers for existing viewports now that systems are available
 	ui.getViewportManager().setupInputHandlersForExistingViewports();

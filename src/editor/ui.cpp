@@ -24,6 +24,7 @@
 #include "runtime/console.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
+#include "gizmos.h"
 
 namespace editor
 {
@@ -64,6 +65,10 @@ struct UI::Impl
 	assets::AssetManager *assetManager = nullptr;
 	engine::GPUResourceManager *gpuManager = nullptr;
 
+	// Gizmo system for object manipulation
+	std::unique_ptr<GizmoSystem> gizmoSystem;
+	std::unique_ptr<GizmoUI> gizmoUI;
+
 	std::string currentScenePath;
 	std::string lastError;
 
@@ -87,6 +92,10 @@ struct UI::Impl
 
 	// Render status bar
 	void renderStatusBar( UI &ui );
+
+	// Render gizmo toolbar and controls
+	void renderGizmoToolbar();
+	void renderGizmoSettings();
 
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager );
@@ -202,6 +211,10 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
+
+	// Render gizmo toolbar and settings
+	m_impl->renderGizmoToolbar();
+	m_impl->renderGizmoSettings();
 }
 
 void UI::endFrame()
@@ -472,6 +485,29 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 			{
 				// Render the actual 3D viewport content
 				ImGui::Image( reinterpret_cast<ImTextureID>( textureHandle ), contentSize );
+
+				// Render gizmos on top of the viewport if gizmo system is available
+				if ( gizmoSystem && scene && viewport->areGizmosVisible() && gizmoSystem->isVisible() )
+				{
+					// Setup ImGuizmo for this viewport
+					if ( auto *camera = viewport->getCamera() )
+					{
+						const auto viewMatrix = camera->getViewMatrix();
+						const auto projMatrix = camera->getProjectionMatrix( viewport->getAspectRatio() );
+						const math::Vec4<> viewportRect{ 0.0f, 0.0f, static_cast<float>( contentSize.x ), static_cast<float>( contentSize.y ) };
+
+						// Setup ImGuizmo context and render gizmos
+						if ( gizmoSystem->setupImGuizmo( viewMatrix, projMatrix, viewportRect ) )
+						{
+							const auto gizmoResult = gizmoSystem->renderGizmo();
+							if ( gizmoResult.wasManipulated )
+							{
+								// Apply transform changes to selected entities
+								gizmoSystem->applyTransformDelta( gizmoResult );
+							}
+						}
+					}
+				}
 			}
 			else
 			{
@@ -927,6 +963,32 @@ void UI::Impl::renderStatusBar( UI &ui )
 	ImGui::PopStyleVar( 2 );
 }
 
+void UI::Impl::renderGizmoToolbar()
+{
+	if ( !gizmoUI )
+		return;
+
+	// Render gizmo toolbar for operation mode selection
+	if ( ImGui::Begin( "Gizmo Tools", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse ) )
+	{
+		gizmoUI->renderToolbar();
+	}
+	ImGui::End();
+}
+
+void UI::Impl::renderGizmoSettings()
+{
+	if ( !gizmoUI )
+		return;
+
+	// Render gizmo settings for snap configuration
+	if ( ImGui::Begin( "Gizmo Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		gizmoUI->renderSettings();
+	}
+	ImGui::End();
+}
+
 // UI::Impl viewport management methods
 bool UI::Impl::initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager )
 {
@@ -999,6 +1061,11 @@ bool UI::isCameraSettingsWindowOpen() const
 ViewportManager &UI::getViewportManager()
 {
 	return m_impl->viewportManager;
+}
+
+GizmoSystem *UI::getGizmoSystem()
+{
+	return m_impl->gizmoSystem.get();
 }
 
 void UI::processInputEvents( platform::Win32Window &window )
@@ -1102,6 +1169,12 @@ void UI::processInputEvents( platform::Win32Window &window )
 			}
 		}
 	}
+
+	// Handle gizmo keyboard shortcuts
+	if ( m_impl->gizmoUI )
+	{
+		m_impl->gizmoUI->handleKeyboardShortcuts();
+	}
 }
 
 void UI::updateViewports( const float deltaTime )
@@ -1114,12 +1187,19 @@ void UI::updateViewports( const float deltaTime )
 void UI::initializeSceneOperations( ecs::Scene &scene,
 	systems::SystemManager &systemManager,
 	assets::AssetManager &assetManager,
-	engine::GPUResourceManager &gpuManager )
+	engine::GPUResourceManager &gpuManager,
+	editor::SelectionManager &selectionManager )
 {
 	m_impl->scene = &scene;
 	m_impl->systemManager = &systemManager;
 	m_impl->assetManager = &assetManager;
 	m_impl->gpuManager = &gpuManager;
+
+	// Create GizmoSystem with SelectionManager and Scene dependencies
+	m_impl->gizmoSystem = std::make_unique<GizmoSystem>( selectionManager, scene );
+
+	// Create GizmoUI with GizmoSystem dependency
+	m_impl->gizmoUI = std::make_unique<GizmoUI>( *m_impl->gizmoSystem );
 }
 
 bool UI::loadScene( const std::string &filePath )

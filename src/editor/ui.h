@@ -21,6 +21,12 @@ class Win32Window;
 
 namespace editor
 {
+class SelectionManager;
+class GizmoSystem;
+} // namespace editor
+
+namespace editor
+{
 
 // Simple 2D vector for ImGui integration (avoids ImVec2 conflicts)
 struct Vec2
@@ -100,7 +106,8 @@ public:
 	void initializeSceneOperations( ecs::Scene &scene,
 		systems::SystemManager &systemManager,
 		assets::AssetManager &assetManager,
-		engine::GPUResourceManager &gpuManager );
+		engine::GPUResourceManager &gpuManager,
+		editor::SelectionManager &selectionManager );
 
 	// File operations
 	bool loadScene( const std::string &filePath );
@@ -116,6 +123,9 @@ public:
 
 	// Get viewport manager for input handling
 	ViewportManager &getViewportManager();
+
+	// Get gizmo system for viewport integration
+	class GizmoSystem *getGizmoSystem();
 
 	void processInputEvents( platform::Win32Window &window );
 	void updateViewports( const float deltaTime );

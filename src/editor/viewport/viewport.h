@@ -35,6 +35,7 @@ namespace editor
 class SelectionManager;
 class ViewportInputHandler;
 class SelectionRenderer;
+class GizmoSystem;
 } // namespace editor
 
 namespace editor
@@ -268,7 +269,7 @@ public:
 	void shutdown();
 
 	// Set scene and system manager for 3D content rendering
-	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem );
+	void setSceneAndSystems( ecs::Scene *scene, systems::SystemManager *systemManager, editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, editor::GizmoSystem *gizmoSystem = nullptr );
 
 	// Setup input handlers for all existing viewports (called after setSceneAndSystems)
 	void setupInputHandlersForExistingViewports();
@@ -323,6 +324,9 @@ private:
 	// Selection and picking systems for object interaction
 	editor::SelectionManager *m_selectionManager = nullptr;
 	picking::PickingSystem *m_pickingSystem = nullptr;
+
+	// Gizmo system for object manipulation
+	editor::GizmoSystem *m_gizmoSystem = nullptr;
 
 	// Find viewport by pointer
 	auto findViewport( Viewport *viewport ) -> decltype( m_viewports.begin() );
