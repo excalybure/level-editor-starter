@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-25 — Critical ImGuizmo Crash Fix
+**Summary:** Fixed critical crash that occurred when selecting objects in the editor. The issue was caused by ImGuizmo's `gContext.mDrawList` being nullptr because `ImGuizmo::BeginFrame()` was never called. Added proper ImGuizmo initialization to UI frame lifecycle and defensive checks.
+
+**Atomic functionalities completed:**
+- AF1: Added `ImGuizmo::BeginFrame()` call to `UI::beginFrame()` to properly initialize ImGuizmo context each frame
+- AF2: Added defensive nullptr check in `ImGuizmo::IsHoveringWindow()` to prevent future crashes
+- AF3: Verified fix with build and test execution - all gizmo (23 cases) and UI tests (37 cases) pass
+
+**Tests:** All gizmo and UI tests passing; application launches and runs without crashing on object selection.
+**Commands:** `unit_test_runner.exe "*gizmo*"` and `unit_test_runner.exe "*ui*"`
+**Notes:** Critical stability improvement. ImGuizmo now properly initialized per frame following library requirements. Both the root cause fix and defensive programming approach ensure robust operation.
+
 ## 2025-09-23 — ViewportInputHandler Integration for Object Selection Complete
 **Summary:** Successfully integrated ViewportInputHandler into the main application's input pipeline following TDD methodology. Completed full integration of object selection and picking systems with visual feedback through SelectionRenderer. The editor now supports left-click object selection, Ctrl+click multi-selection, drag selection, and hover highlighting with proper input priority handling.
 

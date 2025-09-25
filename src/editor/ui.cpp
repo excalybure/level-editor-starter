@@ -3,6 +3,7 @@
 #include "imgui_internal.h" // For DockBuilder API
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
+#include <ImGuizmo.h>
 #include <d3d12.h>
 #include <windows.h>
 #include <commdlg.h> // For GetOpenFileName
@@ -198,6 +199,9 @@ void UI::beginFrame()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+	// Initialize ImGuizmo context for this frame
+	ImGuizmo::BeginFrame();
 
 	// Render all viewports to their render targets first
 	m_impl->viewportManager.render();
