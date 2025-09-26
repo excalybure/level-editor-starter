@@ -296,46 +296,104 @@ void GizmoUI::renderToolbar()
 {
 	// Get current operation for button state
 	const auto currentOp = m_gizmoSystem.getCurrentOperation();
+	const auto currentMode = m_gizmoSystem.getCurrentMode();
 
-	// Helper lambda to check if this button was clicked in mock mode
-	auto isButtonClicked = [this]( const std::string &name ) -> bool {
+	// Helper lambda to check if this button was clicked (real ImGui or mock mode)
+	auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
+		// Check mock mode first for testing
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{
 			m_mockClickedButton.clear(); // Clear after use
 			return true;
 		}
-		// In real implementation, this would use ImGui::Button()
+		// Real ImGui button (only if ImGui context exists)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			return ImGui::Button( label.c_str() );
+		}
 		return false;
 	};
 
+	// Helper lambda for selectable buttons (shows selected state)
+	auto isSelectableButtonClicked = [this]( const std::string &name, const std::string &label, bool isSelected ) -> bool {
+		// Check mock mode first for testing
+		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
+		{
+			m_mockClickedButton.clear(); // Clear after use
+			return true;
+		}
+
+		// Real ImGui selectable button (different style when selected)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			if ( isSelected )
+			{
+				ImGui::PushStyleColor( ImGuiCol_Button, ImGui::GetStyleColorVec4( ImGuiCol_ButtonActive ) );
+			}
+			const bool clicked = ImGui::Button( label.c_str() );
+			if ( isSelected )
+			{
+				ImGui::PopStyleColor();
+			}
+			return clicked;
+		}
+		return false;
+	};
+
+	// Only render ImGui elements if context exists
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		// Operation mode buttons
+		ImGui::Text( "Operation:" );
+		ImGui::SameLine();
+	}
+
 	// Translate button (W key)
-	if ( isButtonClicked( "Translate (W)" ) || currentOp == GizmoOperation::Translate )
+	if ( isSelectableButtonClicked( "Translate (W)", "Translate (W)", currentOp == GizmoOperation::Translate ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Translate );
 	}
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::SameLine();
+	}
 
 	// Rotate button (E key)
-	if ( isButtonClicked( "Rotate (E)" ) )
+	if ( isSelectableButtonClicked( "Rotate (E)", "Rotate (E)", currentOp == GizmoOperation::Rotate ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Rotate );
 	}
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::SameLine();
+	}
 
 	// Scale button (R key)
-	if ( isButtonClicked( "Scale (R)" ) )
+	if ( isSelectableButtonClicked( "Scale (R)", "Scale (R)", currentOp == GizmoOperation::Scale ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Scale );
 	}
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::SameLine();
+	}
 
 	// Universal button
-	if ( isButtonClicked( "Universal" ) )
+	if ( isSelectableButtonClicked( "Universal", "Universal", currentOp == GizmoOperation::Universal ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Universal );
 	}
 
-	// Coordinate space toggle (X key)
-	if ( isButtonClicked( "Local/World (X)" ) )
+	// Separator between operation and mode controls
+	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		const auto currentMode = m_gizmoSystem.getCurrentMode();
+		ImGui::Separator();
+	}
+
+	// Coordinate space toggle (X key)
+	const std::string modeLabel = ( currentMode == GizmoMode::Local ) ? "Local (X)" : "World (X)";
+	if ( isButtonClicked( "Local/World (X)", modeLabel ) )
+	{
 		if ( currentMode == GizmoMode::Local )
 		{
 			m_gizmoSystem.setMode( GizmoMode::World );
@@ -345,9 +403,14 @@ void GizmoUI::renderToolbar()
 			m_gizmoSystem.setMode( GizmoMode::Local );
 		}
 	}
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::SameLine();
+	}
 
 	// Visibility toggle (G key)
-	if ( isButtonClicked( "Toggle Gizmo (G)" ) )
+	const std::string visibilityLabel = m_gizmoSystem.isVisible() ? "Hide Gizmo (G)" : "Show Gizmo (G)";
+	if ( isButtonClicked( "Toggle Gizmo (G)", visibilityLabel ) )
 	{
 		m_gizmoSystem.setVisible( !m_gizmoSystem.isVisible() );
 	}
@@ -355,84 +418,133 @@ void GizmoUI::renderToolbar()
 
 void GizmoUI::renderSettings()
 {
-	// Helper lambda to check if slider was changed in mock mode
-	auto getSliderValue = [this]( const std::string &name, float currentValue ) -> float {
+	// Helper lambda to handle slider changes (real ImGui or mock mode)
+	auto handleSlider = [this]( const std::string &name, const std::string &label, float *value, float min, float max ) -> bool {
+		// Check mock mode first for testing
 		if ( !m_mockSliderName.empty() && m_mockSliderName == name )
 		{
-			const float newValue = m_mockSliderValue;
+			*value = m_mockSliderValue;
 			m_mockSliderName.clear(); // Clear after use
-			return newValue;
+			return true;
 		}
-		// In real implementation, this would use ImGui::SliderFloat()
-		return currentValue;
+		// Real ImGui slider (only if ImGui context exists)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			return ImGui::SliderFloat( label.c_str(), value, min, max );
+		}
+		return false;
 	};
 
-	// Helper lambda to check if button was clicked
-	auto isButtonClicked = [this]( const std::string &name ) -> bool {
+	// Helper lambda to handle button clicks (real ImGui or mock mode)
+	auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
+		// Check mock mode first for testing
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{
 			m_mockClickedButton.clear(); // Clear after use
 			return true;
 		}
-		// In real implementation, this would use ImGui::Button()
+		// Real ImGui button (only if ImGui context exists)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			return ImGui::Button( label.c_str() );
+		}
 		return false;
 	};
 
+	// Helper lambda for checkbox
+	auto handleCheckbox = [this]( const std::string &name, const std::string &label, bool *value ) -> bool {
+		// Check mock mode first for testing (using button click for checkbox toggle)
+		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
+		{
+			*value = !*value;
+			m_mockClickedButton.clear(); // Clear after use
+			return true;
+		}
+		// Real ImGui checkbox (only if ImGui context exists)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			return ImGui::Checkbox( label.c_str(), value );
+		}
+		return false;
+	};
+
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::Text( "Snap Settings:" );
+	}
+
 	// Snap enable/disable toggle
-	if ( isButtonClicked( "Enable Snap" ) )
+	bool snapEnabled = m_gizmoSystem.isSnapEnabled();
+	if ( handleCheckbox( "Enable Snap", "Enable Snap", &snapEnabled ) )
 	{
-		m_gizmoSystem.setSnapEnabled( !m_gizmoSystem.isSnapEnabled() );
+		m_gizmoSystem.setSnapEnabled( snapEnabled );
 	}
 
-	// Snap value sliders
-	const float newTranslationSnap = getSliderValue( "Translation Snap", m_gizmoSystem.getTranslationSnap() );
-	if ( newTranslationSnap != m_gizmoSystem.getTranslationSnap() )
+	// Only show snap value sliders if snap is enabled
+	if ( m_gizmoSystem.isSnapEnabled() )
 	{
-		m_gizmoSystem.setTranslationSnap( newTranslationSnap );
-	}
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			ImGui::Separator();
+		}
 
-	const float newRotationSnap = getSliderValue( "Rotation Snap", m_gizmoSystem.getRotationSnap() );
-	if ( newRotationSnap != m_gizmoSystem.getRotationSnap() )
-	{
-		m_gizmoSystem.setRotationSnap( newRotationSnap );
-	}
+		// Translation snap slider
+		float translationSnap = m_gizmoSystem.getTranslationSnap();
+		if ( handleSlider( "Translation Snap", "Translation Snap", &translationSnap, 0.1f, 10.0f ) )
+		{
+			m_gizmoSystem.setTranslationSnap( translationSnap );
+		}
 
-	const float newScaleSnap = getSliderValue( "Scale Snap", m_gizmoSystem.getScaleSnap() );
-	if ( newScaleSnap != m_gizmoSystem.getScaleSnap() )
-	{
-		m_gizmoSystem.setScaleSnap( newScaleSnap );
+		// Rotation snap slider (in degrees)
+		float rotationSnap = m_gizmoSystem.getRotationSnap();
+		if ( handleSlider( "Rotation Snap", "Rotation Snap (degrees)", &rotationSnap, 1.0f, 90.0f ) )
+		{
+			m_gizmoSystem.setRotationSnap( rotationSnap );
+		}
+
+		// Scale snap slider
+		float scaleSnap = m_gizmoSystem.getScaleSnap();
+		if ( handleSlider( "Scale Snap", "Scale Snap", &scaleSnap, 0.01f, 1.0f ) )
+		{
+			m_gizmoSystem.setScaleSnap( scaleSnap );
+		}
 	}
 }
 
 void GizmoUI::handleKeyboardShortcuts()
 {
-	// Helper lambda to check if key was pressed in mock mode
-	auto isKeyPressed = [this]( const std::string &key ) -> bool {
+	// Helper lambda to check if key was pressed (real ImGui or mock mode)
+	auto isKeyPressed = [this]( const std::string &key, ImGuiKey imguiKey ) -> bool {
+		// Check mock mode first for testing
 		if ( !m_mockPressedKey.empty() && m_mockPressedKey == key )
 		{
 			m_mockPressedKey.clear(); // Clear after use
 			return true;
 		}
-		// In real implementation, this would use ImGui::IsKeyPressed()
+		// Real ImGui key detection (only if ImGui context exists)
+		if ( ImGui::GetCurrentContext() != nullptr )
+		{
+			return ImGui::IsKeyPressed( imguiKey );
+		}
 		return false;
 	};
 
 	// Operation shortcuts
-	if ( isKeyPressed( "W" ) )
+	if ( isKeyPressed( "W", ImGuiKey_W ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Translate );
 	}
-	else if ( isKeyPressed( "E" ) )
+	else if ( isKeyPressed( "E", ImGuiKey_E ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Rotate );
 	}
-	else if ( isKeyPressed( "R" ) )
+	else if ( isKeyPressed( "R", ImGuiKey_R ) )
 	{
 		m_gizmoSystem.setOperation( GizmoOperation::Scale );
 	}
 
 	// Coordinate space toggle
-	if ( isKeyPressed( "X" ) )
+	if ( isKeyPressed( "X", ImGuiKey_X ) )
 	{
 		const auto currentMode = m_gizmoSystem.getCurrentMode();
 		if ( currentMode == GizmoMode::Local )
@@ -446,7 +558,7 @@ void GizmoUI::handleKeyboardShortcuts()
 	}
 
 	// Visibility toggle
-	if ( isKeyPressed( "G" ) )
+	if ( isKeyPressed( "G", ImGuiKey_G ) )
 	{
 		m_gizmoSystem.setVisible( !m_gizmoSystem.isVisible() );
 	}
