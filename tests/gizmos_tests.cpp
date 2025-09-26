@@ -726,7 +726,8 @@ TEST_CASE( "GizmoUI construction and basic rendering", "[gizmos][ui][AF5.1]" )
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Mock ImGui context (this should not crash)
-		ui.renderToolbar();
+		bool isOpen = true;
+		ui.renderToolbar( &isOpen );
 
 		// If we get here, the method didn't crash
 		REQUIRE( true );
@@ -749,7 +750,8 @@ TEST_CASE( "GizmoUI operation mode toolbar", "[gizmos][ui][toolbar][AF5.2]" )
 
 		// Mock ImGui interaction for rotate button
 		ui.setMockButtonClicked( "Rotate (E)" );
-		ui.renderToolbar();
+		bool isOpen = true;
+		ui.renderToolbar( &isOpen );
 
 		// Operation should change to rotate
 		REQUIRE( gizmoSystem.getCurrentOperation() == editor::GizmoOperation::Rotate );
@@ -764,17 +766,29 @@ TEST_CASE( "GizmoUI operation mode toolbar", "[gizmos][ui][toolbar][AF5.2]" )
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Test that toolbar can render all modes without crashing
-		gizmoSystem.setOperation( editor::GizmoOperation::Translate );
-		ui.renderToolbar();
+		{
+			gizmoSystem.setOperation( editor::GizmoOperation::Translate );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
-		gizmoSystem.setOperation( editor::GizmoOperation::Rotate );
-		ui.renderToolbar();
+		{
+			gizmoSystem.setOperation( editor::GizmoOperation::Rotate );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
-		gizmoSystem.setOperation( editor::GizmoOperation::Scale );
-		ui.renderToolbar();
+		{
+			gizmoSystem.setOperation( editor::GizmoOperation::Scale );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
-		gizmoSystem.setOperation( editor::GizmoOperation::Universal );
-		ui.renderToolbar();
+		{
+			gizmoSystem.setOperation( editor::GizmoOperation::Universal );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
 		// If we get here, all operations rendered successfully
 		REQUIRE( true );
@@ -796,15 +810,21 @@ TEST_CASE( "GizmoUI coordinate space toggle", "[gizmos][ui][coordinate][AF5.3]" 
 		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::World );
 
 		// Mock coordinate space toggle
-		ui.setMockButtonClicked( "Local/World (X)" );
-		ui.renderToolbar();
+		{
+			ui.setMockButtonClicked( "Local/World (X)" );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
 		// Mode should change to local
 		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::Local );
 
 		// Toggle again
-		ui.setMockButtonClicked( "Local/World (X)" );
-		ui.renderToolbar();
+		{
+			ui.setMockButtonClicked( "Local/World (X)" );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+		}
 
 		// Mode should change back to world
 		REQUIRE( gizmoSystem.getCurrentMode() == editor::GizmoMode::World );
@@ -829,20 +849,21 @@ TEST_CASE( "GizmoUI snap settings controls", "[gizmos][ui][snap][AF5.4]" )
 
 		// Mock snap enable toggle
 		ui.setMockButtonClicked( "Enable Snap" );
-		ui.renderSettings();
+		bool isOpen = true;
+		ui.renderSettings( &isOpen );
 		REQUIRE( gizmoSystem.isSnapEnabled() );
 
 		// Mock snap value changes
 		ui.setMockSliderValue( "Translation Snap", 2.5f );
-		ui.renderSettings();
+		ui.renderSettings( &isOpen );
 		REQUIRE( gizmoSystem.getTranslationSnap() == 2.5f );
 
 		ui.setMockSliderValue( "Rotation Snap", 45.0f );
-		ui.renderSettings();
+		ui.renderSettings( &isOpen );
 		REQUIRE( gizmoSystem.getRotationSnap() == 45.0f );
 
 		ui.setMockSliderValue( "Scale Snap", 0.25f );
-		ui.renderSettings();
+		ui.renderSettings( &isOpen );
 		REQUIRE( gizmoSystem.getScaleSnap() == 0.25f );
 	}
 }
@@ -860,15 +881,21 @@ TEST_CASE( "GizmoUI visibility toggle", "[gizmos][ui][visibility][AF5.5]" )
 		// Initially visible
 		REQUIRE( gizmoSystem.isVisible() );
 
-		// Mock visibility toggle
-		ui.setMockButtonClicked( "Toggle Gizmo (G)" );
-		ui.renderToolbar();
-		REQUIRE_FALSE( gizmoSystem.isVisible() );
+		{
+			// Mock visibility toggle
+			ui.setMockButtonClicked( "Toggle Gizmo (G)" );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+			REQUIRE_FALSE( gizmoSystem.isVisible() );
+		}
 
-		// Toggle again
-		ui.setMockButtonClicked( "Toggle Gizmo (G)" );
-		ui.renderToolbar();
-		REQUIRE( gizmoSystem.isVisible() );
+		{
+			// Toggle again
+			ui.setMockButtonClicked( "Toggle Gizmo (G)" );
+			bool isOpen = true;
+			ui.renderToolbar( &isOpen );
+			REQUIRE( gizmoSystem.isVisible() );
+		}
 	}
 }
 

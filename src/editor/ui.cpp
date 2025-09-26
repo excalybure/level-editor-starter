@@ -60,6 +60,10 @@ struct UI::Impl
 	// Camera settings window state
 	bool showCameraSettingsWindow = false;
 
+	// Gizmo window states
+	bool showGizmoToolsWindow = true;	 // Default to visible
+	bool showGizmoSettingsWindow = true; // Default to visible
+
 	// Scene Operations state
 	ecs::Scene *scene = nullptr;
 	systems::SystemManager *systemManager = nullptr;
@@ -362,6 +366,17 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			if ( ImGui::MenuItem( "Camera Settings" ) )
 			{
 				showCameraSettingsWindow = true;
+			}
+
+			ImGui::Separator();
+
+			if ( ImGui::MenuItem( "Gizmo Tools" ) )
+			{
+				showGizmoToolsWindow = true;
+			}
+			if ( ImGui::MenuItem( "Gizmo Settings" ) )
+			{
+				showGizmoSettingsWindow = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -968,41 +983,9 @@ void UI::Impl::renderStatusBar( UI &ui )
 
 void UI::Impl::renderToolbar()
 {
-#if 1
-	gizmoUI->renderToolbar();
-	gizmoUI->renderSettings();
-#else
-	// Create toolbar area with styling
-	ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2( 4.0f, 4.0f ) );
-	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8.0f, 4.0f ) );
-	ImGui::PushStyleColor( ImGuiCol_ChildBg, ImVec4( 0.15f, 0.15f, 0.15f, 1.0f ) );
-
-	const float kToolbarHeight = 32.0f;
-	if ( ImGui::BeginChild( "MainToolbar", ImVec2( -1, kToolbarHeight ), true, ImGuiWindowFlags_NoScrollbar ) )
-	{
-		// Center content vertically
-		const float contentHeight = ImGui::GetTextLineHeightWithSpacing();
-		const float yOffset = ( kToolbarHeight - contentHeight ) * 0.5f;
-		ImGui::SetCursorPosY( ImGui::GetCursorPosY() + yOffset );
-
-		// Render gizmo controls if available
-		if ( gizmoUI )
-		{
-			gizmoUI->renderToolbar();
-
-			// Add some spacing before settings
-			ImGui::SameLine();
-			ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
-			ImGui::SameLine();
-
-			gizmoUI->renderSettings();
-		}
-	}
-	ImGui::EndChild();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar( 2 );
-#endif
+	// Use the new visibility-controlled methods
+	gizmoUI->renderToolbar( &showGizmoToolsWindow );
+	gizmoUI->renderSettings( &showGizmoSettingsWindow );
 }
 
 
@@ -1073,6 +1056,27 @@ void UI::showCameraSettingsWindow( bool show )
 bool UI::isCameraSettingsWindowOpen() const
 {
 	return m_impl->showCameraSettingsWindow;
+}
+
+// Gizmo windows management
+void UI::showGizmoToolsWindow( bool show )
+{
+	m_impl->showGizmoToolsWindow = show;
+}
+
+bool UI::isGizmoToolsWindowOpen() const
+{
+	return m_impl->showGizmoToolsWindow;
+}
+
+void UI::showGizmoSettingsWindow( bool show )
+{
+	m_impl->showGizmoSettingsWindow = show;
+}
+
+bool UI::isGizmoSettingsWindowOpen() const
+{
+	return m_impl->showGizmoSettingsWindow;
 }
 
 ViewportManager &UI::getViewportManager()

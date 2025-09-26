@@ -177,8 +177,8 @@ public:
 	constexpr const GizmoSystem &getGizmoSystem() const noexcept { return m_gizmoSystem; }
 
 	// UI rendering methods
-	void renderToolbar();
-	void renderSettings();
+	void renderToolbar( bool *isOpen );
+	void renderSettings( bool *isOpen );
 
 	// Keyboard shortcut handling
 	void handleKeyboardShortcuts();

@@ -292,13 +292,22 @@ GizmoUI::GizmoUI( GizmoSystem &gizmoSystem ) noexcept
 {
 }
 
-void GizmoUI::renderToolbar()
+void GizmoUI::renderToolbar( bool *isOpen )
 {
-	// Only create window if ImGui context exists, otherwise fall back to mock testing mode
+	if ( !isOpen || !*isOpen )
+	{
+		return; // Window should not be shown
+	}
+
+	// Only create window if ImGui context exists and window should be open
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		// Create a floating window for gizmo toolbar
-		ImGui::Begin( "Gizmo Tools" );
+		// Create a floating window for gizmo toolbar with close button support
+		if ( !ImGui::Begin( "Gizmo Tools", isOpen ) )
+		{
+			ImGui::End();
+			return; // Window is collapsed, don't render content
+		}
 	}
 
 	// Get current operation for button state
@@ -306,7 +315,7 @@ void GizmoUI::renderToolbar()
 	const auto currentMode = m_gizmoSystem.getCurrentMode();
 
 	// Helper lambda to check if this button was clicked (real ImGui or mock mode)
-	auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
+	const auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
 		// Check mock mode first for testing
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{
@@ -322,7 +331,7 @@ void GizmoUI::renderToolbar()
 	};
 
 	// Helper lambda for selectable buttons (shows selected state)
-	auto isSelectableButtonClicked = [this]( const std::string &name, const std::string &label, bool isSelected ) -> bool {
+	const auto isSelectableButtonClicked = [this]( const std::string &name, const std::string &label, bool isSelected ) -> bool {
 		// Check mock mode first for testing
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{
@@ -430,17 +439,26 @@ void GizmoUI::renderToolbar()
 	}
 }
 
-void GizmoUI::renderSettings()
+void GizmoUI::renderSettings( bool *isOpen )
 {
-	// Only create window if ImGui context exists, otherwise fall back to mock testing mode
+	if ( !isOpen || !*isOpen )
+	{
+		return; // Window should not be shown
+	}
+
+	// Only create window if ImGui context exists and window should be open
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		// Create a floating window for gizmo settings
-		ImGui::Begin( "Gizmo Settings" );
+		// Create a floating window for gizmo settings with close button support
+		if ( !ImGui::Begin( "Gizmo Settings", isOpen ) )
+		{
+			ImGui::End();
+			return; // Window is collapsed, don't render content
+		}
 	}
 
 	// Helper lambda to handle slider changes (real ImGui or mock mode)
-	auto handleSlider = [this]( const std::string &name, const std::string &label, float *value, float min, float max ) -> bool {
+	const auto handleSlider = [this]( const std::string &name, const std::string &label, float *value, float min, float max ) -> bool {
 		// Check mock mode first for testing
 		if ( !m_mockSliderName.empty() && m_mockSliderName == name )
 		{
@@ -457,7 +475,7 @@ void GizmoUI::renderSettings()
 	};
 
 	// Helper lambda to handle button clicks (real ImGui or mock mode)
-	auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
+	const auto isButtonClicked = [this]( const std::string &name, const std::string &label ) -> bool {
 		// Check mock mode first for testing
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{
@@ -473,7 +491,7 @@ void GizmoUI::renderSettings()
 	};
 
 	// Helper lambda for checkbox
-	auto handleCheckbox = [this]( const std::string &name, const std::string &label, bool *value ) -> bool {
+	const auto handleCheckbox = [this]( const std::string &name, const std::string &label, bool *value ) -> bool {
 		// Check mock mode first for testing (using button click for checkbox toggle)
 		if ( !m_mockClickedButton.empty() && m_mockClickedButton == name )
 		{

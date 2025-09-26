@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-25 — Consolidated Gizmo UI Methods to Single Interface
+**Summary:** Removed duplicate method signatures in GizmoUI by consolidating to a single interface that supports window visibility control. The old renderToolbar() and renderSettings() methods without parameters have been removed, keeping only the versions that take bool* parameters for window closing support.
+
+**Atomic functionalities completed:**
+- AF1: Removed old method declarations from gizmos.h header file (renderToolbar() and renderSettings() without parameters)
+- AF2: Removed old method implementations from gizmos.cpp that didn't support window closing functionality 
+- AF3: Updated all test calls in gizmos_tests.cpp to use new method signatures with bool* parameters for proper window state management
+- AF4: Verified UI code already uses the consolidated interface (renderToolbar(&showGizmoToolsWindow), renderSettings(&showGizmoSettingsWindow))
+
+**Tests:** All 28 gizmo test cases continue to pass (249 assertions). Clean compilation with no errors.
+**Commands:** `unit_test_runner.exe "[gizmos]"` verified full functionality
+**Notes:** API now provides a single, consistent interface for window management. All callers must pass bool* for window open state, enabling proper close button functionality throughout the system.
+
+## 2025-09-25 — Added Window Closing and Tools Menu for Gizmo Windows
+**Summary:** Implemented the ability to close gizmo windows via ImGui close buttons and added "Gizmo Tools" and "Gizmo Settings" menu items in the Tools menu for easy reopening. Users can now manage gizmo window visibility both through the menu system and by directly closing windows.
+
+**Atomic functionalities completed:**
+- AF1: Added boolean flags `showGizmoToolsWindow` and `showGizmoSettingsWindow` to UI::Impl class for tracking visibility state (default: true)
+- AF2: Modified GizmoUI methods to support window closing by adding overloaded versions `renderToolbar(bool*)` and `renderSettings(bool*)` that use ImGui::Begin() with close button support
+- AF3: Added "Gizmo Tools" and "Gizmo Settings" menu items to the existing Tools menu in UI::Impl::setupDockspace() with separator for organization
+- AF4: Updated UI::Impl::renderToolbar() to use the new visibility-controlled methods instead of unconditionally showing windows
+- AF5: Added public UI methods (showGizmoToolsWindow, isGizmoToolsWindowOpen, showGizmoSettingsWindow, isGizmoSettingsWindowOpen) following existing pattern for grid/camera settings
+
+**Tests:** All 6 gizmo UI test cases continue to pass (24 assertions). Build completed successfully with no compilation errors.
+**Commands:** `unit_test_runner.exe "[gizmos][ui]"` verified functionality
+**Notes:** Following established UI pattern for window management. Users can now close gizmo windows and reopen them via Tools menu. Windows default to visible for immediate access to gizmo controls.
+
 ## 2025-09-25 — Converted Gizmo UI Methods to Floating Dockable Windows
 **Summary:** Converted `GizmoUI::renderToolbar()` and `GizmoUI::renderSettings()` from inline toolbar rendering to proper floating ImGui windows. This provides better user experience with dockable, moveable windows that can be positioned anywhere in the editor interface.
 

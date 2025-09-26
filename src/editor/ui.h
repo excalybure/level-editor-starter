@@ -102,6 +102,12 @@ public:
 	void showCameraSettingsWindow( bool show = true );
 	bool isCameraSettingsWindowOpen() const;
 
+	// Gizmo windows management
+	void showGizmoToolsWindow( bool show = true );
+	bool isGizmoToolsWindowOpen() const;
+	void showGizmoSettingsWindow( bool show = true );
+	bool isGizmoSettingsWindowOpen() const;
+
 	// Scene Operations (unified interface)
 	void initializeSceneOperations( ecs::Scene &scene,
 		systems::SystemManager &systemManager,
