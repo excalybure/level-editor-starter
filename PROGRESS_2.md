@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-25 — Converted Gizmo UI Methods to Floating Dockable Windows
+**Summary:** Converted `GizmoUI::renderToolbar()` and `GizmoUI::renderSettings()` from inline toolbar rendering to proper floating ImGui windows. This provides better user experience with dockable, moveable windows that can be positioned anywhere in the editor interface.
+
+**Atomic functionalities completed:**
+- AF1: Converted `renderToolbar()` to create "Gizmo Tools" floating window with `ImGui::Begin()/End()` wrapping all controls
+- AF2: Converted `renderSettings()` to create "Gizmo Settings" floating window with proper window management and improved labeling
+- AF3: Enhanced UI organization with better section headers ("Operation Mode:", "Coordinate Space:", "Visibility:", "Snap-to-Grid:", "Snap Values:")
+- AF4: Added unique ImGui IDs to sliders (##trans, ##rot, ##scale) to prevent widget ID conflicts while maintaining test compatibility
+
+**Tests:** All 28 gizmo test cases (249 assertions) continue to pass. Mock functionality preserved for testing without ImGui context.
+**Commands:** `unit_test_runner.exe "[gizmos][ui]"` and `unit_test_runner.exe "[gizmos]"`
+**Notes:** Users can now dock, move, and resize the gizmo control windows anywhere in the editor. Professional editor experience with flexible UI layout management. Mock testing functionality remains intact.
+
 ## 2025-09-25 — Implemented Actual ImGui Rendering for Gizmo UI Methods
 **Summary:** Replaced mock-only implementations in `GizmoUI::renderToolbar()`, `GizmoUI::renderSettings()`, and `GizmoUI::handleKeyboardShortcuts()` with actual ImGui controls while preserving mock functionality for testing. The UI methods now render real ImGui buttons, sliders, checkboxes, and handle keyboard input when an ImGui context is available.
 

@@ -214,6 +214,9 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
+
+	// Render toolbar below menu bar
+	m_impl->renderToolbar();
 }
 
 void UI::endFrame()
@@ -365,9 +368,6 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		ImGui::EndMenuBar();
 	}
-
-	// Render toolbar below menu bar
-	renderToolbar();
 
 	// Render status bar at the bottom of the dockspace
 	renderStatusBar( ui );
@@ -968,6 +968,10 @@ void UI::Impl::renderStatusBar( UI &ui )
 
 void UI::Impl::renderToolbar()
 {
+#if 1
+	gizmoUI->renderToolbar();
+	gizmoUI->renderSettings();
+#else
 	// Create toolbar area with styling
 	ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2( 4.0f, 4.0f ) );
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8.0f, 4.0f ) );
@@ -998,6 +1002,7 @@ void UI::Impl::renderToolbar()
 
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar( 2 );
+#endif
 }
 
 

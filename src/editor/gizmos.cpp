@@ -294,6 +294,13 @@ GizmoUI::GizmoUI( GizmoSystem &gizmoSystem ) noexcept
 
 void GizmoUI::renderToolbar()
 {
+	// Only create window if ImGui context exists, otherwise fall back to mock testing mode
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		// Create a floating window for gizmo toolbar
+		ImGui::Begin( "Gizmo Tools" );
+	}
+
 	// Get current operation for button state
 	const auto currentOp = m_gizmoSystem.getCurrentOperation();
 	const auto currentMode = m_gizmoSystem.getCurrentMode();
@@ -340,12 +347,10 @@ void GizmoUI::renderToolbar()
 		return false;
 	};
 
-	// Only render ImGui elements if context exists
+	// Operation mode section
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		// Operation mode buttons
-		ImGui::Text( "Operation:" );
-		ImGui::SameLine();
+		ImGui::Text( "Operation Mode:" );
 	}
 
 	// Translate button (W key)
@@ -384,10 +389,11 @@ void GizmoUI::renderToolbar()
 		m_gizmoSystem.setOperation( GizmoOperation::Universal );
 	}
 
-	// Separator between operation and mode controls
+	// Separator between operation and other controls
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
 		ImGui::Separator();
+		ImGui::Text( "Coordinate Space:" );
 	}
 
 	// Coordinate space toggle (X key)
@@ -403,9 +409,11 @@ void GizmoUI::renderToolbar()
 			m_gizmoSystem.setMode( GizmoMode::Local );
 		}
 	}
+
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		ImGui::SameLine();
+		ImGui::Separator();
+		ImGui::Text( "Visibility:" );
 	}
 
 	// Visibility toggle (G key)
@@ -414,10 +422,23 @@ void GizmoUI::renderToolbar()
 	{
 		m_gizmoSystem.setVisible( !m_gizmoSystem.isVisible() );
 	}
+
+	// End the ImGui window
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::End();
+	}
 }
 
 void GizmoUI::renderSettings()
 {
+	// Only create window if ImGui context exists, otherwise fall back to mock testing mode
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		// Create a floating window for gizmo settings
+		ImGui::Begin( "Gizmo Settings" );
+	}
+
 	// Helper lambda to handle slider changes (real ImGui or mock mode)
 	auto handleSlider = [this]( const std::string &name, const std::string &label, float *value, float min, float max ) -> bool {
 		// Check mock mode first for testing
@@ -468,9 +489,10 @@ void GizmoUI::renderSettings()
 		return false;
 	};
 
+	// Snap enable/disable section
 	if ( ImGui::GetCurrentContext() != nullptr )
 	{
-		ImGui::Text( "Snap Settings:" );
+		ImGui::Text( "Snap-to-Grid:" );
 	}
 
 	// Snap enable/disable toggle
@@ -486,28 +508,35 @@ void GizmoUI::renderSettings()
 		if ( ImGui::GetCurrentContext() != nullptr )
 		{
 			ImGui::Separator();
+			ImGui::Text( "Snap Values:" );
 		}
 
 		// Translation snap slider
 		float translationSnap = m_gizmoSystem.getTranslationSnap();
-		if ( handleSlider( "Translation Snap", "Translation Snap", &translationSnap, 0.1f, 10.0f ) )
+		if ( handleSlider( "Translation Snap", "Translation##trans", &translationSnap, 0.1f, 10.0f ) )
 		{
 			m_gizmoSystem.setTranslationSnap( translationSnap );
 		}
 
 		// Rotation snap slider (in degrees)
 		float rotationSnap = m_gizmoSystem.getRotationSnap();
-		if ( handleSlider( "Rotation Snap", "Rotation Snap (degrees)", &rotationSnap, 1.0f, 90.0f ) )
+		if ( handleSlider( "Rotation Snap", "Rotation (deg)##rot", &rotationSnap, 1.0f, 90.0f ) )
 		{
 			m_gizmoSystem.setRotationSnap( rotationSnap );
 		}
 
 		// Scale snap slider
 		float scaleSnap = m_gizmoSystem.getScaleSnap();
-		if ( handleSlider( "Scale Snap", "Scale Snap", &scaleSnap, 0.01f, 1.0f ) )
+		if ( handleSlider( "Scale Snap", "Scale##scale", &scaleSnap, 0.01f, 1.0f ) )
 		{
 			m_gizmoSystem.setScaleSnap( scaleSnap );
 		}
+	}
+
+	// End the ImGui window
+	if ( ImGui::GetCurrentContext() != nullptr )
+	{
+		ImGui::End();
 	}
 }
 
