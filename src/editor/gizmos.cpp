@@ -213,19 +213,35 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 	// Store previous matrix for delta calculation
 	math::Mat4<> originalMatrix = gizmoMatrix;
 
+	// ImGuizmo expects column-major matrices, but our math library uses row-major
+	// We need to transpose before passing to ImGuizmo
+	const auto viewMatrixTransposed = m_viewMatrix.transpose();
+	const auto projMatrixTransposed = m_projectionMatrix.transpose();
+	auto gizmoMatrixTransposed = gizmoMatrix.transpose();
+
 	// Call ImGuizmo
 	result.isManipulating = ImGuizmo::IsUsing();
-	result.wasManipulated = ImGuizmo::Manipulate( m_viewMatrix.data(), m_projectionMatrix.data(), static_cast<ImGuizmo::OPERATION>( operation ), static_cast<ImGuizmo::MODE>( mode ), gizmoMatrix.data(), nullptr, snapPtr );
+	result.wasManipulated = ImGuizmo::Manipulate(
+		viewMatrixTransposed.data(),
+		projMatrixTransposed.data(),
+		static_cast<ImGuizmo::OPERATION>( operation ),
+		static_cast<ImGuizmo::MODE>( mode ),
+		gizmoMatrixTransposed.data(),
+		nullptr,
+		snapPtr );
 
-	// If manipulation occurred, calculate delta
+	// If manipulation occurred, transpose back and calculate delta
 	if ( result.wasManipulated )
 	{
+		// Transpose the result back to our row-major format
+		gizmoMatrix = gizmoMatrixTransposed.transpose();
+
 		// Calculate transform delta (basic implementation)
 		// This is a simplified version - proper decomposition will be implemented in AF3.6
 		result.translationDelta = math::Vec3<>{
-			gizmoMatrix.row0.w - gizmoMatrix.row0.w,
-			gizmoMatrix.row1.w - gizmoMatrix.row1.w,
-			gizmoMatrix.row2.w - gizmoMatrix.row2.w
+			gizmoMatrix.row0.w - originalMatrix.row0.w,
+			gizmoMatrix.row1.w - originalMatrix.row1.w,
+			gizmoMatrix.row2.w - originalMatrix.row2.w
 		};
 
 		// For now, set rotation and scale deltas to defaults

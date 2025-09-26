@@ -514,6 +514,9 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 						const auto projMatrix = camera->getProjectionMatrix( viewport->getAspectRatio() );
 						const math::Vec4<> viewportRect{ 0.0f, 0.0f, static_cast<float>( contentSize.x ), static_cast<float>( contentSize.y ) };
 
+						// Set ImGuizmo to draw to the current window's draw list
+						ImGuizmo::SetDrawlist();
+
 						// Setup ImGuizmo context and render gizmos
 						if ( gizmoSystem->setupImGuizmo( viewMatrix, projMatrix, viewportRect ) )
 						{
