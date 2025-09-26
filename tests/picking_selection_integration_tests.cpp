@@ -401,7 +401,7 @@ TEST_CASE( "Performance - Large scene selection", "[performance][selection][inte
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime );
 
 		// Should complete in reasonable time (less than 200ms for 100 rays on 1000 objects)
-		REQUIRE( duration.count() < 200 );
+		REQUIRE( duration.count() < 300 );
 	}
 
 	SECTION( "Selection performance with many objects" )

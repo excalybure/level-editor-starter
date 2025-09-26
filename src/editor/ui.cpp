@@ -984,8 +984,11 @@ void UI::Impl::renderStatusBar( UI &ui )
 void UI::Impl::renderToolbar()
 {
 	// Use the new visibility-controlled methods
-	gizmoUI->renderToolbar( &showGizmoToolsWindow );
-	gizmoUI->renderSettings( &showGizmoSettingsWindow );
+	if ( gizmoUI )
+	{
+		gizmoUI->renderToolbar( &showGizmoToolsWindow );
+		gizmoUI->renderSettings( &showGizmoSettingsWindow );
+	}
 }
 
 
