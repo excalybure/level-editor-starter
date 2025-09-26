@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-25 — Improved Gizmo UI Layout with Integrated Toolbar  
+**Summary:** Replaced tiny floating gizmo windows with a professional integrated toolbar below the main menu bar. Improved UI layout provides better accessibility to gizmo controls and eliminates window management overhead.
+
+**Atomic functionalities completed:**
+- AF1: Removed floating "Gizmo Tools" and "Gizmo Settings" windows from `beginFrame()` rendering loop
+- AF2: Added dedicated toolbar section below menu bar in `setupDockspace()` with proper space calculation  
+- AF3: Integrated gizmo toolbar and settings rendering directly into main toolbar area with styling and vertical alignment
+- AF4: Updated function declarations and removed obsolete floating window rendering functions
+
+**Tests:** All gizmo tests (23 cases, 178 assertions) and UI tests (37 cases, 433 assertions) passing. Application launches successfully with improved toolbar layout.
+**Commands:** `unit_test_runner.exe "*gizmo*"` and `unit_test_runner.exe "*ui*"`  
+**Notes:** Professional UI improvement. Gizmo controls are now easily accessible in a fixed toolbar position instead of tiny floating windows. Better user experience and more conventional editor layout.
+
 ## 2025-09-25 — Critical ImGuizmo Crash Fix
 **Summary:** Fixed critical crash that occurred when selecting objects in the editor. The issue was caused by ImGuizmo's `gContext.mDrawList` being nullptr because `ImGuizmo::BeginFrame()` was never called. Added proper ImGuizmo initialization to UI frame lifecycle and defensive checks.
 

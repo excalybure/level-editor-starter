@@ -94,9 +94,8 @@ struct UI::Impl
 	// Render status bar
 	void renderStatusBar( UI &ui );
 
-	// Render gizmo toolbar and controls
-	void renderGizmoToolbar();
-	void renderGizmoSettings();
+	// Render main toolbar below menu bar
+	void renderToolbar();
 
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager );
@@ -215,10 +214,6 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
-
-	// Render gizmo toolbar and settings
-	m_impl->renderGizmoToolbar();
-	m_impl->renderGizmoSettings();
 }
 
 void UI::endFrame()
@@ -298,9 +293,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	ImGui::Begin( "Level Editor Dockspace", nullptr, window_flags );
 	ImGui::PopStyleVar( 3 );
 
-	// Create the dockspace with space reserved for status bar
+	// Reserve space for toolbar and status bar
+	const float kToolbarHeight = 32.0f;
 	const ImVec2 availableRegion = ImGui::GetContentRegionAvail();
-	const ImVec2 dockspaceSize = ImVec2( availableRegion.x, availableRegion.y - ( kStatusBarHeight + 2 * kStatusBarHeightPadding ) );
+	const ImVec2 dockspaceSize = ImVec2( availableRegion.x, availableRegion.y - ( kToolbarHeight + kStatusBarHeight + 2 * kStatusBarHeightPadding ) );
 
 	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
 	ImGui::DockSpace( dockspaceId, dockspaceSize, ImGuiDockNodeFlags_None );
@@ -369,6 +365,9 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 		ImGui::EndMenuBar();
 	}
+
+	// Render toolbar below menu bar
+	renderToolbar();
 
 	// Render status bar at the bottom of the dockspace
 	renderStatusBar( ui );
@@ -967,31 +966,40 @@ void UI::Impl::renderStatusBar( UI &ui )
 	ImGui::PopStyleVar( 2 );
 }
 
-void UI::Impl::renderGizmoToolbar()
+void UI::Impl::renderToolbar()
 {
-	if ( !gizmoUI )
-		return;
+	// Create toolbar area with styling
+	ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2( 4.0f, 4.0f ) );
+	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8.0f, 4.0f ) );
+	ImGui::PushStyleColor( ImGuiCol_ChildBg, ImVec4( 0.15f, 0.15f, 0.15f, 1.0f ) );
 
-	// Render gizmo toolbar for operation mode selection
-	if ( ImGui::Begin( "Gizmo Tools", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse ) )
+	const float kToolbarHeight = 32.0f;
+	if ( ImGui::BeginChild( "MainToolbar", ImVec2( -1, kToolbarHeight ), true, ImGuiWindowFlags_NoScrollbar ) )
 	{
-		gizmoUI->renderToolbar();
+		// Center content vertically
+		const float contentHeight = ImGui::GetTextLineHeightWithSpacing();
+		const float yOffset = ( kToolbarHeight - contentHeight ) * 0.5f;
+		ImGui::SetCursorPosY( ImGui::GetCursorPosY() + yOffset );
+
+		// Render gizmo controls if available
+		if ( gizmoUI )
+		{
+			gizmoUI->renderToolbar();
+
+			// Add some spacing before settings
+			ImGui::SameLine();
+			ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
+			ImGui::SameLine();
+
+			gizmoUI->renderSettings();
+		}
 	}
-	ImGui::End();
+	ImGui::EndChild();
+
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar( 2 );
 }
 
-void UI::Impl::renderGizmoSettings()
-{
-	if ( !gizmoUI )
-		return;
-
-	// Render gizmo settings for snap configuration
-	if ( ImGui::Begin( "Gizmo Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-	{
-		gizmoUI->renderSettings();
-	}
-	ImGui::End();
-}
 
 // UI::Impl viewport management methods
 bool UI::Impl::initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager )
