@@ -512,7 +512,13 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 					{
 						const auto viewMatrix = camera->getViewMatrix();
 						const auto projMatrix = camera->getProjectionMatrix( viewport->getAspectRatio() );
-						const math::Vec4<> viewportRect{ 0.0f, 0.0f, static_cast<float>( contentSize.x ), static_cast<float>( contentSize.y ) };
+
+						// Get absolute screen coordinates for ImGuizmo viewport
+						const ImVec2 viewportWindowPos = ImGui::GetWindowPos();
+						const ImVec2 contentMin = ImGui::GetWindowContentRegionMin();
+						const float absoluteX = viewportWindowPos.x + contentMin.x;
+						const float absoluteY = viewportWindowPos.y + contentMin.y;
+						const math::Vec4<> viewportRect{ absoluteX, absoluteY, static_cast<float>( contentSize.x ), static_cast<float>( contentSize.y ) };
 
 						// Set ImGuizmo to draw to the current window's draw list
 						ImGuizmo::SetDrawlist();
