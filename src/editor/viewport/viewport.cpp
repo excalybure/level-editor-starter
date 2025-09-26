@@ -336,10 +336,8 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 				m_lastMousePos = viewportPos;
 				m_mouseTracking = true;
 
-				// Handle mouse click for object selection
-				m_inputHandler->handleMouseClick( *m_scene, *this, viewportPos, true, false, // leftButton, rightButton
-					m_currentInput.keyboard.ctrl,
-					m_currentInput.keyboard.shift );
+				// DON'T process selection immediately - wait to see if this becomes a drag
+				// This allows camera orbit controls to work without interfering with selection
 			}
 			else
 			{
@@ -349,11 +347,25 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 					// Convert from screen/window coordinates to viewport coordinates
 					const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
 					const math::Vec2f viewportPos = windowToViewport( windowPos );
+
+					// Calculate drag distance to determine if this was a click or drag
+					const float dragDistance = math::length( viewportPos - m_lastMousePos );
+					const float MIN_CLICK_DISTANCE = 3.0f; // Maximum pixels for a click vs drag
+
+					if ( dragDistance <= MIN_CLICK_DISTANCE )
+					{
+						// This was a click, not a drag - process as selection
+						m_inputHandler->handleMouseClick( *m_scene, *this, viewportPos, true, false, // leftButton, rightButton
+							m_currentInput.keyboard.ctrl,
+							m_currentInput.keyboard.shift );
+					}
+					// If it was a drag, let the camera controller handle it (don't process selection)
+
 					m_inputHandler->handleMouseRelease( *m_scene, *this, viewportPos );
 					m_mouseTracking = false;
 				}
 			}
-			return true; // Left click events are always handled by selection
+			return false; // Don't claim left button events - let camera controller also process them
 		}
 		break;
 
@@ -365,7 +377,14 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 		// Handle mouse drag if we're tracking
 		if ( m_mouseTracking )
 		{
-			m_inputHandler->handleMouseDrag( *m_scene, *this, m_lastMousePos, viewportPos, m_currentInput.keyboard.ctrl, m_currentInput.keyboard.shift );
+			// Only process selection drag if modifiers are pressed (rectangle selection)
+			// or if this might become a rectangle selection based on distance
+			if ( m_currentInput.keyboard.ctrl || m_currentInput.keyboard.shift )
+			{
+				// Modifier keys pressed - handle as rectangle selection
+				m_inputHandler->handleMouseDrag( *m_scene, *this, m_lastMousePos, viewportPos, m_currentInput.keyboard.ctrl, m_currentInput.keyboard.shift );
+			}
+			// Otherwise, let camera controller handle the drag for orbit operations
 		}
 		else
 		{
