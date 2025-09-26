@@ -20,7 +20,7 @@ Build upon the completed multi-viewport camera system to implement a complete sc
 ## 📦 Phase 1: Enhanced ECS System (Week 1-2)
 
 ### 1.1 Core ECS Expansion
-**Target Module**: `runtime.ecs` enhancement
+**Target Headers**: `src/runtime/ecs/` enhancement
 
 **Current State Analysis**:
 - Basic ECS exists with simple `Entity`, `Storage<T>`, and `Component` concept
@@ -31,10 +31,10 @@ Build upon the completed multi-viewport camera system to implement a complete sc
 
 
 ### 1.2 Essential Components
-**Target Module**: `runtime.components`
+**Target Headers**: `src/runtime/components/`
 
 ### 1.3 System Architecture
-**Target Module**: `runtime.systems`
+**Target Headers**: `src/runtime/systems/`
 
 **Deliverables**:
 - ✅ Enhanced ECS with entity recycling and generation tracking
@@ -52,7 +52,7 @@ Build upon the completed multi-viewport camera system to implement a complete sc
 **vcpkg.json additions**:
 
 ### 2.2 Asset System Foundation
-**Target Module**: `engine.assets`
+**Target Headers**: `src/engine/assets/`
 
 **Design Rationale: Primitive-Based Mesh Architecture**
 
@@ -68,11 +68,11 @@ The asset system is designed around a **primitive-based mesh architecture** that
 This approach contrasts with the legacy "single vertex buffer per mesh" design, providing better performance and flexibility for complex 3D assets.
 
 ### 2.3 glTF Loader Implementation
-**Target Module**: `engine.gltf_loader`
+**Target Headers**: `src/engine/gltf_loader/`
 
 
 ### 2.4 Asset Manager
-**Target Module**: `engine.asset_manager`
+**Target Headers**: `src/engine/asset_manager/`
 
 
 **Deliverables**:
@@ -109,34 +109,34 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 **Gap**: The system can load assets and create ECS scenes, but cannot efficiently render them.
 
 ### 2.5.2 MaterialGPU Implementation
-**Target Module**: `engine.material_gpu`
+**Target Headers**: `src/engine/material_gpu/`
 
 **Design**: Create GPU-ready material resources that handle all rendering state:
 
 ### 2.5.3 GPU Resource Manager
-**Target Module**: `engine.gpu_resource_manager`
+**Target Headers**: `src/engine/gpu_resource_manager/`
 
 **Design**: Centralized caching and sharing of GPU resources across multiple entities:
 
 ### 2.5.4 Enhanced PrimitiveGPU Integration
-**Target Module**: `engine.asset_gpu_buffers` enhancement
+**Target Headers**: `src/engine/asset_gpu_buffers/` enhancement
 
 **Design**: Integrate material references directly into primitive GPU buffers:
 
 ### 2.5.5 Streamlined MeshRenderer Component
-**Target Module**: `runtime.components` enhancement
+**Target Headers**: `src/runtime/components/` enhancement
 
 **Design**: Remove string paths and direct GPU resource references for efficiency:
 
-### 2.5.6 Scene Importer Module
-**Target Module**: `runtime.scene_importer`
+### 2.5.6 Scene Importer Component
+**Target Headers**: `src/runtime/scene_importer/`
 
-**Design**: Dedicated module for converting `assets::Scene` to `ecs::Scene` with support for both GPU and non-GPU scenarios:
+**Design**: Dedicated headers/sources for converting `assets::Scene` to `ecs::Scene` with support for both GPU and non-GPU scenarios:
 
-**Integration with AssetManager**: The existing callback system will use this module:
+**Integration with AssetManager**: The existing callback system will use these components:
 
 **Benefits**:
-- **Architectural Clarity**: Dedicated module for asset-to-ECS conversion
+- **Architectural Clarity**: Dedicated components for asset-to-ECS conversion
 - **Testing Support**: Maintains fast unit tests without GPU overhead  
 - **Performance**: GPU path eliminates string lookups during rendering
 - **Flexibility**: Applications choose appropriate import method
@@ -144,7 +144,7 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 - **Incremental Migration**: Existing tests continue working while adding GPU features
 
 ### 2.5.7 Updated ECS Import Integration
-**Target Module**: `engine.asset_manager` enhancement
+**Target Headers**: `src/engine/asset_manager/` enhancement
 
 **Design**: Integration with GPU resource manager during ECS import:
 
@@ -170,7 +170,7 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 ## 📦 Phase 3: Object Picking & Selection System (Week 3-4)
 
 ### 3.1 Ray-Casting Infrastructure
-**Target Module**: `engine.picking`
+**Target Headers**: `src/engine/picking/`
 
 **Current State Analysis**:
 - Basic ray generation exists in `Viewport::getPickingRay()`
@@ -178,7 +178,7 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 - Need to integrate with ECS for object selection
 
 ### 3.2 Selection Management
-**Target Module**: `editor.selection`
+**Target Headers**: `src/editor/selection/`
 
 **Deliverables**:
 - ✅ Ray-casting system using existing math library
@@ -194,7 +194,7 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 ## 📦 Phase 4: 3D Gizmo Manipulation System (Week 4-5)
 
 ### 4.1 ImGuizmo Integration
-**Target Module**: `editor.gizmos`
+**Target Headers**: `src/editor/gizmos/`
 
 **Current State Analysis**:
 - vcpkg has ImGuizmo port available
@@ -202,7 +202,7 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 - Viewport system provides camera matrices
 
 ### 4.2 Transform Command System (Preparation for Undo/Redo)
-**Target Module**: `editor.transform_commands`
+**Target Headers**: `src/editor/transform_commands/`
 
 **Deliverables**:
 - ✅ ImGuizmo integration with D3D12 backend
@@ -219,27 +219,31 @@ This approach contrasts with the legacy "single vertex buffer per mesh" design, 
 ## 📦 Phase 5: Undo/Redo Command Stack (Week 5-6)
 
 ### 5.1 Command Pattern Infrastructure
-**Target Module**: `editor.commands`
+**Target Headers**: `src/editor/commands/`
 
 ```cpp
-export module editor.commands;
+#pragma once
 
-import std;
+#include <memory>
+#include <vector>
+#include <string>
+#include <functional>
+#include <chrono>
 
-export namespace editor {
+namespace editor {
 
 // Forward declarations
-export class Command;
+class Command;
 
 // Command execution context
-export struct CommandContext {
+struct CommandContext {
     std::string description;
     std::chrono::system_clock::time_point timestamp;
     size_t memoryUsage = 0; // For memory management
 };
 
 // Enhanced command interface
-export class Command {
+class Command {
 public:
     virtual ~Command() = default;
     virtual void execute() = 0;
@@ -251,7 +255,7 @@ public:
 };
 
 // Macro command for batching operations
-export class MacroCommand : public Command {
+class MacroCommand : public Command {
 public:
     MacroCommand(const std::string& description);
     
@@ -267,7 +271,7 @@ private:
 };
 
 // Command history manager
-export class CommandHistory {
+class CommandHistory {
 public:
     CommandHistory(size_t maxHistorySize = 100, size_t maxMemoryMB = 100);
     
@@ -317,20 +321,20 @@ private:
 ```
 
 ### 5.2 ECS-Specific Commands
-**Target Module**: `editor.ecs_commands`
+**Target Headers**: `src/editor/ecs_commands/`
 
 ```cpp
-export module editor.ecs_commands;
+#pragma once
 
-import editor.commands;
-import runtime.ecs;
-import runtime.components;
-import std;
+#include "editor/commands/Command.h"
+#include "runtime/ecs/Scene.h"
+#include "runtime/components/Components.h"
+#include <optional>
 
-export namespace editor {
+namespace editor {
 
 // Entity creation command
-export class CreateEntityCommand : public Command {
+class CreateEntityCommand : public Command {
 public:
     CreateEntityCommand(ecs::Scene& scene, const std::string& name = "Entity");
     
@@ -348,7 +352,7 @@ private:
 };
 
 // Entity deletion command
-export class DeleteEntityCommand : public Command {
+class DeleteEntityCommand : public Command {
 public:
     DeleteEntityCommand(ecs::Scene& scene, ecs::Entity entity);
     
@@ -375,7 +379,7 @@ private:
 };
 
 // Component add/remove commands
-export template<typename T>
+template<typename T>
 class AddComponentCommand : public Command {
 public:
     AddComponentCommand(ecs::Scene& scene, ecs::Entity entity, T component)
@@ -399,7 +403,7 @@ private:
     T m_component;
 };
 
-export template<typename T>
+template<typename T>
 class RemoveComponentCommand : public Command {
 public:
     RemoveComponentCommand(ecs::Scene& scene, ecs::Entity entity)
@@ -434,7 +438,7 @@ private:
 };
 
 // Hierarchy commands
-export class SetParentCommand : public Command {
+class SetParentCommand : public Command {
 public:
     SetParentCommand(ecs::Scene& scene, ecs::Entity child, ecs::Entity newParent);
     
@@ -454,18 +458,17 @@ private:
 ```
 
 ### 5.3 UI Integration
-**Target Module**: `editor.command_ui`
+**Target Headers**: `src/editor/command_ui/`
 
 ```cpp
-export module editor.command_ui;
+#pragma once
 
-import editor.commands;
-import std;
+#include "editor/commands/CommandHistory.h"
 
-export namespace editor {
+namespace editor {
 
 // History window for debugging/power users
-export class CommandHistoryWindow {
+class CommandHistoryWindow {
 public:
     CommandHistoryWindow(CommandHistory& history);
     
@@ -483,7 +486,7 @@ private:
 };
 
 // Undo/Redo integration with main UI
-export class UndoRedoUI {
+class UndoRedoUI {
 public:
     UndoRedoUI(CommandHistory& history);
     
@@ -522,21 +525,21 @@ private:
 ## 📦 Phase 6: Scene Editing UI (Week 6-7)
 
 ### 6.1 Scene Hierarchy Panel
-**Target Module**: `editor.scene_hierarchy`
+**Target Headers**: `src/editor/scene_hierarchy/`
 
 ```cpp
-export module editor.scene_hierarchy;
+#pragma once
 
-import editor.selection;
-import editor.commands;
-import runtime.ecs;
-import runtime.components;
-import std;
+#include "editor/selection/SelectionManager.h"
+#include "editor/commands/CommandHistory.h"
+#include "runtime/ecs/Scene.h"
+#include "runtime/components/Components.h"
+#include <string>
 
-export namespace editor {
+namespace editor {
 
 // Scene hierarchy tree view
-export class SceneHierarchyPanel {
+class SceneHierarchyPanel {
 public:
     SceneHierarchyPanel(ecs::Scene& scene, 
                        SelectionManager& selectionManager,
@@ -579,22 +582,22 @@ private:
 ```
 
 ### 6.2 Entity Inspector Panel
-**Target Module**: `editor.entity_inspector`
+**Target Headers**: `src/editor/entity_inspector/`
 
 ```cpp
-export module editor.entity_inspector;
+#pragma once
 
-import editor.selection;
-import editor.commands;
-import runtime.ecs;
-import runtime.components;
-import engine.asset_manager;
-import std;
+#include "editor/selection/SelectionManager.h"
+#include "editor/commands/CommandHistory.h"
+#include "runtime/ecs/Scene.h"
+#include "runtime/components/Components.h"
+#include "engine/asset_manager/AssetManager.h"
+#include <string>
 
-export namespace editor {
+namespace editor {
 
 // Inspector panel for selected entities
-export class EntityInspectorPanel {
+class EntityInspectorPanel {
 public:
     EntityInspectorPanel(ecs::Scene& scene,
                         SelectionManager& selectionManager,
@@ -633,7 +636,7 @@ private:
 };
 
 // Component UI helpers
-export class ComponentUI {
+class ComponentUI {
 public:
     static bool renderTransform(components::Transform& transform);
     static bool renderName(components::Name& name);
@@ -663,20 +666,21 @@ private:
 ```
 
 ### 6.3 Asset Browser Panel
-**Target Module**: `editor.asset_browser`
+**Target Headers**: `src/editor/asset_browser/`
 
 ```cpp
-export module editor.asset_browser;
+#pragma once
 
-import engine.asset_manager;
-import editor.commands;
-import runtime.ecs;
-import std;
+#include "engine/asset_manager/AssetManager.h"
+#include "editor/commands/CommandHistory.h"
+#include "runtime/ecs/Scene.h"
+#include <vector>
+#include <string>
 
-export namespace editor {
+namespace editor {
 
 // Asset browser for importing and managing assets
-export class AssetBrowserPanel {
+class AssetBrowserPanel {
 public:
     AssetBrowserPanel(asset_manager::AssetManager& assetManager,
                      ecs::Scene& scene,
@@ -727,26 +731,27 @@ private:
 ```
 
 ### 6.4 Integrated Scene Editor
-**Target Module**: `editor.scene_editor`
+**Target Headers**: `src/editor/scene_editor/`
 
 ```cpp
-export module editor.scene_editor;
+#pragma once
 
-import editor.selection;
-import editor.commands;
-import editor.gizmos;
-import editor.scene_hierarchy;
-import editor.entity_inspector;
-import editor.asset_browser;
-import runtime.ecs;
-import runtime.systems;
-import engine.asset_manager;
-import std;
+#include "editor/selection/SelectionManager.h"
+#include "editor/commands/CommandHistory.h"
+#include "editor/gizmos/GizmoSystem.h"
+#include "editor/scene_hierarchy/SceneHierarchyPanel.h"
+#include "editor/entity_inspector/EntityInspectorPanel.h"
+#include "editor/asset_browser/AssetBrowserPanel.h"
+#include "runtime/ecs/Scene.h"
+#include "runtime/systems/SystemManager.h"
+#include "engine/asset_manager/AssetManager.h"
+#include <memory>
+#include <string>
 
-export namespace editor {
+namespace editor {
 
 // Main scene editor orchestrating all panels
-export class SceneEditor {
+class SceneEditor {
 public:
     SceneEditor(ecs::Scene& scene, 
                systems::SystemManager& systemManager,
