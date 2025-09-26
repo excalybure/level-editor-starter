@@ -135,8 +135,56 @@ public:
 		m_currentMemoryUsage += memUsage;
 		m_currentIndex = m_commands.size();
 
-		// TODO: Implement cleanup for size/memory limits
+		// Clean up old commands if we exceed limits
+		cleanupOldCommands();
+
 		return true;
+	}
+
+	/**
+     * @brief Execute a command with merging support
+     * @param command The command to execute (may be merged with previous command)
+     * @return true if execution was successful
+     */
+	bool executeCommandWithMerging( CommandPtr command )
+	{
+		if ( !command )
+			return false;
+
+		// Try to merge with the last command if possible
+		if ( !m_commands.empty() && m_currentIndex == m_commands.size() )
+		{
+			auto &lastEntry = m_commands.back();
+			const auto now = std::chrono::steady_clock::now();
+			const auto timeDiff = std::chrono::duration_cast<std::chrono::milliseconds>( now - lastEntry.context.getTimestamp() );
+
+			// Check if commands can be merged and are within time window
+			const auto mergeTimeWindow = std::chrono::milliseconds( 100 ); // 100ms merge window
+			if ( timeDiff <= mergeTimeWindow && lastEntry.command->canMergeWith( command.get() ) )
+			{
+				// Try to execute the new command first
+				if ( !command->execute() )
+					return false;
+
+				// Attempt merge
+				if ( lastEntry.command->mergeWith( std::move( command ) ) )
+				{
+					// Update the context with new timestamp and memory usage
+					lastEntry.context.updateTimestamp( now );
+					lastEntry.context.updateMemoryUsage( lastEntry.command->getMemoryUsage() );
+					return true;
+				}
+				else
+				{
+					// Merge failed, need to undo the command we just executed
+					command->undo();
+					return false;
+				}
+			}
+		}
+
+		// Cannot merge, execute as a separate command
+		return executeCommand( std::move( command ) );
 	}
 
 	/**
@@ -170,6 +218,25 @@ public:
 	}
 
 private:
+	/**
+	 * @brief Remove oldest commands to stay within limits
+	 */
+	void cleanupOldCommands()
+	{
+		// Remove oldest commands until we're within both count and memory limits
+		while ( !m_commands.empty() &&
+			( m_commands.size() > m_maxCommands || m_currentMemoryUsage > m_maxMemoryUsage ) )
+		{
+			const auto &oldestEntry = m_commands.front();
+			m_currentMemoryUsage -= oldestEntry.context.getMemoryUsage();
+			m_commands.pop_front();
+
+			// Update current index to maintain correct position
+			if ( m_currentIndex > 0 )
+				--m_currentIndex;
+		}
+	}
+
 	struct CommandEntry
 	{
 		CommandPtr command;
