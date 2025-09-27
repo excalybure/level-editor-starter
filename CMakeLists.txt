@@ -10,12 +10,33 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 # Find vcpkg packages
 find_package(imgui CONFIG REQUIRED)
-find_package(imguizmo CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
 # Libraries
+
+# ImGuizmo library (local)
+add_library(ImGuizmo STATIC
+  externals/ImGuizmo/ImGuizmo.cpp
+  externals/ImGuizmo/ImCurveEdit.cpp
+  externals/ImGuizmo/ImGradient.cpp
+  externals/ImGuizmo/ImSequencer.cpp
+  externals/ImGuizmo/GraphEditor.cpp
+)
+
+target_include_directories(ImGuizmo PUBLIC 
+  externals/ImGuizmo
+)
+target_compile_features(ImGuizmo PUBLIC cxx_std_23)
+target_compile_definitions(ImGuizmo PUBLIC NOMINMAX)
+target_link_libraries(ImGuizmo PUBLIC 
+  imgui::imgui
+)
+
+if (MSVC)
+  target_compile_options(ImGuizmo PRIVATE /W4 /permissive- /std:c++latest)
+endif()
 
 # Engine library
 add_library(engine STATIC
@@ -105,7 +126,7 @@ target_compile_features(editor PUBLIC cxx_std_23)
 target_compile_definitions(editor PUBLIC NOMINMAX PIX_AVAILABLE)
 target_link_libraries(editor PUBLIC 
   imgui::imgui
-  imguizmo::imguizmo
+  ImGuizmo
   Microsoft::DirectX-Headers
   Microsoft::WinPixEventRuntime
   d3d12

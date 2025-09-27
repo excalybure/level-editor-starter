@@ -77,6 +77,10 @@ struct UI::Impl
 	std::string currentScenePath;
 	std::string lastError;
 
+	// Track previous frame's gizmo state for input blocking
+	bool wasGizmoHoveredLastFrame = false;
+	bool wasGizmoUsingLastFrame = false;
+
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
 
@@ -228,6 +232,19 @@ void UI::endFrame()
 	if ( !m_initialized )
 		return;
 
+	// Update gizmo state for next frame's input blocking
+	m_impl->wasGizmoHoveredLastFrame = ImGuizmo::IsOver();
+	m_impl->wasGizmoUsingLastFrame = ImGuizmo::IsUsing();
+
+	// Debug output to understand gizmo state
+	if ( m_impl->wasGizmoHoveredLastFrame )
+	{
+		console::info( "UI: Gizmo state - IsOver: {}, IsUsing: {}, WasHovered: {}, WasUsing: {}",
+			ImGuizmo::IsOver(),
+			ImGuizmo::IsUsing(),
+			m_impl->wasGizmoHoveredLastFrame,
+			m_impl->wasGizmoUsingLastFrame );
+	}
 	// End the dockspace
 	ImGui::End(); // End dockspace window
 
@@ -1198,19 +1215,35 @@ void UI::processInputEvents( platform::Win32Window &window )
 			auto *focusedViewport = viewportManager.getFocusedViewport();
 			if ( focusedViewport )
 			{
-				// Check if ImGuizmo is currently using input to prevent camera interference
+				// Check if UI (including ImGuizmo) wants to capture input to prevent camera interference
 				bool shouldBlockCameraInput = false;
 
-				// Only block mouse events when gizmo is actively being manipulated
+				// Only block mouse events when UI systems (ImGui/ImGuizmo) want to capture mouse input
 				if ( viewportEvent.type == ViewportInputEvent::Type::MouseButton ||
 					viewportEvent.type == ViewportInputEvent::Type::MouseMove ||
 					viewportEvent.type == ViewportInputEvent::Type::MouseWheel )
 				{
-					// Check if ImGuizmo is currently capturing input
-					shouldBlockCameraInput = ImGuizmo::IsUsing();
+					// Block input when gizmo is being actively used OR when gizmo was hovered last frame
+					// This prevents both active manipulation interference and initial mouse press issues
+					shouldBlockCameraInput = ImGuizmo::IsUsing() || m_impl->wasGizmoHoveredLastFrame;
+					const std::string eventDesc = [&viewportEvent]() -> std::string {
+						switch ( viewportEvent.type )
+						{
+						case ViewportInputEvent::Type::MouseButton:
+							return std::format( "MouseButton {} button={}", viewportEvent.mouse.pressed ? "Pressed" : "Released", static_cast<int>( viewportEvent.mouse.button ) );
+						case ViewportInputEvent::Type::MouseMove:
+							return std::format( "MouseMove x={} y={} dx={} dy={}", viewportEvent.mouse.x, viewportEvent.mouse.y, viewportEvent.mouse.deltaX, viewportEvent.mouse.deltaY );
+						case ViewportInputEvent::Type::MouseWheel:
+							return std::format( "MouseWheel x={} y={} delta={}", viewportEvent.mouse.x, viewportEvent.mouse.y, viewportEvent.mouse.wheelDelta );
+						default:
+							return std::string( "Unknown input event" );
+						}
+					}();
+
+					// console::info( "UI: Mouse input capture state: {} Event: {}", shouldBlockCameraInput ? "Blocked" : "Allowed", eventDesc );
 				}
 
-				// Forward the event to the viewport unless gizmo is blocking camera input
+				// Forward the event to the viewport unless UI is capturing input
 				if ( !shouldBlockCameraInput )
 				{
 					focusedViewport->handleInput( viewportEvent );
