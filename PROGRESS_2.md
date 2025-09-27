@@ -1,5 +1,17 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-26 — Fix Gizmo Input Blocking Camera Controls
+**Summary:** Fixed critical issue where dragging gizmos also caused camera rotation. Implemented input priority system in UI::processInputEvents that checks ImGuizmo::IsUsing() state to block mouse events from reaching camera controllers when gizmos are actively being manipulated. The fix ensures gizmo manipulation takes priority over camera controls while preserving keyboard shortcuts.
+
+**Atomic functionalities completed:**
+- AF1: Investigated gizmo input handling - Analyzed ImGuizmo API and found IsUsing(), IsOver(), and IsUsingAny() functions for input state detection
+- AF2: Examined camera input flow - Traced input from UI::processInputEvents → viewport::handleInput → camera controller update pipeline
+- AF3: Implemented input priority system - Added ImGuizmo::IsUsing() check in UI::processInputEvents to block mouse events (MouseButton, MouseMove, MouseWheel) when gizmo is active
+- AF4: Added unit tests - Created tests verifying input blocking logic correctly categorizes event types and maintains ImGuizmo API integration
+
+**Tests:** 2 new unit tests for input blocking logic (186 assertions total). All existing UI tests (434 assertions) and gizmo tests continue to pass.
+**Notes:** Mouse input (left-click drag, mouse wheel) is now properly blocked during gizmo manipulation, preventing camera rotation/zoom. Keyboard events continue to work normally. Solution uses ImGuizmo's built-in state tracking for reliable detection of active manipulation.
+
 ## 2025-01-27 — Core Command Pattern Infrastructure Implementation
 **Summary:** Successfully implemented complete command pattern infrastructure with strict TDD methodology, providing professional-grade undo/redo system with memory management, command merging, and comprehensive ECS integration capabilities for the level editor.
 

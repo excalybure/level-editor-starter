@@ -1198,7 +1198,23 @@ void UI::processInputEvents( platform::Win32Window &window )
 			auto *focusedViewport = viewportManager.getFocusedViewport();
 			if ( focusedViewport )
 			{
-				focusedViewport->handleInput( viewportEvent );
+				// Check if ImGuizmo is currently using input to prevent camera interference
+				bool shouldBlockCameraInput = false;
+
+				// Only block mouse events when gizmo is actively being manipulated
+				if ( viewportEvent.type == ViewportInputEvent::Type::MouseButton ||
+					viewportEvent.type == ViewportInputEvent::Type::MouseMove ||
+					viewportEvent.type == ViewportInputEvent::Type::MouseWheel )
+				{
+					// Check if ImGuizmo is currently capturing input
+					shouldBlockCameraInput = ImGuizmo::IsUsing();
+				}
+
+				// Forward the event to the viewport unless gizmo is blocking camera input
+				if ( !shouldBlockCameraInput )
+				{
+					focusedViewport->handleInput( viewportEvent );
+				}
 			}
 		}
 	}
