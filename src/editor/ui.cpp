@@ -232,19 +232,6 @@ void UI::endFrame()
 	if ( !m_initialized )
 		return;
 
-	// Update gizmo state for next frame's input blocking
-	m_impl->wasGizmoHoveredLastFrame = ImGuizmo::IsOver();
-	m_impl->wasGizmoUsingLastFrame = ImGuizmo::IsUsing();
-
-	// Debug output to understand gizmo state
-	if ( m_impl->wasGizmoHoveredLastFrame )
-	{
-		console::info( "UI: Gizmo state - IsOver: {}, IsUsing: {}, WasHovered: {}, WasUsing: {}",
-			ImGuizmo::IsOver(),
-			ImGuizmo::IsUsing(),
-			m_impl->wasGizmoHoveredLastFrame,
-			m_impl->wasGizmoUsingLastFrame );
-	}
 	// End the dockspace
 	ImGui::End(); // End dockspace window
 
@@ -544,6 +531,13 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 						if ( gizmoSystem->setupImGuizmo( viewMatrix, projMatrix, viewportRect ) )
 						{
 							const auto gizmoResult = gizmoSystem->renderGizmo();
+
+							if ( hasFocus )
+							{
+								wasGizmoHoveredLastFrame = gizmoResult.isHovered;
+								wasGizmoUsingLastFrame = gizmoResult.isManipulating;
+							}
+
 							if ( gizmoResult.wasManipulated )
 							{
 								// Apply transform changes to selected entities

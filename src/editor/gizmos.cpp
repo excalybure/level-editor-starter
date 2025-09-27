@@ -230,6 +230,9 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 		nullptr,
 		snapPtr );
 
+	// Check hover state immediately after Manipulate call while ImGuizmo state is fresh
+	result.isHovered = ImGuizmo::IsOver();
+
 	// If manipulation occurred, transpose back and calculate delta
 	if ( result.wasManipulated )
 	{

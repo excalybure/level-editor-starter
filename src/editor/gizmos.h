@@ -37,6 +37,7 @@ struct GizmoResult
 	// Manipulation state flags
 	bool wasManipulated = false; // True if manipulation occurred this frame
 	bool isManipulating = false; // True if currently manipulating
+	bool isHovered = false;		 // True if gizmo is being hovered over
 
 	// Transform deltas from manipulation
 	math::Vec3<> translationDelta{ 0.0f, 0.0f, 0.0f }; // Translation change
