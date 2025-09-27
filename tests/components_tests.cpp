@@ -323,3 +323,39 @@ TEST_CASE( "Selected Component - ECS integration", "[components][selection][ecs]
 		REQUIRE( primaryCount == 1 );
 	}
 }
+
+TEST_CASE( "Transform matrix layout consistency with HLSL", "[components][transform][matrix][hlsl]" )
+{
+	// This test verifies that our matrix layout works correctly with HLSL shader expectations
+	// HLSL mul(matrix, vector) expects column-major matrices, but our C++ matrices are row-major
+
+	components::Transform transform;
+	transform.position = { 10.0f, 20.0f, 30.0f };
+	transform.scale = { 1.0f, 1.0f, 1.0f };
+	transform.rotation = { 0.0f, 0.0f, 0.0f }; // No rotation for simplicity
+
+	const auto matrix = transform.getLocalMatrix();
+
+	// Verify our matrix has translation in the expected position (last column in row-major)
+	REQUIRE( matrix.m03() == Catch::Approx( 10.0f ) ); // Translation X
+	REQUIRE( matrix.m13() == Catch::Approx( 20.0f ) ); // Translation Y
+	REQUIRE( matrix.m23() == Catch::Approx( 30.0f ) ); // Translation Z
+
+	// Test point transformation using our matrix directly (row-major style)
+	math::Vec3f point{ 1.0f, 2.0f, 3.0f };
+	math::Vec3f transformedPoint = matrix.transformPoint( point );
+
+	// Expected result: point + translation = (1+10, 2+20, 3+30) = (11, 22, 33)
+	REQUIRE( transformedPoint.x == Catch::Approx( 11.0f ) );
+	REQUIRE( transformedPoint.y == Catch::Approx( 22.0f ) );
+	REQUIRE( transformedPoint.z == Catch::Approx( 33.0f ) );
+
+	// However, if we transpose the matrix (converting to column-major),
+	// the translation would be in the bottom row instead of the right column
+	const auto transposedMatrix = matrix.transpose();
+
+	// After transpose, translation moves to the bottom row
+	REQUIRE( transposedMatrix.m30() == Catch::Approx( 10.0f ) ); // Translation X (now in bottom row)
+	REQUIRE( transposedMatrix.m31() == Catch::Approx( 20.0f ) ); // Translation Y (now in bottom row)
+	REQUIRE( transposedMatrix.m32() == Catch::Approx( 30.0f ) ); // Translation Z (now in bottom row)
+}

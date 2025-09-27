@@ -154,7 +154,9 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 
 	// Calculate object constants for this entity
 	ObjectConstants objectConstants;
-	objectConstants.worldMatrix = transform.getLocalMatrix();
+	// HLSL expects column-major matrices when using mul(matrix, vector)
+	// Our C++ matrices are row-major, so transpose before sending to GPU
+	objectConstants.worldMatrix = transform.getLocalMatrix().transpose();
 	// For normal matrix, we need the inverse transpose of the world matrix
 	// For uniform scaling, we can use the world matrix directly
 	// TODO: Implement proper inverse transpose calculation for non-uniform scaling

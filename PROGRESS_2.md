@@ -1,5 +1,8 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-27 — Fix Matrix Layout Mismatch Between C++ and HLSL Rendering
+**Summary:** Identified and fixed critical matrix layout mismatch between C++ row-major matrices and HLSL column-major expectations. The issue manifested as incorrect object positioning during rendering when non-zero transform positions were used. Implemented proper matrix transposition before sending transform data to GPU, ensuring consistent spatial transformation between CPU and GPU rendering pipelines.
+
 ## 2025-09-26 — Fix Gizmo Input Blocking Camera Controls
 **Summary:** Fixed critical issue where dragging gizmos also caused camera rotation. Implemented input priority system in UI::processInputEvents that checks ImGuizmo::IsUsing() state to block mouse events from reaching camera controllers when gizmos are actively being manipulated. The fix ensures gizmo manipulation takes priority over camera controls while preserving keyboard shortcuts.
 
