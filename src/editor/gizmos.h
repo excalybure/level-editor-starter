@@ -8,6 +8,10 @@
 namespace ecs
 {
 class Scene;
+} // namespace ecs
+namespace systems
+{
+class SystemManager;
 }
 
 namespace editor
@@ -52,8 +56,8 @@ public:
 	// Default constructor
 	GizmoSystem() noexcept = default;
 
-	// Constructor with SelectionManager and Scene dependencies
-	GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene ) noexcept;
+	// Constructor with SelectionManager, Scene, and SystemManager dependencies
+	GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager ) noexcept;
 
 	// Accessors for current state
 	constexpr GizmoOperation getCurrentOperation() const noexcept
@@ -144,6 +148,7 @@ public:
 private:
 	SelectionManager *m_selectionManager = nullptr;
 	ecs::Scene *m_scene = nullptr;
+	systems::SystemManager *m_systemManager = nullptr;
 	GizmoOperation m_currentOperation = GizmoOperation::Translate;
 	GizmoMode m_currentMode = GizmoMode::World;
 	bool m_isManipulating = false;

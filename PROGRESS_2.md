@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Gizmo Transform Update Propagation to Selection System
+**Summary:** Resolved critical issue where objects moved with gizmos could not be re-selected at their new positions. The problem was that GizmoSystem's applyTransformDelta method only updated local transforms without notifying TransformSystem to recalculate world matrices used by the picking system. Implemented proper world matrix invalidation by adding SystemManager dependency to GizmoSystem and calling TransformSystem::markDirty() after transform changes.
+
+**Atomic functionalities completed:**
+- AF1: Created test case reproducing the selection bug - Implemented comprehensive integration test demonstrating objects become unselectable at new positions after gizmo movement
+- AF2: Investigated transform system dirty propagation - Confirmed that world matrix updates require explicit TransformSystem::markDirty() calls, which were missing from gizmo transform application
+- AF3: Fixed gizmo system to properly mark transforms dirty - Added SystemManager dependency to GizmoSystem constructor and updated applyTransformDelta to call transformSystem->markDirty() for proper world matrix recalculation  
+- AF4: Verified selection bounds update correctly - Confirmed that with proper world matrix updates, picking system correctly detects objects at their new positions
+- AF5: Tested fix with integration test - Created comprehensive test suite verifying complete workflow: select → move with gizmo → deselect → re-select at new position
+
+**Tests:** 2 new integration tests (24 assertions) verifying both the fix and demonstrating the original bug. All existing gizmo tests (202 assertions) continue to pass.
+**Notes:** Solution maintains backward compatibility with existing tests through dual constructor approach. The fix ensures proper communication between gizmo system, transform system, and picking system for accurate entity selection after movement. Critical for editor usability where users expect to interact with objects at their visual positions.
+
 ## 2025-09-27 — Fix Matrix Layout Mismatch Between C++ and HLSL Rendering
 **Summary:** Identified and fixed critical matrix layout mismatch between C++ row-major matrices and HLSL column-major expectations. The issue manifested as incorrect object positioning during rendering when non-zero transform positions were used. Implemented proper matrix transposition before sending transform data to GPU, ensuring consistent spatial transformation between CPU and GPU rendering pipelines.
 

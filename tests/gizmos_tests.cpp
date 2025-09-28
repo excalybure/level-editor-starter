@@ -136,7 +136,7 @@ TEST_CASE( "GizmoSystem with SelectionManager", "[gizmos][unit][selection]" )
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
 
-		const editor::GizmoSystem system( selectionManager, scene );
+		const editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Should have default values for operation and mode
 		REQUIRE( system.getCurrentOperation() == editor::GizmoOperation::Translate );
@@ -200,7 +200,7 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entity with transform
 		const auto entity = scene.createEntity();
@@ -223,7 +223,7 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entities with transforms
 		const auto entity1 = scene.createEntity();
@@ -249,7 +249,7 @@ TEST_CASE( "GizmoSystem selection center calculation", "[gizmos][unit][center]" 
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// No selection
 		const auto center = system.calculateSelectionCenter();
@@ -267,7 +267,7 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entity with transform
 		const auto entity = scene.createEntity();
@@ -291,7 +291,7 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entities with transforms
 		const auto entity1 = scene.createEntity();
@@ -318,7 +318,7 @@ TEST_CASE( "GizmoSystem matrix calculation", "[gizmos][unit][matrix]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// No selection
 		const auto matrix = system.calculateGizmoMatrix();
@@ -351,7 +351,7 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entity with initial transform
 		const auto entity = scene.createEntity();
@@ -390,7 +390,7 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create entities with initial transforms
 		const auto entity1 = scene.createEntity();
@@ -439,7 +439,7 @@ TEST_CASE( "GizmoSystem transform delta application", "[gizmos][unit][delta]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// No selection
 		editor::GizmoResult delta;
@@ -491,7 +491,7 @@ TEST_CASE( "GizmoSystem ImGuizmo setup", "[gizmos][unit][imguizmo][setup]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create test view and projection matrices
 		const auto viewMatrix = math::Mat4f::lookAt( math::Vec3f{ 0, 0, 10 }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 0, 1, 0 } );
@@ -508,7 +508,7 @@ TEST_CASE( "GizmoSystem ImGuizmo setup", "[gizmos][unit][imguizmo][setup]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Create test matrices with invalid viewport (zero width/height)
 		const auto viewMatrix = math::Mat4f::identity();
@@ -528,7 +528,7 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to local mode
 		system.setMode( editor::GizmoMode::Local );
@@ -543,7 +543,7 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to world mode
 		system.setMode( editor::GizmoMode::World );
@@ -558,7 +558,7 @@ TEST_CASE( "GizmoSystem ImGuizmo coordinate space configuration", "[gizmos][unit
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Start with local mode
 		system.setMode( editor::GizmoMode::Local );
@@ -581,7 +581,7 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to translate operation
 		system.setOperation( editor::GizmoOperation::Translate );
@@ -596,7 +596,7 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to rotate operation
 		system.setOperation( editor::GizmoOperation::Rotate );
@@ -611,7 +611,7 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to scale operation
 		system.setOperation( editor::GizmoOperation::Scale );
@@ -626,7 +626,7 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set to universal operation
 		system.setOperation( editor::GizmoOperation::Universal );
@@ -641,7 +641,7 @@ TEST_CASE( "GizmoSystem ImGuizmo operation mode binding", "[gizmos][unit][imguiz
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Start with translate
 		system.setOperation( editor::GizmoOperation::Translate );
@@ -668,7 +668,7 @@ TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Initially disabled
 		REQUIRE_FALSE( system.isSnapEnabled() );
@@ -687,7 +687,7 @@ TEST_CASE( "GizmoSystem ImGuizmo snap configuration", "[gizmos][unit][imguizmo][
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem system( selectionManager, scene );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
 
 		// Set custom snap values
 		system.setTranslationSnap( 2.5f );
@@ -708,9 +708,7 @@ TEST_CASE( "GizmoUI construction and basic rendering", "[gizmos][ui][AF5.1]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
-
-		// This should compile and not crash
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager ); // This should compile and not crash
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Verify UI has reference to gizmo system
@@ -722,7 +720,7 @@ TEST_CASE( "GizmoUI construction and basic rendering", "[gizmos][ui][AF5.1]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Mock ImGui context (this should not crash)
@@ -741,7 +739,7 @@ TEST_CASE( "GizmoUI operation mode toolbar", "[gizmos][ui][toolbar][AF5.2]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Set initial operation to translate
@@ -762,7 +760,7 @@ TEST_CASE( "GizmoUI operation mode toolbar", "[gizmos][ui][toolbar][AF5.2]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Test that toolbar can render all modes without crashing
@@ -802,7 +800,7 @@ TEST_CASE( "GizmoUI coordinate space toggle", "[gizmos][ui][coordinate][AF5.3]" 
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Set initial mode to world
@@ -838,7 +836,7 @@ TEST_CASE( "GizmoUI snap settings controls", "[gizmos][ui][snap][AF5.4]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Initial snap values
@@ -875,7 +873,7 @@ TEST_CASE( "GizmoUI visibility toggle", "[gizmos][ui][visibility][AF5.5]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Initially visible
@@ -906,7 +904,7 @@ TEST_CASE( "GizmoUI keyboard shortcuts", "[gizmos][ui][keyboard][AF5.6]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 		editor::GizmoUI ui( gizmoSystem );
 
 		// Initial state

@@ -2,6 +2,7 @@
 #include "selection.h"
 #include "runtime/components.h"
 #include "runtime/ecs.h"
+#include "runtime/systems.h"
 
 // ImGui headers must be included before ImGuizmo
 #include <imgui.h>
@@ -10,8 +11,8 @@
 namespace editor
 {
 
-GizmoSystem::GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene ) noexcept
-	: m_selectionManager( &selectionManager ), m_scene( &scene )
+GizmoSystem::GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager ) noexcept
+	: m_selectionManager( &selectionManager ), m_scene( &scene ), m_systemManager( &systemManager )
 {
 	// Initialize with default values (already set in header)
 }
@@ -110,6 +111,13 @@ void GizmoSystem::applyTransformDelta( const GizmoResult &delta )
 		return;
 	}
 
+	// Get TransformSystem for proper world matrix invalidation (if available)
+	systems::TransformSystem *transformSystem = nullptr;
+	if ( m_systemManager )
+	{
+		transformSystem = m_systemManager->getSystem<systems::TransformSystem>();
+	}
+
 	// Apply delta to all selected entities
 	for ( const auto entity : selectedEntities )
 	{
@@ -126,8 +134,15 @@ void GizmoSystem::applyTransformDelta( const GizmoResult &delta )
 			// Apply scale delta (multiplicative)
 			transform->scale *= delta.scaleDelta;
 
-			// Mark transform as dirty for matrix recalculation
+			// Mark transform as dirty for local matrix recalculation
 			transform->markDirty();
+
+			// CRITICAL FIX: Mark entity as dirty in TransformSystem for world matrix recalculation
+			// This is only available when constructed with SystemManager
+			if ( transformSystem )
+			{
+				transformSystem->markDirty( entity );
+			}
 		}
 	}
 }

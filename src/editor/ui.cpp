@@ -1270,8 +1270,8 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 	m_impl->assetManager = &assetManager;
 	m_impl->gpuManager = &gpuManager;
 
-	// Create GizmoSystem with SelectionManager and Scene dependencies
-	m_impl->gizmoSystem = std::make_unique<GizmoSystem>( selectionManager, scene );
+	// Create GizmoSystem with SelectionManager, Scene, and SystemManager dependencies
+	m_impl->gizmoSystem = std::make_unique<GizmoSystem>( selectionManager, scene, systemManager );
 
 	// Create GizmoUI with GizmoSystem dependency
 	m_impl->gizmoUI = std::make_unique<GizmoUI>( *m_impl->gizmoSystem );

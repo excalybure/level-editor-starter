@@ -18,7 +18,7 @@ TEST_CASE( "GizmoSystem SelectionManager Integration", "[gizmos][integration][AF
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entity with transform
 		const auto entity = scene.createEntity();
@@ -46,7 +46,7 @@ TEST_CASE( "GizmoSystem SelectionManager Integration", "[gizmos][integration][AF
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create and select entity
 		const auto entity = scene.createEntity();
@@ -75,7 +75,7 @@ TEST_CASE( "GizmoSystem SelectionManager Integration", "[gizmos][integration][AF
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create two entities
 		const auto entity1 = scene.createEntity();
@@ -110,7 +110,7 @@ TEST_CASE( "GizmoSystem Viewport Rendering Integration", "[gizmos][integration][
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create test viewport matrices
 		const auto viewMatrix = math::Mat4f::lookAt(
@@ -130,7 +130,7 @@ TEST_CASE( "GizmoSystem Viewport Rendering Integration", "[gizmos][integration][
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entity and select it
 		const auto entity = scene.createEntity();
@@ -167,7 +167,7 @@ TEST_CASE( "Complete Manipulation Workflow", "[gizmos][integration][AF6.3]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Step 1: Select objects
 		const auto entity = scene.createEntity();
@@ -218,7 +218,7 @@ TEST_CASE( "Complete Manipulation Workflow", "[gizmos][integration][AF6.3]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create and select entity
 		const auto entity = scene.createEntity();
@@ -251,7 +251,7 @@ TEST_CASE( "Multi-Selection Manipulation Scenarios", "[gizmos][integration][AF6.
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create multiple entities at different positions
 		const auto entity1 = scene.createEntity();
@@ -293,7 +293,7 @@ TEST_CASE( "Multi-Selection Manipulation Scenarios", "[gizmos][integration][AF6.
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entities
 		const auto entity1 = scene.createEntity();
@@ -360,7 +360,7 @@ TEST_CASE( "Coordinate Space Switching During Manipulation", "[gizmos][integrati
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entity
 		const auto entity = scene.createEntity();
@@ -388,7 +388,7 @@ TEST_CASE( "Coordinate Space Switching During Manipulation", "[gizmos][integrati
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create rotated entity
 		const auto entity = scene.createEntity();
@@ -420,7 +420,7 @@ TEST_CASE( "Snap Functionality Testing", "[gizmos][integration][AF6.6]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Configure snap settings
 		gizmoSystem.setSnapEnabled( true );
@@ -439,7 +439,7 @@ TEST_CASE( "Snap Functionality Testing", "[gizmos][integration][AF6.6]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Test fine grid
 		gizmoSystem.setSnapEnabled( true );
@@ -470,7 +470,7 @@ TEST_CASE( "Snap Functionality Testing", "[gizmos][integration][AF6.6]" )
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Initially disabled
 		REQUIRE_FALSE( gizmoSystem.isSnapEnabled() );
@@ -496,7 +496,7 @@ TEST_CASE( "Transform Command Generation Validation", "[gizmos][integration][AF6
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entity
 		const auto entity = scene.createEntity();
@@ -525,7 +525,7 @@ TEST_CASE( "Transform Command Generation Validation", "[gizmos][integration][AF6
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		editor::SelectionManager selectionManager( scene, systemManager );
-		editor::GizmoSystem gizmoSystem( selectionManager, scene );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
 
 		// Create entity
 		const auto entity = scene.createEntity();
