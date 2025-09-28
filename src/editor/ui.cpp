@@ -1211,7 +1211,7 @@ void UI::processInputEvents( platform::Win32Window &window )
 				// Check if UI (including ImGuizmo) wants to capture input to prevent camera interference
 				bool shouldBlockCameraInput = false;
 
-				// Only block mouse events when UI systems (ImGui/ImGuizmo) want to capture mouse input
+				// Block mouse events when UI systems (ImGui/ImGuizmo) want to capture mouse input
 				if ( viewportEvent.type == ViewportInputEvent::Type::MouseButton ||
 					viewportEvent.type == ViewportInputEvent::Type::MouseMove ||
 					viewportEvent.type == ViewportInputEvent::Type::MouseWheel )
@@ -1219,21 +1219,21 @@ void UI::processInputEvents( platform::Win32Window &window )
 					// Block input when gizmo is being actively used OR when gizmo was hovered last frame
 					// This prevents both active manipulation interference and initial mouse press issues
 					shouldBlockCameraInput = ImGuizmo::IsUsing() || m_impl->wasGizmoHoveredLastFrame;
-					const std::string eventDesc = [&viewportEvent]() -> std::string {
-						switch ( viewportEvent.type )
-						{
-						case ViewportInputEvent::Type::MouseButton:
-							return std::format( "MouseButton {} button={}", viewportEvent.mouse.pressed ? "Pressed" : "Released", static_cast<int>( viewportEvent.mouse.button ) );
-						case ViewportInputEvent::Type::MouseMove:
-							return std::format( "MouseMove x={} y={} dx={} dy={}", viewportEvent.mouse.x, viewportEvent.mouse.y, viewportEvent.mouse.deltaX, viewportEvent.mouse.deltaY );
-						case ViewportInputEvent::Type::MouseWheel:
-							return std::format( "MouseWheel x={} y={} delta={}", viewportEvent.mouse.x, viewportEvent.mouse.y, viewportEvent.mouse.wheelDelta );
-						default:
-							return std::string( "Unknown input event" );
-						}
-					}();
+				}
 
-					// console::info( "UI: Mouse input capture state: {} Event: {}", shouldBlockCameraInput ? "Blocked" : "Allowed", eventDesc );
+				// Block keyboard events for gizmo shortcut keys ONLY when gizmos are active
+				if ( viewportEvent.type == ViewportInputEvent::Type::KeyPress )
+				{
+					const char key = static_cast<char>( viewportEvent.keyboard.keyCode );
+					// Only block gizmo shortcut keys when gizmos are visible and there's a valid selection
+					const bool gizmosAreActive = m_impl->gizmoSystem &&
+						m_impl->gizmoSystem->isVisible() &&
+						m_impl->gizmoSystem->hasValidSelection();
+
+					if ( gizmosAreActive && ( key == 'W' || key == 'E' || key == 'R' || key == 'X' || key == 'G' ) )
+					{
+						shouldBlockCameraInput = true;
+					}
 				}
 
 				// Forward the event to the viewport unless UI is capturing input

@@ -229,6 +229,8 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmos_tests.cpp
     tests/gizmo_integration_tests.cpp
     tests/gizmo_selection_integration_test.cpp
+    tests/gizmo_operation_switching_tests.cpp
+    tests/gizmo_keyboard_blocking_tests.cpp
     tests/transform_commands_tests.cpp
     tests/editor_command_tests.cpp
   )

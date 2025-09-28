@@ -1,5 +1,19 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Gizmo Operation Switch Clearing Selection + Conditional Keyboard Blocking
+**Summary:** Resolved issue where switching gizmo operations (W/E/R keyboard shortcuts) was clearing the active selection. The problem was that keyboard events for gizmo shortcuts were being sent to both the gizmo system AND the viewport camera controls simultaneously, causing conflicts. Fixed by adding conditional keyboard event blocking for gizmo shortcut keys (W/E/R/X/G) only when gizmos are visible AND have a valid selection, allowing normal camera controls when gizmos are inactive.
+
+**Atomic functionalities completed:**
+- AF1: Investigated selection clearing bug - Discovered that gizmo keyboard shortcuts (W/E/R) were conflicting with camera controls receiving same key events
+- AF2: Identified input event routing issue - Found that UI was sending KeyPress events to viewport while also processing gizmo shortcuts, causing dual handling
+- AF3: Enhanced input blocking logic - Extended existing mouse input blocking to include keyboard events for gizmo shortcut keys (W/E/R/X/G)
+- AF4: Added comprehensive test coverage - Created integration test verifying selection preservation through operation switches, coordinate toggles, and visibility changes
+- AF5: Improved conditional blocking - Enhanced keyboard blocking to only activate when gizmos are both visible AND have valid selection, preserving camera controls when gizmos are inactive
+- AF6: Added conditional blocking tests - Created test suite verifying keyboard blocking behavior under different gizmo states (invisible, no selection, active)
+
+**Tests:** 2 new integration tests with 44 assertions total covering gizmo keyboard shortcuts, selection preservation, and conditional keyboard blocking scenarios. All existing tests continue to pass.
+**Notes:** Fix prevents keyboard event conflicts between gizmo shortcuts and camera controls while maintaining full functionality of both systems. Users can now switch gizmo operations without losing their selection, and camera controls (W/E keys) work normally when gizmos are not actively being used. Improves workflow efficiency and prevents user confusion.
+
 ## 2025-09-28 — Fix Gizmo Transform Update Propagation to Selection System
 **Summary:** Resolved critical issue where objects moved with gizmos could not be re-selected at their new positions. The problem was that GizmoSystem's applyTransformDelta method only updated local transforms without notifying TransformSystem to recalculate world matrices used by the picking system. Implemented proper world matrix invalidation by adding SystemManager dependency to GizmoSystem and calling TransformSystem::markDirty() after transform changes.
 
