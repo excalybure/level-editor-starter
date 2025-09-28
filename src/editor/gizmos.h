@@ -1,8 +1,10 @@
 ﻿#pragma once
 
 #include <string>
+#include <unordered_map>
 #include "engine/math/vec.h"
 #include "engine/math/matrix.h"
+#include "runtime/entity.h"
 
 // Forward declarations
 namespace ecs
@@ -116,17 +118,8 @@ public:
 		return m_wasManipulated;
 	}
 
-	constexpr void beginManipulation() noexcept
-	{
-		m_isManipulating = true;
-		m_wasManipulated = false;
-	}
-
-	constexpr void endManipulation() noexcept
-	{
-		m_isManipulating = false;
-		m_wasManipulated = true;
-	}
+	void beginManipulation() noexcept;
+	void endManipulation() noexcept;
 
 	constexpr void resetManipulationState() noexcept
 	{
@@ -168,6 +161,10 @@ private:
 	math::Mat4<> m_viewMatrix = math::Mat4<>::identity();
 	math::Mat4<> m_projectionMatrix = math::Mat4<>::identity();
 	math::Vec4<> m_viewportRect{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Original scale tracking for absolute scaling relative to manipulation start
+	std::unordered_map<ecs::Entity, math::Vec3<>> m_originalEntityScales;
+	math::Vec3<> m_originalGizmoScale{ 1.0f, 1.0f, 1.0f };
 };
 
 // UI class for gizmo controls and settings

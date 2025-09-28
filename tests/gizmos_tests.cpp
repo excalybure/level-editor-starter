@@ -934,3 +934,53 @@ TEST_CASE( "GizmoUI keyboard shortcuts", "[gizmos][ui][keyboard][AF5.6]" )
 		REQUIRE_FALSE( gizmoSystem.isVisible() );
 	}
 }
+
+TEST_CASE( "GizmoSystem scale delta is relative to original state", "[gizmos][scaling][bug-fix]" )
+{
+	SECTION( "Scale delta should be calculated relative to manipulation start, not frame-to-frame" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem system( selectionManager, scene, systemManager );
+
+		// Create entity with initial scale of (2, 2, 2)
+		const auto entity = scene.createEntity();
+		scene.addComponent<components::Transform>( entity,
+			components::Transform{ math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 2, 2, 2 } } );
+
+		// Select the entity
+		selectionManager.select( entity );
+
+		// Begin manipulation
+		system.beginManipulation();
+
+		// Simulate first frame of scaling: user drags to make it 1.5x larger
+		// The scale delta should be 1.5 (which means new scale = original * 1.5 = 2 * 1.5 = 3)
+		editor::GizmoResult firstDelta;
+		firstDelta.scaleDelta = math::Vec3f{ 1.5f, 1.5f, 1.5f };
+		system.applyTransformDelta( firstDelta );
+
+		// Check that entity scale is now 3,3,3
+		const auto *transform = scene.getComponent<components::Transform>( entity );
+		REQUIRE( transform->scale.x == 3.0f );
+		REQUIRE( transform->scale.y == 3.0f );
+		REQUIRE( transform->scale.z == 3.0f );
+
+		// Simulate second frame: user continues dragging to make it 2x larger than original
+		// The scale delta should be 2.0 (which means new scale = original * 2.0 = 2 * 2.0 = 4)
+		// NOT 2.0 * current_scale which would be 3 * 2 = 6
+		editor::GizmoResult secondDelta;
+		secondDelta.scaleDelta = math::Vec3f{ 2.0f, 2.0f, 2.0f };
+		system.applyTransformDelta( secondDelta );
+
+		// Check that entity scale is now 4,4,4 (not 6,6,6)
+		transform = scene.getComponent<components::Transform>( entity );
+		REQUIRE( transform->scale.x == 4.0f );
+		REQUIRE( transform->scale.y == 4.0f );
+		REQUIRE( transform->scale.z == 4.0f );
+
+		// End manipulation
+		system.endManipulation();
+	}
+}

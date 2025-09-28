@@ -131,8 +131,19 @@ void GizmoSystem::applyTransformDelta( const GizmoResult &delta )
 			// Apply rotation delta (additive)
 			transform->rotation += delta.rotationDelta;
 
-			// Apply scale delta (multiplicative)
-			transform->scale *= delta.scaleDelta;
+			// Apply scale delta (absolute scaling relative to original)
+			// If we have the original scale stored, use it for absolute scaling
+			auto originalScaleIt = m_originalEntityScales.find( entity );
+			if ( originalScaleIt != m_originalEntityScales.end() )
+			{
+				// Apply scale relative to original: newScale = originalScale * scaleDelta
+				transform->scale = originalScaleIt->second * delta.scaleDelta;
+			}
+			else
+			{
+				// Fallback to multiplicative scaling if original scale not available
+				transform->scale *= delta.scaleDelta;
+			}
 
 			// Mark transform as dirty for local matrix recalculation
 			transform->markDirty();
@@ -278,11 +289,28 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 
 		result.rotationDelta = newRotation - originalRotation;
 
-		result.scaleDelta = math::Vec3<>{
-			( originalScale.x != 0.0f ) ? ( newScale.x / originalScale.x ) : 1.0f,
-			( originalScale.y != 0.0f ) ? ( newScale.y / originalScale.y ) : 1.0f,
-			( originalScale.z != 0.0f ) ? ( newScale.z / originalScale.z ) : 1.0f
-		};
+		// Calculate scale delta relative to original gizmo scale (when manipulation began)
+		// This makes scaling absolute relative to manipulation start, not frame-to-frame
+		if ( m_isManipulating && 
+			 m_originalGizmoScale.x != 0.0f && 
+			 m_originalGizmoScale.y != 0.0f && 
+			 m_originalGizmoScale.z != 0.0f )
+		{
+			result.scaleDelta = math::Vec3<>{
+				newScale.x / m_originalGizmoScale.x,
+				newScale.y / m_originalGizmoScale.y,
+				newScale.z / m_originalGizmoScale.z
+			};
+		}
+		else
+		{
+			// Fallback to frame-to-frame calculation if not manipulating or original scale is zero
+			result.scaleDelta = math::Vec3<>{
+				( originalScale.x != 0.0f ) ? ( newScale.x / originalScale.x ) : 1.0f,
+				( originalScale.y != 0.0f ) ? ( newScale.y / originalScale.y ) : 1.0f,
+				( originalScale.z != 0.0f ) ? ( newScale.z / originalScale.z ) : 1.0f
+			};
+		}
 
 		// Update manipulation state
 		if ( !m_isManipulating )
@@ -324,6 +352,52 @@ int GizmoSystem::getImGuizmoOperation() const noexcept
 	default:
 		return 7; // Default to translate
 	}
+}
+
+void GizmoSystem::beginManipulation() noexcept
+{
+	m_isManipulating = true;
+	m_wasManipulated = false;
+
+	// Clear any previous original scales
+	m_originalEntityScales.clear();
+
+	// Store original entity scales for all selected entities
+	if ( m_selectionManager && m_scene )
+	{
+		const auto &selectedEntities = m_selectionManager->getSelectedEntities();
+		for ( const auto entity : selectedEntities )
+		{
+			if ( m_scene->hasComponent<components::Transform>( entity ) )
+			{
+				const auto *transform = m_scene->getComponent<components::Transform>( entity );
+				m_originalEntityScales[entity] = transform->scale;
+			}
+		}
+
+		// Store original gizmo scale by calculating current gizmo matrix and extracting its scale
+		if ( !selectedEntities.empty() )
+		{
+			auto gizmoMatrix = calculateGizmoMatrix();
+			const auto gizmoMatrixTransposed = gizmoMatrix.transpose();
+			math::Vec3f dummyTranslation, dummyRotation;
+			ImGuizmo::DecomposeMatrixToComponents(
+				gizmoMatrixTransposed.data(),
+				dummyTranslation.data(),
+				dummyRotation.data(),
+				m_originalGizmoScale.data() );
+		}
+	}
+}
+
+void GizmoSystem::endManipulation() noexcept
+{
+	m_isManipulating = false;
+	m_wasManipulated = true;
+
+	// Clear original scales as manipulation is complete
+	m_originalEntityScales.clear();
+	m_originalGizmoScale = math::Vec3<>{ 1.0f, 1.0f, 1.0f };
 }
 
 // GizmoUI implementation
