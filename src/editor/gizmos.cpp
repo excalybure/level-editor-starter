@@ -291,10 +291,10 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 
 		// Calculate scale delta relative to original gizmo scale (when manipulation began)
 		// This makes scaling absolute relative to manipulation start, not frame-to-frame
-		if ( m_isManipulating && 
-			 m_originalGizmoScale.x != 0.0f && 
-			 m_originalGizmoScale.y != 0.0f && 
-			 m_originalGizmoScale.z != 0.0f )
+		if ( m_isManipulating &&
+			m_originalGizmoScale.x != 0.0f &&
+			m_originalGizmoScale.y != 0.0f &&
+			m_originalGizmoScale.z != 0.0f )
 		{
 			result.scaleDelta = math::Vec3<>{
 				newScale.x / m_originalGizmoScale.x,

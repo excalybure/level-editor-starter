@@ -1,5 +1,16 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Picking System Scale Transform Handling for Object Selection
+**Summary:** Fixed critical bug where scaled objects were only pickable at their original (unscaled) bounds instead of their scaled bounds. The issue was in `PickingSystem::testEntityBounds()` which used a simplified approximation that only transformed the center of the bounding box to world space while keeping the original local size unchanged. Implemented proper world-space bounding box calculation by transforming all 8 corners of the AABB to world space, then computing a new axis-aligned bounding box that correctly encompasses the scaled object.
+
+**Atomic functionalities completed:**
+- AF1: Created failing test demonstrating scale bug - Added test case showing scaled 3x cube was not pickable at scaled bounds (X=2.5) but should be since scaled bounds extend to [-3,3]
+- AF2: Replaced simplified transform with proper AABB transformation - Modified `testEntityBounds()` to transform all 8 corners of local AABB using world matrix, then compute world-space min/max bounds
+- AF3: Validated fix with comprehensive testing - New scale test passes and all existing picking tests (79 assertions) continue passing, confirming no regression
+
+**Tests:** 1 new test case with 5 assertions for scaled object bounds; all 7 picking test cases (79 total assertions) passing. Also verified 4 selection integration tests (177 assertions) and gizmo-selection-picking integration tests (24 assertions) continue passing.
+**Notes:** This fixes a user-reported issue where scaling objects made them unselectable at their visual bounds. The previous implementation was a known approximation that worked for unscaled objects but failed for any scale transforms. The new approach correctly handles scale, rotation, and translation by computing proper world-space bounds.
+
 ## 2025-09-28 — Fix Gizmo Rotation and Scale Operations via Matrix Decomposition  
 **Summary:** Fixed critical issue where gizmo rotation and scaling operations were non-functional despite translation working correctly. The problem was in the `GizmoSystem::renderGizmo()` method which was hardcoding rotation deltas to zero and scale deltas to identity values (1,1,1) instead of properly calculating them from ImGuizmo's transformed matrices. Implemented proper matrix decomposition using ImGuizmo's `DecomposeMatrixToComponents` function to extract accurate rotation and scale deltas, making all gizmo operations fully functional.
 

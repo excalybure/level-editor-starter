@@ -8,6 +8,7 @@
 #include "runtime/entity.h"
 #include "runtime/systems.h"
 #include "editor/viewport/viewport.h"
+#include <algorithm>
 
 namespace picking
 {
@@ -126,22 +127,18 @@ bool PickingSystem::testEntityBounds( ecs::Scene &scene, ecs::Entity entity, con
 	// Get world transform using TransformSystem for proper hierarchical transforms
 	const auto worldMatrix = transformSystem->getWorldTransform( scene, entity );
 
-	// For simplicity, we'll use the AABB in world space
-	// In a more advanced implementation, we could transform the ray to local space
-	// and test against the local AABB, or transform the AABB corners to world space
+	// Transform all 8 corners of the AABB to world space and compute the world-space AABB
+	Vec3<> worldMin = worldMatrix.transformPoint( bounds.corner( 0 ) );
+	Vec3<> worldMax = worldMin;
 
-	// Transform bounds center and size to world space
-	const auto localCenter = bounds.center();
-	const auto localSize = bounds.size();
+	for ( int i = 1; i < 8; ++i )
+	{
+		const Vec3<> worldCorner = worldMatrix.transformPoint( bounds.corner( i ) );
 
-	// Simple approximation: transform center to world space and keep original size
-	// This isn't perfectly accurate for rotated/scaled objects but works for basic cases
-	const Vec4<> worldCenter4 = worldMatrix * Vec4<>{ localCenter.x, localCenter.y, localCenter.z, 1.0f };
-	const Vec3<> worldCenter = worldCenter4.xyz();
-
-	// Create world space AABB (simplified)
-	const Vec3<> worldMin = worldCenter - localSize * 0.5f;
-	const Vec3<> worldMax = worldCenter + localSize * 0.5f;
+		// Expand world bounding box to encompass this corner
+		worldMin = min( worldMin, worldCorner );
+		worldMax = max( worldMax, worldCorner );
+	}
 
 	return rayAABBIntersection( rayOrigin, rayDirection, worldMin, worldMax, hitDistance );
 }

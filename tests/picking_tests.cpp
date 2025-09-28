@@ -117,3 +117,72 @@ TEST_CASE( "PickingSystem - Multiple entities distance sorting", "[picking][mult
 	REQUIRE( results[1].entity == farCube );  // Further cube second
 	REQUIRE( results[0].distance < results[1].distance );
 }
+
+TEST_CASE( "PickingSystem - Scaled object bounds", "[picking][scale][integration]" )
+{
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
+	picking::PickingSystem picker( systemManager );
+
+	// Create entity with initial bounds of [-1, 1] in all directions
+	auto entity = scene.createEntity( "ScaledCube" );
+
+	components::Transform transform;
+	transform.position = math::Vec3<>{ 0.0f, 0.0f, 0.0f };
+	transform.rotation = math::Vec3<>{ 0.0f, 0.0f, 0.0f };
+	transform.scale = math::Vec3<>{ 3.0f, 3.0f, 3.0f }; // Scale up by 3x
+	scene.addComponent( entity, transform );
+
+	components::MeshRenderer meshRenderer;
+	meshRenderer.bounds = math::BoundingBox3D<float>{
+		math::Vec3<>{ -1.0f, -1.0f, -1.0f }, // Original bounds: 2x2x2 cube
+		math::Vec3<>{ 1.0f, 1.0f, 1.0f }
+	};
+	scene.addComponent( entity, meshRenderer );
+
+	// Update system to ensure world transforms are computed
+	systemManager.update( scene, 0.016f );
+
+	SECTION( "Ray should hit scaled object at scaled bounds" )
+	{
+		// After 3x scale, the cube should extend from [-3, 3] in all directions
+		// Test ray hitting at the edge of the scaled bounds (should hit)
+		math::Vec3<> rayOrigin{ 2.5f, 0.0f, -5.0f }; // X=2.5 is within scaled bounds [-3, 3]
+		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
+
+		auto result = picker.raycast( scene, rayOrigin, rayDirection );
+
+		// This should hit because the scaled cube extends to x=3.0
+		REQUIRE( result.hit == true );
+		REQUIRE( result.entity == entity );
+	}
+
+	SECTION( "Ray should miss scaled object beyond scaled bounds" )
+	{
+		// Test ray missing beyond the scaled bounds (should miss)
+		math::Vec3<> rayOrigin{ 3.5f, 0.0f, -5.0f }; // X=3.5 is outside scaled bounds [-3, 3]
+		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
+
+		auto result = picker.raycast( scene, rayOrigin, rayDirection );
+
+		// This should miss because X=3.5 is beyond the scaled bound of x=3.0
+		REQUIRE( result.hit == false );
+	}
+
+	SECTION( "Ray should miss within original bounds but outside scaled bounds" )
+	{
+		// Test ray that would hit original bounds but misses scaled bounds
+		// This test reveals the bug: if picking uses original bounds, it would miss
+		// when it should hit at scaled size
+		math::Vec3<> rayOrigin{ 0.5f, 0.0f, -5.0f }; // Within both original and scaled bounds
+		math::Vec3<> rayDirection{ 0.0f, 0.0f, 1.0f };
+
+		auto result = picker.raycast( scene, rayOrigin, rayDirection );
+
+		// This should definitely hit - the ray is well within scaled bounds
+		REQUIRE( result.hit == true );
+		REQUIRE( result.entity == entity );
+	}
+}
