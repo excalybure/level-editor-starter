@@ -136,7 +136,6 @@ public:
 	// ImGuizmo integration methods
 	bool setupImGuizmo( const math::Mat4<> &viewMatrix, const math::Mat4<> &projectionMatrix, const math::Vec4<> &viewport ) noexcept;
 	GizmoResult renderGizmo() noexcept;
-	GizmoResult renderGizmo( const math::Mat4<> &viewMatrix, const math::Mat4<> &projectionMatrix, const math::Vec4<> &viewport ) noexcept;
 
 	// ImGuizmo coordinate space conversion
 	int getImGuizmoMode() const noexcept;

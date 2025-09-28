@@ -536,12 +536,11 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 							{
 								wasGizmoHoveredLastFrame = gizmoResult.isHovered;
 								wasGizmoUsingLastFrame = gizmoResult.isManipulating;
-							}
-
-							if ( gizmoResult.wasManipulated )
-							{
-								// Apply transform changes to selected entities
-								gizmoSystem->applyTransformDelta( gizmoResult );
+								if ( gizmoResult.wasManipulated )
+								{
+									// Apply transform changes to selected entities
+									gizmoSystem->applyTransformDelta( gizmoResult );
+								}
 							}
 						}
 					}

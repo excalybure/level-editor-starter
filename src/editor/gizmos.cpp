@@ -266,18 +266,6 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 	return result;
 }
 
-GizmoResult GizmoSystem::renderGizmo( const math::Mat4<> &viewMatrix, const math::Mat4<> &projectionMatrix, const math::Vec4<> &viewport ) noexcept
-{
-	// Setup ImGuizmo with provided matrices and viewport
-	if ( !setupImGuizmo( viewMatrix, projectionMatrix, viewport ) )
-	{
-		return GizmoResult{}; // Return default result if setup fails
-	}
-
-	// Call the existing renderGizmo method
-	return renderGizmo();
-}
-
 int GizmoSystem::getImGuizmoMode() const noexcept
 {
 	// Convert our GizmoMode to ImGuizmo::MODE
