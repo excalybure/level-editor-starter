@@ -1,4 +1,5 @@
 #include "transform_commands.h"
+#include <typeinfo>
 
 namespace editor
 {
@@ -72,7 +73,54 @@ bool TransformEntityCommand::undo()
 
 std::string TransformEntityCommand::getDescription() const
 {
+	// Get entity name if it has one
+	if ( m_scene->hasComponent<components::Name>( m_entity ) )
+	{
+		const auto *nameComp = m_scene->getComponent<components::Name>( m_entity );
+		return "Transform " + nameComp->name;
+	}
 	return "Transform Entity";
+}
+
+size_t TransformEntityCommand::getMemoryUsage() const
+{
+	// Calculate memory usage: object size + any dynamic allocations
+	return sizeof( *this );
+}
+
+bool TransformEntityCommand::canMergeWith( const Command *other ) const
+{
+	// Can merge with another TransformEntityCommand for the same entity
+	if ( const auto *otherTransform = dynamic_cast<const TransformEntityCommand *>( other ) )
+	{
+		return m_entity == otherTransform->m_entity;
+	}
+	return false;
+}
+
+bool TransformEntityCommand::mergeWith( std::unique_ptr<Command> other )
+{
+	// Merge with another TransformEntityCommand for the same entity
+	if ( auto *otherTransform = dynamic_cast<TransformEntityCommand *>( other.get() ) )
+	{
+		if ( m_entity == otherTransform->m_entity )
+		{
+			// Update our after state to match the other command's after state
+			if ( otherTransform->m_hasAfterState )
+			{
+				m_afterTransform = otherTransform->m_afterTransform;
+				m_hasAfterState = true;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+void TransformEntityCommand::updateAfterTransform( const components::Transform &afterTransform ) noexcept
+{
+	m_afterTransform = afterTransform;
+	m_hasAfterState = true;
 }
 
 // BatchTransformCommand implementation
@@ -142,6 +190,93 @@ std::string BatchTransformCommand::getDescription() const
 	else
 	{
 		return "Transform " + std::to_string( entityCount ) + " Entities";
+	}
+}
+
+size_t BatchTransformCommand::getMemoryUsage() const
+{
+	size_t totalMemory = sizeof( *this );
+	
+	// Add memory usage of all individual commands
+	for ( const auto &command : m_commands )
+	{
+		totalMemory += command->getMemoryUsage();
+	}
+	
+	// Add memory for the vector storage
+	totalMemory += m_commands.capacity() * sizeof( std::unique_ptr<TransformEntityCommand> );
+	
+	return totalMemory;
+}
+
+bool BatchTransformCommand::canMergeWith( const Command *other ) const
+{
+	// Can merge with another BatchTransformCommand if they have the same entities
+	if ( const auto *otherBatch = dynamic_cast<const BatchTransformCommand *>( other ) )
+	{
+		if ( m_commands.size() != otherBatch->m_commands.size() )
+		{
+			return false;
+		}
+		
+		// Check that all entities match
+		for ( size_t i = 0; i < m_commands.size(); ++i )
+		{
+			if ( m_commands[i]->getEntity() != otherBatch->m_commands[i]->getEntity() )
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+bool BatchTransformCommand::mergeWith( std::unique_ptr<Command> other )
+{
+	// Merge with another BatchTransformCommand
+	if ( auto *otherBatch = dynamic_cast<BatchTransformCommand *>( other.get() ) )
+	{
+		if ( canMergeWith( otherBatch ) )
+		{
+			// Merge each individual command
+			for ( size_t i = 0; i < m_commands.size(); ++i )
+			{
+				auto otherCommand = std::move( otherBatch->m_commands[i] );
+				if ( !m_commands[i]->mergeWith( std::move( otherCommand ) ) )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+std::vector<ecs::Entity> BatchTransformCommand::getEntities() const
+{
+	std::vector<ecs::Entity> entities;
+	entities.reserve( m_commands.size() );
+	
+	for ( const auto &command : m_commands )
+	{
+		entities.push_back( command->getEntity() );
+	}
+	
+	return entities;
+}
+
+void BatchTransformCommand::updateAfterTransforms( const std::vector<components::Transform> &afterTransforms )
+{
+	if ( afterTransforms.size() != m_commands.size() )
+	{
+		return; // Size mismatch, cannot update
+	}
+	
+	for ( size_t i = 0; i < m_commands.size(); ++i )
+	{
+		m_commands[i]->updateAfterTransform( afterTransforms[i] );
 	}
 }
 

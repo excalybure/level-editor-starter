@@ -6,6 +6,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "engine/math/vec.h"
+#include "editor/commands/Command.h"  // Use the new Command interface
 
 // Forward declarations
 namespace editor
@@ -17,40 +18,11 @@ namespace editor
 {
 
 /**
- * @brief Base interface for all command objects in the undo/redo system
- * 
- * Commands encapsulate operations that can be executed and undone, providing
- * the foundation for the undo/redo functionality in the level editor.
- */
-class Command
-{
-public:
-	virtual ~Command() = default;
-
-	/**
-	 * @brief Execute the command operation
-	 * @return true if the command was executed successfully, false otherwise
-	 */
-	virtual bool execute() = 0;
-
-	/**
-	 * @brief Undo the command operation
-	 * @return true if the command was undone successfully, false otherwise
-	 */
-	virtual bool undo() = 0;
-
-	/**
-	 * @brief Get a human-readable description of the command
-	 * @return String description suitable for display in UI (e.g., "Move Object", "Rotate 3 Objects")
-	 */
-	virtual std::string getDescription() const = 0;
-};
-
-/**
  * @brief Command for transforming a single entity
  * 
  * Captures the before and after transform states of an entity and provides
  * execute/undo functionality to apply or revert the transformation.
+ * Supports command merging for smooth gizmo manipulation.
  */
 class TransformEntityCommand : public Command
 {
@@ -75,6 +47,21 @@ public:
 	bool execute() override;
 	bool undo() override;
 	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command *other ) const override;
+	bool mergeWith( std::unique_ptr<Command> other ) override;
+
+	/**
+	 * @brief Get the entity being transformed
+	 * @return The entity ID
+	 */
+	ecs::Entity getEntity() const noexcept { return m_entity; }
+
+	/**
+	 * @brief Update the after transform state (for command merging)
+	 * @param afterTransform The new after transform state
+	 */
+	void updateAfterTransform( const components::Transform &afterTransform ) noexcept;
 
 private:
 	ecs::Entity m_entity;
@@ -90,6 +77,7 @@ private:
  * 
  * Manages a collection of individual transform commands for multiple entities,
  * allowing batch operations to be executed and undone as a single unit.
+ * Supports command merging for smooth multi-entity gizmo manipulation.
  */
 class BatchTransformCommand : public Command
 {
@@ -102,7 +90,7 @@ public:
 	BatchTransformCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene ) noexcept;
 
 	/**
-	 * @brief Add a specific transform command to the batch
+	 * @brief Add a transform for a specific entity with explicit before/after states
 	 * @param entity The entity to transform
 	 * @param beforeTransform The transform state before the change
 	 * @param afterTransform The transform state after the change
@@ -113,34 +101,50 @@ public:
 	bool execute() override;
 	bool undo() override;
 	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command *other ) const override;
+	bool mergeWith( std::unique_ptr<Command> other ) override;
+
+	/**
+	 * @brief Get the entities being transformed
+	 * @return Vector of entity IDs
+	 */
+	std::vector<ecs::Entity> getEntities() const;
+
+	/**
+	 * @brief Update after transform states for all entities (for command merging)
+	 * @param afterTransforms Vector of new after transform states (must match entity count)
+	 */
+	void updateAfterTransforms( const std::vector<components::Transform> &afterTransforms );
 
 private:
-	std::vector<std::unique_ptr<TransformEntityCommand>> m_commands;
 	ecs::Scene *m_scene;
+	std::vector<std::unique_ptr<TransformEntityCommand>> m_commands;
 };
 
 /**
  * @brief Factory class for creating transform commands
  * 
- * Provides static methods to create appropriate command types based on selection and context.
+ * Provides convenient methods for creating transform commands from various inputs,
+ * ensuring proper command creation for use with the command history system.
  */
 class TransformCommandFactory
 {
 public:
 	/**
-	 * @brief Create appropriate command for the given entities
-	 * @param entities The entities to create a command for
+	 * @brief Create a transform command for the given entities
+	 * @param entities The entities to transform
 	 * @param scene The scene containing the entities
-	 * @return Unique pointer to the created command (single or batch)
+	 * @return Command for single entity or batch command for multiple entities
 	 */
 	static std::unique_ptr<Command> createCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
 
 	/**
-	 * @brief Create command from GizmoResult manipulation
+	 * @brief Create a transform command from gizmo manipulation results
 	 * @param gizmoResult The result of gizmo manipulation
-	 * @param entities The entities affected by the manipulation
+	 * @param entities The entities that were manipulated
 	 * @param scene The scene containing the entities
-	 * @return Unique pointer to the created command with before/after states
+	 * @return Command ready for execution and undo/redo history
 	 */
 	static std::unique_ptr<Command> createFromGizmoResult( const struct GizmoResult &gizmoResult,
 		const std::vector<ecs::Entity> &entities,
@@ -148,26 +152,28 @@ public:
 };
 
 /**
- * @brief Utility functions for transform capture and manipulation
+ * @brief Utility functions for transform operations
  */
 namespace TransformUtils
 {
+
 /**
-	 * @brief Capture current transforms from a list of entities
-	 * @param entities The entities to capture transforms from
-	 * @param scene The scene containing the entities
-	 * @return Vector of captured transforms (parallel to entities vector)
-	 */
+ * @brief Capture current transform states of entities
+ * @param entities The entities to capture transforms for
+ * @param scene The scene containing the entities
+ * @return Vector of captured transform states
+ */
 std::vector<components::Transform> captureTransforms( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
 
 /**
-	 * @brief Apply transform deltas to current transforms
-	 * @param currentTransforms The current transform states
-	 * @param gizmoResult The manipulation deltas to apply
-	 * @return Vector of new transform states after applying deltas
-	 */
+ * @brief Apply gizmo manipulation deltas to transform states
+ * @param currentTransforms The current transform states
+ * @param gizmoResult The gizmo manipulation result
+ * @return Vector of updated transform states
+ */
 std::vector<components::Transform> applyGizmoDeltas( const std::vector<components::Transform> &currentTransforms,
 	const struct GizmoResult &gizmoResult );
+
 } // namespace TransformUtils
 
 } // namespace editor
