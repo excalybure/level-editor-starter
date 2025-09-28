@@ -304,13 +304,30 @@ void Viewport::handleInput( const ViewportInputEvent &event )
 	if ( !m_isFocused || !m_controller )
 		return;
 
-	updateInputState( event );
+	// Check if this is a mouse event outside viewport bounds
+	const bool isMouseEvent = ( event.type == ViewportInputEvent::Type::MouseButton ||
+		event.type == ViewportInputEvent::Type::MouseMove ||
+		event.type == ViewportInputEvent::Type::MouseWheel );
+
+	bool isOutsideViewport = false;
+	if ( isMouseEvent )
+	{
+		const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+		isOutsideViewport = !isPointInViewport( windowPos );
+	}
+
+	// Only update input state if the event is inside viewport bounds (or not a mouse event)
+	if ( !isOutsideViewport )
+	{
+		updateInputState( event );
+	}
 
 	// Try selection input first (for left mouse button and selection operations)
 	bool selectionHandled = handleSelectionInput( event );
 
 	// If selection didn't handle it (e.g., right click, keyboard), handle camera controls
-	if ( !selectionHandled )
+	// But only if the event is inside viewport bounds (or not a mouse event)
+	if ( !selectionHandled && !isOutsideViewport )
 	{
 		handleCameraInput( event );
 	}
@@ -326,10 +343,17 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 	case ViewportInputEvent::Type::MouseButton:
 		if ( event.mouse.button == 0 ) // Left mouse button for selection
 		{
+			// Check if mouse position is within viewport bounds
+			const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+			if ( !isPointInViewport( windowPos ) )
+			{
+				// Mouse is outside viewport bounds - don't process selection events
+				return false;
+			}
+
 			if ( event.mouse.pressed )
 			{
 				// Convert from window coordinates to viewport coordinates
-				const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
 				const math::Vec2f viewportPos = windowToViewport( windowPos );
 
 				// Store mouse position for potential drag operation
@@ -345,7 +369,6 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 				if ( m_mouseTracking )
 				{
 					// Convert from screen/window coordinates to viewport coordinates
-					const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
 					const math::Vec2f viewportPos = windowToViewport( windowPos );
 
 					// Calculate drag distance to determine if this was a click or drag
@@ -372,6 +395,14 @@ bool Viewport::handleSelectionInput( const ViewportInputEvent &event )
 	case ViewportInputEvent::Type::MouseMove: {
 		// Convert from screen/window coordinates to viewport coordinates
 		const math::Vec2f windowPos{ event.mouse.x, event.mouse.y };
+
+		// Always check bounds for hover detection and drag operations
+		if ( !isPointInViewport( windowPos ) )
+		{
+			// Mouse is outside viewport bounds - don't process hover or drag
+			return false;
+		}
+
 		const math::Vec2f viewportPos = windowToViewport( windowPos );
 
 		// Handle mouse drag if we're tracking
@@ -525,6 +556,16 @@ math::Vec2<> Viewport::windowToViewport( const math::Vec2<> &windowPos ) const n
 		windowPos.x - m_offsetFromWindow.x,
 		windowPos.y - m_offsetFromWindow.y
 	};
+}
+
+bool Viewport::isPointInViewport( const math::Vec2<> &windowPos ) const noexcept
+{
+	// Convert to viewport-relative coordinates
+	const auto viewportPos = windowToViewport( windowPos );
+
+	// Check if the point is within viewport bounds (0,0 to width,height)
+	return viewportPos.x >= 0.0f && viewportPos.x <= static_cast<float>( m_size.x ) &&
+		viewportPos.y >= 0.0f && viewportPos.y <= static_cast<float>( m_size.y );
 }
 
 void Viewport::setOffsetFromWindow( const math::Vec2<> &offset ) noexcept

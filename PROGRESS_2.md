@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Viewport Input Bounds Checking for Selection and Camera Controls  
+**Summary:** Fixed issue where clicking on UI elements outside viewport (menus, toolbars, status bar, gizmo windows) would clear the selection and cause unwanted camera movement. The problem was that viewport input handling didn't check mouse event coordinates against actual viewport bounds. Implemented comprehensive bounds checking that prevents both selection clearing and camera input processing for mouse events outside the viewport rendering area.
+
+**Atomic functionalities completed:**
+- AF1: Added viewport bounds checking utility - Implemented `isPointInViewport()` method that validates mouse coordinates against viewport's actual rendered area using offset and size
+- AF2: Enhanced selection input bounds validation - Modified `handleSelectionInput()` to check viewport bounds before processing mouse events, preventing selection clearing from clicks outside viewport
+- AF3: Improved camera input filtering - Updated `handleInput()` to filter mouse events by viewport bounds, preventing camera controller from receiving out-of-bounds input that caused unwanted movement during UI interaction
+- AF4: Conditional input state updates - Ensured input state is only updated for mouse events within viewport bounds, preventing camera controllers from seeing external mouse coordinates
+- AF5: Comprehensive mouse event filtering - Applied bounds checking to all mouse event types (MouseButton, MouseMove, MouseWheel) while preserving keyboard event handling for proper camera controls
+
+**Tests:** Existing viewport input tests continue to pass (25 assertions). Created demonstration scripts showing behavior before/after fix. Verified that clicking menus/toolbars no longer affects viewport while normal viewport interaction remains unchanged.
+**Notes:** Fix maintains full backward compatibility while dramatically improving user experience. Users can now interact with UI elements without losing their selection or causing unwanted camera movement. The solution properly separates viewport-specific input from global UI input, creating clear boundaries between different interaction areas.
+
 ## 2025-09-28 — Fix Gizmo Operation Switch Clearing Selection + Conditional Keyboard Blocking
 **Summary:** Resolved issue where switching gizmo operations (W/E/R keyboard shortcuts) was clearing the active selection. The problem was that keyboard events for gizmo shortcuts were being sent to both the gizmo system AND the viewport camera controls simultaneously, causing conflicts. Fixed by adding conditional keyboard event blocking for gizmo shortcut keys (W/E/R/X/G) only when gizmos are visible AND have a valid selection, allowing normal camera controls when gizmos are inactive.
 

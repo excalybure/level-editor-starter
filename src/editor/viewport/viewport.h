@@ -169,6 +169,9 @@ public:
 	// setOffsetFromWindow: sets viewport position relative to application window (not screen)
 	void setOffsetFromWindow( const math::Vec2<> &offset ) noexcept;
 
+	// Bounds checking for input validation
+	bool isPointInViewport( const math::Vec2<> &windowPos ) const noexcept;
+
 	// View operations
 	void frameAll() noexcept;
 	void frameSelection( const math::Vec3<> &center, const math::Vec3<> &size ) noexcept;
