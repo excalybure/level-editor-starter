@@ -109,6 +109,7 @@ if (MSVC)
 endif()
 
 add_library(editor STATIC
+  src/editor/commands/EcsCommands.cpp
   src/editor/gizmos.cpp
   src/editor/selection.cpp
   src/editor/selection_renderer.cpp
@@ -233,6 +234,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmo_keyboard_blocking_tests.cpp
     tests/transform_commands_tests.cpp
     tests/editor_command_tests.cpp
+    tests/ecs_command_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

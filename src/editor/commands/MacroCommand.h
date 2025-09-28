@@ -138,13 +138,13 @@ public:
 		return total;
 	}
 
-	bool canMergeWith( const Command *other ) const override
+	bool canMergeWith( const Command */* other */ ) const override
 	{
 		// MacroCommand doesn't support merging by default
 		return false;
 	}
 
-	bool mergeWith( std::unique_ptr<Command> other ) override
+	bool mergeWith( std::unique_ptr<Command> /* other */ ) override
 	{
 		// MacroCommand doesn't support merging by default
 		return false;

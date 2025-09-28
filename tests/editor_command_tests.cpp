@@ -45,12 +45,12 @@ public:
 		return sizeof( *this ) + m_description.size();
 	}
 
-	bool canMergeWith( const Command *other ) const override
+	bool canMergeWith( const Command */* other */ ) const override
 	{
 		return false; // Simple test command doesn't support merging
 	}
 
-	bool mergeWith( std::unique_ptr<Command> other ) override
+	bool mergeWith( std::unique_ptr<Command> /* other */ ) override
 	{
 		return false; // Simple test command doesn't support merging
 	}
