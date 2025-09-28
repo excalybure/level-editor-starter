@@ -199,28 +199,28 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 	const int mode = getImGuizmoMode();
 
 	// Apply snap values if enabled
-	float snapValues[3] = { 0.0f, 0.0f, 0.0f };
+	math::Vec3f snapValues{ 0.0f, 0.0f, 0.0f };
 	float *snapPtr = nullptr;
 	if ( m_snapEnabled )
 	{
 		switch ( m_currentOperation )
 		{
 		case GizmoOperation::Translate:
-			snapValues[0] = snapValues[1] = snapValues[2] = m_translationSnap;
-			snapPtr = snapValues;
+			snapValues = math::Vec3f{ m_translationSnap, m_translationSnap, m_translationSnap };
+			snapPtr = snapValues.data();
 			break;
 		case GizmoOperation::Rotate:
-			snapValues[0] = snapValues[1] = snapValues[2] = m_rotationSnap;
-			snapPtr = snapValues;
+			snapValues = math::Vec3f{ m_rotationSnap, m_rotationSnap, m_rotationSnap };
+			snapPtr = snapValues.data();
 			break;
 		case GizmoOperation::Scale:
-			snapValues[0] = snapValues[1] = snapValues[2] = m_scaleSnap;
-			snapPtr = snapValues;
+			snapValues = math::Vec3f{ m_scaleSnap, m_scaleSnap, m_scaleSnap };
+			snapPtr = snapValues.data();
 			break;
 		case GizmoOperation::Universal:
 			// For universal mode, use translation snap
-			snapValues[0] = snapValues[1] = snapValues[2] = m_translationSnap;
-			snapPtr = snapValues;
+			snapValues = math::Vec3f{ m_translationSnap, m_translationSnap, m_translationSnap };
+			snapPtr = snapValues.data();
 			break;
 		}
 	}
@@ -254,17 +254,35 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 		// Transpose the result back to our row-major format
 		gizmoMatrix = gizmoMatrixTransposed.transpose();
 
-		// Calculate transform delta (basic implementation)
-		// This is a simplified version - proper decomposition will be implemented in AF3.6
-		result.translationDelta = math::Vec3<>{
-			gizmoMatrix.row0.w - originalMatrix.row0.w,
-			gizmoMatrix.row1.w - originalMatrix.row1.w,
-			gizmoMatrix.row2.w - originalMatrix.row2.w
-		};
+		// Properly decompose both original and new matrices to extract deltas
+		math::Vec3f originalTranslation, originalRotation, originalScale;
+		math::Vec3f newTranslation, newRotation, newScale;
 
-		// For now, set rotation and scale deltas to defaults
-		result.rotationDelta = math::Vec3<>{ 0.0f, 0.0f, 0.0f };
-		result.scaleDelta = math::Vec3<>{ 1.0f, 1.0f, 1.0f };
+		// Decompose original matrix
+		const auto originalMatrixTransposed = originalMatrix.transpose();
+		ImGuizmo::DecomposeMatrixToComponents(
+			originalMatrixTransposed.data(),
+			originalTranslation.data(),
+			originalRotation.data(),
+			originalScale.data() );
+
+		// Decompose new matrix
+		ImGuizmo::DecomposeMatrixToComponents(
+			gizmoMatrixTransposed.data(),
+			newTranslation.data(),
+			newRotation.data(),
+			newScale.data() );
+
+		// Calculate deltas
+		result.translationDelta = newTranslation - originalTranslation;
+
+		result.rotationDelta = newRotation - originalRotation;
+
+		result.scaleDelta = math::Vec3<>{
+			( originalScale.x != 0.0f ) ? ( newScale.x / originalScale.x ) : 1.0f,
+			( originalScale.y != 0.0f ) ? ( newScale.y / originalScale.y ) : 1.0f,
+			( originalScale.z != 0.0f ) ? ( newScale.z / originalScale.z ) : 1.0f
+		};
 
 		// Update manipulation state
 		if ( !m_isManipulating )
