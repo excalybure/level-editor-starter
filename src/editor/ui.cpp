@@ -532,15 +532,22 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 						{
 							const auto gizmoResult = gizmoSystem->renderGizmo();
 
-							if ( hasFocus )
+							// Get current mouse position for bounds checking
+							const ImVec2 mousePos = ImGui::GetIO().MousePos;
+							const math::Vec2<> windowMousePos{ mousePos.x, mousePos.y };
+
+							// Only update gizmo state when mouse is within this viewport
+							if ( viewport->isPointInViewport( windowMousePos ) )
 							{
 								wasGizmoHoveredLastFrame = gizmoResult.isHovered;
 								wasGizmoUsingLastFrame = gizmoResult.isManipulating;
-								if ( gizmoResult.wasManipulated )
-								{
-									// Apply transform changes to selected entities
-									gizmoSystem->applyTransformDelta( gizmoResult );
-								}
+							}
+
+							// Only apply transform changes when viewport has focus to prevent unintended modifications
+							if ( hasFocus && gizmoResult.wasManipulated )
+							{
+								// Apply transform changes to selected entities
+								gizmoSystem->applyTransformDelta( gizmoResult );
 							}
 						}
 					}

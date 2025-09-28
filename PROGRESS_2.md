@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Gizmo Input Blocking Bug for Unfocused Viewport Manipulation
+**Summary:** Fixed critical bug where gizmo manipulation in an unfocused viewport would cause camera input to remain permanently blocked after the manipulation ended. The issue was that gizmo state (`wasGizmoHoveredLastFrame`, `wasGizmoUsingLastFrame`) was only updated when the viewport had focus, but the input blocking logic used this state regardless of focus status. This caused stale state to persist, blocking camera input even after gizmo manipulation had ended. Fixed by tracking gizmo state when the mouse is within the viewport bounds, independent of focus, while preserving focus-based restriction for actual transform application.
+
+**Atomic functionalities completed:**
+- AF1: Identified gizmo state tracking bug - Found that `renderViewportPane()` only updates `wasGizmoHoveredLastFrame`/`wasGizmoUsingLastFrame` when `hasFocus` is true, but input blocking logic uses these flags regardless of focus
+- AF2: Created test documenting the issue - Added test case to `gizmo_keyboard_blocking_tests.cpp` that validates gizmo state should work independently of viewport focus to prevent input blocking issues  
+- AF3: Implemented viewport-aware gizmo state tracking - Modified `renderViewportPane()` to update gizmo state flags only when mouse is within the current viewport bounds using `viewport->isPointInViewport()`
+- AF4: Preserved focus-based transform safety - Maintained focus check for `gizmoResult.wasManipulated` to ensure transform deltas are only applied when viewport has focus, preventing unintended modifications
+- AF5: Verified fix with comprehensive testing - All gizmo tests (130 assertions in 16 test cases), keyboard blocking tests (15 assertions), and UI tests (24 assertions) continue passing
+
+**Tests:** Added 1 new test case for viewport focus-independent gizmo state tracking. All existing gizmo, UI, and input-related tests continue to pass, confirming no regressions.
+**Notes:** This fixes the user-reported bug where dragging gizmos in unfocused viewports would cause camera orbiting to begin immediately upon mouse release. The refined solution ensures gizmo state is only tracked for the viewport where the mouse is located, preventing cross-viewport interference while maintaining proper input blocking behavior. Users can now manipulate gizmos in any viewport without experiencing persistent input blocking issues.
+
 ## 2025-09-28 — Fix Gizmo Rotation Units Conversion for Proper Object Rotation  
 **Summary:** Fixed critical issue where gizmo rotation operations caused objects to rotate excessively ("like crazy") due to a units mismatch between ImGuizmo's degree-based output and the engine's radian-based transform storage. The problem was that ImGuizmo's `DecomposeMatrixToComponents` returns rotation values in degrees, but the engine's Transform component stores rotation in radians. Rotation deltas were being applied directly without unit conversion, causing a 45-degree rotation to be applied as 45 radians (≈2578 degrees). Implemented proper degree-to-radian conversion in the `renderGizmo()` method where rotation deltas are calculated.
 
