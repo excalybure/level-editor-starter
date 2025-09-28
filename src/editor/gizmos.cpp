@@ -287,7 +287,15 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 		// Calculate deltas
 		result.translationDelta = newTranslation - originalTranslation;
 
-		result.rotationDelta = newRotation - originalRotation;
+		// Convert rotation delta from degrees to radians
+		// ImGuizmo's DecomposeMatrixToComponents returns rotation in degrees,
+		// but our Transform component stores rotation in radians
+		const math::Vec3f rotationDeltaInDegrees = newRotation - originalRotation;
+		result.rotationDelta = math::Vec3f{
+			math::radians( rotationDeltaInDegrees.x ),
+			math::radians( rotationDeltaInDegrees.y ),
+			math::radians( rotationDeltaInDegrees.z )
+		};
 
 		// Calculate scale delta relative to original gizmo scale (when manipulation began)
 		// This makes scaling absolute relative to manipulation start, not frame-to-frame

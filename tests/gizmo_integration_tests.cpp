@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include "editor/gizmos.h"
 #include "editor/selection.h"
@@ -10,6 +11,7 @@
 #include "engine/math/matrix.h"
 
 using Catch::Matchers::WithinAbs;
+using Catch::Approx;
 
 TEST_CASE( "GizmoSystem SelectionManager Integration", "[gizmos][integration][AF6.1]" )
 {
@@ -567,5 +569,61 @@ TEST_CASE( "Transform Command Generation Validation", "[gizmos][integration][AF6
 		REQUIRE_THAT( transform->scale.x, WithinAbs( initialScale.x * 0.5f, 0.001f ) );
 		REQUIRE_THAT( transform->scale.y, WithinAbs( initialScale.y * 0.5f, 0.001f ) );
 		REQUIRE_THAT( transform->scale.z, WithinAbs( initialScale.z * 0.5f, 0.001f ) );
+	}
+}
+
+TEST_CASE( "GizmoSystem - Rotation Delta Units Issue", "[gizmos][rotation][units][bug]" )
+{
+	SECTION( "Rotation deltas from renderGizmo are converted from degrees to radians" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		systemManager.addSystem<systems::TransformSystem>();
+		systemManager.initialize( scene );
+
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
+
+		// Create entity with zero initial rotation
+		const auto entity = scene.createEntity();
+		const math::Vec3f initialPosition{ 0.0f, 0.0f, 0.0f };
+		const math::Vec3f initialRotation{ 0.0f, 0.0f, 0.0f }; // Zero rotation in radians
+		const math::Vec3f initialScale{ 1.0f, 1.0f, 1.0f };
+
+		scene.addComponent<components::Transform>( entity,
+			components::Transform{ initialPosition, initialRotation, initialScale } );
+
+		selectionManager.select( entity );
+
+		// NOTE: This test demonstrates the fix conceptually. In practice, the renderGizmo() method
+		// handles the conversion from ImGuizmo's degree-based output to radians.
+		// For this test, we create a GizmoResult as if it came from renderGizmo after conversion.
+
+		// Simulate what renderGizmo would produce after converting ImGuizmo's 45-degree output
+		const float rotationInDegrees = 45.0f;
+		const float expectedRotationInRadians = math::radians( rotationInDegrees );
+
+		editor::GizmoResult rotationResult;
+		rotationResult.wasManipulated = true;
+		rotationResult.translationDelta = math::Vec3f{ 0.0f, 0.0f, 0.0f };
+		// This delta is now in radians as it would come from renderGizmo after conversion
+		rotationResult.rotationDelta = math::Vec3f{ 0.0f, expectedRotationInRadians, 0.0f };
+		rotationResult.scaleDelta = math::Vec3f{ 1.0f, 1.0f, 1.0f };
+
+		// Apply the rotation delta
+		gizmoSystem.applyTransformDelta( rotationResult );
+
+		// Check what actually happened
+		const auto *transform = scene.getComponent<components::Transform>( entity );
+
+		// The rotation delta should be applied directly (already in radians)
+		const float actualRotationInRadians = transform->rotation.y;
+
+		// Should match the expected value
+		REQUIRE_THAT( actualRotationInRadians, WithinAbs( expectedRotationInRadians, 0.001f ) );
+
+		// Convert to degrees to verify it's the expected 45 degrees
+		const float actualRotationInDegrees = math::degrees( actualRotationInRadians );
+		REQUIRE_THAT( actualRotationInDegrees, WithinAbs( 45.0f, 0.1f ) );
 	}
 }

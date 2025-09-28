@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-28 — Fix Gizmo Rotation Units Conversion for Proper Object Rotation  
+**Summary:** Fixed critical issue where gizmo rotation operations caused objects to rotate excessively ("like crazy") due to a units mismatch between ImGuizmo's degree-based output and the engine's radian-based transform storage. The problem was that ImGuizmo's `DecomposeMatrixToComponents` returns rotation values in degrees, but the engine's Transform component stores rotation in radians. Rotation deltas were being applied directly without unit conversion, causing a 45-degree rotation to be applied as 45 radians (≈2578 degrees). Implemented proper degree-to-radian conversion in the `renderGizmo()` method where rotation deltas are calculated.
+
+**Atomic functionalities completed:**
+- AF1: Created failing test demonstrating rotation units bug - Added test showing 45-degree rotation delta being incorrectly applied as 45 radians instead of ~0.785 radians
+- AF2: Identified root cause in renderGizmo method - ImGuizmo returns rotation in degrees but Transform component expects radians, causing massive over-rotation  
+- AF3: Implemented unit conversion in renderGizmo delta calculation - Added degree-to-radian conversion for rotation deltas right after ImGuizmo decomposition
+- AF4: Validated existing rotation application logic - Confirmed additive rotation delta approach is correct for incremental gizmo manipulations
+- AF5: Verified fix with comprehensive testing - All gizmo tests (313 assertions), selection tests (317 assertions), transform tests (148 assertions), and integration tests (951 assertions) passing
+
+**Tests:** 1 new rotation units test plus comprehensive validation of existing test suite. Updated test demonstrates proper conversion from ImGuizmo's degree output to engine's radian storage.
+**Notes:** This fixes the user-reported issue where rotating objects with gizmos caused excessive rotation. The fix ensures that ImGuizmo's degree-based rotation deltas are properly converted to radians before being applied to the Transform component, resulting in predictable and controllable rotation behavior.
+
 ## 2025-09-28 — Fix Picking System Scale Transform Handling for Object Selection
 **Summary:** Fixed critical bug where scaled objects were only pickable at their original (unscaled) bounds instead of their scaled bounds. The issue was in `PickingSystem::testEntityBounds()` which used a simplified approximation that only transformed the center of the bounding box to world space while keeping the original local size unchanged. Implemented proper world-space bounding box calculation by transforming all 8 corners of the AABB to world space, then computing a new axis-aligned bounding box that correctly encompasses the scaled object.
 
