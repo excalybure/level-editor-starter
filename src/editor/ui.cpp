@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <commdlg.h> // For GetOpenFileName
 
-#include "ui.h"
+#include "editor/ui.h"
 
 #include <memory>
 #include <string>
@@ -25,6 +25,7 @@
 #include "runtime/console.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
+#include "editor/commands/CommandUI.h"
 #include "gizmos.h"
 
 namespace editor
@@ -74,6 +75,12 @@ struct UI::Impl
 	std::unique_ptr<GizmoSystem> gizmoSystem;
 	std::unique_ptr<GizmoUI> gizmoUI;
 
+	// Command history and UI integration
+	std::unique_ptr<CommandHistory> commandHistory;
+	std::unique_ptr<UndoRedoUI> undoRedoUI;
+	std::unique_ptr<CommandHistoryWindow> commandHistoryWindow;
+	bool showCommandHistoryWindow = false;
+
 	std::string currentScenePath;
 	std::string lastError;
 
@@ -98,6 +105,9 @@ struct UI::Impl
 
 	// Render camera settings window
 	void renderCameraSettingsWindow();
+
+	// Render command history window
+	void renderCommandHistoryWindow();
 
 	// Render status bar
 	void renderStatusBar( UI &ui );
@@ -178,6 +188,11 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 		return false;
 	}
 
+	// Initialize command history system
+	m_impl->commandHistory = std::make_unique<CommandHistory>();
+	m_impl->undoRedoUI = std::make_unique<UndoRedoUI>( *m_impl->commandHistory );
+	m_impl->commandHistoryWindow = std::make_unique<CommandHistoryWindow>( *m_impl->commandHistory );
+
 	m_initialized = true;
 	return true;
 }
@@ -222,6 +237,9 @@ void UI::beginFrame()
 
 	// Render camera settings window if open
 	m_impl->renderCameraSettingsWindow();
+
+	// Render command history window if open
+	m_impl->renderCommandHistoryWindow();
 
 	// Render toolbar below menu bar
 	m_impl->renderToolbar();
@@ -352,6 +370,16 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			ImGui::EndMenu();
 		}
 
+		if ( ImGui::BeginMenu( "Edit" ) )
+		{
+			// Render undo/redo menu items
+			if ( undoRedoUI )
+			{
+				undoRedoUI->renderMenuItems();
+			}
+			ImGui::EndMenu();
+		}
+
 		if ( ImGui::BeginMenu( "View" ) )
 		{
 			for ( auto &pane : layout.panes )
@@ -381,6 +409,13 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			if ( ImGui::MenuItem( "Gizmo Settings" ) )
 			{
 				showGizmoSettingsWindow = true;
+			}
+
+			ImGui::Separator();
+
+			if ( ImGui::MenuItem( "Command History" ) )
+			{
+				showCommandHistoryWindow = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -954,6 +989,17 @@ void UI::Impl::renderCameraSettingsWindow()
 	ImGui::End();
 }
 
+void UI::Impl::renderCommandHistoryWindow()
+{
+	if ( !showCommandHistoryWindow )
+		return;
+
+	if ( commandHistoryWindow )
+	{
+		commandHistoryWindow->render( &showCommandHistoryWindow );
+	}
+}
+
 void UI::Impl::renderStatusBar( UI &ui )
 {
 	// Create a child region for the status bar with styling
@@ -1257,6 +1303,12 @@ void UI::processInputEvents( platform::Win32Window &window )
 	{
 		m_impl->gizmoUI->handleKeyboardShortcuts();
 	}
+
+	// Handle undo/redo keyboard shortcuts
+	if ( m_impl->undoRedoUI )
+	{
+		m_impl->undoRedoUI->handleKeyboardShortcuts();
+	}
 }
 
 void UI::updateViewports( const float deltaTime )
@@ -1441,6 +1493,21 @@ size_t UI::getEntityCount() const
 const std::string &UI::getLastError() const
 {
 	return m_impl->lastError;
+}
+
+void UI::showCommandHistoryWindow( bool show )
+{
+	m_impl->showCommandHistoryWindow = show;
+}
+
+bool UI::isCommandHistoryWindowOpen() const
+{
+	return m_impl->showCommandHistoryWindow;
+}
+
+CommandHistory *UI::getCommandHistory()
+{
+	return m_impl->commandHistory.get();
 }
 
 } // namespace editor

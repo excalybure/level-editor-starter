@@ -25,6 +25,9 @@ class SelectionManager;
 class GizmoSystem;
 } // namespace editor
 
+// Forward declarations
+class CommandHistory;
+
 namespace editor
 {
 
@@ -132,6 +135,11 @@ public:
 
 	// Get gizmo system for viewport integration
 	class GizmoSystem *getGizmoSystem();
+
+	// Command history management
+	void showCommandHistoryWindow( bool show = true );
+	bool isCommandHistoryWindowOpen() const;
+	class CommandHistory *getCommandHistory();
 
 	void processInputEvents( platform::Win32Window &window );
 	void updateViewports( const float deltaTime );
