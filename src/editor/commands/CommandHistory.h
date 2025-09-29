@@ -2,6 +2,7 @@
 
 #include "Command.h"
 #include "CommandContext.h"
+#include "CommandProfiler.h"
 #include <memory>
 #include <vector>
 #include <deque>
@@ -106,12 +107,17 @@ public:
      */
 	bool executeCommand( CommandPtr command )
 	{
+		PROFILE_COMMAND_OPERATION( "CommandHistory::executeCommand" );
+
 		if ( !command )
 			return false;
 
 		// Try to execute the command first
-		if ( !command->execute() )
-			return false;
+		{
+			PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::execute", command->getMemoryUsage() );
+			if ( !command->execute() )
+				return false;
+		}
 
 		// Create context for the command
 		const auto timestamp = std::chrono::steady_clock::now();
@@ -121,6 +127,7 @@ public:
 		// Clear any redo history when executing new command
 		if ( m_currentIndex < m_commands.size() )
 		{
+			PROFILE_COMMAND_OPERATION( "CommandHistory::clearRedoHistory" );
 			// Remove commands from current index to end
 			const auto it = m_commands.begin() + m_currentIndex;
 			for ( auto iter = it; iter != m_commands.end(); ++iter )
@@ -136,7 +143,10 @@ public:
 		m_currentIndex = m_commands.size();
 
 		// Clean up old commands if we exceed limits
-		cleanupOldCommands();
+		{
+			PROFILE_COMMAND_OPERATION( "CommandHistory::cleanup" );
+			cleanupOldCommands();
+		}
 
 		return true;
 	}
@@ -148,6 +158,8 @@ public:
      */
 	bool executeCommandWithMerging( CommandPtr command )
 	{
+		PROFILE_COMMAND_OPERATION( "CommandHistory::executeCommandWithMerging" );
+
 		if ( !command )
 			return false;
 
@@ -163,22 +175,28 @@ public:
 			if ( timeDiff <= mergeTimeWindow && lastEntry.command->canMergeWith( command.get() ) )
 			{
 				// Try to execute the new command first
-				if ( !command->execute() )
-					return false;
+				{
+					PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::execute", command->getMemoryUsage() );
+					if ( !command->execute() )
+						return false;
+				}
 
 				// Attempt merge
-				if ( lastEntry.command->mergeWith( std::move( command ) ) )
 				{
-					// Update the context with new timestamp and memory usage
-					lastEntry.context.updateTimestamp( now );
-					lastEntry.context.updateMemoryUsage( lastEntry.command->getMemoryUsage() );
-					return true;
-				}
-				else
-				{
-					// Merge failed, need to undo the command we just executed
-					command->undo();
-					return false;
+					PROFILE_COMMAND_OPERATION( "Command::mergeWith" );
+					if ( lastEntry.command->mergeWith( std::move( command ) ) )
+					{
+						// Update the context with new timestamp and memory usage
+						lastEntry.context.updateTimestamp( now );
+						lastEntry.context.updateMemoryUsage( lastEntry.command->getMemoryUsage() );
+						return true;
+					}
+					else
+					{
+						// Merge failed, need to undo the command we just executed
+						command->undo();
+						return false;
+					}
 				}
 			}
 		}
@@ -193,11 +211,18 @@ public:
      */
 	bool undo()
 	{
+		PROFILE_COMMAND_OPERATION( "CommandHistory::undo" );
+
 		if ( !canUndo() )
 			return false;
 
 		--m_currentIndex;
-		return m_commands[m_currentIndex].command->undo();
+
+		{
+			PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::undo",
+				m_commands[m_currentIndex].context.getMemoryUsage() );
+			return m_commands[m_currentIndex].command->undo();
+		}
 	}
 
 	/**
@@ -206,10 +231,18 @@ public:
      */
 	bool redo()
 	{
+		PROFILE_COMMAND_OPERATION( "CommandHistory::redo" );
+
 		if ( !canRedo() )
 			return false;
 
-		bool success = m_commands[m_currentIndex].command->execute();
+		bool success;
+		{
+			PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::redo",
+				m_commands[m_currentIndex].context.getMemoryUsage() );
+			success = m_commands[m_currentIndex].command->execute();
+		}
+
 		if ( success )
 		{
 			++m_currentIndex;
@@ -217,24 +250,103 @@ public:
 		return success;
 	}
 
+	/**
+     * @brief Get profiling data for command operations
+     * @return Reference to the command profiler
+     */
+	const CommandProfiler &getProfiler() const
+	{
+		return g_commandProfiler;
+	}
+
+	/**
+     * @brief Reset profiling data
+     */
+	void resetProfiling()
+	{
+		g_commandProfiler.reset();
+	}
+
+	/**
+     * @brief Get commands that exceed performance thresholds
+     * @param threshold Maximum acceptable duration (default: 1ms)
+     * @return List of slow operation names
+     */
+	std::vector<std::string> getSlowOperations( std::chrono::microseconds threshold = std::chrono::milliseconds( 1 ) ) const
+	{
+		return g_commandProfiler.getSlowOperations( threshold );
+	}
+
+	/**
+     * @brief Get more accurate memory usage calculation
+     * @return Actual memory usage including overhead
+     */
+	size_t getActualMemoryUsage() const
+	{
+		return calculateActualMemoryUsage();
+	}
+
 private:
 	/**
-	 * @brief Remove oldest commands to stay within limits
+	 * @brief Intelligently remove oldest commands to stay within limits
 	 */
 	void cleanupOldCommands()
 	{
-		// Remove oldest commands until we're within both count and memory limits
+		// Early exit if no cleanup needed
+		if ( m_commands.size() <= m_maxCommands && m_currentMemoryUsage <= m_maxMemoryUsage )
+			return;
+
+		// Calculate how much we need to clean up
+		const size_t commandsToRemove = m_commands.size() > m_maxCommands ? m_commands.size() - m_maxCommands : 0;
+		const size_t memoryToFree = m_currentMemoryUsage > m_maxMemoryUsage ? m_currentMemoryUsage - m_maxMemoryUsage : 0;
+
+		// Priority cleanup: remove commands that are large in memory first
+		std::vector<size_t> candidateIndices;
+		size_t removedCommands = 0;
+		size_t freedMemory = 0;
+
+		// Simple approach: remove from front (oldest commands)
+		// This maintains the invariant and is cache-friendly
 		while ( !m_commands.empty() &&
-			( m_commands.size() > m_maxCommands || m_currentMemoryUsage > m_maxMemoryUsage ) )
+			( removedCommands < commandsToRemove || freedMemory < memoryToFree ) )
 		{
 			const auto &oldestEntry = m_commands.front();
-			m_currentMemoryUsage -= oldestEntry.context.getMemoryUsage();
+			const size_t commandMemory = oldestEntry.context.getMemoryUsage();
+
+			m_currentMemoryUsage -= commandMemory;
+			freedMemory += commandMemory;
+			++removedCommands;
+
 			m_commands.pop_front();
 
 			// Update current index to maintain correct position
 			if ( m_currentIndex > 0 )
 				--m_currentIndex;
 		}
+	}
+
+	/**
+	 * @brief Compress command data to reduce memory usage
+	 */
+	void compressCommands()
+	{
+		// For now, this is a placeholder for future compression implementation
+		// Could implement delta compression for similar commands
+		// or compress large data payloads in commands
+	}
+
+	/**
+	 * @brief Estimate memory usage with better accuracy
+	 */
+	size_t calculateActualMemoryUsage() const
+	{
+		size_t total = sizeof( *this );
+		for ( const auto &entry : m_commands )
+		{
+			total += sizeof( entry );
+			total += entry.command->getMemoryUsage();
+		}
+		return total;
 	}
 
 	struct CommandEntry
