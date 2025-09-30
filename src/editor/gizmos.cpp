@@ -3,6 +3,8 @@
 #include "runtime/components.h"
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
+#include "commands/CommandHistory.h"
+#include "transform_commands.h"
 
 // ImGui headers must be included before ImGuizmo
 #include <imgui.h>
@@ -11,8 +13,8 @@
 namespace editor
 {
 
-GizmoSystem::GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager ) noexcept
-	: m_selectionManager( &selectionManager ), m_scene( &scene ), m_systemManager( &systemManager )
+GizmoSystem::GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager, CommandHistory *commandHistory ) noexcept
+	: m_selectionManager( &selectionManager ), m_scene( &scene ), m_systemManager( &systemManager ), m_commandHistory( commandHistory )
 {
 	// Initialize with default values (already set in header)
 }
@@ -367,10 +369,11 @@ void GizmoSystem::beginManipulation() noexcept
 	m_isManipulating = true;
 	m_wasManipulated = false;
 
-	// Clear any previous original scales
+	// Clear previous snapshots and scales
+	m_manipulationSnapshots.clear();
 	m_originalEntityScales.clear();
 
-	// Store original entity scales for all selected entities
+	// Capture BEFORE state for all selected entities (for command creation)
 	if ( m_selectionManager && m_scene )
 	{
 		const auto &selectedEntities = m_selectionManager->getSelectedEntities();
@@ -379,6 +382,11 @@ void GizmoSystem::beginManipulation() noexcept
 			if ( m_scene->hasComponent<components::Transform>( entity ) )
 			{
 				const auto *transform = m_scene->getComponent<components::Transform>( entity );
+
+				// Store complete transform snapshot for command creation
+				m_manipulationSnapshots.push_back( { entity, *transform } );
+
+				// Store original scale for absolute scaling during manipulation
 				m_originalEntityScales[entity] = transform->scale;
 			}
 		}
@@ -403,7 +411,54 @@ void GizmoSystem::endManipulation() noexcept
 	m_isManipulating = false;
 	m_wasManipulated = true;
 
-	// Clear original scales as manipulation is complete
+	// Create transform command(s) if CommandHistory is available and we have snapshots
+	if ( m_commandHistory && m_scene && !m_manipulationSnapshots.empty() )
+	{
+		if ( m_manipulationSnapshots.size() == 1 )
+		{
+			// Single entity - create TransformEntityCommand
+			const auto &snapshot = m_manipulationSnapshots[0];
+			const auto *afterTransform = m_scene->getComponent<components::Transform>( snapshot.entity );
+
+			if ( afterTransform )
+			{
+				auto command = std::make_unique<TransformEntityCommand>(
+					snapshot.entity,
+					*m_scene,
+					snapshot.beforeTransform, // before
+					*afterTransform			  // after
+				);
+				m_commandHistory->executeCommand( std::move( command ) );
+			}
+		}
+		else
+		{
+			// Multiple entities - create BatchTransformCommand
+			// NOTE: Pass empty vector to constructor since we'll add transforms explicitly
+			std::vector<ecs::Entity> emptyEntities;
+			auto batchCommand = std::make_unique<BatchTransformCommand>(
+				emptyEntities,
+				*m_scene );
+
+			// Add each transform with before/after states
+			for ( const auto &snapshot : m_manipulationSnapshots )
+			{
+				const auto *afterTransform = m_scene->getComponent<components::Transform>( snapshot.entity );
+				if ( afterTransform )
+				{
+					batchCommand->addTransform(
+						snapshot.entity,
+						snapshot.beforeTransform,
+						*afterTransform );
+				}
+			}
+
+			m_commandHistory->executeCommand( std::move( batchCommand ) );
+		}
+	}
+
+	// Clear snapshots and original scales
+	m_manipulationSnapshots.clear();
 	m_originalEntityScales.clear();
 	m_originalGizmoScale = math::Vec3<>{ 1.0f, 1.0f, 1.0f };
 }

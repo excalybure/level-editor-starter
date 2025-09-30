@@ -2,11 +2,15 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "engine/math/vec.h"
 #include "engine/math/matrix.h"
 #include "runtime/entity.h"
+#include "runtime/components.h"
 
 // Forward declarations
+class CommandHistory;
+
 namespace ecs
 {
 class Scene;
@@ -58,8 +62,8 @@ public:
 	// Default constructor
 	GizmoSystem() noexcept = default;
 
-	// Constructor with SelectionManager, Scene, and SystemManager dependencies
-	GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager ) noexcept;
+	// Constructor with SelectionManager, Scene, SystemManager, and optional CommandHistory
+	GizmoSystem( SelectionManager &selectionManager, ecs::Scene &scene, systems::SystemManager &systemManager, CommandHistory *commandHistory = nullptr ) noexcept;
 
 	// Accessors for current state
 	constexpr GizmoOperation getCurrentOperation() const noexcept
@@ -165,6 +169,17 @@ private:
 	// Original scale tracking for absolute scaling relative to manipulation start
 	std::unordered_map<ecs::Entity, math::Vec3<>> m_originalEntityScales;
 	math::Vec3<> m_originalGizmoScale{ 1.0f, 1.0f, 1.0f };
+
+	// Command history integration for undo/redo support
+	CommandHistory *m_commandHistory = nullptr;
+
+	// Transform snapshots for command creation (before-state tracking)
+	struct TransformSnapshot
+	{
+		ecs::Entity entity;
+		components::Transform beforeTransform;
+	};
+	std::vector<TransformSnapshot> m_manipulationSnapshots;
 };
 
 // UI class for gizmo controls and settings

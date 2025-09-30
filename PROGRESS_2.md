@@ -1,5 +1,30 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-05-30 — Task 3: GizmoSystem Command Integration Complete (M2-P5-AF3.6)
+**Summary:** Successfully integrated GizmoSystem with CommandHistory to enable undoable/redoable gizmo manipulations. Implemented snapshot-based transform command creation where beginManipulation() captures before-state, endManipulation() creates appropriate commands (TransformEntityCommand for single entity, BatchTransformCommand for multiple), and CommandHistory::executeCommand() manages undo/redo. Fixed critical bug in BatchTransformCommand creation where constructor was adding commands twice (once automatically, once via addTransform), causing duplicate command execution and incorrect undo behavior.
+
+**Atomic functionalities completed:**
+- AF3.6.1: GizmoSystem CommandHistory integration - Added CommandHistory* parameter to constructor (default nullptr), m_commandHistory member, TransformSnapshot structure for capturing before-state
+- AF3.6.2: UI CommandHistory wiring - Modified UI::initializeSceneOperations() to pass m_impl->commandHistory.get() to GizmoSystem constructor
+- AF3.6.3: Before-state snapshot capture - Implemented m_manipulationSnapshots population in beginManipulation() storing complete Transform for each selected entity
+- AF3.6.4: Command creation on manipulation end - Implemented endManipulation() logic: single entity → TransformEntityCommand, multiple → BatchTransformCommand, execute via CommandHistory->executeCommand()
+- AF3.6.5: Single entity manipulation tests - Created comprehensive tests verifying TransformEntityCommand creation, undo restores original position, redo reapplies transformation
+- AF3.6.6: Multi-entity manipulation tests - Created tests verifying BatchTransformCommand creation for 3 entities, single command created, undo restores all entities simultaneously
+- AF3.6.7: Bug fix: BatchTransformCommand double-creation - Fixed endManipulation() to pass empty vector to BatchTransformCommand constructor (which was auto-creating commands), then explicitly add transforms via addTransform()
+- AF3.6.8: Null-safety tests - Validated GizmoSystem works without CommandHistory (no crashes), empty selection creates no commands
+
+**Tests:** 
+- gizmo-commands tests: 37 assertions in 4 test cases passing
+- All gizmo tests: 313 assertions in 33 test cases passing (no regressions)
+- Commands: `unit_test_runner.exe "[gizmo-commands]"`, `unit_test_runner.exe "[gizmos]"`
+
+**Notes:** 
+- Architecture follows Option 1 design: GizmoSystem owns command creation, captures before-state in beginManipulation(), creates commands in endManipulation()
+- Command merging enabled by default (100ms window) - rapid manipulations merge into single undoable operation
+- Null-safe design with CommandHistory* = nullptr ensures backward compatibility
+- Critical bug discovered: BatchTransformCommand constructor automatically creates commands for passed entities, but we were also calling addTransform() for each entity, resulting in 2N commands instead of N. Fixed by passing empty vector to constructor.
+- Real-time transform updates still happen via applyTransformDelta() during manipulation; commands only capture before/after snapshots for undo/redo
+
 ## 2025-09-29 — Entity Reference Fixup: Virtual Method Refactoring (M2-P5-T9b)
 **Summary:** Refactored entity reference fixup implementation to use virtual methods instead of dynamic_cast for cleaner, more maintainable code. Moved getOriginalEntity() from concrete command classes to Command base class as virtual method with default implementation, eliminating RTTI dependency and simplifying CommandHistory logic.
 

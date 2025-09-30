@@ -242,6 +242,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/command_performance_tests.cpp
     tests/command_integration_tests.cpp
     tests/entity_fixup_test.cpp
+    tests/gizmo_command_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor
