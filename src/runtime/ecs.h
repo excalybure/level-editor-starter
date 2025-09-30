@@ -407,6 +407,28 @@ public:
 		}
 	}
 
+	Entity findEntityByName( const std::string &targetName )
+	{
+		Entity result{};
+
+		auto *storage = getComponentStorage<components::Name>();
+		if ( !storage )
+		{
+			return {};
+		}
+
+		for ( auto &[entity, component] : *storage )
+		{
+			// Only process valid entities
+			if ( component.name == targetName )
+			{
+				return entity; // Stop iteration when found
+			}
+		}
+
+		return Entity{};
+	}
+
 private:
 	// Helper to check if 'ancestor' is an ancestor of 'descendant'
 	bool isAncestor( Entity ancestor, Entity descendant ) const

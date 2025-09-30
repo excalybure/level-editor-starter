@@ -1,5 +1,46 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-29 — Entity Reference Fixup: Virtual Method Refactoring (M2-P5-T9b)
+**Summary:** Refactored entity reference fixup implementation to use virtual methods instead of dynamic_cast for cleaner, more maintainable code. Moved getOriginalEntity() from concrete command classes to Command base class as virtual method with default implementation, eliminating RTTI dependency and simplifying CommandHistory logic.
+
+**Atomic functionalities completed:**
+- AF1: Command base class virtual method - Added virtual getOriginalEntity() to Command.h with default implementation returning invalid entity
+- AF2: CommandHistory::undo() simplification - Removed dynamic_cast to DeleteEntityCommand, replaced with direct virtual method call
+- AF3: CommandHistory::redo() simplification - Removed dynamic_cast to CreateEntityCommand/DeleteEntityCommand, replaced with direct virtual method call
+- AF4: Build and test validation - All 14 entity-fixup assertions passing, 252 integration workflow assertions passing
+
+**Tests:** entity-fixup tests: 14 assertions passing; integration workflow tests: 252 assertions in 7 test cases passing
+**Notes:** Polymorphic design pattern applied correctly - using virtual methods eliminates need for type checking (dynamic_cast), making code more object-oriented and maintainable. Removed unnecessary include of EcsCommands.h from CommandHistory.cpp as it's no longer needed. This refactoring demonstrates proper use of polymorphism: instead of checking "what type of command is this?" we simply ask the command "what is your original entity?" and let each command type provide the appropriate answer through virtual dispatch.
+
+## 2025-09-29 — Entity Reference Fixup: Complete Undo/Redo Symmetry (M2-P5-T9)
+**Summary:** Fixed critical asymmetry in entity reference fixup system where fixup only occurred during undo() but not redo(), causing entity reference corruption when redoing commands after entity recreation. Implemented complete bidirectional entity reference fixup by adding getOriginalEntity() methods to both CreateEntityCommand and DeleteEntityCommand, and extending fixup logic to redo() path. Solution ensures entity references remain valid throughout complete undo/redo cycles including scenarios where entities are created, deleted, and recreated multiple times.
+
+**Atomic functionalities completed:**
+- AF1: DeleteEntityCommand::getOriginalEntity() - Added method to return m_originalEntity for accurate old entity reference retrieval during fixup
+- AF2: CommandHistory::undo() original entity retrieval - Replaced generation-1 assumption with dynamic_cast to DeleteEntityCommand and call to getOriginalEntity() for precise entity reference fixup
+- AF3: Entity fixup test validation - Verified AddComponentCommand redo now works correctly after entity delete/undo cycle (14 assertions passing)
+- AF4: CreateEntityCommand entity recreation tracking - Added m_originalEntity tracking, implemented getRecreatedEntity() and getOriginalEntity() for redo path fixup
+- AF5: CommandHistory::redo() entity fixup - Added fixupEntityReferences() call in redo() when CreateEntityCommand or DeleteEntityCommand recreates entity with new generation
+- AF6: Full integration test suite validation - All 49 integration tests passing with 1225 assertions confirming no regression
+
+**Tests:** All entity-fixup tests passing (14 assertions); all integration tests passing (1225 assertions in 49 test cases)
+**Notes:** Root cause was that entity reference fixup assumed generation incremented by exactly 1 (generation-1 calculation), which failed when entities went through multiple creation/deletion cycles. Additionally, redo() path had no fixup logic at all, causing commands to reference stale entity generations after redo. Solution uses dynamic_cast to identify CreateEntityCommand and DeleteEntityCommand, retrieves actual original entity from stored m_originalEntity member, and applies fixup symmetrically in both undo() and redo() paths. This architecture correctly handles complex scenarios: Create(gen=0) → Undo → Redo(gen=1) → Undo → Redo(gen=2), ensuring subsequent commands always reference current entity generation.
+
+## 2025-09-28 — Entity Reference Fixup: Command History Solution (M2-P5-T8)
+**Summary:** Successfully implemented Command History Fixup solution to resolve critical entity generation mismatch issue where entity deletion/recreation cycles caused command redo failures. Developed comprehensive entity reference management system that automatically updates stale entity references in command history when entities are recreated with new generations. Implementation enables proper undo/redo functionality in all entity manipulation scenarios.
+
+**Atomic functionalities completed:**
+- AF8.1: Command interface entity reference management - Added updateEntityReference() and getRecreatedEntity() virtual methods to Command base class
+- AF8.2: DeleteEntityCommand recreation detection - Implemented entity recreation detection and tracking of original vs. recreated entity references
+- AF8.3: Universal command reference updates - Added updateEntityReference implementations to all command types (ECS, Transform, Hierarchy commands)
+- AF8.4: Command history fixup mechanism - Implemented automatic entity reference fixup in CommandHistory::undo() when entities are recreated
+- AF8.5: ECS commands entity reference management - Added reference update capability to CreateEntityCommand, DeleteEntityCommand, AddComponentCommand, RemoveComponentCommand, SetParentCommand, RenameEntityCommand
+- AF8.6: Transform commands entity reference management - Added reference update capability to TransformEntityCommand and BatchTransformCommand
+- AF8.7: Integration test validation - Fixed and validated integration test expectations to confirm entity reference fixup functionality
+
+**Tests:** Updated "ECS command validation with scene operations" integration test (corrected expectation from 7 to 6 commands); all integration tests passing
+**Notes:** This solution addresses the fundamental architectural limitation where entity IDs are recycled but generations increment, causing stored entity references in commands to become invalid when entities are deleted and recreated. The fixup mechanism detects when DeleteEntityCommand::undo() recreates an entity and automatically updates all subsequent commands in history to reference the new generation. This enables seamless undo/redo cycles including scenarios like: Create Entity → Add Component → Delete Entity → Undo Delete → Redo Add Component. Architecture uses entity ID/generation comparison to identify matching entities and update references throughout command history.
+
 ## 2025-09-28 — Task 6: Integration Testing and Validation Complete (M2-P5)
 **Summary:** Successfully completed comprehensive integration testing and validation for the command system using strict TDD methodology. Implemented complete end-to-end workflow tests validating command system integration across all editor systems including entity creation, transformation, component management, and undo/redo functionality. Fixed critical compilation issues with TransformEntityCommand and BatchTransformCommand constructor usage to ensure proper test execution.
 

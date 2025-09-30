@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include "runtime/entity.h"
 
 /**
  * @brief Abstract base class for all commands in the editor
@@ -51,4 +52,37 @@ public:
      * @return true if merge was successful, false otherwise
      */
 	virtual bool mergeWith( std::unique_ptr<Command> other ) = 0;
+
+	/**
+     * @brief Update entity references when entities are recreated
+     * @param oldEntity The old entity reference that is no longer valid
+     * @param newEntity The new entity reference to use instead
+     * @return true if any references were updated, false if this command doesn't reference the entity
+     */
+	virtual bool updateEntityReference( ecs::Entity /* oldEntity */, ecs::Entity /* newEntity */ ) { return false; }
+
+	/**
+     * @brief Called after command undo to get the entity that was recreated (if any)
+     * @return Entity that was recreated, or invalid entity if none
+     */
+	virtual ecs::Entity getRecreatedEntity() const { return ecs::Entity{ 0, 0 }; }
+
+	/**
+     * @brief Get the original entity before recreation (if applicable)
+     * @return Original entity before recreation, or invalid entity if not applicable
+     */
+	virtual ecs::Entity getOriginalEntity() const { return ecs::Entity{ 0, 0 }; }
 };
+
+namespace editor
+{
+inline bool updateEntityReference( ecs::Entity &entityRef, ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	if ( entityRef.id == oldEntity.id && entityRef.generation == oldEntity.generation )
+	{
+		entityRef = newEntity;
+		return true;
+	}
+	return false;
+}
+}

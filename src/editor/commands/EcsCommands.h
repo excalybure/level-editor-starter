@@ -28,6 +28,9 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+	ecs::Entity getRecreatedEntity() const override;
+	ecs::Entity getOriginalEntity() const { return m_originalEntity; }
 
 	ecs::Entity getCreatedEntity() const { return m_entity; }
 
@@ -35,6 +38,7 @@ private:
 	ecs::Scene &m_scene;
 	std::string m_name;
 	ecs::Entity m_entity{};
+	ecs::Entity m_originalEntity{}; // Store the original entity for reference fixup
 	bool m_executed = false;
 };
 
@@ -55,10 +59,14 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+	ecs::Entity getRecreatedEntity() const override;
+	ecs::Entity getOriginalEntity() const { return m_originalEntity; }
 
 private:
 	ecs::Scene &m_scene;
 	ecs::Entity m_entity;
+	ecs::Entity m_originalEntity; // Store the original entity for reference fixup
 	std::string m_entityName;
 	bool m_executed = false;
 
@@ -131,16 +139,21 @@ public:
 		return sizeof( *this );
 	}
 
-	bool canMergeWith( const Command *other ) const override
+	bool canMergeWith( const Command * /* other */ ) const override
 	{
 		// Component commands typically cannot be merged
 		return false;
 	}
 
-	bool mergeWith( std::unique_ptr<Command> other ) override
+	bool mergeWith( std::unique_ptr<Command> /* other */ ) override
 	{
 		// Component commands typically cannot be merged
 		return false;
+	}
+
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override
+	{
+		return editor::updateEntityReference( m_entity, oldEntity, newEntity );
 	}
 
 private:
@@ -233,6 +246,11 @@ public:
 		return false;
 	}
 
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override
+	{
+		return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+	}
+
 private:
 	ecs::Scene &m_scene;
 	ecs::Entity m_entity;
@@ -258,6 +276,7 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
 
 private:
 	ecs::Scene &m_scene;
@@ -289,6 +308,7 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
 
 private:
 	ecs::Scene &m_scene;

@@ -14,6 +14,13 @@ bool CreateEntityCommand::execute()
 		return false;
 
 	m_entity = m_scene.createEntity( m_name );
+
+	// Store original entity on first execution for reference fixup
+	if ( !m_originalEntity.isValid() )
+	{
+		m_originalEntity = m_entity;
+	}
+
 	m_executed = true;
 	return m_entity.isValid();
 }
@@ -42,7 +49,7 @@ size_t CreateEntityCommand::getMemoryUsage() const
 	return sizeof( *this ) + m_name.size();
 }
 
-bool CreateEntityCommand::canMergeWith( const Command */* other */) const
+bool CreateEntityCommand::canMergeWith( const Command * /* other */ ) const
 {
 	// Entity creation commands cannot be merged
 	return false;
@@ -54,8 +61,24 @@ bool CreateEntityCommand::mergeWith( std::unique_ptr<Command> /* other */ )
 	return false;
 }
 
+bool CreateEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+ecs::Entity CreateEntityCommand::getRecreatedEntity() const
+{
+	// Return the recreated entity (m_entity) if this command has been executed and m_entity differs from m_originalEntity
+	// This indicates the entity was created, then undone (deleted), then redone (recreated with new generation)
+	if ( m_executed && m_entity.id == m_originalEntity.id && m_entity.generation != m_originalEntity.generation )
+	{
+		return m_entity;
+	}
+	return ecs::Entity{ 0, 0 }; // Invalid entity if not recreated
+}
+
 DeleteEntityCommand::DeleteEntityCommand( ecs::Scene &scene, ecs::Entity entity )
-	: m_scene( scene ), m_entity( entity ), m_executed( false )
+	: m_scene( scene ), m_entity( entity ), m_originalEntity( entity ), m_executed( false )
 {
 	// Capture the entity name if it has one
 	if ( scene.hasComponent<components::Name>( entity ) )
@@ -113,7 +136,7 @@ size_t DeleteEntityCommand::getMemoryUsage() const
 	return sizeof( *this ) + m_entityName.size();
 }
 
-bool DeleteEntityCommand::canMergeWith( const Command */* other */) const
+bool DeleteEntityCommand::canMergeWith( const Command * /* other */ ) const
 {
 	// Entity deletion commands cannot be merged
 	return false;
@@ -123,6 +146,22 @@ bool DeleteEntityCommand::mergeWith( std::unique_ptr<Command> /* other */ )
 {
 	// Entity deletion commands cannot be merged
 	return false;
+}
+
+bool DeleteEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+ecs::Entity DeleteEntityCommand::getRecreatedEntity() const
+{
+	// Return the recreated entity (m_entity) if this command has been executed and then undone
+	// Only return it if it differs from the original entity (meaning it was recreated)
+	if ( !m_executed && m_entity.id == m_originalEntity.id && m_entity.generation != m_originalEntity.generation )
+	{
+		return m_entity;
+	}
+	return ecs::Entity{ 0, 0 }; // Invalid entity if not recreated
 }
 
 void DeleteEntityCommand::captureEntityState()
@@ -221,7 +260,7 @@ size_t SetParentCommand::getMemoryUsage() const
 	return sizeof( *this ) + m_childName.size() + m_newParentName.size();
 }
 
-bool SetParentCommand::canMergeWith( const Command */* other */) const
+bool SetParentCommand::canMergeWith( const Command * /* other */ ) const
 {
 	// Hierarchy commands typically cannot be merged
 	return false;
@@ -231,6 +270,15 @@ bool SetParentCommand::mergeWith( std::unique_ptr<Command> /* other */ )
 {
 	// Hierarchy commands typically cannot be merged
 	return false;
+}
+
+bool SetParentCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	bool updated = false;
+	updated |= editor::updateEntityReference( m_child, oldEntity, newEntity );
+	updated |= editor::updateEntityReference( m_newParent, oldEntity, newEntity );
+	updated |= editor::updateEntityReference( m_oldParent, oldEntity, newEntity );
+	return updated;
 }
 
 void SetParentCommand::captureNames()
@@ -314,7 +362,7 @@ size_t RenameEntityCommand::getMemoryUsage() const
 	return sizeof( *this ) + m_oldName.size() + m_newName.size();
 }
 
-bool RenameEntityCommand::canMergeWith( const Command */* other */) const
+bool RenameEntityCommand::canMergeWith( const Command * /* other */ ) const
 {
 	// Rename commands typically cannot be merged
 	return false;
@@ -324,6 +372,11 @@ bool RenameEntityCommand::mergeWith( std::unique_ptr<Command> /* other */ )
 {
 	// Rename commands typically cannot be merged
 	return false;
+}
+
+bool RenameEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
 }
 
 void RenameEntityCommand::captureOldName()

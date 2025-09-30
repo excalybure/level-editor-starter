@@ -109,6 +109,7 @@ if (MSVC)
 endif()
 
 add_library(editor STATIC
+  src/editor/commands/CommandHistory.cpp
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
   src/editor/commands/EcsCommands.cpp
@@ -240,6 +241,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/command_ui_tests.cpp
     tests/command_performance_tests.cpp
     tests/command_integration_tests.cpp
+    tests/entity_fixup_test.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

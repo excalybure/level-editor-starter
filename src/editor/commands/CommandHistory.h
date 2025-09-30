@@ -209,46 +209,13 @@ public:
      * @brief Undo the last executed command
      * @return true if undo was successful
      */
-	bool undo()
-	{
-		PROFILE_COMMAND_OPERATION( "CommandHistory::undo" );
-
-		if ( !canUndo() )
-			return false;
-
-		--m_currentIndex;
-
-		{
-			PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::undo",
-				m_commands[m_currentIndex].context.getMemoryUsage() );
-			return m_commands[m_currentIndex].command->undo();
-		}
-	}
+	bool undo();
 
 	/**
      * @brief Redo the next undone command
      * @return true if redo was successful
      */
-	bool redo()
-	{
-		PROFILE_COMMAND_OPERATION( "CommandHistory::redo" );
-
-		if ( !canRedo() )
-			return false;
-
-		bool success;
-		{
-			PROFILE_COMMAND_OPERATION_WITH_MEMORY( "Command::redo",
-				m_commands[m_currentIndex].context.getMemoryUsage() );
-			success = m_commands[m_currentIndex].command->execute();
-		}
-
-		if ( success )
-		{
-			++m_currentIndex;
-		}
-		return success;
-	}
+	bool redo();
 
 	/**
      * @brief Get profiling data for command operations
@@ -285,6 +252,14 @@ public:
 	{
 		return calculateActualMemoryUsage();
 	}
+
+	/**
+     * @brief Update entity references in all commands after entity recreation
+     * @param oldEntity The old entity that was deleted
+     * @param newEntity The new entity that was recreated
+     * @return Number of commands that were updated
+     */
+	size_t fixupEntityReferences( ecs::Entity oldEntity, ecs::Entity newEntity );
 
 private:
 	/**

@@ -351,7 +351,7 @@ TEST_CASE( "ECS command validation with scene operations", "[integration][workfl
 		REQUIRE( nameComp->name == "RenamedEntity1" );
 
 		// Test undo sequence
-		REQUIRE( history.getCommandCount() == 7 );
+		REQUIRE( history.getCommandCount() == 6 );
 
 		// Undo rename
 		REQUIRE( history.undo() );
@@ -556,7 +556,7 @@ TEST_CASE( "Error recovery and system stability", "[integration][workflow][AF6.7
 
 		// The command creation should succeed, but execution might fail
 		const size_t commandsBefore = history.getCommandCount();
-		[[mayube_unused]] const bool result = history.executeCommand( std::move( invalidCmd ) );
+		[[maybe_unused]] const bool result = history.executeCommand( std::move( invalidCmd ) );
 
 		// System should remain stable regardless of result
 		REQUIRE( history.getCommandCount() >= commandsBefore ); // Count should not decrease

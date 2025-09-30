@@ -6,7 +6,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "engine/math/vec.h"
-#include "editor/commands/Command.h"  // Use the new Command interface
+#include "editor/commands/Command.h"
 
 // Forward declarations
 namespace editor
@@ -50,6 +50,7 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
 
 	/**
 	 * @brief Get the entity being transformed
@@ -104,6 +105,7 @@ public:
 	size_t getMemoryUsage() const override;
 	bool canMergeWith( const Command *other ) const override;
 	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
 
 	/**
 	 * @brief Get the entities being transformed

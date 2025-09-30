@@ -117,6 +117,11 @@ bool TransformEntityCommand::mergeWith( std::unique_ptr<Command> other )
 	return false;
 }
 
+bool TransformEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
 void TransformEntityCommand::updateAfterTransform( const components::Transform &afterTransform ) noexcept
 {
 	m_afterTransform = afterTransform;
@@ -196,16 +201,16 @@ std::string BatchTransformCommand::getDescription() const
 size_t BatchTransformCommand::getMemoryUsage() const
 {
 	size_t totalMemory = sizeof( *this );
-	
+
 	// Add memory usage of all individual commands
 	for ( const auto &command : m_commands )
 	{
 		totalMemory += command->getMemoryUsage();
 	}
-	
+
 	// Add memory for the vector storage
 	totalMemory += m_commands.capacity() * sizeof( std::unique_ptr<TransformEntityCommand> );
-	
+
 	return totalMemory;
 }
 
@@ -218,7 +223,7 @@ bool BatchTransformCommand::canMergeWith( const Command *other ) const
 		{
 			return false;
 		}
-		
+
 		// Check that all entities match
 		for ( size_t i = 0; i < m_commands.size(); ++i )
 		{
@@ -254,16 +259,29 @@ bool BatchTransformCommand::mergeWith( std::unique_ptr<Command> other )
 	return false;
 }
 
+bool BatchTransformCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	bool updated = false;
+	for ( auto &command : m_commands )
+	{
+		if ( command->updateEntityReference( oldEntity, newEntity ) )
+		{
+			updated = true;
+		}
+	}
+	return updated;
+}
+
 std::vector<ecs::Entity> BatchTransformCommand::getEntities() const
 {
 	std::vector<ecs::Entity> entities;
 	entities.reserve( m_commands.size() );
-	
+
 	for ( const auto &command : m_commands )
 	{
 		entities.push_back( command->getEntity() );
 	}
-	
+
 	return entities;
 }
 
@@ -273,7 +291,7 @@ void BatchTransformCommand::updateAfterTransforms( const std::vector<components:
 	{
 		return; // Size mismatch, cannot update
 	}
-	
+
 	for ( size_t i = 0; i < m_commands.size(); ++i )
 	{
 		m_commands[i]->updateAfterTransform( afterTransforms[i] );
