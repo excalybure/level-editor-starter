@@ -39,7 +39,7 @@ mode: agent
 3. Prefer **small diffs** and **narrow scope**. Do not edit unrelated files.
 4. **Const correctness**:
    - Functions and methods that do not mutate observable state **must be `const`**.
-   - **Local variables** are `const` if not mutated; prefer `constexpr` where viable.
+   - **Local variables** must be `const` if they are not mutated; prefer `constexpr` where viable.
    - Prefer **value/`string_view`/`span`** over raw pointers for ownership clarity.
 5. **C++23 features** are encouraged when they simplify or clarify code (concepts, ranges, modules). Use them pragmatically; don’t over‑engineer.
 6. **Logging noise**: test output may include `[INFO]`, `[WARNING]`, `[ERROR]/[ERRPR]` messages that are expected; **judge success solely by Catch2’s test results**.

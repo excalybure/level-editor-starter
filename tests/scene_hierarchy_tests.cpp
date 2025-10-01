@@ -186,3 +186,106 @@ TEST_CASE( "SceneHierarchyPanel - Deep hierarchies render correctly", "[T1.2][sc
 	REQUIRE( depth == 4 );
 	REQUIRE( current.id == level0.id ); // Should end at root
 }
+
+// T1.3: Selection Integration Tests
+
+TEST_CASE( "SceneHierarchyPanel - Clicking entity selects it", "[T1.3][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Simulate selection (panel will internally call selectionManager.select())
+	selectionManager.select( entity1 );
+
+	// Assert
+	REQUIRE( selectionManager.isSelected( entity1 ) );
+	REQUIRE( !selectionManager.isSelected( entity2 ) );
+	REQUIRE( selectionManager.getSelectionCount() == 1 );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Ctrl+Click adds to selection", "[T1.3][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+	const ecs::Entity entity3 = scene.createEntity( "Entity3" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Simulate Ctrl+Click (additive selection)
+	selectionManager.select( entity1, false ); // First click (replace)
+	selectionManager.select( entity2, true );  // Ctrl+Click (additive)
+	selectionManager.select( entity3, true );  // Ctrl+Click (additive)
+
+	// Assert
+	REQUIRE( selectionManager.isSelected( entity1 ) );
+	REQUIRE( selectionManager.isSelected( entity2 ) );
+	REQUIRE( selectionManager.isSelected( entity3 ) );
+	REQUIRE( selectionManager.getSelectionCount() == 3 );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Ctrl+Click on selected entity deselects it", "[T1.3][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Select both, then deselect one
+	selectionManager.select( entity1, false );
+	selectionManager.select( entity2, true );
+	selectionManager.toggleSelection( entity1 ); // Ctrl+Click on selected entity
+
+	// Assert
+	REQUIRE( !selectionManager.isSelected( entity1 ) );
+	REQUIRE( selectionManager.isSelected( entity2 ) );
+	REQUIRE( selectionManager.getSelectionCount() == 1 );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Selection synchronizes with SelectionManager", "[T1.3][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Select via SelectionManager
+	selectionManager.select( entity1 );
+
+	// Assert - Panel should reflect this selection
+	REQUIRE( selectionManager.isSelected( entity1 ) );
+	REQUIRE( selectionManager.getPrimarySelection().id == entity1.id );
+
+	// Act - Change selection
+	selectionManager.select( entity2 );
+
+	// Assert
+	REQUIRE( !selectionManager.isSelected( entity1 ) );
+	REQUIRE( selectionManager.isSelected( entity2 ) );
+	REQUIRE( selectionManager.getPrimarySelection().id == entity2.id );
+}

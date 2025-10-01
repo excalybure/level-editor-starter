@@ -67,13 +67,40 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	const std::vector<ecs::Entity> children = m_scene.getChildren( entity );
 	const bool hasChildren = !children.empty();
 
+	// Check if this entity is selected
+	const bool isSelected = m_selectionManager.isSelected( entity );
+
 	if ( hasChildren )
 	{
 		// Use ImGui tree node for entities with children
-		const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
 			ImGuiTreeNodeFlags_SpanAvailWidth;
 
+		// Add Selected flag if entity is selected
+		if ( isSelected )
+		{
+			flags |= ImGuiTreeNodeFlags_Selected;
+		}
+
 		const bool nodeOpen = ImGui::TreeNodeEx( label.c_str(), flags );
+
+		// Handle selection on click
+		if ( ImGui::IsItemClicked() )
+		{
+			// Check for Ctrl modifier for additive selection
+			const bool additive = ImGui::GetIO().KeyCtrl;
+
+			if ( additive && isSelected )
+			{
+				// Ctrl+Click on selected entity: toggle off
+				m_selectionManager.toggleSelection( entity );
+			}
+			else
+			{
+				// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
+				m_selectionManager.select( entity, additive );
+			}
+		}
 
 		if ( nodeOpen )
 		{
@@ -91,11 +118,35 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	}
 	else
 	{
-		// Leaf node - use Selectable or TreeNodeEx with leaf flag
-		const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen |
+		// Leaf node - use TreeNodeEx with leaf flag
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen |
 			ImGuiTreeNodeFlags_SpanAvailWidth;
 
+		// Add Selected flag if entity is selected
+		if ( isSelected )
+		{
+			flags |= ImGuiTreeNodeFlags_Selected;
+		}
+
 		ImGui::TreeNodeEx( label.c_str(), flags );
+
+		// Handle selection on click
+		if ( ImGui::IsItemClicked() )
+		{
+			// Check for Ctrl modifier for additive selection
+			const bool additive = ImGui::GetIO().KeyCtrl;
+
+			if ( additive && isSelected )
+			{
+				// Ctrl+Click on selected entity: toggle off
+				m_selectionManager.toggleSelection( entity );
+			}
+			else
+			{
+				// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
+				m_selectionManager.select( entity, additive );
+			}
+		}
 	}
 }
 

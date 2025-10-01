@@ -41,12 +41,29 @@
 
 ---
 
-## Remaining Sub-tasks
-
-### ⏳ T1.3: Selection Integration
-**Status:** NOT STARTED
+### ✅ T1.3: Selection Integration (COMPLETED - 2025-10-01)
 **Atomic Functionality:** Clicking entity selects it
-**Dependencies:** SelectionManager (already passed to constructor)
+
+**Implementation:**
+- Added selection state checking via `SelectionManager::isSelected()`
+- Applied `ImGuiTreeNodeFlags_Selected` for visual highlighting
+- Implemented `ImGui::IsItemClicked()` detection for mouse clicks
+- Added `ImGui::GetIO().KeyCtrl` detection for Ctrl modifier
+- Single-click: replaces selection (`select(entity, false)`)
+- Ctrl+Click: adds to selection or toggles off if already selected
+- Applied identical logic to both parent nodes and leaf nodes
+
+**Tests:** 4 test cases, 15 assertions passing
+- Clicking entity selects it
+- Ctrl+Click adds to selection
+- Ctrl+Click on selected entity deselects it
+- Selection synchronizes with SelectionManager
+
+**Result:** Full entity selection with multi-select support and visual feedback working. Panel integrates seamlessly with SelectionManager for cross-system selection coordination.
+
+---
+
+## Remaining Sub-tasks
 
 ### ⏳ T1.4: Drag-and-Drop Reparenting  
 **Status:** NOT STARTED

@@ -1,5 +1,29 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-01 — Scene Hierarchy Panel: Selection Integration (M2-P6-T1.3)
+**Summary:** Implemented complete entity selection functionality in Scene Hierarchy Panel with single-click selection, Ctrl+Click for multi-selection (additive), and toggle-deselection of already-selected entities. Panel now displays visual selection highlighting using ImGui's TreeNodeFlags_Selected and integrates seamlessly with SelectionManager for bidirectional selection state synchronization across all editor systems.
+
+**Atomic functionalities completed:**
+- AF1.3.1: Single-click entity selection - Added ImGui::IsItemClicked() detection in renderEntityNode(), calls SelectionManager::select() with additive=false to replace selection
+- AF1.3.2: Selection visual highlighting - Added isSelected check using SelectionManager::isSelected(), applies ImGuiTreeNodeFlags_Selected flag to both parent and leaf nodes
+- AF1.3.3: Ctrl+Click additive selection - Implemented ImGui::GetIO().KeyCtrl detection, passes additive=true to allow multi-entity selection accumulation
+- AF1.3.4: Ctrl+Click toggle deselection - Added logic to call SelectionManager::toggleSelection() when Ctrl+Clicking already-selected entity
+- AF1.3.5: SelectionManager synchronization - Panel queries selection state every frame and reflects changes made externally (e.g., from other panels or systems)
+- AF1.3.6: Parent and leaf node handling - Applied identical selection logic to both tree nodes (with children) and leaf nodes (no children) for consistent behavior
+
+**Tests:** 
+- T1.3 tests: 4 test cases with 15 new assertions (single-click, Ctrl+Click add, Ctrl+Click toggle, synchronization)
+- All tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 34 assertions in 11 test cases
+- Commands: `unit_test_runner.exe "[scene_hierarchy][T1.3]"`
+
+**Notes:** 
+- Selection logic handles both parent nodes (ImGuiTreeNodeFlags_OpenOnArrow) and leaf nodes (ImGuiTreeNodeFlags_Leaf) consistently
+- Visual feedback uses ImGui's built-in Selected flag for native platform appearance
+- No Shift+Click range selection implemented yet (deferred to future enhancement)
+- SelectionManager already handles primary selection designation for gizmo operations
+- Implementation follows TDD: tests written first, minimal code added to pass tests, refactored for const-correctness
+- Flag variables cannot be const as they're conditionally modified based on selection state
+
 ## 2025-09-30 — Scene Hierarchy Panel Foundation (M2-P6-T1.1-T1.2)
 **Summary:** Implemented foundation for Scene Hierarchy Panel with basic entity tree view and hierarchical parent-child rendering. Created SceneHierarchyPanel class following TDD methodology with tests written first (Red), then implementation (Green). Panel displays all entities in the scene with proper hierarchy using ImGui tree nodes, supporting expand/collapse for entities with children and proper indentation for nested structures up to arbitrary depth.
 
