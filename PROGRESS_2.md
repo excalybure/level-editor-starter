@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-09-30 — Scene Hierarchy Panel Foundation (M2-P6-T1.1-T1.2)
+**Summary:** Implemented foundation for Scene Hierarchy Panel with basic entity tree view and hierarchical parent-child rendering. Created SceneHierarchyPanel class following TDD methodology with tests written first (Red), then implementation (Green). Panel displays all entities in the scene with proper hierarchy using ImGui tree nodes, supporting expand/collapse for entities with children and proper indentation for nested structures up to arbitrary depth.
+
+**Atomic functionalities completed:**
+- AF1.1: SceneHierarchyPanel class creation - Created header and implementation files with constructor taking Scene&, SelectionManager&, CommandHistory& as dependencies
+- AF1.2: Basic rendering framework - Implemented render() method with ImGui::Begin/End window, visibility toggle via setVisible()/isVisible()
+- AF1.3: Entity enumeration - Implemented renderEntityTree() to iterate Scene::getAllEntities() and display entity names
+- AF1.4: Name fallback logic - Implemented getEntityDisplayName() returning Name component or "Entity [ID]" fallback
+- AF1.5: Recursive tree structure - Implemented renderEntityNode() with ImGui::TreeNodeEx for hierarchical rendering, filtering root entities (no parent) in renderEntityTree()
+- AF1.6: Parent-child relationships - Added recursive child rendering using Scene::getChildren(), properly indented using ImGui tree node structure
+- AF1.7: Tree node flags - Applied ImGuiTreeNodeFlags_OpenOnArrow, OpenOnDoubleClick, SpanAvailWidth for parent nodes; Leaf, NoTreePushOnOpen for leaf nodes
+
+**Tests:** 
+- T1.1 tests: 4 test cases with 10 assertions (empty scene, entity display, name fallback, visibility toggle)
+- T1.2 tests: 3 test cases with 9 assertions (root entity display, child indentation, deep hierarchies up to 5 levels)
+- All tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 19 assertions in 7 test cases
+- Commands: `unit_test_runner.exe "[scene_hierarchy][T1.1]"`, `unit_test_runner.exe "[scene_hierarchy][T1.2]"`
+
+**Notes:** 
+- Used Scene's implicit hierarchy API (getParent/getChildren/setParent) - no Hierarchy component exists
+- Implemented proper TDD workflow: wrote failing tests first, then minimal implementation to pass tests
+- Panel integrates with existing ECS and follows const-correctness guidelines
+- Tree nodes use format strings with ## separator for unique ImGui IDs even with duplicate names
+- Foundation ready for T1.3 (Selection Integration) - SelectionManager already passed to constructor
+- CMakeLists.txt updated to include SceneHierarchyPanel.cpp in editor library and scene_hierarchy_tests.cpp in test runner
+
 ## 2025-05-30 — Task 3: GizmoSystem Command Integration Complete (M2-P5-AF3.6)
 **Summary:** Successfully integrated GizmoSystem with CommandHistory to enable undoable/redoable gizmo manipulations. Implemented snapshot-based transform command creation where beginManipulation() captures before-state, endManipulation() creates appropriate commands (TransformEntityCommand for single entity, BatchTransformCommand for multiple), and CommandHistory::executeCommand() manages undo/redo. Fixed critical bug in BatchTransformCommand creation where constructor was adding commands twice (once automatically, once via addTransform), causing duplicate command execution and incorrect undo behavior.
 
