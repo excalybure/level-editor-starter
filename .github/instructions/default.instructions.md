@@ -279,6 +279,12 @@ Refs: M2-P1-T03
 - **Re-run tests frequently.** After each Green/Refactor step.
 - **Explain assumptions** in comments or the progress note when specs are ambiguous.
 - **Do not silence failing tests** (no `#ifdef`, no skipping without justification).
+- **Know when NOT to write unit tests**:
+  - **UI code requiring external contexts** (ImGui, DirectX, OpenGL): Writing unit tests for code that calls `ImGui::DragFloat()`, `ImGui::Button()`, etc., is **not productive** without a fully initialized ImGui context. Such tests either crash (SIGSEGV), or only validate API signatures without testing actual behavior.
+  - **Instead**: For UI widgets and rendering code, rely on **integration tests** that run in the full application context, or validate behavior through manual testing in the running editor.
+  - **Red flag**: If a test file cannot meaningfully call the functions it's supposed to test (e.g., stubbing out all ImGui calls), **do not create the test file**. Note in `PROGRESS_<N>.md` that the code will be validated via integration testing.
+  - **Exception**: You CAN test UI **logic** (e.g., state management, input validation, command generation) separately from rendering, by extracting testable functions that don't call ImGui directly.
+- **Ensure all read-only locals are const** Local variables that are not mutated have to be const
 
 ---
 
