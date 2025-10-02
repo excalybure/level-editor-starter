@@ -285,6 +285,9 @@ Refs: M2-P1-T03
   - **Red flag**: If a test file cannot meaningfully call the functions it's supposed to test (e.g., stubbing out all ImGui calls), **do not create the test file**. Note in `PROGRESS_<N>.md` that the code will be validated via integration testing.
   - **Exception**: You CAN test UI **logic** (e.g., state management, input validation, command generation) separately from rendering, by extracting testable functions that don't call ImGui directly.
 - **Ensure all read-only locals are const** Local variables that are not mutated have to be const
+- **Use semantic_search** for common utilities (conversions, constants, helpers) before implementing
+- **Use grep_search** with patterns like constexpr.*Pi|degrees|radians to find existing implementations
+- **Check namespace documentation** - If working in editor, check if math::, engine::, runtime:: have what you need
 
 ---
 

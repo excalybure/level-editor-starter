@@ -2,6 +2,7 @@
 
 #include <string>
 #include "runtime/entity.h"
+#include "runtime/components.h"
 
 namespace ecs
 {
@@ -72,6 +73,17 @@ private:
 	void renderSingleEntity( ecs::Entity entity );
 	void renderMultiSelection();
 	void renderEntityHeader( ecs::Entity entity );
+
+	// Component rendering methods
+	void renderTransformComponent( ecs::Entity entity );
+
+	// Transform editing state for command creation
+	struct TransformEditState
+	{
+		bool isEditing = false;
+		components::Transform beforeTransform;
+	};
+	TransformEditState m_transformEditState;
 };
 
 } // namespace editor

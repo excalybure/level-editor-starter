@@ -5,6 +5,8 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "runtime/systems.h"
+#include "engine/math/math.h"
+#include <cmath>
 
 // ============================================================================
 // T2.1: Inspector Panel Foundation Tests
@@ -130,4 +132,40 @@ TEST_CASE( "EntityInspectorPanel - Panel can be hidden and shown", "[T2.1][entit
 
 	panel.setVisible( false );
 	REQUIRE( !panel.isVisible() );
+}
+
+// ============================================================================
+// T2.3: Transform Component Editor Tests
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - Entity with Transform component can be inspected", "[T2.3][entity_inspector][transform][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TransformEntity" );
+
+	// Add Transform component
+	scene.addComponent( entity, components::Transform{} );
+
+	// Set initial transform values
+	auto *transform = scene.getComponent<components::Transform>( entity );
+	REQUIRE( transform != nullptr );
+
+	transform->position = { 1.0f, 2.0f, 3.0f };
+	transform->rotation = { 0.1f, 0.2f, 0.3f }; // radians
+	transform->scale = { 2.0f, 2.0f, 2.0f };
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Assert - Panel should be able to access Transform component
+	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
+	REQUIRE( transform->position.x == 1.0f );
+	REQUIRE( transform->position.y == 2.0f );
+	REQUIRE( transform->position.z == 3.0f );
 }

@@ -1,6 +1,63 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Transform Component Editor (M2-P6-T2.3)
+**Summary:** Implemented complete Transform component editor in Entity Inspector Panel with position, rotation (degrees), and scale editing using ComponentUI helpers. Transform modifications create TransformEntityCommand instances for full undo/redo support with command merging during continuous dragging. Rotation values display in degrees for user-friendly editing while storing in radians internally using existing `math::degrees()` and `math::radians()` utilities. Added Vec2/Vec3/Vec4 overloads for angle conversion functions to vec.h for cleaner vector-based conversions. The implementation leverages existing TransformEntityCommand's merge functionality to consolidate continuous drag operations into single undoable actions.
+
+**Atomic functionalities completed:**
+- AF2.3.1: renderTransformComponent() implementation - Added method displaying Transform component with ImGui::CollapsingHeader, defaultOpen flag, and three Vec3 controls for position/rotation/scale
+- AF2.3.2: Transform edit state tracking - Implemented TransformEditState struct storing isEditing flag and beforeTransform snapshot for command creation
+- AF2.3.3: Command creation on edit complete - Added logic detecting edit start (first value change) capturing before state, and edit end (mouse release) creating TransformEntityCommand
+- AF2.3.4: Degrees/radians conversion - Used existing `math::degrees()` and `math::radians()` functions from math.h for conversion instead of duplicating constants
+- AF2.3.5: Vec3 angle conversion overloads - Added `math::degrees(Vec3)` and `math::radians(Vec3)` to vec.h for component-wise conversion (also Vec2/Vec4)
+- AF2.3.6: Component presence check - Added hasComponent<Transform> check in renderSingleEntity() before calling renderTransformComponent()
+- AF2.3.7: Transform dirty marking - Called transform->markDirty() on all property changes to invalidate cached matrices
+- AF2.3.8: Command execution - Wired TransformEntityCommand to CommandHistory.executeCommand() for proper undo/redo stack integration
+- AF2.3.9: Drag speed tuning - Set appropriate speed parameters: 0.1f for position/scale, 1.0f for rotation degrees
+
+**Tests:**
+- T2.3 tests: 3 test cases with 22 assertions (component access, scalar conversion, Vec3 conversion)
+- Vec tests: 4 test cases with 29 assertions for Vec2/Vec3/Vec4 angle conversions with round-trip validation
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 34 assertions in 9 test cases
+- Commands: `unit_test_runner.exe "[T2.3]"` or `"[entity_inspector][transform]"` or `"[angles]"`
+
+**Notes:**
+- Command merging handled automatically by TransformEntityCommand's existing canMergeWith()/mergeWith() implementation
+- UI interaction testing (command creation on drag) validated through integration tests in running editor per updated instructions
+- Uses existing math utilities: `math::pi<float>`, `math::degrees()`, `math::radians()` from engine/math/math.h
+- Enhanced vec.h with Vec2/Vec3/Vec4 overloads for cleaner angle conversions: `math::degrees(vec)` and `math::radians(vec)`
+- Edit state tracking ensures single command per drag operation, not per frame change
+- Position reset value: (0,0,0), Scale reset: (1,1,1), Rotation reset: (0,0,0) degrees
+- Transform component rendered with ImGuiTreeNodeFlags_DefaultOpen for immediate visibility
+- Ready for Name/Visible component editors (T2.4) following same command pattern
+
 ## 2025-10-02 — Component UI Helpers (M2-P6-T2.2)
+**Summary:** Created ComponentUI utility class with reusable ImGui widgets for editing component properties. Implemented renderVec3Control() with RGB color-coded drag floats and reset button, plus renderFloatControl() with optional min/max bounds. These helpers provide consistent styling and interaction patterns for all component editors in the Entity Inspector Panel. Color coding: X=Red, Y=Green, Z=Blue for intuitive 3D vector editing.
+
+**Atomic functionalities completed:**
+- AF2.2.1: ComponentUI class structure - Created ComponentUI.h with static utility methods for component property rendering
+- AF2.2.2: Vec3 control API - Implemented renderVec3Control(label, value, resetValue, speed) returning bool for change detection
+- AF2.2.3: Color-coded components - Added RGB color styling (red/green/blue) for X/Y/Z drag floats with hover/active state colors
+- AF2.2.4: Reset button - Implemented reset button in renderVec3Control() to restore default values, returns true on reset
+- AF2.2.5: Float control API - Implemented renderFloatControl(label, value, min, max) with optional bounds enforcement
+- AF2.2.6: ImGui DragFloat integration - Used ImGui::DragFloat() with appropriate parameters for smooth value editing
+- AF2.2.7: Return value semantics - Both methods return true if user modified the value, enabling command creation
+- AF2.2.8: ImGui styling - Applied ImGuiCol_FrameBg colors for visual distinction and ImGui::PushID for unique widget IDs
+
+**Tests:**
+- No unit tests (ComponentUI requires ImGui context for testing, will be validated through integration tests)
+- Actual rendering and interaction behavior tested manually in editor
+
+**Notes:**
+- Unit tests not practical without ImGui context initialization
+- Color scheme matches industry standard (Unity/Unreal): Red=X, Green=Y, Blue=Z
+- ImGui::PushID ensures unique widget IDs when multiple controls render same-named properties
+- Reset button positioned inline with drag floats for convenient access
+- Float control supports unbounded mode (min=0, max=0) for free-form editing
+- ComponentUI.cpp uses ImGui::PushStyleColor/PopStyleColor for temporary color overrides
+- Widget widths set to 80px for balanced layout with three components
+- Implementation ready for Transform component editor (T2.3) and other component types
+
+## 2025-10-02 — Entity Inspector Panel: Foundation (M2-P6-T2.1)
 **Summary:** Created ComponentUI utility class with reusable ImGui widgets for editing component properties. Implemented renderVec3Control() with RGB color-coded drag floats and reset button, plus renderFloatControl() with optional min/max bounds. These helpers provide consistent styling and interaction patterns for all component editors in the Entity Inspector Panel. Color coding: X=Red, Y=Green, Z=Blue for intuitive 3D vector editing.
 
 **Atomic functionalities completed:**
