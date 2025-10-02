@@ -484,6 +484,45 @@ constexpr bool approxEqual( const Vec4<T> &a, const Vec4<T> &b, T epsilon = stat
 		std::abs( a.w - b.w ) <= epsilon;
 }
 
+// Angle conversion for Vec2
+template <typename T>
+constexpr Vec2<T> radians( const Vec2<T> &degrees_vec )
+{
+	return { radians( degrees_vec.x ), radians( degrees_vec.y ) };
+}
+
+template <typename T>
+constexpr Vec2<T> degrees( const Vec2<T> &radians_vec )
+{
+	return { degrees( radians_vec.x ), degrees( radians_vec.y ) };
+}
+
+// Angle conversion for Vec3
+template <typename T>
+constexpr Vec3<T> radians( const Vec3<T> &degrees_vec )
+{
+	return { radians( degrees_vec.x ), radians( degrees_vec.y ), radians( degrees_vec.z ) };
+}
+
+template <typename T>
+constexpr Vec3<T> degrees( const Vec3<T> &radians_vec )
+{
+	return { degrees( radians_vec.x ), degrees( radians_vec.y ), degrees( radians_vec.z ) };
+}
+
+// Angle conversion for Vec4
+template <typename T>
+constexpr Vec4<T> radians( const Vec4<T> &degrees_vec )
+{
+	return { radians( degrees_vec.x ), radians( degrees_vec.y ), radians( degrees_vec.z ), radians( degrees_vec.w ) };
+}
+
+template <typename T>
+constexpr Vec4<T> degrees( const Vec4<T> &radians_vec )
+{
+	return { degrees( radians_vec.x ), degrees( radians_vec.y ), degrees( radians_vec.z ), degrees( radians_vec.w ) };
+}
+
 // Concrete type aliases
 using Vec2f = Vec2<float>;
 using Vec2d = Vec2<double>;

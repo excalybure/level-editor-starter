@@ -349,3 +349,69 @@ TEST_CASE( "Vec swizzles are constexpr", "[math][vec][swizzle][constexpr]" )
 		static_assert( xyw.z == 4.0f );
 	}
 }
+
+TEST_CASE( "Vec3 angle conversion (radians/degrees)", "[math][vec3][angles]" )
+{
+	// Test Vec3 angle conversion functions
+	SECTION( "radians to degrees conversion" )
+	{
+		const math::Vec3f radiansVec{ math::pi<float>, math::pi<float> / 2.0f, math::pi<float> / 4.0f };
+		const math::Vec3f degreesVec = math::degrees( radiansVec );
+
+		REQUIRE_THAT( degreesVec.x, WithinRel( 180.0f, 0.01f ) );
+		REQUIRE_THAT( degreesVec.y, WithinRel( 90.0f, 0.01f ) );
+		REQUIRE_THAT( degreesVec.z, WithinRel( 45.0f, 0.01f ) );
+	}
+
+	SECTION( "degrees to radians conversion" )
+	{
+		const math::Vec3f degreesVec{ 180.0f, 90.0f, 45.0f };
+		const math::Vec3f radiansVec = math::radians( degreesVec );
+
+		REQUIRE_THAT( radiansVec.x, WithinRel( math::pi<float>, 0.01f ) );
+		REQUIRE_THAT( radiansVec.y, WithinRel( math::pi<float> / 2.0f, 0.01f ) );
+		REQUIRE_THAT( radiansVec.z, WithinRel( math::pi<float> / 4.0f, 0.01f ) );
+	}
+
+	SECTION( "round-trip conversion" )
+	{
+		const math::Vec3f original{ 1.2f, 2.3f, 3.4f };
+		const math::Vec3f converted = math::radians( math::degrees( original ) );
+
+		REQUIRE_THAT( converted.x, WithinRel( original.x, 0.0001f ) );
+		REQUIRE_THAT( converted.y, WithinRel( original.y, 0.0001f ) );
+		REQUIRE_THAT( converted.z, WithinRel( original.z, 0.0001f ) );
+	}
+}
+
+TEST_CASE( "Vec2 angle conversion (radians/degrees)", "[math][vec2][angles]" )
+{
+	// Test Vec2 angle conversion functions
+	const math::Vec2f radiansVec{ math::pi<float>, math::pi<float> / 2.0f };
+	const math::Vec2f degreesVec = math::degrees( radiansVec );
+
+	REQUIRE_THAT( degreesVec.x, WithinRel( 180.0f, 0.01f ) );
+	REQUIRE_THAT( degreesVec.y, WithinRel( 90.0f, 0.01f ) );
+
+	const math::Vec2f backToRadians = math::radians( degreesVec );
+	REQUIRE_THAT( backToRadians.x, WithinRel( math::pi<float>, 0.001f ) );
+	REQUIRE_THAT( backToRadians.y, WithinRel( math::pi<float> / 2.0f, 0.001f ) );
+}
+
+TEST_CASE( "Vec4 angle conversion (radians/degrees)", "[math][vec4][angles]" )
+{
+	// Test Vec4 angle conversion functions
+	const math::Vec4f radiansVec{ math::pi<float>, math::pi<float> / 2.0f, math::pi<float> / 4.0f, math::pi<float> / 6.0f };
+	const math::Vec4f degreesVec = math::degrees( radiansVec );
+
+	REQUIRE_THAT( degreesVec.x, WithinRel( 180.0f, 0.01f ) );
+	REQUIRE_THAT( degreesVec.y, WithinRel( 90.0f, 0.01f ) );
+	REQUIRE_THAT( degreesVec.z, WithinRel( 45.0f, 0.01f ) );
+	REQUIRE_THAT( degreesVec.w, WithinRel( 30.0f, 0.01f ) );
+
+	const math::Vec4f backToRadians = math::radians( degreesVec );
+	REQUIRE_THAT( backToRadians.x, WithinRel( math::pi<float>, 0.001f ) );
+	REQUIRE_THAT( backToRadians.y, WithinRel( math::pi<float> / 2.0f, 0.001f ) );
+	REQUIRE_THAT( backToRadians.z, WithinRel( math::pi<float> / 4.0f, 0.001f ) );
+	REQUIRE_THAT( backToRadians.w, WithinRel( math::pi<float> / 6.0f, 0.001f ) );
+}
