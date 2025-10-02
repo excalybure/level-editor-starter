@@ -394,3 +394,84 @@ TEST_CASE( "SceneHierarchyPanel - Cannot create circular parent-child relationsh
 	REQUIRE( scene.getParent( parent ).id == grandparent.id );	  // original hierarchy intact
 	REQUIRE( scene.getParent( child ).id == parent.id );
 }
+
+// ============================================================================
+// T1.5: Context Menu
+// ============================================================================
+
+TEST_CASE( "SceneHierarchyPanel - Create child entity command", "[T1.5][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity parent = scene.createEntity( "Parent" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Create child entity via command
+	auto createCommand = std::make_unique<editor::CreateEntityCommand>( scene, "Child" );
+	commandHistory.executeCommand( std::move( createCommand ) );
+
+	// Get the created entity (last entity in scene)
+	const auto entities = scene.getAllEntities();
+	const ecs::Entity child = entities.back();
+
+	// Set parent relationship
+	auto parentCommand = std::make_unique<editor::SetParentCommand>( scene, child, parent );
+	commandHistory.executeCommand( std::move( parentCommand ) );
+
+	// Assert
+	REQUIRE( scene.isValid( child ) );
+	REQUIRE( scene.getParent( child ).id == parent.id );
+	REQUIRE( scene.getChildren( parent ).size() == 1 );
+	REQUIRE( commandHistory.canUndo() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Delete entity command", "[T1.5][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "ToDelete" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Delete entity via command
+	auto command = std::make_unique<editor::DeleteEntityCommand>( scene, entity );
+	const bool executed = commandHistory.executeCommand( std::move( command ) );
+
+	// Assert
+	REQUIRE( executed );
+	REQUIRE( !scene.isValid( entity ) );
+	REQUIRE( commandHistory.canUndo() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Rename entity command", "[T1.5][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "OldName" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Rename entity via command
+	auto command = std::make_unique<editor::RenameEntityCommand>( scene, entity, "NewName" );
+	const bool executed = commandHistory.executeCommand( std::move( command ) );
+
+	// Assert
+	REQUIRE( executed );
+	const auto *name = scene.getComponent<components::Name>( entity );
+	REQUIRE( name != nullptr );
+	REQUIRE( name->name == "NewName" );
+	REQUIRE( commandHistory.canUndo() );
+}

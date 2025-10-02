@@ -227,6 +227,22 @@ bool SetParentCommand::execute()
 	if ( m_executed || !m_scene.isValid( m_child ) || !m_scene.isValid( m_newParent ) )
 		return false;
 
+	// Prevent self-parenting
+	if ( m_child.id == m_newParent.id )
+		return false;
+
+	// Prevent circular references (check if newParent is a descendant of child)
+	ecs::Entity current = m_newParent;
+	while ( m_scene.isValid( current ) )
+	{
+		const ecs::Entity parent = m_scene.getParent( current );
+		if ( !m_scene.isValid( parent ) )
+			break; // Reached root
+		if ( parent.id == m_child.id )
+			return false; // Would create circular reference
+		current = parent;
+	}
+
 	m_scene.setParent( m_child, m_newParent );
 	m_executed = true;
 	return true;

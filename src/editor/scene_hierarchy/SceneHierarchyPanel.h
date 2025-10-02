@@ -66,6 +66,7 @@ private:
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
 	bool m_visible = true;
+	ecs::Entity m_contextMenuEntity{}; // Entity for which context menu is open
 
 	/**
 	 * @brief Render the entity tree (all entities in hierarchical structure)
@@ -84,6 +85,12 @@ private:
 	 * @return Entity name or "Entity [ID]" fallback
 	 */
 	std::string getEntityDisplayName( ecs::Entity entity ) const;
+
+	/**
+	 * @brief Render context menu for an entity
+	 * @param entity The entity to show context menu for
+	 */
+	void renderContextMenu( ecs::Entity entity );
 };
 
 } // namespace editor

@@ -131,6 +131,13 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 			ImGui::EndDragDropTarget();
 		}
 
+		// Handle right-click for context menu
+		if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
+		{
+			m_contextMenuEntity = entity;
+			ImGui::OpenPopup( "EntityContextMenu" );
+		}
+
 		if ( nodeOpen )
 		{
 			// Render children recursively
@@ -203,7 +210,17 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 			}
 			ImGui::EndDragDropTarget();
 		}
+
+		// Handle right-click for context menu
+		if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
+		{
+			m_contextMenuEntity = entity;
+			ImGui::OpenPopup( "EntityContextMenu" );
+		}
 	}
+
+	// Render context menu (once per frame, not per entity)
+	renderContextMenu( entity );
 }
 
 std::string SceneHierarchyPanel::getEntityDisplayName( ecs::Entity entity ) const
@@ -216,6 +233,68 @@ std::string SceneHierarchyPanel::getEntityDisplayName( ecs::Entity entity ) cons
 
 	// Fallback to Entity [ID]
 	return std::format( "Entity [{}]", entity.id );
+}
+
+void SceneHierarchyPanel::renderContextMenu( ecs::Entity entity )
+{
+	// Only render context menu for the entity that was right-clicked
+	if ( entity.id != m_contextMenuEntity.id )
+		return;
+
+	if ( ImGui::BeginPopup( "EntityContextMenu" ) )
+	{
+		const std::string displayName = getEntityDisplayName( entity );
+		ImGui::Text( "Entity: %s", displayName.c_str() );
+		ImGui::Separator();
+
+		// Create Child
+		if ( ImGui::MenuItem( "Create Child" ) )
+		{
+			// Create new entity
+			auto createCommand = std::make_unique<CreateEntityCommand>( m_scene, "New Entity" );
+			m_commandHistory.executeCommand( std::move( createCommand ) );
+
+			// Get the created entity (last entity in scene)
+			const auto entities = m_scene.getAllEntities();
+			const ecs::Entity newEntity = entities.back();
+
+			// Set parent relationship
+			auto parentCommand = std::make_unique<SetParentCommand>( m_scene, newEntity, entity );
+			m_commandHistory.executeCommand( std::move( parentCommand ) );
+		}
+
+		// Duplicate (placeholder - requires DuplicateEntityCommand)
+		if ( ImGui::MenuItem( "Duplicate" ) )
+		{
+			// TODO: Implement DuplicateEntityCommand
+			// For now, just create a new entity with same name
+			const auto *name = m_scene.getComponent<components::Name>( entity );
+			const std::string newName = name ? name->name + " Copy" : "Entity Copy";
+
+			auto command = std::make_unique<CreateEntityCommand>( m_scene, newName );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+
+		// Delete
+		if ( ImGui::MenuItem( "Delete" ) )
+		{
+			auto command = std::make_unique<DeleteEntityCommand>( m_scene, entity );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+
+		ImGui::Separator();
+
+		// Rename
+		if ( ImGui::MenuItem( "Rename" ) )
+		{
+			// TODO: Implement inline rename (T1.6)
+			// For now, just use a simple hardcoded rename
+			auto command = std::make_unique<RenameEntityCommand>( m_scene, entity, "Renamed Entity" );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+
+		ImGui::EndPopup();
+	}
 }
 
 } // namespace editor

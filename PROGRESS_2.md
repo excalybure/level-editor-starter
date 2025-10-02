@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-15 — Scene Hierarchy Panel: Context Menu (M2-P6-T1.5)
+**Summary:** Implemented right-click context menu for Scene Hierarchy Panel with Create Child, Duplicate, Delete, and Rename operations. Added ImGui popup menu triggered on right-click (ImGuiMouseButton_Right) with menu items executing appropriate commands through CommandHistory. Fixed SetParentCommand validation to properly prevent self-parenting and circular hierarchies by returning false from execute() when invalid operations detected.
+
+**Atomic functionalities completed:**
+- AF1.5.1: Right-click menu trigger - Added IsItemHovered() and IsMouseClicked(ImGuiMouseButton_Right) detection in renderEntityNode(), stores m_contextMenuEntity and calls ImGui::OpenPopup()
+- AF1.5.2: Context menu UI rendering - Implemented renderContextMenu() method with ImGui::BeginPopup()/EndPopup() displaying entity name header and menu items
+- AF1.5.3: Create Child command integration - Menu item "Create Child" creates new entity with CreateEntityCommand, then parents it with SetParentCommand
+- AF1.5.4: Delete command integration - Menu item "Delete" executes DeleteEntityCommand to remove entity and all descendants
+- AF1.5.5: Rename command integration - Menu item "Rename" executes RenameEntityCommand with hardcoded "Renamed Entity" (inline rename deferred to T1.6)
+- AF1.5.6: Duplicate command placeholder - Menu item "Duplicate" creates new entity with " Copy" suffix (full DuplicateEntityCommand deferred)
+- AF1.5.7: SetParentCommand validation fix - Added self-parenting check (child.id == newParent.id) and circular reference detection loop in execute() method
+
+**Tests:** 
+- T1.5 tests: 3 test cases with 11 new assertions (create child, delete, rename command execution)
+- All scene hierarchy tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 60 assertions in 18 test cases
+- Commands: `unit_test_runner.exe "[T1.5]"` or `"[scene_hierarchy]"`
+
+**Notes:** 
+- SetParentCommand bug fix: execute() now validates against self-parenting and circular hierarchies before calling Scene::setParent(), returns false to prevent command history pollution
+- Circular reference detection: Added while loop checking if newParent is descendant of child by walking up parent chain
+- Context menu entity tracking: Added m_contextMenuEntity member to track which entity should show popup
+- Popup scoping: renderContextMenu() called per entity but only renders for matching m_contextMenuEntity to avoid multiple popups
+- Rename functionality: Currently uses hardcoded name; T1.6 will implement inline editing with ImGui::InputText
+- Duplicate functionality: Simple name-based copy; full component duplication requires DuplicateEntityCommand implementation
+- ImGui popup behavior: Popup remains open until user clicks outside or selects menu item, follows natural UI conventions
+
 ## 2025-10-01 — Scene Hierarchy Panel: Drag-and-Drop Reparenting (M2-P6-T1.4)
 **Summary:** Implemented drag-and-drop reparenting foundation for Scene Hierarchy Panel using existing SetParentCommand infrastructure. Created comprehensive tests demonstrating command execution, undo/redo functionality, and circular reference prevention. Tests verify that entities can be reparented via SetParentCommand with full command history support, and that the command properly validates against self-parenting and circular hierarchies. The implementation establishes the command-layer infrastructure needed for ImGui drag-drop UI integration.
 
