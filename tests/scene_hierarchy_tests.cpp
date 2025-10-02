@@ -574,3 +574,91 @@ TEST_CASE( "SceneHierarchyPanel - Empty rename buffer uses fallback name", "[T1.
 	REQUIRE( name->name == "TestEntity" );
 	REQUIRE( !panel.isRenaming() );
 }
+
+// ============================================================================
+// T1.8: Search and Filter Tests
+// ============================================================================
+
+TEST_CASE( "SceneHierarchyPanel - Search filter can be set and retrieved", "[T1.8][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act
+	panel.setSearchFilter( "Cube" );
+
+	// Assert
+	REQUIRE( panel.getSearchFilter() == "Cube" );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Empty search filter matches all entities", "[T1.8][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity cube = scene.createEntity( "Cube" );
+	const ecs::Entity sphere = scene.createEntity( "Sphere" );
+	const ecs::Entity light = scene.createEntity( "Light" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act
+	panel.setSearchFilter( "" );
+
+	// Assert - All entities should match when filter is empty
+	REQUIRE( panel.matchesSearchFilter( cube ) );
+	REQUIRE( panel.matchesSearchFilter( sphere ) );
+	REQUIRE( panel.matchesSearchFilter( light ) );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Search filter matches case-insensitively", "[T1.8][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity cube = scene.createEntity( "MyCube" );
+	const ecs::Entity sphere = scene.createEntity( "Sphere" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act
+	panel.setSearchFilter( "cube" ); // lowercase filter
+
+	// Assert - Should match "MyCube" case-insensitively
+	REQUIRE( panel.matchesSearchFilter( cube ) );
+	REQUIRE( !panel.matchesSearchFilter( sphere ) );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Search filter supports substring matching", "[T1.8][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity playerCube = scene.createEntity( "PlayerCube" );
+	const ecs::Entity enemyCube = scene.createEntity( "EnemyCube" );
+	const ecs::Entity sphere = scene.createEntity( "Sphere" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act
+	panel.setSearchFilter( "Cube" );
+
+	// Assert - Should match both entities containing "Cube"
+	REQUIRE( panel.matchesSearchFilter( playerCube ) );
+	REQUIRE( panel.matchesSearchFilter( enemyCube ) );
+	REQUIRE( !panel.matchesSearchFilter( sphere ) );
+}

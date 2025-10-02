@@ -155,17 +155,44 @@
 
 ---
 
+### ✅ T1.8: Search and Filter (COMPLETED - 2025-10-01)
+**Atomic Functionality:** Filter entities by name in hierarchy
+
+**Implementation:**
+- Added `m_searchFilter` string member for search text storage
+- Implemented test API: `setSearchFilter()`, `getSearchFilter()`, `matchesSearchFilter()`
+- Added ImGui::InputTextWithHint search bar at top of panel with "Search..." placeholder
+- Configured search input with full width (-1.0f) and ImGui::Separator() for visual division
+- Implemented case-insensitive matching using std::transform with std::tolower
+- Used std::string::find() for substring matching (not just prefix)
+- Empty filter returns true for all entities (no filtering)
+- Modified `renderEntityTree()` to skip entities not matching filter
+- Modified `renderEntityNode()` child rendering to apply filter check
+
+**Tests:** 4 test cases, 9 assertions passing
+- Search filter can be set and retrieved
+- Empty search filter matches all entities
+- Search filter matches case-insensitively ("cube" matches "MyCube")
+- Search filter supports substring matching ("Cube" matches "PlayerCube" and "EnemyCube")
+
+**Result:** Search and filter fully functional with real-time filtering. Search bar at top of panel filters entity visibility with case-insensitive substring matching. Supports quick navigation in large scenes.
+
+**Technical Notes:**
+- ImGui::InputTextWithHint provides better UX than plain InputText
+- std::tolower cast to unsigned char prevents undefined behavior with non-ASCII
+- Filter applies to both root entities and children consistently
+- Search updates continuously on every keystroke (no search button needed)
+- O(n) filter check per entity per frame - acceptable for typical scene sizes
+- Future enhancement: Could show parent entities of filtered children for context
+
+---
+
 ## Remaining Sub-tasks
 
 ### ⏳ T1.7: Focus Selected Entity
 **Status:** NOT STARTED
 **Atomic Functionality:** Double-click entity to focus camera on it
 **Requires:** Camera controller API integration
-
-### ⏳ T1.8: Search and Filter
-**Status:** NOT STARTED
-**Atomic Functionality:** Filter entities by name in hierarchy
-**UI:** Search input field with clear button
 
 ---
 
@@ -181,7 +208,7 @@
 
 ## Summary
 
-**Total Tests**: 22 test cases, 73 assertions
-**Passing**: 22 test cases, 73 assertions (all passing)
-**Coverage**: Basic tree, hierarchy, selection, drag-drop, context menu, inline rename
-**Next Steps**: T1.7 Focus Selected Entity or T1.8 Search and Filter (camera integration may be deferred)
+**Total Tests**: 26 test cases, 82 assertions
+**Passing**: 26 test cases, 82 assertions (all passing)
+**Coverage**: Basic tree, hierarchy, selection, drag-drop, context menu, inline rename, search filter
+**Next Steps**: T1.7 Focus Selected Entity (requires camera controller API)

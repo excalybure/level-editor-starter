@@ -8,6 +8,8 @@
 #include <format>
 #include <memory>
 #include <cstring>
+#include <algorithm>
+#include <cctype>
 
 namespace editor
 {
@@ -25,6 +27,19 @@ void SceneHierarchyPanel::render()
 		return;
 
 	ImGui::Begin( "Scene Hierarchy", &m_visible );
+
+	// Render search bar at the top
+	char searchBuffer[256];
+	std::strncpy( searchBuffer, m_searchFilter.c_str(), sizeof( searchBuffer ) - 1 );
+	searchBuffer[sizeof( searchBuffer ) - 1] = '\0';
+
+	ImGui::SetNextItemWidth( -1.0f ); // Full width
+	if ( ImGui::InputTextWithHint( "##search", "Search...", searchBuffer, sizeof( searchBuffer ) ) )
+	{
+		m_searchFilter = searchBuffer;
+	}
+
+	ImGui::Separator();
 
 	renderEntityTree();
 
@@ -46,6 +61,10 @@ void SceneHierarchyPanel::renderEntityTree()
 	{
 		// Skip invalid entities
 		if ( !m_scene.isValid( entity ) )
+			continue;
+
+		// Skip entities that don't match the search filter
+		if ( !matchesSearchFilter( entity ) )
 			continue;
 
 		// Only render entities that don't have a parent (root entities)
@@ -194,16 +213,14 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	{
 		for ( const auto &child : children )
 		{
-			if ( m_scene.isValid( child ) )
+			if ( m_scene.isValid( child ) && matchesSearchFilter( child ) )
 			{
 				renderEntityNode( child );
 			}
 		}
 
 		ImGui::TreePop();
-	}
-
-	// Render context menu (once per frame, not per entity)
+	} // Render context menu (once per frame, not per entity)
 	renderContextMenu( entity );
 }
 
@@ -318,6 +335,32 @@ void SceneHierarchyPanel::cancelRename()
 void SceneHierarchyPanel::setRenameBuffer( const std::string &name )
 {
 	m_renameBuffer = name;
+}
+
+void SceneHierarchyPanel::setSearchFilter( const std::string &filter )
+{
+	m_searchFilter = filter;
+}
+
+bool SceneHierarchyPanel::matchesSearchFilter( ecs::Entity entity ) const
+{
+	// Empty filter matches everything
+	if ( m_searchFilter.empty() )
+		return true;
+
+	// Get entity name
+	const std::string entityName = getEntityDisplayName( entity );
+
+	// Convert both to lowercase for case-insensitive comparison
+	std::string lowerEntityName = entityName;
+	std::string lowerFilter = m_searchFilter;
+
+	std::transform( lowerEntityName.begin(), lowerEntityName.end(), lowerEntityName.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+
+	std::transform( lowerFilter.begin(), lowerFilter.end(), lowerFilter.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+
+	// Check if entity name contains the filter string
+	return lowerEntityName.find( lowerFilter ) != std::string::npos;
 }
 
 } // namespace editor

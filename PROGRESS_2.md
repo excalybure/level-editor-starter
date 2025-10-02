@@ -1,5 +1,33 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-01 — Scene Hierarchy Panel: Search and Filter (M2-P6-T1.8)
+**Summary:** Implemented search and filter functionality for Scene Hierarchy Panel with case-insensitive substring matching. Added ImGui::InputTextWithHint search bar at top of panel that filters entity visibility in real-time. Entities not matching the search filter are hidden from the tree view, supporting quick navigation in large scenes. Implementation uses std::transform with std::tolower for case-insensitive comparison and std::string::find for substring matching.
+
+**Atomic functionalities completed:**
+- AF1.8.1: Search filter state - Added m_searchFilter string member to store current search text
+- AF1.8.2: Search filter API - Implemented setSearchFilter(), getSearchFilter(), matchesSearchFilter() methods for test validation
+- AF1.8.3: ImGui search input UI - Added InputTextWithHint at top of render() with full width (-1.0f) and "Search..." placeholder text
+- AF1.8.4: Real-time filter updates - Search buffer updates m_searchFilter on every keystroke for immediate feedback
+- AF1.8.5: Case-insensitive matching - Implemented matchesSearchFilter() using std::transform to convert both entity name and filter to lowercase
+- AF1.8.6: Substring matching - Used std::string::find() to check if entity name contains filter string anywhere (not just prefix)
+- AF1.8.7: Empty filter handling - Empty search filter matches all entities (returns true immediately)
+- AF1.8.8: Tree filtering integration - Modified renderEntityTree() and renderEntityNode() to skip entities that don't match filter
+
+**Tests:** 
+- T1.8 tests: 4 test cases with 9 new assertions (set/get filter, empty filter matches all, case-insensitive, substring matching)
+- All scene hierarchy tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 82 assertions in 26 test cases
+- Commands: `unit_test_runner.exe "[T1.8]"` or `"[scene_hierarchy]"`
+
+**Notes:** 
+- ImGui::InputTextWithHint provides better UX than plain InputText with placeholder text showing when empty
+- ImGui::Separator() visually divides search bar from entity tree for cleaner layout
+- std::tolower with unsigned char cast prevents undefined behavior with non-ASCII characters
+- Filter applies to both root entities and children for consistent behavior
+- Search updates continuously as user types (no explicit search button needed)
+- Future enhancement: Could show parent entities of filtered children for context (currently hides parents if they don't match)
+- Performance: O(n) filter check per entity per frame - acceptable for typical scene sizes (<10k entities)
+- Filter persistence: Search text remains between frames, cleared only when user deletes text
+
 ## 2025-01-15 — Scene Hierarchy Panel: Inline Rename (M2-P6-T1.6)
 **Summary:** Implemented inline rename functionality for Scene Hierarchy Panel with double-click activation, ImGui::InputText integration, and Enter/Escape key handling. Added test API methods (startRename, commitRename, cancelRename) for TDD validation. UI displays text input field inline when renaming, with automatic focus and text selection for quick editing. Context menu "Rename" option now triggers inline rename instead of hardcoded name.
 

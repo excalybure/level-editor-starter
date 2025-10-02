@@ -69,6 +69,11 @@ public:
 	ecs::Entity getRenamingEntity() const { return m_renameEntity; }
 	void setRenameBuffer( const std::string &name );
 
+	// Search filter API (for testing)
+	void setSearchFilter( const std::string &filter );
+	std::string getSearchFilter() const { return m_searchFilter; }
+	bool matchesSearchFilter( ecs::Entity entity ) const;
+
 private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
@@ -79,6 +84,9 @@ private:
 	// Inline rename state
 	ecs::Entity m_renameEntity{}; // Entity being renamed (invalid = not renaming)
 	std::string m_renameBuffer;	  // Current text in rename input field
+
+	// Search filter state
+	std::string m_searchFilter; // Current search filter text
 
 	/**
 	 * @brief Render the entity tree (all entities in hierarchical structure)
