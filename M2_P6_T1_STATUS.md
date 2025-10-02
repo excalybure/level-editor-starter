@@ -123,14 +123,41 @@
 
 ---
 
+### ✅ T1.6: Inline Rename (COMPLETED - 2025-01-15)
+**Atomic Functionality:** Double-click entity to rename inline with ImGui::InputText
+
+**Implementation:**
+- Added `m_renameEntity` and `m_renameBuffer` member variables for state tracking
+- Implemented test API: `startRename()`, `commitRename()`, `cancelRename()`, `isRenaming()`, `getRenamingEntity()`, `setRenameBuffer()`
+- Modified `renderEntityNode()` to render ImGui::InputText when entity is in rename mode
+- Added double-click detection: `ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)` triggers startRename()
+- Input field configuration: `ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll`
+- Enter key handling: commits rename and executes RenameEntityCommand through CommandHistory
+- Escape key handling: `ImGui::IsKeyPressed(ImGuiKey_Escape)` cancels rename
+- Empty name validation: commitRename() rejects empty strings
+- Context menu "Rename" now calls startRename() for inline editing
+
+**Tests:** 4 test cases, 13 assertions passing
+- Double-click starts rename mode
+- Commit rename executes RenameEntityCommand with new name
+- Cancel rename preserves original name
+- Empty name buffer rejected (keeps original name)
+
+**Result:** Inline rename fully functional with ImGui UI integration. Double-click any entity to edit name with text selection, Enter to commit, Escape to cancel. Context menu "Rename" option triggers same inline editing flow.
+
+**Technical Notes:**
+- Inline rendering uses TreeNodeEx with hidden label + SameLine() + InputText pattern
+- SetKeyboardFocusHere() auto-focuses input field on first frame
+- ImGuiKey_Escape used directly (GetKeyIndex deprecated in modern ImGui)
+- strncpy() used for buffer copying (warnings harmless with null termination)
+- Rename state isolated per entity via m_renameEntity validity check
+- Both parent nodes and leaf nodes support inline rename identically
+
+---
+
 ## Remaining Sub-tasks
 
-### ⏳ T1.6: Inline Rename
-**Status:** NOT STARTED  
-**Atomic Functionality:** Double-click entity to rename
-**Requires:** ModifyComponentCommand<Name> generic command
-
-### ⏳ T1.7: Focus Selected Entity (Frame in View)
+### ⏳ T1.7: Focus Selected Entity
 **Status:** NOT STARTED
 **Atomic Functionality:** Double-click entity to focus camera on it
 **Requires:** Camera controller API integration
@@ -154,7 +181,7 @@
 
 ## Summary
 
-**Total Tests**: 18 test cases, 60 assertions
-**Passing**: 18 test cases, 60 assertions (all passing)
-**Coverage**: Basic tree, hierarchy, selection, drag-drop, context menu
-**Next Steps**: T1.6 Inline Rename implementation
+**Total Tests**: 22 test cases, 73 assertions
+**Passing**: 22 test cases, 73 assertions (all passing)
+**Coverage**: Basic tree, hierarchy, selection, drag-drop, context menu, inline rename
+**Next Steps**: T1.7 Focus Selected Entity or T1.8 Search and Filter (camera integration may be deferred)

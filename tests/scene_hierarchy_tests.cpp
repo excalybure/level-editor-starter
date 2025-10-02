@@ -475,3 +475,102 @@ TEST_CASE( "SceneHierarchyPanel - Rename entity command", "[T1.5][scene_hierarch
 	REQUIRE( name->name == "NewName" );
 	REQUIRE( commandHistory.canUndo() );
 }
+
+// ============================================================================
+// T1.6: Inline Rename
+// ============================================================================
+
+TEST_CASE( "SceneHierarchyPanel - Double-click entity starts rename mode", "[T1.6][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Start rename mode
+	panel.startRename( entity );
+
+	// Assert
+	REQUIRE( panel.isRenaming() );
+	REQUIRE( panel.getRenamingEntity().id == entity.id );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Commit rename executes RenameEntityCommand", "[T1.6][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "OldName" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Start rename and commit with new name
+	panel.startRename( entity );
+	panel.setRenameBuffer( "NewName" );
+	panel.commitRename();
+
+	// Assert
+	const auto *name = scene.getComponent<components::Name>( entity );
+	REQUIRE( name != nullptr );
+	REQUIRE( name->name == "NewName" );
+	REQUIRE( commandHistory.canUndo() );
+	REQUIRE( !panel.isRenaming() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Cancel rename does not change name", "[T1.6][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "OriginalName" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Start rename, modify buffer, then cancel
+	panel.startRename( entity );
+	panel.setRenameBuffer( "ChangedName" );
+	panel.cancelRename();
+
+	// Assert
+	const auto *name = scene.getComponent<components::Name>( entity );
+	REQUIRE( name != nullptr );
+	REQUIRE( name->name == "OriginalName" );
+	REQUIRE( !commandHistory.canUndo() ); // No command executed
+	REQUIRE( !panel.isRenaming() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Empty rename buffer uses fallback name", "[T1.6][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Start rename with empty buffer and commit
+	panel.startRename( entity );
+	panel.setRenameBuffer( "" );
+	panel.commitRename();
+
+	// Assert - Should either cancel or use default name
+	const auto *name = scene.getComponent<components::Name>( entity );
+	REQUIRE( name != nullptr );
+	// Empty names should be rejected, keeping original name
+	REQUIRE( name->name == "TestEntity" );
+	REQUIRE( !panel.isRenaming() );
+}

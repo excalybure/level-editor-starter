@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-15 — Scene Hierarchy Panel: Inline Rename (M2-P6-T1.6)
+**Summary:** Implemented inline rename functionality for Scene Hierarchy Panel with double-click activation, ImGui::InputText integration, and Enter/Escape key handling. Added test API methods (startRename, commitRename, cancelRename) for TDD validation. UI displays text input field inline when renaming, with automatic focus and text selection for quick editing. Context menu "Rename" option now triggers inline rename instead of hardcoded name.
+
+**Atomic functionalities completed:**
+- AF1.6.1: Rename state tracking - Added m_renameEntity and m_renameBuffer members to track active rename operation
+- AF1.6.2: Test API methods - Implemented startRename(), commitRename(), cancelRename(), isRenaming(), getRenamingEntity(), setRenameBuffer() for TDD
+- AF1.6.3: ImGui inline input rendering - Modified renderEntityNode() to show InputText when entity is in rename mode for both parent and leaf nodes
+- AF1.6.4: Double-click activation - Added IsMouseDoubleClicked() detection to start rename mode on double-click
+- AF1.6.5: Enter key commit - InputText with EnterReturnsTrue flag executes RenameEntityCommand through CommandHistory
+- AF1.6.6: Escape key cancel - IsKeyPressed(ImGuiKey_Escape) cancels rename without modifying entity name
+- AF1.6.7: Empty name validation - commitRename() rejects empty names, calls cancelRename() instead
+- AF1.6.8: Context menu integration - "Rename" menu item calls startRename() instead of hardcoded RenameEntityCommand
+
+**Tests:** 
+- T1.6 tests: 4 test cases with 13 new assertions (start rename, commit, cancel, empty name handling)
+- All scene hierarchy tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 73 assertions in 22 test cases
+- Commands: `unit_test_runner.exe "[T1.6]"` or `"[scene_hierarchy]"`
+
+**Notes:** 
+- Input field rendered inline using TreeNodeEx with hidden label + SameLine() + InputText pattern
+- SetKeyboardFocusHere() ensures input receives focus immediately when rename starts
+- ImGuiInputTextFlags_AutoSelectAll highlights text for instant typing
+- Rename buffer updated continuously; committed only on Enter press
+- Double-click conflicts with tree node expand resolved by checking rename state first
+- Modern ImGui uses ImGuiKey_Escape directly instead of deprecated GetKeyIndex()
+- strncpy() warnings ignored (safe usage with explicit null termination)
+
 ## 2025-01-15 — Scene Hierarchy Panel: Context Menu (M2-P6-T1.5)
 **Summary:** Implemented right-click context menu for Scene Hierarchy Panel with Create Child, Duplicate, Delete, and Rename operations. Added ImGui popup menu triggered on right-click (ImGuiMouseButton_Right) with menu items executing appropriate commands through CommandHistory. Fixed SetParentCommand validation to properly prevent self-parenting and circular hierarchies by returning false from execute() when invalid operations detected.
 

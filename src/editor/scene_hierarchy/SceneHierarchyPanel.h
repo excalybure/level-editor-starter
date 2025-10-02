@@ -61,12 +61,24 @@ public:
 	 */
 	bool isVisible() const { return m_visible; }
 
+	// Inline rename API (for testing)
+	void startRename( ecs::Entity entity );
+	void commitRename();
+	void cancelRename();
+	bool isRenaming() const { return m_renameEntity.isValid(); }
+	ecs::Entity getRenamingEntity() const { return m_renameEntity; }
+	void setRenameBuffer( const std::string &name );
+
 private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
 	bool m_visible = true;
 	ecs::Entity m_contextMenuEntity{}; // Entity for which context menu is open
+
+	// Inline rename state
+	ecs::Entity m_renameEntity{}; // Entity being renamed (invalid = not renaming)
+	std::string m_renameBuffer;	  // Current text in rename input field
 
 	/**
 	 * @brief Render the entity tree (all entities in hierarchical structure)

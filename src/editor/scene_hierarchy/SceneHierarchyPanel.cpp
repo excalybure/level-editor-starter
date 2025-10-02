@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <format>
 #include <memory>
+#include <cstring>
 
 namespace editor
 {
@@ -72,6 +73,9 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	// Check if this entity is selected
 	const bool isSelected = m_selectionManager.isSelected( entity );
 
+	// Check if this entity is being renamed
+	const bool isRenaming = m_renameEntity.isValid() && m_renameEntity.id == entity.id;
+
 	if ( hasChildren )
 	{
 		// Use ImGui tree node for entities with children
@@ -84,58 +88,100 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 			flags |= ImGuiTreeNodeFlags_Selected;
 		}
 
-		const bool nodeOpen = ImGui::TreeNodeEx( label.c_str(), flags );
-
-		// Handle selection on click
-		if ( ImGui::IsItemClicked() )
+		// If renaming, show input field instead of tree node label
+		bool nodeOpen = false;
+		if ( isRenaming )
 		{
-			// Check for Ctrl modifier for additive selection
-			const bool additive = ImGui::GetIO().KeyCtrl;
+			// Show tree node arrow but with input field for name
+			nodeOpen = ImGui::TreeNodeEx( std::format( "##rename{}", entity.id ).c_str(), flags );
+			ImGui::SameLine();
 
-			if ( additive && isSelected )
+			// Focus input on first frame
+			ImGui::SetKeyboardFocusHere();
+
+			// Render input field
+			char buffer[256];
+			std::strncpy( buffer, m_renameBuffer.c_str(), sizeof( buffer ) - 1 );
+			buffer[sizeof( buffer ) - 1] = '\0';
+
+			if ( ImGui::InputText( std::format( "##input{}", entity.id ).c_str(), buffer, sizeof( buffer ), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll ) )
 			{
-				// Ctrl+Click on selected entity: toggle off
-				m_selectionManager.toggleSelection( entity );
+				// Enter pressed - commit rename
+				m_renameBuffer = buffer;
+				commitRename();
 			}
 			else
 			{
-				// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
-				m_selectionManager.select( entity, additive );
+				m_renameBuffer = buffer;
+			}
+
+			// Check for Escape to cancel
+			if ( ImGui::IsKeyPressed( ImGuiKey_Escape ) )
+			{
+				cancelRename();
 			}
 		}
-
-		// Setup drag source
-		if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+		else
 		{
-			// Set payload containing the entity ID
-			ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
-			ImGui::Text( "%s", displayName.c_str() );
-			ImGui::EndDragDropSource();
-		}
+			nodeOpen = ImGui::TreeNodeEx( label.c_str(), flags );
 
-		// Setup drop target
-		if ( ImGui::BeginDragDropTarget() )
-		{
-			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+			// Handle selection on click
+			if ( ImGui::IsItemClicked() )
 			{
-				const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+				// Check for Ctrl modifier for additive selection
+				const bool additive = ImGui::GetIO().KeyCtrl;
 
-				// Only execute if dragged entity is different from target
-				if ( draggedEntity.id != entity.id )
+				if ( additive && isSelected )
 				{
-					// Create and execute SetParentCommand
-					auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
-					m_commandHistory.executeCommand( std::move( command ) );
+					// Ctrl+Click on selected entity: toggle off
+					m_selectionManager.toggleSelection( entity );
+				}
+				else
+				{
+					// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
+					m_selectionManager.select( entity, additive );
 				}
 			}
-			ImGui::EndDragDropTarget();
-		}
 
-		// Handle right-click for context menu
-		if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
-		{
-			m_contextMenuEntity = entity;
-			ImGui::OpenPopup( "EntityContextMenu" );
+			// Handle double-click to start rename
+			if ( ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked( ImGuiMouseButton_Left ) )
+			{
+				startRename( entity );
+			}
+
+			// Setup drag source
+			if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+			{
+				// Set payload containing the entity ID
+				ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
+				ImGui::Text( "%s", displayName.c_str() );
+				ImGui::EndDragDropSource();
+			}
+
+			// Setup drop target
+			if ( ImGui::BeginDragDropTarget() )
+			{
+				if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+				{
+					const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+
+					// Only execute if dragged entity is different from target
+					if ( draggedEntity.id != entity.id )
+					{
+						// Create and execute SetParentCommand
+						auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
+						m_commandHistory.executeCommand( std::move( command ) );
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			// Handle right-click for context menu
+			if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
+			{
+				m_contextMenuEntity = entity;
+				ImGui::OpenPopup( "EntityContextMenu" );
+			}
 		}
 
 		if ( nodeOpen )
@@ -164,58 +210,99 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 			flags |= ImGuiTreeNodeFlags_Selected;
 		}
 
-		ImGui::TreeNodeEx( label.c_str(), flags );
-
-		// Handle selection on click
-		if ( ImGui::IsItemClicked() )
+		// If renaming, show input field instead of tree node label
+		if ( isRenaming )
 		{
-			// Check for Ctrl modifier for additive selection
-			const bool additive = ImGui::GetIO().KeyCtrl;
+			// Show tree node icon but with input field for name
+			ImGui::TreeNodeEx( std::format( "##rename{}", entity.id ).c_str(), flags );
+			ImGui::SameLine();
 
-			if ( additive && isSelected )
+			// Focus input on first frame
+			ImGui::SetKeyboardFocusHere();
+
+			// Render input field
+			char buffer[256];
+			std::strncpy( buffer, m_renameBuffer.c_str(), sizeof( buffer ) - 1 );
+			buffer[sizeof( buffer ) - 1] = '\0';
+
+			if ( ImGui::InputText( std::format( "##input{}", entity.id ).c_str(), buffer, sizeof( buffer ), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll ) )
 			{
-				// Ctrl+Click on selected entity: toggle off
-				m_selectionManager.toggleSelection( entity );
+				// Enter pressed - commit rename
+				m_renameBuffer = buffer;
+				commitRename();
 			}
 			else
 			{
-				// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
-				m_selectionManager.select( entity, additive );
+				m_renameBuffer = buffer;
+			}
+
+			// Check for Escape to cancel
+			if ( ImGui::IsKeyPressed( ImGuiKey_Escape ) )
+			{
+				cancelRename();
 			}
 		}
-
-		// Setup drag source
-		if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+		else
 		{
-			// Set payload containing the entity ID
-			ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
-			ImGui::Text( "%s", displayName.c_str() );
-			ImGui::EndDragDropSource();
-		}
+			ImGui::TreeNodeEx( label.c_str(), flags );
 
-		// Setup drop target
-		if ( ImGui::BeginDragDropTarget() )
-		{
-			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+			// Handle selection on click
+			if ( ImGui::IsItemClicked() )
 			{
-				const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+				// Check for Ctrl modifier for additive selection
+				const bool additive = ImGui::GetIO().KeyCtrl;
 
-				// Only execute if dragged entity is different from target
-				if ( draggedEntity.id != entity.id )
+				if ( additive && isSelected )
 				{
-					// Create and execute SetParentCommand
-					auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
-					m_commandHistory.executeCommand( std::move( command ) );
+					// Ctrl+Click on selected entity: toggle off
+					m_selectionManager.toggleSelection( entity );
+				}
+				else
+				{
+					// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
+					m_selectionManager.select( entity, additive );
 				}
 			}
-			ImGui::EndDragDropTarget();
-		}
 
-		// Handle right-click for context menu
-		if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
-		{
-			m_contextMenuEntity = entity;
-			ImGui::OpenPopup( "EntityContextMenu" );
+			// Handle double-click to start rename
+			if ( ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked( ImGuiMouseButton_Left ) )
+			{
+				startRename( entity );
+			}
+
+			// Setup drag source
+			if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+			{
+				// Set payload containing the entity ID
+				ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
+				ImGui::Text( "%s", displayName.c_str() );
+				ImGui::EndDragDropSource();
+			}
+
+			// Setup drop target
+			if ( ImGui::BeginDragDropTarget() )
+			{
+				if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+				{
+					const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+
+					// Only execute if dragged entity is different from target
+					if ( draggedEntity.id != entity.id )
+					{
+						// Create and execute SetParentCommand
+						auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
+						m_commandHistory.executeCommand( std::move( command ) );
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			// Handle right-click for context menu
+			if ( ImGui::IsItemHovered() && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
+			{
+				m_contextMenuEntity = entity;
+				ImGui::OpenPopup( "EntityContextMenu" );
+			}
 		}
 	}
 
@@ -287,14 +374,53 @@ void SceneHierarchyPanel::renderContextMenu( ecs::Entity entity )
 		// Rename
 		if ( ImGui::MenuItem( "Rename" ) )
 		{
-			// TODO: Implement inline rename (T1.6)
-			// For now, just use a simple hardcoded rename
-			auto command = std::make_unique<RenameEntityCommand>( m_scene, entity, "Renamed Entity" );
-			m_commandHistory.executeCommand( std::move( command ) );
+			// Start inline rename mode
+			startRename( entity );
 		}
 
 		ImGui::EndPopup();
 	}
+}
+
+void SceneHierarchyPanel::startRename( ecs::Entity entity )
+{
+	if ( !m_scene.isValid( entity ) )
+		return;
+
+	m_renameEntity = entity;
+	m_renameBuffer = getEntityDisplayName( entity );
+}
+
+void SceneHierarchyPanel::commitRename()
+{
+	if ( !m_renameEntity.isValid() )
+		return;
+
+	// Validate non-empty name
+	if ( m_renameBuffer.empty() )
+	{
+		cancelRename();
+		return;
+	}
+
+	// Execute rename command
+	auto command = std::make_unique<RenameEntityCommand>( m_scene, m_renameEntity, m_renameBuffer );
+	m_commandHistory.executeCommand( std::move( command ) );
+
+	// Clear rename state
+	m_renameEntity = ecs::Entity{};
+	m_renameBuffer.clear();
+}
+
+void SceneHierarchyPanel::cancelRename()
+{
+	m_renameEntity = ecs::Entity{};
+	m_renameBuffer.clear();
+}
+
+void SceneHierarchyPanel::setRenameBuffer( const std::string &name )
+{
+	m_renameBuffer = name;
 }
 
 } // namespace editor
