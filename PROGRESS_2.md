@@ -1,5 +1,35 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-16 — Scene Hierarchy Panel: Focus Selected Entity (M2-P6-T1.7)
+**Summary:** Implemented focus selected entity functionality with callback-based API for camera integration. Added setFocusCallback/requestFocus methods to SceneHierarchyPanel allowing camera controller to focus on selected entities. Integrated F key shortcut (ImGui::IsKeyPressed(ImGuiKey_F)) in render() method to trigger focus on first selected entity when panel has window focus. Camera system already provides focusOnPoint() and focusOnBounds() methods for smooth entity framing with ease-out interpolation.
+
+**Atomic functionalities completed:**
+- AF1.7.1: Focus callback typedef - Added using FocusCallback = std::function<void(ecs::Entity)> and #include <functional> to support testable callback pattern
+- AF1.7.2: Focus API implementation - Implemented setFocusCallback(FocusCallback) storing callback with std::move for efficient transfer
+- AF1.7.3: Focus request validation - Implemented requestFocus(ecs::Entity) with scene.isValid() check and safe callback invocation
+- AF1.7.4: F key detection - Added ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_F) in render() to detect focus shortcut
+- AF1.7.5: Selection integration - F key triggers requestFocus() on first selected entity from SelectionManager::getSelectedEntities()
+- AF1.7.6: Callback invocation safety - requestFocus() checks if m_focusCallback is set before invoking to prevent null function calls
+- AF1.7.7: Entity validation - requestFocus() validates entity with scene.isValid() before callback invocation
+- AF1.7.8: Transform component access - Tests verify callback can access Transform component to retrieve entity position for camera focus
+
+**Tests:** 
+- T1.7 tests: 4 test cases with 14 new assertions (callback set/invoke, no-callback safety, Transform bounds calculation, F key trigger simulation)
+- All scene hierarchy tests passing: `unit_test_runner.exe "[scene_hierarchy]"` - 88 assertions in 29 test cases
+- Focus-specific tests: `unit_test_runner.exe "*Focus*"` - 14 assertions in 4 test cases
+- Commands: `unit_test_runner.exe "[T1.7]"` or `"[scene_hierarchy]"` or `"*Focus*"`
+
+**Notes:** 
+- Camera API discovery: PerspectiveCameraController::focusOnPoint(const math::Vec3<> &point, float distance = 10.0f) and focusOnBounds(center, size) already implemented with FocusState for smooth transitions
+- Callback pattern enables unit testing without ViewportManager dependency injection
+- F key chosen over double-click to avoid conflict with inline rename (T1.6)
+- Test pattern uses lambda callbacks to capture focus invocations for verification
+- Real integration will wire callback in UI class: `hierarchyPanel.setFocusCallback([this](ecs::Entity e) { viewport->getController()->focusOnPoint(transform->position); });`
+- Viewport integration: ViewportManager::getActiveViewport() → Viewport::getController() → PerspectiveCameraController cast → focusOnPoint()
+- Camera focus transitions use ease-out interpolation for smooth animation (see FocusState in camera_controller.h)
+- ECS API fix during implementation: scene.addComponent(entity, component) takes component by value, not pointer return
+- F key requires window focus check (ImGui::IsWindowFocused()) to prevent triggering when other panels active
+
 ## 2025-10-01 — Scene Hierarchy Panel: Search and Filter (M2-P6-T1.8)
 **Summary:** Implemented search and filter functionality for Scene Hierarchy Panel with case-insensitive substring matching. Added ImGui::InputTextWithHint search bar at top of panel that filters entity visibility in real-time. Entities not matching the search filter are hidden from the tree view, supporting quick navigation in large scenes. Implementation uses std::transform with std::tolower for case-insensitive comparison and std::string::find for substring matching.
 

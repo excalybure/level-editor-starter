@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include "editor/scene_hierarchy/SceneHierarchyPanel.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
@@ -6,6 +7,7 @@
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
 #include "runtime/systems.h"
+#include "engine/math/vec.h"
 
 TEST_CASE( "SceneHierarchyPanel - Empty scene renders without errors", "[T1.1][scene_hierarchy][unit]" )
 {
@@ -661,4 +663,92 @@ TEST_CASE( "SceneHierarchyPanel - Search filter supports substring matching", "[
 	REQUIRE( panel.matchesSearchFilter( playerCube ) );
 	REQUIRE( panel.matchesSearchFilter( enemyCube ) );
 	REQUIRE( !panel.matchesSearchFilter( sphere ) );
+}
+
+// ============================================================================
+// T1.7: Focus Selected Entity Tests
+// ============================================================================
+
+TEST_CASE( "SceneHierarchyPanel - Focus callback can be set and invoked", "[T1.7][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Track if focus callback was invoked
+	bool focusCallbackInvoked = false;
+	ecs::Entity focusedEntity{};
+
+	panel.setFocusCallback( [&]( ecs::Entity e ) {
+		focusCallbackInvoked = true;
+		focusedEntity = e;
+	} );
+
+	// Act
+	panel.requestFocus( entity );
+
+	// Assert
+	REQUIRE( focusCallbackInvoked );
+	REQUIRE( focusedEntity.id == entity.id );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Focus with no callback does not crash", "[T1.7][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act & Assert - Should not crash
+	panel.requestFocus( entity );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Focus calculates entity bounds from Transform", "[T1.7][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+	// Add Transform component
+	components::Transform transform;
+	transform.position = math::Vec3<>{ 10.0f, 20.0f, 30.0f };
+	scene.addComponent( entity, transform );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Track focus parameters
+	math::Vec3<> focusPosition{};
+	bool focusCallbackInvoked = false;
+
+	panel.setFocusCallback( [&]( ecs::Entity e ) {
+		focusCallbackInvoked = true;
+		if ( const auto *t = scene.getComponent<components::Transform>( e ) )
+		{
+			focusPosition = t->position;
+		}
+	} );
+
+	// Act
+	panel.requestFocus( entity );
+
+	// Assert
+	REQUIRE( focusCallbackInvoked );
+	REQUIRE( focusPosition.x == Catch::Approx( 10.0f ) );
+	REQUIRE( focusPosition.y == Catch::Approx( 20.0f ) );
+	REQUIRE( focusPosition.z == Catch::Approx( 30.0f ) );
 }

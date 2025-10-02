@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 #include "runtime/entity.h"
 
 namespace ecs
@@ -74,6 +75,11 @@ public:
 	std::string getSearchFilter() const { return m_searchFilter; }
 	bool matchesSearchFilter( ecs::Entity entity ) const;
 
+	// Focus entity API (for testing)
+	using FocusCallback = std::function<void( ecs::Entity )>;
+	void setFocusCallback( FocusCallback callback );
+	void requestFocus( ecs::Entity entity );
+
 private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
@@ -87,6 +93,9 @@ private:
 
 	// Search filter state
 	std::string m_searchFilter; // Current search filter text
+
+	// Focus callback
+	FocusCallback m_focusCallback; // Callback to focus camera on entity
 
 	/**
 	 * @brief Render the entity tree (all entities in hierarchical structure)

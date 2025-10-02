@@ -41,6 +41,17 @@ void SceneHierarchyPanel::render()
 
 	ImGui::Separator();
 
+	// Handle F key to focus on selected entity
+	if ( ImGui::IsWindowFocused() && ImGui::IsKeyPressed( ImGuiKey_F ) )
+	{
+		const auto selectedEntities = m_selectionManager.getSelectedEntities();
+		if ( !selectedEntities.empty() )
+		{
+			// Focus on the first selected entity
+			requestFocus( selectedEntities[0] );
+		}
+	}
+
 	renderEntityTree();
 
 	ImGui::End();
@@ -361,6 +372,23 @@ bool SceneHierarchyPanel::matchesSearchFilter( ecs::Entity entity ) const
 
 	// Check if entity name contains the filter string
 	return lowerEntityName.find( lowerFilter ) != std::string::npos;
+}
+
+void SceneHierarchyPanel::setFocusCallback( FocusCallback callback )
+{
+	m_focusCallback = std::move( callback );
+}
+
+void SceneHierarchyPanel::requestFocus( ecs::Entity entity )
+{
+	if ( !m_scene.isValid( entity ) )
+		return;
+
+	// Invoke callback if set
+	if ( m_focusCallback )
+	{
+		m_focusCallback( entity );
+	}
 }
 
 } // namespace editor
