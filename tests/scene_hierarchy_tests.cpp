@@ -4,6 +4,7 @@
 #include "runtime/components.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
+#include "editor/commands/EcsCommands.h"
 #include "runtime/systems.h"
 
 TEST_CASE( "SceneHierarchyPanel - Empty scene renders without errors", "[T1.1][scene_hierarchy][unit]" )
@@ -288,4 +289,108 @@ TEST_CASE( "SceneHierarchyPanel - Selection synchronizes with SelectionManager",
 	REQUIRE( !selectionManager.isSelected( entity1 ) );
 	REQUIRE( selectionManager.isSelected( entity2 ) );
 	REQUIRE( selectionManager.getPrimarySelection().id == entity2.id );
+}
+
+// ============================================================================
+// T1.4: Drag-and-Drop Reparenting
+// ============================================================================
+
+TEST_CASE( "SceneHierarchyPanel - Drag-drop executes SetParentCommand", "[T1.4][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity parent = scene.createEntity( "Parent" );
+	const ecs::Entity child = scene.createEntity( "Child" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Execute SetParentCommand (simulating drag-drop behavior)
+	auto command = std::make_unique<editor::SetParentCommand>( scene, child, parent );
+	const bool executed = commandHistory.executeCommand( std::move( command ) );
+
+	// Assert
+	REQUIRE( executed );
+	REQUIRE( scene.getParent( child ).id == parent.id );
+	REQUIRE( scene.getChildren( parent ).size() == 1 );
+	REQUIRE( scene.getChildren( parent )[0].id == child.id );
+	REQUIRE( commandHistory.canUndo() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Drag-drop command can be undone", "[T1.4][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity parent = scene.createEntity( "Parent" );
+	const ecs::Entity child = scene.createEntity( "Child" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Execute and then undo
+	auto command = std::make_unique<editor::SetParentCommand>( scene, child, parent );
+	commandHistory.executeCommand( std::move( command ) );
+	const bool undone = commandHistory.undo();
+
+	// Assert
+	REQUIRE( undone );
+	REQUIRE( !scene.getParent( child ).isValid() );
+	REQUIRE( scene.getChildren( parent ).empty() );
+	REQUIRE( commandHistory.canRedo() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Cannot drag entity onto itself", "[T1.4][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "Entity" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Act - Try to parent entity to itself
+	auto command = std::make_unique<editor::SetParentCommand>( scene, entity, entity );
+	const bool executed = commandHistory.executeCommand( std::move( command ) );
+
+	// Assert - Should fail (circular reference)
+	REQUIRE( !executed );
+	REQUIRE( !scene.getParent( entity ).isValid() );
+}
+
+TEST_CASE( "SceneHierarchyPanel - Cannot create circular parent-child relationships", "[T1.4][scene_hierarchy][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity grandparent = scene.createEntity( "Grandparent" );
+	const ecs::Entity parent = scene.createEntity( "Parent" );
+	const ecs::Entity child = scene.createEntity( "Child" );
+
+	editor::SceneHierarchyPanel panel( scene, selectionManager, commandHistory );
+
+	// Set up hierarchy: grandparent -> parent -> child
+	scene.setParent( parent, grandparent );
+	scene.setParent( child, parent );
+
+	// Act - Try to make grandparent a child of child (circular!)
+	auto command = std::make_unique<editor::SetParentCommand>( scene, grandparent, child );
+	const bool executed = commandHistory.executeCommand( std::move( command ) );
+
+	// Assert - Should fail (would create cycle)
+	REQUIRE( !executed );
+	REQUIRE( scene.getParent( grandparent ).isValid() == false ); // grandparent should still be root
+	REQUIRE( scene.getParent( parent ).id == grandparent.id );	  // original hierarchy intact
+	REQUIRE( scene.getParent( child ).id == parent.id );
 }

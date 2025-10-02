@@ -3,8 +3,10 @@
 #include "runtime/components.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
+#include "editor/commands/EcsCommands.h"
 #include <imgui.h>
 #include <format>
+#include <memory>
 
 namespace editor
 {
@@ -102,6 +104,33 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 			}
 		}
 
+		// Setup drag source
+		if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+		{
+			// Set payload containing the entity ID
+			ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
+			ImGui::Text( "%s", displayName.c_str() );
+			ImGui::EndDragDropSource();
+		}
+
+		// Setup drop target
+		if ( ImGui::BeginDragDropTarget() )
+		{
+			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+			{
+				const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+
+				// Only execute if dragged entity is different from target
+				if ( draggedEntity.id != entity.id )
+				{
+					// Create and execute SetParentCommand
+					auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
+					m_commandHistory.executeCommand( std::move( command ) );
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		if ( nodeOpen )
 		{
 			// Render children recursively
@@ -146,6 +175,33 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 				// Normal click or Ctrl+Click on unselected: select (additive if Ctrl held)
 				m_selectionManager.select( entity, additive );
 			}
+		}
+
+		// Setup drag source
+		if ( ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+		{
+			// Set payload containing the entity ID
+			ImGui::SetDragDropPayload( "ENTITY_HIERARCHY", &entity, sizeof( ecs::Entity ) );
+			ImGui::Text( "%s", displayName.c_str() );
+			ImGui::EndDragDropSource();
+		}
+
+		// Setup drop target
+		if ( ImGui::BeginDragDropTarget() )
+		{
+			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
+			{
+				const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
+
+				// Only execute if dragged entity is different from target
+				if ( draggedEntity.id != entity.id )
+				{
+					// Create and execute SetParentCommand
+					auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
+					m_commandHistory.executeCommand( std::move( command ) );
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 	}
 }
