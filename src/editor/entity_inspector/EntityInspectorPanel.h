@@ -76,6 +76,8 @@ private:
 
 	// Component rendering methods
 	void renderTransformComponent( ecs::Entity entity );
+	void renderNameComponent( ecs::Entity entity );
+	void renderVisibleComponent( ecs::Entity entity );
 
 	// Transform editing state for command creation
 	struct TransformEditState
@@ -84,6 +86,23 @@ private:
 		components::Transform beforeTransform;
 	};
 	TransformEditState m_transformEditState;
+
+	// Name editing state for command creation
+	struct NameEditState
+	{
+		bool isEditing = false;
+		std::string beforeName;
+		char nameBuffer[256] = {};
+	};
+	NameEditState m_nameEditState;
+
+	// Visible editing state for command creation
+	struct VisibleEditState
+	{
+		bool isEditing = false;
+		components::Visible beforeVisible;
+	};
+	VisibleEditState m_visibleEditState;
 };
 
 } // namespace editor

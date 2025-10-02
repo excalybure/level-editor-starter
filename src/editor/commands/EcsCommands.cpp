@@ -409,6 +409,98 @@ void RenameEntityCommand::captureOldName()
 	}
 }
 
+// ModifyVisibleCommand implementation
+ModifyVisibleCommand::ModifyVisibleCommand( ecs::Scene &scene, ecs::Entity entity, const components::Visible &newVisible )
+	: m_scene( scene ), m_entity( entity ), m_newVisible( newVisible ), m_executed( false ), m_hadVisibleComponent( false )
+{
+	captureOldVisible();
+}
+
+bool ModifyVisibleCommand::execute()
+{
+	if ( m_executed || !m_scene.isValid( m_entity ) )
+		return false;
+
+	// Ensure the entity has a Visible component
+	if ( !m_scene.hasComponent<components::Visible>( m_entity ) )
+	{
+		// Add Visible component if it doesn't exist
+		m_scene.addComponent( m_entity, m_newVisible );
+	}
+	else
+	{
+		// Modify existing Visible component
+		auto *visible = m_scene.getComponent<components::Visible>( m_entity );
+		*visible = m_newVisible;
+	}
+
+	m_executed = true;
+	return true;
+}
+
+bool ModifyVisibleCommand::undo()
+{
+	if ( !m_executed )
+		return false;
+
+	if ( m_hadVisibleComponent )
+	{
+		// Restore old visible state
+		auto *visible = m_scene.getComponent<components::Visible>( m_entity );
+		*visible = m_oldVisible;
+	}
+	else
+	{
+		// Remove visible component that was added
+		m_scene.removeComponent<components::Visible>( m_entity );
+	}
+
+	m_executed = false;
+	return true;
+}
+
+std::string ModifyVisibleCommand::getDescription() const
+{
+	return "Modify Visibility";
+}
+
+size_t ModifyVisibleCommand::getMemoryUsage() const
+{
+	return sizeof( *this );
+}
+
+bool ModifyVisibleCommand::canMergeWith( const Command * /* other */ ) const
+{
+	// Visible modification commands typically cannot be merged
+	return false;
+}
+
+bool ModifyVisibleCommand::mergeWith( std::unique_ptr<Command> /* other */ )
+{
+	// Visible modification commands typically cannot be merged
+	return false;
+}
+
+bool ModifyVisibleCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+void ModifyVisibleCommand::captureOldVisible()
+{
+	if ( m_scene.hasComponent<components::Visible>( m_entity ) )
+	{
+		m_oldVisible = *m_scene.getComponent<components::Visible>( m_entity );
+		m_hadVisibleComponent = true;
+	}
+	else
+	{
+		// Default visible state
+		m_oldVisible = components::Visible{};
+		m_hadVisibleComponent = false;
+	}
+}
+
 // EcsCommandFactory implementations
 std::unique_ptr<CreateEntityCommand> EcsCommandFactory::createEntity( ecs::Scene &scene, const std::string &name )
 {
@@ -428,6 +520,11 @@ std::unique_ptr<SetParentCommand> EcsCommandFactory::setParent( ecs::Scene &scen
 std::unique_ptr<RenameEntityCommand> EcsCommandFactory::renameEntity( ecs::Scene &scene, ecs::Entity entity, const std::string &newName )
 {
 	return std::make_unique<RenameEntityCommand>( scene, entity, newName );
+}
+
+std::unique_ptr<ModifyVisibleCommand> EcsCommandFactory::modifyVisible( ecs::Scene &scene, ecs::Entity entity, const components::Visible &newVisible )
+{
+	return std::make_unique<ModifyVisibleCommand>( scene, entity, newVisible );
 }
 
 } // namespace editor

@@ -4,10 +4,12 @@
 #include "runtime/components.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
+#include "editor/commands/EcsCommands.h"
 #include "editor/transform_commands.h"
 #include "engine/math/math.h"
 #include <imgui.h>
 #include <format>
+#include <cstring>
 
 namespace editor
 {
@@ -72,6 +74,18 @@ void EntityInspectorPanel::renderSingleEntity( ecs::Entity entity )
 {
 	renderEntityHeader( entity );
 	ImGui::Separator();
+
+	// Render Name component if present
+	if ( m_scene.hasComponent<components::Name>( entity ) )
+	{
+		renderNameComponent( entity );
+	}
+
+	// Render Visible component if present
+	if ( m_scene.hasComponent<components::Visible>( entity ) )
+	{
+		renderVisibleComponent( entity );
+	}
 
 	// Render Transform component if present
 	if ( m_scene.hasComponent<components::Transform>( entity ) )
@@ -190,6 +204,130 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 
 			// Reset edit state
 			m_transformEditState.isEditing = false;
+		}
+
+		ImGui::PopID();
+	}
+}
+
+void EntityInspectorPanel::renderNameComponent( ecs::Entity entity )
+{
+	auto *nameComp = m_scene.getComponent<components::Name>( entity );
+	if ( !nameComp )
+		return;
+
+	// Component header with collapsing header
+	if ( ImGui::CollapsingHeader( "Name", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::PushID( "Name" );
+
+		// Initialize buffer if not editing yet
+		if ( !m_nameEditState.isEditing )
+		{
+			std::strncpy( m_nameEditState.nameBuffer, nameComp->name.c_str(), sizeof( m_nameEditState.nameBuffer ) - 1 );
+			m_nameEditState.nameBuffer[sizeof( m_nameEditState.nameBuffer ) - 1] = '\0';
+		}
+
+		ImGui::Text( "Name" );
+		ImGui::SameLine();
+
+		// Input text for name editing
+		const bool valueChanged = ImGui::InputText( "##NameInput", m_nameEditState.nameBuffer, sizeof( m_nameEditState.nameBuffer ), ImGuiInputTextFlags_EnterReturnsTrue );
+
+		// Detect when input becomes active (user clicks in field)
+		if ( ImGui::IsItemActivated() && !m_nameEditState.isEditing )
+		{
+			// Capture before state
+			m_nameEditState.isEditing = true;
+			m_nameEditState.beforeName = nameComp->name;
+		}
+
+		// Detect when input becomes inactive (user finishes editing)
+		const bool editingEnded = m_nameEditState.isEditing && ( valueChanged || ( ImGui::IsItemDeactivated() && !ImGui::IsItemActive() ) );
+
+		if ( editingEnded )
+		{
+			// Get new name from buffer
+			const std::string newName = m_nameEditState.nameBuffer;
+
+			// Only create command if name actually changed
+			if ( newName != m_nameEditState.beforeName )
+			{
+				auto command = std::make_unique<editor::RenameEntityCommand>( m_scene, entity, newName );
+				m_commandHistory.executeCommand( std::move( command ) );
+			}
+
+			// Reset edit state
+			m_nameEditState.isEditing = false;
+		}
+
+		ImGui::PopID();
+	}
+}
+
+void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
+{
+	auto *visible = m_scene.getComponent<components::Visible>( entity );
+	if ( !visible )
+		return;
+
+	// Component header with collapsing header
+	if ( ImGui::CollapsingHeader( "Visible", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::PushID( "Visible" );
+
+		bool valueChanged = false;
+
+		// Visible checkbox
+		bool isVisible = visible->visible;
+		if ( ImGui::Checkbox( "Visible", &isVisible ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisible = *visible;
+			}
+			visible->visible = isVisible;
+			valueChanged = true;
+		}
+
+		// Cast Shadows checkbox
+		bool castShadows = visible->castShadows;
+		if ( ImGui::Checkbox( "Cast Shadows", &castShadows ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisible = *visible;
+			}
+			visible->castShadows = castShadows;
+			valueChanged = true;
+		}
+
+		// Receive Shadows checkbox
+		bool receiveShadows = visible->receiveShadows;
+		if ( ImGui::Checkbox( "Receive Shadows", &receiveShadows ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisible = *visible;
+			}
+			visible->receiveShadows = receiveShadows;
+			valueChanged = true;
+		}
+
+		// Create command when editing ends (no items active anymore)
+		if ( m_visibleEditState.isEditing && !ImGui::IsAnyItemActive() )
+		{
+			// Create and execute visible command
+			const components::Visible afterVisible = *visible;
+			auto command = std::make_unique<editor::ModifyVisibleCommand>( m_scene, entity, afterVisible );
+
+			m_commandHistory.executeCommand( std::move( command ) );
+
+			// Reset edit state
+			m_visibleEditState.isEditing = false;
 		}
 
 		ImGui::PopID();

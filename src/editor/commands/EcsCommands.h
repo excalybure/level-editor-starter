@@ -322,6 +322,36 @@ private:
 };
 
 /**
+ * @brief Command for modifying Visible component properties
+ * 
+ * Changes the Visible component of an entity while preserving the old state
+ * for undo functionality.
+ */
+class ModifyVisibleCommand : public Command
+{
+public:
+	ModifyVisibleCommand( ecs::Scene &scene, ecs::Entity entity, const components::Visible &newVisible );
+
+	bool execute() override;
+	bool undo() override;
+	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command *other ) const override;
+	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+
+private:
+	ecs::Scene &m_scene;
+	ecs::Entity m_entity;
+	components::Visible m_newVisible;
+	components::Visible m_oldVisible;
+	bool m_executed = false;
+	bool m_hadVisibleComponent = false;
+
+	void captureOldVisible();
+};
+
+/**
  * @brief Factory for creating ECS command instances
  * 
  * Provides convenient static methods for creating all types of ECS commands
@@ -352,6 +382,9 @@ public:
 
 	// Naming commands
 	static std::unique_ptr<RenameEntityCommand> renameEntity( ecs::Scene &scene, ecs::Entity entity, const std::string &newName );
+
+	// Component modification commands
+	static std::unique_ptr<ModifyVisibleCommand> modifyVisible( ecs::Scene &scene, ecs::Entity entity, const components::Visible &newVisible );
 };
 
 } // namespace editor

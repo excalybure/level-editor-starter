@@ -533,6 +533,85 @@ TEST_CASE( "RenameEntityCommand for name changes", "[ecs-commands][unit][AF2.6]"
 	}
 }
 
+TEST_CASE( "ModifyVisibleCommand for visibility changes", "[ecs-commands][unit][T2.4][visible]" )
+{
+	SECTION( "ModifyVisibleCommand can be constructed with entity and new visible state" )
+	{
+		ecs::Scene scene;
+		const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+		components::Visible oldVisible;
+		oldVisible.visible = true;
+		oldVisible.castShadows = true;
+		oldVisible.receiveShadows = true;
+		scene.addComponent( entity, oldVisible );
+
+		components::Visible newVisible;
+		newVisible.visible = false;
+		newVisible.castShadows = false;
+		newVisible.receiveShadows = false;
+
+		editor::ModifyVisibleCommand cmd( scene, entity, newVisible );
+
+		REQUIRE( cmd.getDescription() == "Modify Visible Component" );
+	}
+
+	SECTION( "ModifyVisibleCommand execute modifies visible component" )
+	{
+		ecs::Scene scene;
+		const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+		components::Visible oldVisible;
+		oldVisible.visible = true;
+		oldVisible.castShadows = true;
+		oldVisible.receiveShadows = true;
+		scene.addComponent( entity, oldVisible );
+
+		components::Visible newVisible;
+		newVisible.visible = false;
+		newVisible.castShadows = false;
+		newVisible.receiveShadows = false;
+
+		editor::ModifyVisibleCommand cmd( scene, entity, newVisible );
+
+		REQUIRE( cmd.execute() );
+
+		const auto *visible = scene.getComponent<components::Visible>( entity );
+		REQUIRE( visible != nullptr );
+		REQUIRE( visible->visible == false );
+		REQUIRE( visible->castShadows == false );
+		REQUIRE( visible->receiveShadows == false );
+	}
+
+	SECTION( "ModifyVisibleCommand undo restores original visible state" )
+	{
+		ecs::Scene scene;
+		const ecs::Entity entity = scene.createEntity( "TestEntity" );
+
+		components::Visible oldVisible;
+		oldVisible.visible = true;
+		oldVisible.castShadows = true;
+		oldVisible.receiveShadows = false;
+		scene.addComponent( entity, oldVisible );
+
+		components::Visible newVisible;
+		newVisible.visible = false;
+		newVisible.castShadows = false;
+		newVisible.receiveShadows = true;
+
+		editor::ModifyVisibleCommand cmd( scene, entity, newVisible );
+
+		REQUIRE( cmd.execute() );
+		REQUIRE( cmd.undo() );
+
+		const auto *visible = scene.getComponent<components::Visible>( entity );
+		REQUIRE( visible != nullptr );
+		REQUIRE( visible->visible == true );
+		REQUIRE( visible->castShadows == true );
+		REQUIRE( visible->receiveShadows == false );
+	}
+}
+
 TEST_CASE( "EcsCommandFactory convenient command creation", "[ecs-commands][unit][AF2.8]" )
 {
 	SECTION( "EcsCommandFactory can create all command types" )

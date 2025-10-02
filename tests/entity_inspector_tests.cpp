@@ -169,3 +169,59 @@ TEST_CASE( "EntityInspectorPanel - Entity with Transform component can be inspec
 	REQUIRE( transform->position.y == 2.0f );
 	REQUIRE( transform->position.z == 3.0f );
 }
+
+// ============================================================================
+// T2.4: Name and Visible Component Editor Tests
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - Entity with Name component can be inspected", "[T2.4][entity_inspector][name][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "NamedEntity" );
+
+	// Name component is auto-added by createEntity with custom name
+	REQUIRE( scene.hasComponent<components::Name>( entity ) );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Assert - Panel should be able to access Name component
+	const auto *name = scene.getComponent<components::Name>( entity );
+	REQUIRE( name != nullptr );
+	REQUIRE( name->name == "NamedEntity" );
+}
+
+TEST_CASE( "EntityInspectorPanel - Entity with Visible component can be inspected", "[T2.4][entity_inspector][visible][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "VisibleEntity" );
+
+	// Add Visible component
+	components::Visible visible;
+	visible.visible = true;
+	visible.castShadows = false;
+	visible.receiveShadows = true;
+	scene.addComponent( entity, visible );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Assert - Panel should be able to access Visible component
+	const auto *visibleComp = scene.getComponent<components::Visible>( entity );
+	REQUIRE( visibleComp != nullptr );
+	REQUIRE( visibleComp->visible == true );
+	REQUIRE( visibleComp->castShadows == false );
+	REQUIRE( visibleComp->receiveShadows == true );
+}

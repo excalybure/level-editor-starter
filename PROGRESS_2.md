@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Name and Visible Component Editors (M2-P6-T2.4)
+**Summary:** Implemented Name and Visible component editors in Entity Inspector Panel with full undo/redo support. The Name editor uses ImGui::InputText() with RenameEntityCommand for entity renaming, while the Visible editor provides checkboxes for visible/castShadows/receiveShadows properties with a new ModifyVisibleCommand for state changes. Both editors follow the established command pattern from Transform editing, capturing before/after states and creating commands only when values actually change.
+
+**Atomic functionalities completed:**
+- AF2.4.1: renderNameComponent() implementation - Added method displaying Name component with ImGui::InputText(), capturing edit start/end states, creating RenameEntityCommand on value change
+- AF2.4.2: ModifyVisibleCommand creation - Implemented new command class for Visible component modifications with execute/undo, capturing old state for restoration
+- AF2.4.3: renderVisibleComponent() implementation - Added method with three checkboxes (visible, castShadows, receiveShadows), creating ModifyVisibleCommand on changes
+- AF2.4.4: Component integration - Wired Name and Visible editors into renderSingleEntity(), checking component presence before rendering
+
+**Tests:**
+- T2.4 entity inspector tests: 2 test cases with 7 assertions (component access validation for Name and Visible components)
+- ModifyVisibleCommand tests: 3 test cases with 12 assertions (construction, execute, undo with state restoration)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 24 assertions in 9 test cases
+- Commands: `unit_test_runner.exe "[T2.4]"` or `"[visible]"`
+
+**Notes:**
+- Name editing uses text input buffer (256 chars) with edit state tracking for command creation
+- RenameEntityCommand already existed in EcsCommands, reused for Name component editing
+- ModifyVisibleCommand follows same pattern as RenameEntityCommand: captures old state, modifies on execute, restores on undo
+- Input text activation/deactivation detects when user starts/finishes editing entity name
+- Visible checkboxes create command when mouse released (no items active), similar to Transform drag behavior
+- Edit state ensures single command per editing session, not per checkbox change
+- Components rendered in order: Name → Visible → Transform for logical grouping
+- Both components use ImGuiTreeNodeFlags_DefaultOpen for immediate visibility
+- Ready for MeshRenderer component editor (T2.5) with read-only display
+
 ## 2025-10-02 — Transform Component Editor (M2-P6-T2.3)
 **Summary:** Implemented complete Transform component editor in Entity Inspector Panel with position, rotation (degrees), and scale editing using ComponentUI helpers. Transform modifications create TransformEntityCommand instances for full undo/redo support with command merging during continuous dragging. Rotation values display in degrees for user-friendly editing while storing in radians internally using existing `math::degrees()` and `math::radians()` utilities. Added Vec2/Vec3/Vec4 overloads for angle conversion functions to vec.h for cleaner vector-based conversions. The implementation leverages existing TransformEntityCommand's merge functionality to consolidate continuous drag operations into single undoable actions.
 
