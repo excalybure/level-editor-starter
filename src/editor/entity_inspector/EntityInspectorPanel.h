@@ -78,6 +78,7 @@ private:
 	void renderTransformComponent( ecs::Entity entity );
 	void renderNameComponent( ecs::Entity entity );
 	void renderVisibleComponent( ecs::Entity entity );
+	void renderMeshRendererComponent( ecs::Entity entity );
 
 	// Transform editing state for command creation
 	struct TransformEditState

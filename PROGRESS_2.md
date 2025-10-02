@@ -1,5 +1,29 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — MeshRenderer Component Editor (M2-P6-T2.5)
+**Summary:** Implemented read-only MeshRenderer component editor in Entity Inspector Panel displaying mesh handle, GPU upload status, and primitive count. The editor shows mesh handle value, color-coded GPU status (green="Uploaded", orange="Not Uploaded"), primitive count when GPU mesh is available, and LOD bias. This establishes the foundation for future asset selector functionality where users will be able to browse and assign mesh assets to entities.
+
+**Atomic functionalities completed:**
+- AF2.5.1: renderMeshRendererComponent() method declaration - Added method signature to EntityInspectorPanel.h for MeshRenderer component rendering
+- AF2.5.2: Read-only display implementation - Implemented display showing mesh handle, GPU status with color coding, primitive count, and LOD bias (all read-only)
+- AF2.5.3: Component integration - Wired MeshRenderer editor into renderSingleEntity() with hasComponent check, rendering after Transform component
+- AF2.5.4: Component access test - Added test validating MeshRenderer component access and basic property values
+
+**Tests:**
+- T2.5 test: 1 test case with 3 assertions (component access validation for MeshRenderer)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 27 assertions in 10 test cases
+- Commands: `unit_test_runner.exe "[T2.5]"` or `"[entity_inspector][meshrenderer]"`
+
+**Notes:**
+- MeshRenderer display is read-only (no editing), suitable for inspection and debugging
+- GPU status shows "Uploaded" in green when gpuMesh != nullptr, "Not Uploaded" in orange otherwise
+- Primitive count only displayed when GPU mesh is available (avoids null pointer access)
+- LOD bias displayed with 2 decimal precision
+- Placeholder text "(Asset selector coming soon)" indicates future enhancement area
+- Component uses ImGuiTreeNodeFlags_DefaultOpen for immediate visibility
+- Included engine/gpu/mesh_gpu.h for MeshGPU type definition and getPrimitiveCount() access
+- Ready for Add Component Menu (T2.6) to enable adding MeshRenderer to entities
+
 ## 2025-10-02 — Name and Visible Component Editors (M2-P6-T2.4)
 **Summary:** Implemented Name and Visible component editors in Entity Inspector Panel with full undo/redo support. The Name editor uses ImGui::InputText() with RenameEntityCommand for entity renaming, while the Visible editor provides checkboxes for visible/castShadows/receiveShadows properties with a new ModifyVisibleCommand for state changes. Both editors follow the established command pattern from Transform editing, capturing before/after states and creating commands only when values actually change.
 

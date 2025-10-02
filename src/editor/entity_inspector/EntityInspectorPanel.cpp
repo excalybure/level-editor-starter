@@ -7,6 +7,7 @@
 #include "editor/commands/EcsCommands.h"
 #include "editor/transform_commands.h"
 #include "engine/math/math.h"
+#include "engine/gpu/mesh_gpu.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>
@@ -91,6 +92,12 @@ void EntityInspectorPanel::renderSingleEntity( ecs::Entity entity )
 	if ( m_scene.hasComponent<components::Transform>( entity ) )
 	{
 		renderTransformComponent( entity );
+	}
+
+	// Render MeshRenderer component if present
+	if ( m_scene.hasComponent<components::MeshRenderer>( entity ) )
+	{
+		renderMeshRendererComponent( entity );
 	}
 
 	// Additional component editors will be added in subsequent tasks
@@ -329,6 +336,52 @@ void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
 			// Reset edit state
 			m_visibleEditState.isEditing = false;
 		}
+
+		ImGui::PopID();
+	}
+}
+
+void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
+{
+	const auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
+	if ( !meshRenderer )
+		return;
+
+	// Component header with collapsing header
+	if ( ImGui::CollapsingHeader( "MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::PushID( "MeshRenderer" );
+
+		// Display mesh handle (read-only)
+		ImGui::Text( "Mesh Handle" );
+		ImGui::SameLine();
+		ImGui::TextDisabled( "%u", meshRenderer->meshHandle );
+
+		// Display GPU status (read-only)
+		ImGui::Text( "GPU Status" );
+		ImGui::SameLine();
+		if ( meshRenderer->gpuMesh != nullptr )
+		{
+			ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "Uploaded" );
+
+			// Display primitive count if GPU mesh is available
+			ImGui::Text( "Primitives" );
+			ImGui::SameLine();
+			ImGui::TextDisabled( "%u", meshRenderer->gpuMesh->getPrimitiveCount() );
+		}
+		else
+		{
+			ImGui::TextColored( ImVec4( 1.0f, 0.5f, 0.0f, 1.0f ), "Not Uploaded" );
+		}
+
+		// Display LOD bias (read-only for now)
+		ImGui::Text( "LOD Bias" );
+		ImGui::SameLine();
+		ImGui::TextDisabled( "%.2f", meshRenderer->lodBias );
+
+		// Future: Asset selector button will be added here
+		ImGui::Separator();
+		ImGui::TextDisabled( "(Asset selector coming soon)" );
 
 		ImGui::PopID();
 	}

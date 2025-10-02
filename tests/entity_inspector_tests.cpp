@@ -225,3 +225,29 @@ TEST_CASE( "EntityInspectorPanel - Entity with Visible component can be inspecte
 	REQUIRE( visibleComp->castShadows == false );
 	REQUIRE( visibleComp->receiveShadows == true );
 }
+
+TEST_CASE( "EntityInspectorPanel - Entity with MeshRenderer component can be inspected", "[T2.5][entity_inspector][meshrenderer][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "MeshEntity" );
+
+	// Add MeshRenderer component
+	components::MeshRenderer meshRenderer;
+	meshRenderer.meshHandle = 42; // Set a test mesh handle
+	scene.addComponent( entity, meshRenderer );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Assert - Panel should be able to access MeshRenderer component
+	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRendererComp != nullptr );
+	REQUIRE( meshRendererComp->meshHandle == 42 );
+	REQUIRE( meshRendererComp->gpuMesh == nullptr ); // No GPU resources in test
+}
