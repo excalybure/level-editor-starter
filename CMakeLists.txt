@@ -113,6 +113,7 @@ add_library(editor STATIC
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
   src/editor/commands/EcsCommands.cpp
+  src/editor/entity_inspector/EntityInspectorPanel.cpp
   src/editor/gizmos.cpp
   src/editor/scene_hierarchy/SceneHierarchyPanel.cpp
   src/editor/selection.cpp
@@ -245,6 +246,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/entity_fixup_test.cpp
     tests/gizmo_command_integration_tests.cpp
     tests/scene_hierarchy_tests.cpp
+    tests/entity_inspector_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

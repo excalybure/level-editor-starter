@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Entity Inspector Panel: Foundation (M2-P6-T2.1)
+**Summary:** Created Entity Inspector Panel foundation with basic rendering infrastructure for displaying component properties of selected entities. Implemented panel class with visibility controls, selection state handling (no selection, single entity, multiple entities), and entity header rendering. The panel integrates with SelectionManager to respond to entity selection and provides foundation for component editing in subsequent tasks.
+
+**Atomic functionalities completed:**
+- AF2.1.1: Panel class structure - Created EntityInspectorPanel.h with class definition taking Scene, SelectionManager, and CommandHistory references
+- AF2.1.2: Basic render method - Implemented render() checking m_visible flag and creating ImGui window with "Entity Inspector" title
+- AF2.1.3: Selection state detection - Added logic to check selection count and branch to appropriate rendering method (no selection, single, multi)
+- AF2.1.4: No selection state - Implemented renderNoSelection() showing "No Selection" message with helpful text for users
+- AF2.1.5: Single entity rendering - Implemented renderSingleEntity() with entity validity check and header rendering
+- AF2.1.6: Multi-selection state - Implemented renderMultiSelection() showing count of selected entities with placeholder text
+- AF2.1.7: Entity header display - Implemented renderEntityHeader() displaying entity name (or ID fallback) with styled yellow text
+- AF2.1.8: Visibility controls - Implemented setVisible()/isVisible() methods for panel show/hide functionality
+
+**Tests:**
+- T2.1 tests: 6 test cases with 12 assertions (construction, visibility toggle, empty selection, single selection, multi-selection, hide/show)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 12 assertions in 6 test cases
+- Commands: `unit_test_runner.exe "[T2.1]"` or `"[entity_inspector]"`
+
+**Notes:**
+- Panel follows same architectural pattern as SceneHierarchyPanel for consistency
+- Component editors will be added in subsequent tasks (T2.2-T2.7)
+- ImGui window management handled automatically with Begin/End calls
+- Entity header uses yellow text (ImGui::PushStyleColor) for visual hierarchy
+- Multi-selection support is currently placeholder, full implementation in T2.8
+- Panel added to CMakeLists.txt in both editor library and unit_test_runner targets
+- Implementation uses const correctness throughout (isVisible() const, const references where appropriate)
+
 ## 2025-01-16 — Scene Hierarchy Panel: Focus Selected Entity (M2-P6-T1.7)
 **Summary:** Implemented focus selected entity functionality with callback-based API for camera integration. Added setFocusCallback/requestFocus methods to SceneHierarchyPanel allowing camera controller to focus on selected entities. Integrated F key shortcut (ImGui::IsKeyPressed(ImGuiKey_F)) in render() method to trigger focus on first selected entity when panel has window focus. Camera system already provides focusOnPoint() and focusOnBounds() methods for smooth entity framing with ease-out interpolation.
 
