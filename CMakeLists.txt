@@ -113,6 +113,7 @@ add_library(editor STATIC
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
   src/editor/commands/EcsCommands.cpp
+  src/editor/entity_inspector/ComponentUI.cpp
   src/editor/entity_inspector/EntityInspectorPanel.cpp
   src/editor/gizmos.cpp
   src/editor/scene_hierarchy/SceneHierarchyPanel.cpp

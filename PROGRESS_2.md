@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Component UI Helpers (M2-P6-T2.2)
+**Summary:** Created ComponentUI utility class with reusable ImGui widgets for editing component properties. Implemented renderVec3Control() with RGB color-coded drag floats and reset button, plus renderFloatControl() with optional min/max bounds. These helpers provide consistent styling and interaction patterns for all component editors in the Entity Inspector Panel. Color coding: X=Red, Y=Green, Z=Blue for intuitive 3D vector editing.
+
+**Atomic functionalities completed:**
+- AF2.2.1: ComponentUI class structure - Created ComponentUI.h with static utility methods for component property rendering
+- AF2.2.2: Vec3 control API - Implemented renderVec3Control(label, value, resetValue, speed) returning bool for change detection
+- AF2.2.3: Color-coded components - Added RGB color styling (red/green/blue) for X/Y/Z drag floats with hover/active state colors
+- AF2.2.4: Reset button - Implemented reset button in renderVec3Control() to restore default values, returns true on reset
+- AF2.2.5: Float control API - Implemented renderFloatControl(label, value, min, max) with optional bounds enforcement
+- AF2.2.6: ImGui DragFloat integration - Used ImGui::DragFloat() with appropriate parameters for smooth value editing
+- AF2.2.7: Return value semantics - Both methods return true if user modified the value, enabling command creation
+- AF2.2.8: ImGui styling - Applied ImGuiCol_FrameBg colors for visual distinction and ImGui::PushID for unique widget IDs
+
+**Tests:**
+- No unit tests (ComponentUI requires ImGui context for testing, will be validated through integration tests)
+- Actual rendering and interaction behavior tested manually in editor
+
+**Notes:**
+- Unit tests not practical without ImGui context initialization
+- Color scheme matches industry standard (Unity/Unreal): Red=X, Green=Y, Blue=Z
+- ImGui::PushID ensures unique widget IDs when multiple controls render same-named properties
+- Reset button positioned inline with drag floats for convenient access
+- Float control supports unbounded mode (min=0, max=0) for free-form editing
+- ComponentUI.cpp uses ImGui::PushStyleColor/PopStyleColor for temporary color overrides
+- Widget widths set to 80px for balanced layout with three components
+- Implementation ready for Transform component editor (T2.3) and other component types
+
 ## 2025-10-02 — Entity Inspector Panel: Foundation (M2-P6-T2.1)
 **Summary:** Created Entity Inspector Panel foundation with basic rendering infrastructure for displaying component properties of selected entities. Implemented panel class with visibility controls, selection state handling (no selection, single entity, multiple entities), and entity header rendering. The panel integrates with SelectionManager to respond to entity selection and provides foundation for component editing in subsequent tasks.
 
