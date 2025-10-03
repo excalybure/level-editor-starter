@@ -1,5 +1,46 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Path Breadcrumbs (M2-P6-T3.3)
+**Summary:** Implemented T3.3: Path Breadcrumbs for the Asset Browser Panel using strict TDD methodology. Added navigateToParent() method with robust boundary checking to prevent navigation above the root directory, getPathSegments() to generate breadcrumb path segments from root to current directory, and renderPathBar() to display an interactive breadcrumb navigation bar with up button and clickable path segments. The implementation provides intuitive path navigation matching standard file browser UX, with safe handling of filesystem errors and edge cases like root directory boundaries.
+
+**Atomic functionalities completed:**
+- AF3.3.1: navigateToParent() method - Added public method to navigate to parent directory with boundary checking (prevents going above root)
+- AF3.3.2: Root boundary check - If currentPath equals rootPath, early return without navigation
+- AF3.3.3: Parent path calculation - Uses std::filesystem::path::parent_path() to compute parent directory
+- AF3.3.4: Parent validation - Checks if parent path is at or above root by comparing path string sizes
+- AF3.3.5: Conditional navigation - Navigates to parent if within root, otherwise resets to root path
+- AF3.3.6: getPathSegments() method - Returns vector of (name, fullPath) pairs representing breadcrumb segments
+- AF3.3.7: Segment building - Builds path incrementally from root using relative path decomposition
+- AF3.3.8: Root segment - First segment always shows root directory name with full root path
+- AF3.3.9: Relative path iteration - Uses std::filesystem::relative() to get path from root to current, iterates parts
+- AF3.3.10: renderPathBar() method - Renders breadcrumb UI with up button and clickable segment buttons
+- AF3.3.11: Conditional up button - Shows "^" button only when not at root, calls navigateToParent() on click
+- AF3.3.12: Segment buttons - Each path segment rendered as ImGui::Button() that navigates to that level
+- AF3.3.13: Path separators - Adds "/" text between segments (but not after last), using ImGui::SameLine()
+- AF3.3.14: render() integration - Updated main render() to call renderPathBar() above content area
+
+**Tests:** 2 new test cases with 9 assertions for T3.3, plus 8 existing tests (T3.1, T3.2); filtered commands: `unit_test_runner.exe "[AssetBrowser][T3.3]"` or `"[AssetBrowser]"`. Total: 27 assertions in 10 test cases, all passing.
+
+**Notes:**
+- navigateToParent() boundary logic: Compares parent path string size vs root string size to detect out-of-bounds
+- Root boundary safety: If parent would be above root (shorter path), resets m_currentPath to m_rootPath instead
+- Filesystem error handling: All operations wrapped in try-catch, stay at current path on error
+- getPathSegments() algorithm: Build path incrementally (root → root/a → root/a/b), store name + full path for each
+- Relative path decomposition: Uses std::filesystem::relative(current, root) to extract path difference
+- Root-only case: When at root, segments vector contains only root entry (early return after first segment)
+- Empty segments fallback: On error with no segments, returns at least root segment ("assets", m_rootPath)
+- renderPathBar() layout: Up button (conditional) → segment buttons with "/" separators → horizontal flow
+- ImGui::SameLine() usage: Keeps all breadcrumb elements on same line (button → text → button → ...)
+- Separator logic: Loop adds "/" after each segment except last (i < segments.size() - 1)
+- Click behavior: Segment button click calls navigateToDirectory() with segment's full path
+- Up button appearance: Simple "^" character, matches common file browser conventions
+- render() integration: Breadcrumb bar rendered between panel header and content area, followed by Separator()
+- UX consistency: Breadcrumb navigation matches Windows Explorer, macOS Finder, VS Code file explorer
+- No circular navigation: navigateToParent() from root is no-op (root is its own parent conceptually)
+- Path segment names: Uses filename() to get directory name without full path (readable labels)
+- Test coverage: navigateToParent boundary cases (root, subdirectory, deep paths), getPathSegments structure
+- Foundation complete for T3.4 (Asset Grid View) and T3.5 (Asset Selection and Preview)
+
 ## 2025-10-03 — Asset Browser Directory Tree View (M2-P6-T3.2)
 **Summary:** Implemented T3.2: Directory Tree View for the Asset Browser Panel using strict TDD methodology. Added hierarchical folder navigation with recursive ImGui tree nodes, enabling users to browse the folder structure in a left sidebar while viewing selected directory contents in the right panel. The implementation includes current directory highlighting, expand/collapse functionality, and robust handling of deep directory hierarchies. Navigation updates the current path and refreshes the content view automatically.
 

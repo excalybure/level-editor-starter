@@ -37,7 +37,9 @@ void AssetBrowserPanel::render()
 
 		// Right panel: Current directory contents
 		ImGui::BeginChild( "DirectoryContents", ImVec2( 0, 0 ), true );
-		ImGui::Text( "Path: %s", m_currentPath.c_str() );
+
+		// Path breadcrumbs
+		renderPathBar();
 		ImGui::Separator();
 
 		// Get directory contents
@@ -90,6 +92,82 @@ void AssetBrowserPanel::navigateToDirectory( const std::string &path )
 	{
 		m_currentPath = path;
 	}
+}
+
+void AssetBrowserPanel::navigateToParent()
+{
+	// Don't navigate above root path
+	if ( m_currentPath == m_rootPath )
+	{
+		return;
+	}
+
+	try
+	{
+		const std::filesystem::path currentPath( m_currentPath );
+		const std::filesystem::path parentPath = currentPath.parent_path();
+
+		// Check if parent is at or above root
+		const std::filesystem::path rootPath( m_rootPath );
+		const auto parentStr = parentPath.string();
+		const auto rootStr = rootPath.string();
+
+		// Navigate to parent if it's within or equal to root
+		if ( parentStr.size() >= rootStr.size() )
+		{
+			navigateToDirectory( parentStr );
+		}
+		else
+		{
+			// Parent is above root, navigate to root instead
+			m_currentPath = m_rootPath;
+		}
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		// On error, stay at current path
+	}
+}
+
+std::vector<std::pair<std::string, std::string>> AssetBrowserPanel::getPathSegments() const
+{
+	std::vector<std::pair<std::string, std::string>> segments;
+
+	try
+	{
+		const std::filesystem::path currentPath( m_currentPath );
+		const std::filesystem::path rootPath( m_rootPath );
+
+		// Build segments from root to current
+		std::filesystem::path buildPath = rootPath;
+		segments.push_back( { rootPath.filename().string(), rootPath.string() } );
+
+		// If we're at root, we're done
+		if ( m_currentPath == m_rootPath )
+		{
+			return segments;
+		}
+
+		// Get relative path from root to current
+		const auto relativePath = std::filesystem::relative( currentPath, rootPath );
+
+		// Add each segment of the relative path
+		for ( const auto &part : relativePath )
+		{
+			buildPath /= part;
+			segments.push_back( { part.string(), buildPath.string() } );
+		}
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		// On error, return at least the root
+		if ( segments.empty() )
+		{
+			segments.push_back( { "assets", m_rootPath } );
+		}
+	}
+
+	return segments;
 }
 
 std::vector<std::string> AssetBrowserPanel::getDirectoryContents( const std::string &path ) const
@@ -224,6 +302,42 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 	catch ( const std::filesystem::filesystem_error & )
 	{
 		// Silently handle errors
+	}
+}
+
+void AssetBrowserPanel::renderPathBar()
+{
+	// Up button
+	if ( m_currentPath != m_rootPath )
+	{
+		if ( ImGui::Button( "^" ) )
+		{
+			navigateToParent();
+		}
+		ImGui::SameLine();
+	}
+
+	// Path segments
+	const auto segments = getPathSegments();
+	for ( size_t i = 0; i < segments.size(); ++i )
+	{
+		const auto &segment = segments[i];
+		const std::string &name = segment.first;
+		const std::string &path = segment.second;
+
+		// Display segment as button
+		if ( ImGui::Button( name.c_str() ) )
+		{
+			navigateToDirectory( path );
+		}
+
+		// Add separator between segments (but not after last)
+		if ( i < segments.size() - 1 )
+		{
+			ImGui::SameLine();
+			ImGui::Text( "/" );
+			ImGui::SameLine();
+		}
 	}
 }
 

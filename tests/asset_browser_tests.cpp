@@ -212,3 +212,70 @@ TEST_CASE( "AssetBrowserPanel handles deep directory hierarchies", "[AssetBrowse
 	// Clean up
 	std::filesystem::remove_all( deepRoot );
 }
+
+// T3.3: Path Breadcrumbs Tests
+
+TEST_CASE( "AssetBrowserPanel can navigate to parent directory", "[AssetBrowser][T3.3][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "Navigate to subdirectory then back to parent" )
+	{
+		const std::string subdir1Path = fixture.testRoot + "/subdir1";
+		panel.navigateToDirectory( subdir1Path );
+		REQUIRE( panel.getCurrentPath() == subdir1Path );
+
+		// Navigate up to parent
+		panel.navigateToParent();
+		REQUIRE( panel.getCurrentPath() == panel.getRootPath() );
+	}
+
+	SECTION( "Cannot navigate above root path" )
+	{
+		// Already at root
+		REQUIRE( panel.getCurrentPath() == panel.getRootPath() );
+
+		// Try to navigate up from root
+		panel.navigateToParent();
+
+		// Should still be at root
+		REQUIRE( panel.getCurrentPath() == panel.getRootPath() );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel gets path segments correctly", "[AssetBrowser][T3.3][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "Root path has one segment" )
+	{
+		const auto segments = panel.getPathSegments();
+		REQUIRE( segments.size() == 1 );
+		REQUIRE( segments[0].second == panel.getRootPath() );
+	}
+
+	SECTION( "Subdirectory path has multiple segments" )
+	{
+		const std::string subdir1Path = fixture.testRoot + "/subdir1";
+		panel.navigateToDirectory( subdir1Path );
+
+		const auto segments = panel.getPathSegments();
+		REQUIRE( segments.size() == 2 );
+		// First segment should be root
+		REQUIRE( segments[0].second == panel.getRootPath() );
+		// Second segment should be subdir1
+		REQUIRE( segments[1].second == subdir1Path );
+	}
+}
