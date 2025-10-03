@@ -279,3 +279,86 @@ TEST_CASE( "AssetBrowserPanel gets path segments correctly", "[AssetBrowser][T3.
 		REQUIRE( segments[1].second == subdir1Path );
 	}
 }
+
+// ============================================================================
+// T3.4: Asset Grid View
+// ============================================================================
+
+TEST_CASE( "AssetBrowserPanel identifies asset types from file extensions", "[AssetBrowser][T3.4][unit]" )
+{
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+
+	SECTION( "GLTF files are identified as meshes" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "model.gltf" );
+		REQUIRE( type == editor::AssetType::Mesh );
+	}
+
+	SECTION( "GLB files are identified as meshes" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "model.glb" );
+		REQUIRE( type == editor::AssetType::Mesh );
+	}
+
+	SECTION( "Unknown extensions return Unknown type" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "file.txt" );
+		REQUIRE( type == editor::AssetType::Unknown );
+	}
+
+	SECTION( "Extension matching is case-insensitive" )
+	{
+		const auto type1 = panel.getAssetTypeFromExtension( "model.GLTF" );
+		const auto type2 = panel.getAssetTypeFromExtension( "model.Gltf" );
+		REQUIRE( type1 == editor::AssetType::Mesh );
+		REQUIRE( type2 == editor::AssetType::Mesh );
+	}
+
+	SECTION( "Files without extension return Unknown" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "noextension" );
+		REQUIRE( type == editor::AssetType::Unknown );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel filters files from directories", "[AssetBrowser][T3.4][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "getFileContents returns only files, not directories" )
+	{
+		const auto files = panel.getFileContents( fixture.testRoot );
+
+		// Should have 2 files (file1.txt, file2.gltf), but not subdirectories
+		REQUIRE( files.size() == 2 );
+
+		// Verify all returned items are files
+		for ( const auto &file : files )
+		{
+			REQUIRE( !std::filesystem::is_directory( file ) );
+		}
+	}
+
+	SECTION( "Empty directory returns empty file list" )
+	{
+		const std::string emptyDir = fixture.testRoot + "/subdir2";
+		const auto files = panel.getFileContents( emptyDir );
+		REQUIRE( files.empty() );
+	}
+
+	SECTION( "Non-existent path returns empty file list" )
+	{
+		const auto files = panel.getFileContents( "nonexistent_path" );
+		REQUIRE( files.empty() );
+	}
+}

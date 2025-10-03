@@ -42,32 +42,8 @@ void AssetBrowserPanel::render()
 		renderPathBar();
 		ImGui::Separator();
 
-		// Get directory contents
-		const auto contents = getDirectoryContents( m_currentPath );
-
-		// Display directories and files
-		for ( const auto &item : contents )
-		{
-			const bool isDir = isDirectory( item );
-			const std::string displayName = std::filesystem::path( item ).filename().string();
-
-			if ( isDir )
-			{
-				// Display folder with icon
-				ImGui::Text( "[DIR] %s", displayName.c_str() );
-			}
-			else
-			{
-				// Display file
-				ImGui::Text( "      %s", displayName.c_str() );
-			}
-		}
-
-		// Show message for empty directories
-		if ( contents.empty() )
-		{
-			ImGui::TextDisabled( "(empty directory)" );
-		}
+		// Asset grid view
+		renderAssetGrid();
 
 		ImGui::EndChild();
 	}
@@ -338,6 +314,146 @@ void AssetBrowserPanel::renderPathBar()
 			ImGui::Text( "/" );
 			ImGui::SameLine();
 		}
+	}
+}
+
+AssetType AssetBrowserPanel::getAssetTypeFromExtension( const std::string &filename ) const
+{
+	try
+	{
+		const std::filesystem::path path( filename );
+		std::string extension = path.extension().string();
+
+		// Convert to lowercase for case-insensitive comparison
+		std::transform( extension.begin(), extension.end(), extension.begin(), []( unsigned char c ) { return static_cast<char>( std::tolower( c ) ); } );
+
+		// Check for mesh formats
+		if ( extension == ".gltf" || extension == ".glb" )
+		{
+			return AssetType::Mesh;
+		}
+
+		// Future: Add texture formats (.png, .jpg, etc.)
+		// Future: Add material formats (.mat, etc.)
+
+		return AssetType::Unknown;
+	}
+	catch ( const std::exception & )
+	{
+		return AssetType::Unknown;
+	}
+}
+
+std::vector<std::string> AssetBrowserPanel::getFileContents( const std::string &path ) const
+{
+	std::vector<std::string> files;
+
+	// Check if path exists
+	if ( !std::filesystem::exists( path ) )
+	{
+		return files;
+	}
+
+	try
+	{
+		// Iterate through directory entries
+		for ( const auto &entry : std::filesystem::directory_iterator( path ) )
+		{
+			// Only add files, not directories
+			if ( entry.is_regular_file() )
+			{
+				files.push_back( entry.path().string() );
+			}
+		}
+
+		// Sort alphabetically
+		std::sort( files.begin(), files.end() );
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		// Return empty vector on error
+	}
+
+	return files;
+}
+
+void AssetBrowserPanel::renderAssetGrid()
+{
+	// Get files in current directory (excluding subdirectories)
+	const auto files = getFileContents( m_currentPath );
+
+	// If there are no files, show a message
+	if ( files.empty() )
+	{
+		ImGui::TextDisabled( "(no assets in this directory)" );
+		return;
+	}
+
+	// Grid layout parameters
+	const float cellSize = 100.0f;
+	const float cellPadding = 10.0f;
+	const float totalCellSize = cellSize + cellPadding;
+
+	// Calculate number of columns based on available width
+	const float availableWidth = ImGui::GetContentRegionAvail().x;
+	const int columnCount = std::max( 1, static_cast<int>( availableWidth / totalCellSize ) );
+
+	// Render grid
+	int currentColumn = 0;
+	for ( const auto &filePath : files )
+	{
+		const std::filesystem::path path( filePath );
+		const std::string filename = path.filename().string();
+		const AssetType assetType = getAssetTypeFromExtension( filename );
+
+		// Start new row if needed
+		if ( currentColumn > 0 )
+		{
+			ImGui::SameLine();
+		}
+
+		// Begin grid cell
+		ImGui::BeginGroup();
+
+		// Display icon based on asset type
+		const char *icon = "?";
+		switch ( assetType )
+		{
+		case AssetType::Mesh:
+			icon = "[M]";
+			break;
+		case AssetType::Texture:
+			icon = "[T]";
+			break;
+		case AssetType::Material:
+			icon = "[Mat]";
+			break;
+		case AssetType::Unknown:
+		default:
+			icon = "[?]";
+			break;
+		}
+
+		// Render icon as button (placeholder for thumbnail)
+		ImGui::Button( icon, ImVec2( cellSize, cellSize ) );
+
+		// Display filename below icon (truncate if too long)
+		const float textWidth = ImGui::CalcTextSize( filename.c_str() ).x;
+		if ( textWidth > cellSize )
+		{
+			// Truncate and add ellipsis
+			std::string truncated = filename.substr( 0, 15 ) + "...";
+			ImGui::TextWrapped( "%s", truncated.c_str() );
+		}
+		else
+		{
+			ImGui::Text( "%s", filename.c_str() );
+		}
+
+		ImGui::EndGroup();
+
+		// Update column counter
+		currentColumn = ( currentColumn + 1 ) % columnCount;
 	}
 }
 

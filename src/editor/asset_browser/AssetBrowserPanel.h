@@ -19,6 +19,15 @@ class CommandHistory;
 namespace editor
 {
 
+// Asset type enumeration for file classification
+enum class AssetType
+{
+	Unknown,
+	Mesh,
+	Texture,
+	Material
+};
+
 // Asset browser panel for importing and managing assets
 class AssetBrowserPanel
 {
@@ -46,6 +55,12 @@ public:
 	// Path utilities
 	std::vector<std::pair<std::string, std::string>> getPathSegments() const;
 
+	// Asset type detection
+	AssetType getAssetTypeFromExtension( const std::string &filename ) const;
+
+	// File system queries (public for testability)
+	std::vector<std::string> getFileContents( const std::string &path ) const;
+
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;
@@ -54,6 +69,7 @@ private:
 	// UI rendering helpers
 	void renderDirectoryTree( const std::string &path );
 	void renderPathBar();
+	void renderAssetGrid();
 
 	// Reference members
 	assets::AssetManager &m_assetManager;

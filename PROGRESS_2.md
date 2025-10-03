@@ -1,5 +1,60 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Grid View (M2-P6-T3.4)
+**Summary:** Implemented T3.4: Asset Grid View for the Asset Browser Panel using strict TDD methodology. Added AssetType enumeration for file type classification, getAssetTypeFromExtension() method with case-insensitive extension matching, getFileContents() helper that filters files from directories, and renderAssetGrid() that displays assets in a responsive grid layout with file type icons. The grid adapts column count based on available width (minimum 1, maximum based on 110px cells), displays placeholder icons for different asset types ([M] for meshes, [T] for textures, [Mat] for materials, [?] for unknown), and truncates long filenames for better display. Empty directories show an appropriate message instead of empty grid.
+
+**Atomic functionalities completed:**
+- AF3.4.1: AssetType enumeration - Added enum class with Unknown, Mesh, Texture, Material values for file classification
+- AF3.4.2: getAssetTypeFromExtension() method - Returns AssetType based on file extension with case-insensitive matching
+- AF3.4.3: Extension normalization - Converts extension to lowercase using std::tolower() for case-insensitive comparison
+- AF3.4.4: Mesh format detection - Identifies .gltf and .glb files as AssetType::Mesh
+- AF3.4.5: Unknown type fallback - Returns AssetType::Unknown for unrecognized extensions or errors
+- AF3.4.6: getFileContents() helper - Filters directory contents to return only regular files (excludes subdirectories)
+- AF3.4.7: File-only iteration - Uses std::filesystem::is_regular_file() to filter out directories
+- AF3.4.8: Alphabetical file sorting - Sorts file list alphabetically for consistent display
+- AF3.4.9: renderAssetGrid() implementation - Displays files in responsive grid with icons and filenames
+- AF3.4.10: Empty directory handling - Shows "(no assets in this directory)" message when getFileContents returns empty
+- AF3.4.11: Grid layout calculation - Computes column count from available width (100px cell + 10px padding = 110px per cell)
+- AF3.4.12: Minimum column constraint - Uses std::max(1, calculatedColumns) to ensure at least one column
+- AF3.4.13: File type icon mapping - Switch statement maps AssetType to visual icon ([M], [T], [Mat], [?])
+- AF3.4.14: Icon button rendering - ImGui::Button() with cellSize x cellSize dimensions as placeholder for future thumbnails
+- AF3.4.15: Filename truncation - Calculates text width with ImGui::CalcTextSize(), truncates to 15 chars + "..." if exceeds cell width
+- AF3.4.16: Grid cell grouping - ImGui::BeginGroup()/EndGroup() wraps icon + filename for proper layout
+- AF3.4.17: Column wrapping - Uses counter modulo columnCount to insert ImGui::SameLine() or start new row
+- AF3.4.18: render() integration - Modified main render() to call renderAssetGrid() instead of old file list display
+
+**Tests:** 2 new test cases with 11 assertions for T3.4, plus 10 existing tests (T3.1-T3.3); filtered commands: `unit_test_runner.exe "*asset types*"` and `"*filters files*"`. Total: 38 assertions in 12 test cases, all passing.
+
+**Notes:**
+- AssetType enum uses enum class for type safety and scoped enumerators
+- getAssetTypeFromExtension() uses std::filesystem::path::extension() for robust extraction
+- Case-insensitive matching prevents user confusion with .GLTF vs .gltf extensions
+- Error handling: try-catch around std::filesystem operations returns AssetType::Unknown on exception
+- getFileContents() separates files from directories (complements existing getDirectoryContents())
+- File-only filtering essential for grid display (don't show folders twice - they're in tree view)
+- Alphabetical sorting provides predictable, searchable asset order
+- renderAssetGrid() replaces old inline file listing in render() method
+- Grid layout responsive: narrows to single column on small windows, expands to multiple columns with space
+- Cell size 100x100px provides good balance between visual space and information density
+- Cell padding 10px gives breathing room between grid items
+- Icon placeholders: [M] mesh, [T] texture, [Mat] material, [?] unknown (future: actual thumbnails)
+- ImGui::Button() for icons enables future click handling for selection (T3.5)
+- Filename truncation algorithm: if CalcTextSize().x > cellSize, take substr(0, 15) + "..."
+- ImGui::BeginGroup() ensures icon and filename stay together as unit during layout
+- Column counter % columnCount determines when to call SameLine() for horizontal layout
+- No SameLine() before first item in row (currentColumn == 0)
+- Empty message uses ImGui::TextDisabled() for subtle gray appearance
+- Removed old getDirectoryContents() loop from render() - now exclusively in directory tree
+- Grid view only shows files in current directory (m_currentPath), not subdirectories
+- Test coverage: extension matching (case-sensitive and insensitive), file filtering, empty/invalid paths
+- Public getFileContents() method exposed for testability (test can verify filtering logic)
+- Foundation complete for T3.5 (Asset Selection) - buttons ready for IsItemClicked() handling
+- Foundation complete for thumbnail rendering - button placeholder can be replaced with texture
+- Current implementation focuses on core grid layout; future enhancements: selection, previews, drag-drop
+- .glb support added alongside .gltf (binary glTF format)
+- Future texture formats: .png, .jpg, .jpeg, .dds, .tga, .bmp
+- Future material formats: custom .mat or embedded in .gltf materials
+
 ## 2025-10-03 — Asset Browser Path Breadcrumbs (M2-P6-T3.3)
 **Summary:** Implemented T3.3: Path Breadcrumbs for the Asset Browser Panel using strict TDD methodology. Added navigateToParent() method with robust boundary checking to prevent navigation above the root directory, getPathSegments() to generate breadcrumb path segments from root to current directory, and renderPathBar() to display an interactive breadcrumb navigation bar with up button and clickable path segments. The implementation provides intuitive path navigation matching standard file browser UX, with safe handling of filesystem errors and edge cases like root directory boundaries.
 
