@@ -513,6 +513,15 @@ void AssetBrowserPanel::renderAssetGrid()
 			selectAsset( filePath );
 		}
 
+		// Drag-and-drop source
+		if ( canDragAsset( filePath ) && ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
+		{
+			const std::string payload = getDragDropPayload( filePath );
+			ImGui::SetDragDropPayload( "ASSET_BROWSER_ITEM", payload.c_str(), payload.size() + 1 );
+			ImGui::Text( "Drag %s", filename.c_str() );
+			ImGui::EndDragDropSource();
+		}
+
 		if ( isSelected )
 		{
 			ImGui::PopStyleColor();
@@ -694,6 +703,28 @@ bool AssetBrowserPanel::importAsset( const std::string &sourceFilePath )
 	{
 		return false;
 	}
+}
+
+bool AssetBrowserPanel::canDragAsset( const std::string &assetPath ) const
+{
+	// Check if asset type is supported for drag-and-drop
+	const std::filesystem::path path( assetPath );
+	const auto assetType = getAssetTypeFromExtension( path.filename().string() );
+
+	// Currently only Mesh assets support drag-to-scene
+	return assetType == AssetType::Mesh;
+}
+
+std::string AssetBrowserPanel::getDragDropPayload( const std::string &assetPath ) const
+{
+	// Only return payload for draggable assets
+	if ( !canDragAsset( assetPath ) )
+	{
+		return "";
+	}
+
+	// Return the full asset path as payload
+	return assetPath;
 }
 
 } // namespace editor

@@ -539,3 +539,43 @@ TEST_CASE( "AssetBrowserPanel shows import UI", "[AssetBrowser][T3.6][ui]" )
 		REQUIRE( panel.isVisible() );
 	}
 }
+
+TEST_CASE( "AssetBrowserPanel supports drag-and-drop", "[AssetBrowser][T3.7][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "getDragDropPayload returns asset path for mesh" )
+	{
+		const std::string assetPath = fixture.testRoot + "/test_mesh.gltf";
+		const auto payload = panel.getDragDropPayload( assetPath );
+
+		REQUIRE( !payload.empty() );
+		REQUIRE( payload == assetPath );
+	}
+
+	SECTION( "getDragDropPayload returns empty for unsupported type" )
+	{
+		const std::string assetPath = fixture.testRoot + "/unsupported.xyz";
+		const auto payload = panel.getDragDropPayload( assetPath );
+
+		REQUIRE( payload.empty() );
+	}
+
+	SECTION( "canDragAsset returns true for supported types" )
+	{
+		REQUIRE( panel.canDragAsset( fixture.testRoot + "/mesh.gltf" ) );
+		REQUIRE( panel.canDragAsset( fixture.testRoot + "/model.glb" ) );
+	}
+
+	SECTION( "canDragAsset returns false for unsupported types" )
+	{
+		REQUIRE( !panel.canDragAsset( fixture.testRoot + "/file.txt" ) );
+		REQUIRE( !panel.canDragAsset( fixture.testRoot + "/unknown.xyz" ) );
+	}
+}

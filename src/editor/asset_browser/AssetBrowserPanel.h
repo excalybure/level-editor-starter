@@ -81,6 +81,10 @@ public:
 	// Asset import
 	bool importAsset( const std::string &sourceFilePath );
 
+	// Drag-and-drop support
+	bool canDragAsset( const std::string &assetPath ) const;
+	std::string getDragDropPayload( const std::string &assetPath ) const;
+
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;

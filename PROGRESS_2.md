@@ -1,5 +1,59 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Drag-and-Drop Support (M2-P6-T3.7)
+**Summary:** Implemented T3.7: Drag-and-Drop to Scene for the Asset Browser Panel using strict TDD methodology. Added canDragAsset() method to determine if an asset type supports drag-and-drop (currently Mesh types only), getDragDropPayload() method to generate the asset path payload string, and integrated ImGui BeginDragDropSource/EndDragDropSource into the asset grid rendering. During drag operations, users see a tooltip showing the filename being dragged. The payload is typed as "ASSET_BROWSER_ITEM" with the full asset path as data, ready for drop targets (viewport, hierarchy panels) to accept and process. This implementation provides the complete drag source infrastructure - drop handling and entity creation will be implemented in the respective target panels.
+
+**Atomic functionalities completed:**
+- AF3.7.1: canDragAsset() method declaration - Added public const method taking asset path, returning bool
+- AF3.7.2: Asset type extraction - Uses std::filesystem::path to get filename from full path
+- AF3.7.3: Type-based drag eligibility - Calls getAssetTypeFromExtension() to check asset type
+- AF3.7.4: Mesh-only dragging - Returns true only for AssetType::Mesh (extensible design for future types)
+- AF3.7.5: getDragDropPayload() method declaration - Added public const method returning std::string payload
+- AF3.7.6: Drag eligibility check in payload - Calls canDragAsset() first, returns empty string if not draggable
+- AF3.7.7: Asset path as payload - Returns full asset path string for draggable assets
+- AF3.7.8: Empty payload for invalid - Returns empty string for non-draggable types (safe default)
+- AF3.7.9: Drag source integration point - Added after button click check in renderAssetGrid()
+- AF3.7.10: Conditional drag source - ImGui::BeginDragDropSource() only called if canDragAsset() returns true
+- AF3.7.11: Payload generation - Calls getDragDropPayload() to get asset path string
+- AF3.7.12: Payload registration - ImGui::SetDragDropPayload() with type "ASSET_BROWSER_ITEM"
+- AF3.7.13: Null-terminated payload - payload.size() + 1 ensures null terminator included in payload data
+- AF3.7.14: Drag visual feedback - ImGui::Text() displays "Drag [filename]" during drag operation
+- AF3.7.15: Drag source completion - ImGui::EndDragDropSource() closes drag source context
+- AF3.7.16: Drag visual positioning - Tooltip follows cursor showing what's being dragged
+- AF3.7.17: Non-blocking drag - Drag source doesn't interfere with selection or other interactions
+
+**Tests:** 1 new test case with 7 assertions for T3.7, plus 16 existing tests (T3.1-T3.6); filtered commands: `unit_test_runner.exe "*drag*"` or `"[AssetBrowser]"`. Total: 67 assertions in 17 test cases, all passing.
+
+**Notes:**
+- canDragAsset() centralizes draggability logic, preventing drag attempts on unsupported types
+- Currently only Mesh assets (.gltf, .glb) support dragging - design allows easy extension to Texture, Material
+- getDragDropPayload() returns asset path as string - drop targets use this to load and instantiate asset
+- Empty payload return signals "not draggable" to calling code (avoids invalid drag operations)
+- ImGui drag-drop API requires BeginDragDropSource() immediately after item rendering (button in this case)
+- Drag source check (canDragAsset()) prevents unnecessary BeginDragDropSource() calls
+- Payload type "ASSET_BROWSER_ITEM" allows drop targets to identify asset browser payloads vs other drag sources
+- Null-terminator inclusion in payload size ensures C-string compatibility in drop target
+- Drag visual uses filename only (not full path) for clean user experience
+- Drag operation doesn't modify selection state - user can still click to select without dragging
+- ImGui::BeginDragDropSource() returns false if not in drag state (safe to call every frame)
+- Drag source ends automatically when user releases mouse (no manual state management needed)
+- Drop targets implemented separately in viewport/hierarchy panels (separation of concerns)
+- Future: CreateEntityFromAssetCommand will handle entity creation from dropped asset path
+- Future: Viewport drop target will accept "ASSET_BROWSER_ITEM" payload and spawn entity
+- Future: Hierarchy drop target will accept payload and parent entity under drop target
+- Future: Ray-cast at drop position to place entity at world position under cursor
+- Test coverage: payload generation for meshes, empty payload for unsupported, drag eligibility checks
+- Integration testing: actual drag-drop operation validated via manual testing (ImGui interaction)
+- Drag source active only during mouse drag - no persistent state needed
+- Multiple assets can be dragged sequentially without interference
+- Drag operation can be cancelled by releasing outside drop target (no action taken)
+- Asset path payload preserves full path for drop target to resolve file location
+- Extensibility: Adding Texture/Material drag support only requires updating canDragAsset() check
+- Performance: canDragAsset() and getDragDropPayload() lightweight (file extension check + string copy)
+- UI feedback clear: "Drag [filename]" tooltip provides immediate feedback of what's being dragged
+- No drag preview image yet (future: could render asset thumbnail as drag visual)
+- Drag-drop pattern matches standard ImGui usage (portable across platforms)
+
 ## 2025-10-03 — Asset Browser Asset Import (M2-P6-T3.6)
 **Summary:** Implemented T3.6: Asset Import for the Asset Browser Panel using strict TDD methodology. Added importAsset() method that validates source files, checks asset type support, and copies files to the current directory using std::filesystem operations. Implemented Import Asset button with ImGui text input popup dialog for file path entry (placeholder for future native file dialog). The implementation includes robust path handling with canonical path comparison to detect duplicate imports, filesystem error handling, and visual feedback for import success/failure. Users can now import supported asset files (.gltf, .glb) into any directory within the asset browser.
 
