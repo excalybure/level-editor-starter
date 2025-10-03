@@ -485,10 +485,18 @@ public:
 		return m_entityManager.getAllEntities();
 	}
 
-	// Get entity count
+	// Get entity count (only counts valid entities)
 	size_t getEntityCount() const
 	{
-		return m_entityManager.getAllEntities().size();
+		size_t count = 0;
+		for ( const auto &entity : m_entityManager.getAllEntities() )
+		{
+			if ( m_entityManager.isValid( entity ) )
+			{
+				++count;
+			}
+		}
+		return count;
 	}
 
 	// Component iteration support

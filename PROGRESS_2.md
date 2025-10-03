@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-19 — Scene Editor Integration Tests Foundation Complete (M2-P6-T7.1)
+**Summary:** Created comprehensive integration test suite for scene editor workflows, implementing 3 test sections covering Create→Transform→Save→Load cycles. During TDD process, discovered and fixed critical bug in Scene::getEntityCount() which was returning total entity slot count including destroyed (invalid) entities instead of counting only valid ones. Also fixed iterator invalidation bug in SceneSerializer::loadScene() where entities were being destroyed while iterating over getAllEntities() span. All integration tests now pass, validating basic scene editing workflows including entity creation via commands, component addition, scene serialization/deserialization, and data preservation across save/load cycles.
+
+**Atomic functionalities completed:**
+- AF7.1.1: Test file creation - Created tests/scene_editor_integration_tests.cpp with Catch2 framework structure
+- AF7.1.2: Section 1: "Create entity with transform component" - Tests CreateEntityCommand, AddComponentCommand<Transform>, verifies entity creation and component data
+- AF7.1.3: Section 2: "Save scene and verify file exists" - Tests scene::SceneSerializer::saveScene(), creates entity with position data, verifies JSON file creation
+- AF7.1.4: Section 3: "Round-trip: Save and load preserves data" - Creates entity with Transform and Visible components, saves, destroys all entities, loads, verifies lossless data preservation
+- AF7.1.5: Bugfix: SceneSerializer iterator invalidation - Fixed SceneSerializer::loadScene() to copy entities list before destroying (line 278) to avoid iterator invalidation
+- AF7.1.6: Bugfix: Scene::getEntityCount() - Fixed to count only valid entities instead of all entity slots (lines 489-500 in ecs.h)
+- AF7.1.7: Test cleanup - Added lambda cleanup function to remove temporary .scene files after each section
+- AF7.1.8: API pattern validation - Confirmed AddComponentCommand requires 3 parameters (scene, entity, component_data) following entity_inspector_tests.cpp pattern
+
+**Tests:** 3 test sections in scene_editor_integration_tests.cpp with 37 assertions - all passing. Tests: `unit_test_runner.exe "*Complete editing workflow: Create*"`. Coverage: CreateEntityCommand via CommandHistory, AddComponentCommand<Transform/Visible>, SceneSerializer save/load round-trip, entity destruction and cleanup, temp file management with fs::temp_directory_path().
+
+**Notes:**
+- Critical bug fix: EntityManager::getAllEntities() returns span over ALL entity slots including destroyed ones (marked invalid but not removed from vector)
+- getEntityCount() now iterates and counts only isValid() entities (performance acceptable for typical entity counts <10k)
+- SceneSerializer bug identical to test code bug: both iterated over getAllEntities() while calling destroyEntity() causing invalidation
+- std::vector copy pattern (`std::vector<ecs::Entity>(span.begin(), span.end())`) prevents iterator invalidation
+- Commands through CommandHistory work correctly for entity lifecycle management
+- Component data properly passed by value to AddComponentCommand (not added after creation)
+- Sections are independent in Catch2: each starts with fresh scene and history objects
+- Floating-point comparisons use Catch2 WithinAbs matcher (tolerance 0.001f)
+- T7.1 foundation complete - ready for additional workflow tests (multi-selection, hierarchy, performance, rapid undo/redo)
+
 ## 2025-10-03 — Renderer Integration: Visibility System (M2-P6-T6.0)
 **Summary:** Completed Task 6.0 (MeshRenderer Visibility Integration) to ensure visibility changes from the inspector immediately reflect in viewport rendering. Modified MeshRenderingSystem::render() to check for Visible component and skip rendering when visible=false, added visual feedback in SceneHierarchyPanel to gray out invisible entities, and verified that existing inspector visibility toggle and multi-selection systems properly integrate. Created comprehensive test suite (visibility_integration_tests.cpp) with 3 test cases verifying rendering behavior with different visibility states. Entities without Visible component default to visible (backward compatibility). The rendering pipeline now fully respects entity visibility state, providing immediate visual feedback across all editor panels.
 

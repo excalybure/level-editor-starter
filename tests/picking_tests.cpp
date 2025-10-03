@@ -122,7 +122,7 @@ TEST_CASE( "PickingSystem - Scaled object bounds", "[picking][scale][integration
 {
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
-	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	systemManager.addSystem<systems::TransformSystem>();
 	systemManager.initialize( scene );
 	picking::PickingSystem picker( systemManager );
 

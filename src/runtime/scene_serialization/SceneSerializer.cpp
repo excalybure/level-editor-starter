@@ -274,8 +274,9 @@ std::expected<void, SerializationErrorInfo> SceneSerializer::loadScene(
 		}
 
 		// Clear existing scene
-		const auto entities = scene.getAllEntities();
-		for ( const auto entity : entities )
+		// Copy entities list before destroying to avoid iterator invalidation
+		const auto entitiesToDestroy = std::vector<ecs::Entity>( scene.getAllEntities().begin(), scene.getAllEntities().end() );
+		for ( const auto entity : entitiesToDestroy )
 		{
 			scene.destroyEntity( entity );
 		}
