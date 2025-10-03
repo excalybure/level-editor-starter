@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Panel Foundation (M2-P6-T3.1)
+**Summary:** Implemented T3.1: Basic File System Navigation for the Asset Browser Panel using strict TDD methodology. Delivered AssetBrowserPanel class with file system navigation capabilities including directory enumeration, sorting (directories first, then alphabetically), and safe handling of empty/non-existent paths. The panel integrates with AssetManager, Scene, and CommandHistory, providing the foundation for asset management UI. All file system operations use C++17 std::filesystem with proper error handling.
+
+**Atomic functionalities completed:**
+- AF3.1.1: AssetBrowserPanel header file - Created AssetBrowserPanel.h with class definition, constructor taking AssetManager&, Scene&, CommandHistory&
+- AF3.1.2: State members - Added m_rootPath (default: "assets/"), m_currentPath, m_visible (default: true) for panel state management
+- AF3.1.3: Public API - Implemented render(), setVisible(), isVisible(), setRootPath(), getRootPath(), getCurrentPath() methods
+- AF3.1.4: getDirectoryContents() helper - Private method using std::filesystem::directory_iterator to enumerate directory contents
+- AF3.1.5: isDirectory() helper - Private method using std::filesystem::is_directory() with try-catch for filesystem_error handling
+- AF3.1.6: Directory sorting - Implemented sort predicate prioritizing directories over files, then alphabetical order within each group
+- AF3.1.7: Root path normalization - setRootPath() ensures trailing separator, initializes m_currentPath to m_rootPath
+- AF3.1.8: render() implementation - ImGui window with path display, directory/file listing with [DIR] prefix for folders, "(empty directory)" message
+
+**Tests:** 6 test cases with 14 assertions; filtered commands: `unit_test_runner.exe "[AssetBrowser][T3.1]"` or `"[AssetBrowser]"`. Full coverage of instantiation, root path configuration, visibility control, empty directories, and non-existent paths.
+
+**Notes:**
+- Tests avoid ImGui::render() calls which require initialized ImGui context (causes SIGSEGV in unit tests)
+- Tests focus on testable business logic: path management, state tracking, visibility control
+- File system operations wrapped in try-catch blocks returning empty results on error (no exceptions thrown to UI layer)
+- Directory contents sorted with std::sort using custom comparator: directories first, alphabetical within each type
+- Empty directories display "(empty directory)" message in ImGui::TextDisabled() for visual distinction
+- Non-existent paths handled gracefully without crashes (std::filesystem::exists() check in getDirectoryContents())
+- AssetBrowserPanel integrated into editor library via CMakeLists.txt (src/editor/asset_browser/ folder structure)
+- Test file integrated into unit_test_runner with proper temp directory cleanup using RAII pattern (TempDirectoryFixture)
+- Current implementation displays flat file list; hierarchical tree navigation will be added in T3.2
+- Foundation ready for T3.2 (Directory Tree View), T3.3 (Path Breadcrumbs), T3.4 (Asset Grid View)
+
 ## 2025-10-02 — Multi-Selection Support (M2-P6-T2.8)
 **Summary:** Implemented multi-selection editing support in Entity Inspector Panel, enabling simultaneous editing of Transform and Visible components across multiple selected entities. The feature detects when multiple entities are selected and displays common components with mixed value indicators ("—") when properties differ across the selection. Batch edits are implemented using MacroCommand to group individual entity commands, ensuring atomic undo/redo operations that affect all selected entities together. Transform and Visible components support full multi-editing with proper before/after state tracking for each entity.
 

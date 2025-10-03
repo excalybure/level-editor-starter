@@ -109,6 +109,7 @@ if (MSVC)
 endif()
 
 add_library(editor STATIC
+  src/editor/asset_browser/AssetBrowserPanel.cpp
   src/editor/commands/CommandHistory.cpp
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
@@ -248,6 +249,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmo_command_integration_tests.cpp
     tests/scene_hierarchy_tests.cpp
     tests/entity_inspector_tests.cpp
+    tests/asset_browser_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

@@ -553,7 +553,7 @@ TEST_CASE( "ModifyVisibleCommand for visibility changes", "[ecs-commands][unit][
 
 		editor::ModifyVisibleCommand cmd( scene, entity, newVisible );
 
-		REQUIRE( cmd.getDescription() == "Modify Visible Component" );
+		REQUIRE( cmd.getDescription() == "Modify Visibility" );
 	}
 
 	SECTION( "ModifyVisibleCommand execute modifies visible component" )
