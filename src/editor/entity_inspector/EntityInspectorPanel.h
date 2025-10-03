@@ -83,6 +83,10 @@ private:
 	// Component management
 	void renderAddComponentMenu( ecs::Entity entity );
 
+	// Helper to render component context menu (right-click)
+	template <components::Component T>
+	void renderComponentContextMenu( const char *componentName, ecs::Entity entity );
+
 	// Transform editing state for command creation
 	struct TransformEditState
 	{

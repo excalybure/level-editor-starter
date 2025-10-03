@@ -136,6 +136,7 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 	// Component header with collapsing header
 	if ( ImGui::CollapsingHeader( "Transform", ImGuiTreeNodeFlags_DefaultOpen ) )
 	{
+		renderComponentContextMenu<components::Transform>( "Transform", entity );
 		ImGui::PushID( "Transform" );
 
 		bool valueChanged = false;
@@ -221,20 +222,23 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 
 void EntityInspectorPanel::renderNameComponent( ecs::Entity entity )
 {
-	auto *nameComp = m_scene.getComponent<components::Name>( entity );
-	if ( !nameComp )
+	auto *name = m_scene.getComponent<components::Name>( entity );
+	if ( !name )
 		return;
 
 	// Component header with collapsing header
 	if ( ImGui::CollapsingHeader( "Name", ImGuiTreeNodeFlags_DefaultOpen ) )
 	{
+		renderComponentContextMenu<components::Name>( "Name", entity );
 		ImGui::PushID( "Name" );
 
 		// Initialize buffer if not editing yet
 		if ( !m_nameEditState.isEditing )
 		{
-			std::strncpy( m_nameEditState.nameBuffer, nameComp->name.c_str(), sizeof( m_nameEditState.nameBuffer ) - 1 );
-			m_nameEditState.nameBuffer[sizeof( m_nameEditState.nameBuffer ) - 1] = '\0';
+			const size_t bufferSize = sizeof( m_nameEditState.nameBuffer );
+			const size_t copyLength = std::min( name->name.length(), bufferSize - 1 );
+			std::memcpy( m_nameEditState.nameBuffer, name->name.c_str(), copyLength );
+			m_nameEditState.nameBuffer[copyLength] = '\0';
 		}
 
 		ImGui::Text( "Name" );
@@ -248,7 +252,7 @@ void EntityInspectorPanel::renderNameComponent( ecs::Entity entity )
 		{
 			// Capture before state
 			m_nameEditState.isEditing = true;
-			m_nameEditState.beforeName = nameComp->name;
+			m_nameEditState.beforeName = name->name;
 		}
 
 		// Detect when input becomes inactive (user finishes editing)
@@ -283,6 +287,7 @@ void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
 	// Component header with collapsing header
 	if ( ImGui::CollapsingHeader( "Visible", ImGuiTreeNodeFlags_DefaultOpen ) )
 	{
+		renderComponentContextMenu<components::Visible>( "Visible", entity );
 		ImGui::PushID( "Visible" );
 
 		bool valueChanged = false;
@@ -345,13 +350,14 @@ void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
 
 void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 {
-	const auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
+	auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
 	if ( !meshRenderer )
 		return;
 
 	// Component header with collapsing header
 	if ( ImGui::CollapsingHeader( "MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen ) )
 	{
+		renderComponentContextMenu<components::MeshRenderer>( "MeshRenderer", entity );
 		ImGui::PushID( "MeshRenderer" );
 
 		// Display mesh handle (read-only)
@@ -480,5 +486,48 @@ void EntityInspectorPanel::renderAddComponentMenu( ecs::Entity entity )
 		ImGui::EndPopup();
 	}
 }
+
+// Template implementation for component context menu
+template <components::Component T>
+void EntityInspectorPanel::renderComponentContextMenu( const char *componentName, ecs::Entity entity )
+{
+	// Check if this is an essential component (Transform or Name) - cannot be removed
+	const bool isEssential = std::is_same_v<T, components::Transform> || std::is_same_v<T, components::Name>;
+
+	// Open context menu on right-click
+	const std::string popupId = std::format( "##ComponentContext_{}", componentName );
+	if ( ImGui::BeginPopupContextItem( popupId.c_str() ) )
+	{
+		ImGui::TextDisabled( "%s Component", componentName );
+		ImGui::Separator();
+
+		// Show "Remove Component" menu item, disabled for essential components
+		if ( ImGui::MenuItem( "Remove Component", nullptr, false, !isEssential ) )
+		{
+			// Create and execute RemoveComponentCommand
+			auto command = std::make_unique<RemoveComponentCommand<T>>( m_scene, entity );
+			m_commandHistory.executeCommand( std::move( command ) );
+			ImGui::CloseCurrentPopup();
+		}
+
+		// Show tooltip explaining why essential components cannot be removed
+		if constexpr ( isEssential )
+		{
+			if ( ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenDisabled ) )
+			{
+				ImGui::SetTooltip( "Essential component cannot be removed" );
+			}
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+// Explicit template instantiations for all component types
+template void EntityInspectorPanel::renderComponentContextMenu<components::Transform>( const char *, ecs::Entity );
+template void EntityInspectorPanel::renderComponentContextMenu<components::Name>( const char *, ecs::Entity );
+template void EntityInspectorPanel::renderComponentContextMenu<components::Visible>( const char *, ecs::Entity );
+template void EntityInspectorPanel::renderComponentContextMenu<components::MeshRenderer>( const char *, ecs::Entity );
+template void EntityInspectorPanel::renderComponentContextMenu<components::Selected>( const char *, ecs::Entity );
 
 } // namespace editor

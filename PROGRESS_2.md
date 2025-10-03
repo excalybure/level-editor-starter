@@ -1,5 +1,36 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Remove Component Menu (M2-P6-T2.7)
+**Summary:** Implemented component context menu with "Remove Component" functionality in Entity Inspector Panel, enabling users to remove components via right-click context menus. The feature adds context menus to all component headers (Transform, Name, Visible, MeshRenderer) that appear on right-click. Essential components (Transform and Name) are protected from removal with disabled menu items and explanatory tooltips. The implementation uses the existing RemoveComponentCommand<T> template which captures component state before removal, ensuring proper restoration on undo with all original property values intact.
+
+**Atomic functionalities completed:**
+- AF2.7.1: renderComponentContextMenu<T>() template method - Added template method declaration to EntityInspectorPanel.h for component context menu rendering
+- AF2.7.2: Context menu integration - Wired renderComponentContextMenu<T>() calls into all component renderers (Name, Visible, Transform, MeshRenderer)
+- AF2.7.3: Essential component protection - Implemented std::is_same_v checks to identify Transform/Name as essential, disabling "Remove Component" menu item for these types
+- AF2.7.4: Tooltip feedback - Added ImGuiHoveredFlags_AllowWhenDisabled tooltip showing "Essential component cannot be removed" for protected components
+- AF2.7.5: Command execution - Reused existing RemoveComponentCommand<T> template, creating and executing via m_commandHistory for full undo/redo support
+- AF2.7.6: Template instantiations - Added explicit template instantiations for all 5 component types to ensure compiler generates necessary code
+
+**Tests:**
+- T2.7 test: 1 test case with 8 assertions (component removal with state restoration, undo/redo validation)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 43 assertions in 12 test cases
+- Commands: `unit_test_runner.exe "[T2.7]"` or `"[remove_component]"`
+
+**Notes:**
+- Context menus appear on right-click of component headers using ImGui::BeginPopupContextItem()
+- Unique popup IDs generated using std::format("##ComponentContext_{}", componentName) to avoid conflicts
+- RemoveComponentCommand<T> already existed in EcsCommands.h with full state capture in constructor
+- Command captures component state before removal, enabling perfect restoration on undo
+- Essential components (Transform, Name) cannot be removed to maintain entity integrity
+- Disabled menu items show tooltip on hover explaining why removal is blocked
+- ImGui::CloseCurrentPopup() called after command execution for smooth UX
+- Template method requires explicit instantiations at end of .cpp file for all component types
+- std::is_same_v used for compile-time type checking of essential components
+- Added #include <typeinfo> for type identification support
+- Compiler warning C4127 (conditional expression is constant) expected for std::is_same_v usage, can be safely ignored or converted to `if constexpr` in future
+- Context menu pattern consistent with ImGui best practices for per-item menus
+- Complete component lifecycle now supported: view → edit → add → remove, all with undo/redo
+
 ## 2025-10-02 — Add Component Menu (M2-P6-T2.6)
 **Summary:** Implemented "Add Component" menu in Entity Inspector Panel enabling users to add components to entities via an intuitive popup menu. The feature provides a full-width button that opens a popup listing all available component types (Transform, Name, Visible, MeshRenderer, Selected). Menu items are automatically disabled with tooltips when the component is already present on the entity, preventing duplicate component additions. Commands are created with sensible default values for each component type and support full undo/redo functionality through the command history system.
 

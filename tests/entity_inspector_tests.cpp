@@ -299,3 +299,55 @@ TEST_CASE( "EntityInspectorPanel - Can add components to entity via command", "[
 	// Assert - Component should be added back
 	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
 }
+
+// ============================================================================
+// T2.7: Remove Component Menu Tests
+// ============================================================================
+
+TEST_CASE( "Can remove components from entity via command", "[T2.7][entity_inspector][remove_component][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+	selectionManager.select( entity );
+
+	// Add Visible component to test removal
+	components::Visible visible;
+	visible.visible = true;
+	visible.castShadows = true;
+	visible.receiveShadows = false;
+	scene.addComponent( entity, visible );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Initially, entity should have Visible component
+	REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+
+	// Act - Create RemoveComponentCommand (simulating context menu selection)
+	auto command = std::make_unique<editor::RemoveComponentCommand<components::Visible>>( scene, entity );
+	commandHistory.executeCommand( std::move( command ) );
+
+	// Assert - Component should be removed
+	REQUIRE( !scene.hasComponent<components::Visible>( entity ) );
+
+	// Act - Undo the remove command
+	commandHistory.undo();
+
+	// Assert - Component should be restored with original values
+	REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+	const auto *restoredVisible = scene.getComponent<components::Visible>( entity );
+	REQUIRE( restoredVisible != nullptr );
+	REQUIRE( restoredVisible->visible == true );
+	REQUIRE( restoredVisible->castShadows == true );
+	REQUIRE( restoredVisible->receiveShadows == false );
+
+	// Act - Redo the remove command
+	commandHistory.redo();
+
+	// Assert - Component should be removed again
+	REQUIRE( !scene.hasComponent<components::Visible>( entity ) );
+}
