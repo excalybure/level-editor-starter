@@ -369,7 +369,9 @@ void AssetBrowserPanel::renderPathBar()
 		const std::string &path = segment.second;
 
 		// Display segment as button
-		if ( ImGui::Button( name.c_str() ) )
+		// Use ## ID suffix to handle empty names (root path case)
+		const std::string buttonLabel = name.empty() ? "assets##root" : name + "##" + std::to_string( i );
+		if ( ImGui::Button( buttonLabel.c_str() ) )
 		{
 			navigateToDirectory( path );
 		}
@@ -508,7 +510,9 @@ void AssetBrowserPanel::renderAssetGrid()
 			ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.3f, 0.5f, 0.8f, 1.0f ) );
 		}
 
-		if ( ImGui::Button( icon, ImVec2( cellSize, cellSize ) ) )
+		// Create unique button ID using the file path
+		const std::string buttonLabel = std::string( icon ) + "##" + filePath;
+		if ( ImGui::Button( buttonLabel.c_str(), ImVec2( cellSize, cellSize ) ) )
 		{
 			selectAsset( filePath );
 		}
