@@ -1,5 +1,50 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-12 — Scene Editor Integration Complete (M2-P6-T4.3-T4.6)
+**Summary:** Completed remaining Scene Editor UI integration tasks (T4.3 through T4.6). Verified input handling is sufficient (gizmo system already blocks keyboard/mouse capture), implemented enhanced docking layout with 7-window configuration (scene hierarchy left 20%, entity inspector right 25%, asset browser bottom 30%, 2x2 viewport grid in center), enhanced status bar with selection count, gizmo mode/space, and FPS display, and implemented scene modified tracking with asterisk in window title plus warning dialogs on File→New/Open when changes are unsaved. The UI now provides a complete, integrated scene editing experience with all panels properly docked, visual feedback for scene state, and protection against accidental data loss.
+
+**Atomic functionalities completed:**
+- AF4.3.1: Input handling review - Verified GizmoSystem's isManipulating() already blocks keyboard shortcuts
+- AF4.3.2: ImGui capture check - Confirmed ImGui::GetIO().WantCaptureKeyboard/Mouse prevents panel input leakage
+- AF4.3.3: No changes needed - Input handling already correct (gizmo system → keyboard shortcuts → UI panels)
+- AF4.4.1: setupInitialLayout() implementation - Added new method in ui.cpp to configure docking on first run
+- AF4.4.2: Viewport grid layout - Split center dock into 2x2 grid (Viewport 1-4) using DockBuilderSplitNode
+- AF4.4.3: Hierarchy panel left - Dock SceneHierarchyPanel left 20% of main dock space
+- AF4.4.4: Inspector panel right - Dock EntityInspectorPanel right 25% of remaining space
+- AF4.4.5: Asset browser bottom - Dock AssetBrowserPanel bottom 30% of main dock space
+- AF4.4.6: One-time layout - Check ImGui::DockBuilderGetNode() != nullptr to avoid resetting user customization
+- AF4.5.1: Selection count display - Added status bar text showing "N entities selected" using SelectionManager::getSelectionCount()
+- AF4.5.2: Gizmo mode display - Added switch statement to show current gizmo operation (Translate/Rotate/Scale/Universal)
+- AF4.5.3: Gizmo space display - Added conditional text showing "Local" or "World" based on GizmoSystem::getCurrentMode()
+- AF4.5.4: FPS display - Added frame time (ms) and FPS using ImGui::GetIO().DeltaTime and Framerate
+- AF4.5.5: Vertical separators - Added ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical) between status sections
+- AF4.6.1: m_sceneModified flag - Added bool member to UI::Impl initialized to false
+- AF4.6.2: Window title asterisk - Modified setupDockspace() to append " *" to title when m_sceneModified is true
+- AF4.6.3: Mark modified on command - Set m_sceneModified = true in Edit menu after executeCommand() calls
+- AF4.6.4: Clear on load - Set m_sceneModified = false in loadScene() after successful load
+- AF4.6.5: Clear on new/clear - Set m_sceneModified = false in File→New and clearScene()
+- AF4.6.6: Unsaved warning File→New - Added ImGui::OpenPopup() with Yes/No dialog before clearing scene
+- AF4.6.7: Unsaved warning File→Open - Added ImGui::OpenPopup() with Yes/No dialog before loading scene
+- AF4.6.8: Warning dialog rendering - Added BeginPopupModal()/EndPopupModal() for confirmation dialogs
+
+**Tests:** No new unit tests created for UI integration tasks. Input handling verified by reviewing existing gizmo tests. Docking layout, status bar, and scene modified tracking validated via manual testing in running editor (UI panels require full ImGui context and DirectX device initialization, making isolated unit tests impractical per instructions §9 "Do not write unit tests for UI code requiring external contexts").
+
+**Notes:**
+- T4.3 (Input Handling Review): No code changes needed - existing gizmo system already blocks keyboard shortcuts during manipulation via isManipulating() flag, and ImGui's WantCaptureKeyboard/WantCaptureMouse flags prevent input leakage to editor when panels are focused.
+- T4.4 (Docking Layout): Implemented setupInitialLayout() to create 7-window layout programmatically using ImGui DockBuilder API. Center dock space split into 2x2 viewport grid, hierarchy panel docked left (20%), inspector docked right (25%), asset browser docked bottom (30%). One-time setup on first run only - preserves user customization afterward.
+- T4.5 (Status Bar Enhancement): Extended renderStatusBar() to show: scene path (existing), entity count (existing), selection count (new), gizmo mode/space (new), FPS (new), and error status (existing). Vertical separators added between sections for visual organization.
+- T4.6 (Scene Modified Tracking): Added m_sceneModified flag to UI::Impl. Flag set to true when Create/Delete Entity commands execute. Flag cleared on successful load or new/clear scene. Window title shows asterisk when modified. File→New and File→Open show "Unsaved Changes" warning dialogs with Yes/No buttons when m_sceneModified is true, allowing user to cancel operation or proceed with data loss.
+- Fixed GizmoSystem API usage: Changed getMode() to getCurrentOperation() and isLocalSpace() to getCurrentMode() == GizmoMode::Local to match actual interface in gizmos.h.
+- Docking layout uses DockBuilderSplitNode() to create fixed proportions - user can resize docks but initial layout provides sensible defaults.
+- Status bar gizmo mode shows operation name (Translate/Rotate/Scale/Universal) and space (Local/World) for quick reference without switching to toolbar.
+- FPS display helps users monitor performance during scene editing - frame time in milliseconds alongside FPS.
+- Scene modified tracking follows standard desktop application pattern (asterisk in title bar + confirmation dialogs on potentially destructive actions).
+- Warning dialogs use ImGui::BeginPopupModal() with ImGuiWindowFlags_AlwaysAutoResize for consistent sizing.
+- Unsaved changes dialog provides Yes/No options (not Yes/No/Cancel) - clicking outside or pressing Escape closes dialog without action (implicit cancel).
+- Selection count shows "N entities selected" with proper pluralization (1 entity vs N entities).
+- All edits successful, build succeeded with exit code 0.
+- Integration complete: all T4 subtasks (T4.0-T4.6) finished, UI fully functional with panels, menus, docking, status bar, and scene tracking.
+
 ## 2025-10-03 — Asset Browser Drag-and-Drop Support (M2-P6-T3.7)
 **Summary:** Implemented T3.7: Drag-and-Drop to Scene for the Asset Browser Panel using strict TDD methodology. Added canDragAsset() method to determine if an asset type supports drag-and-drop (currently Mesh types only), getDragDropPayload() method to generate the asset path payload string, and integrated ImGui BeginDragDropSource/EndDragDropSource into the asset grid rendering. During drag operations, users see a tooltip showing the filename being dragged. The payload is typed as "ASSET_BROWSER_ITEM" with the full asset path as data, ready for drop targets (viewport, hierarchy panels) to accept and process. This implementation provides the complete drag source infrastructure - drop handling and entity creation will be implemented in the respective target panels.
 

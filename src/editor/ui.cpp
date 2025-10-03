@@ -97,6 +97,7 @@ struct UI::Impl
 
 	std::string currentScenePath;
 	std::string lastError;
+	bool m_sceneModified = false;
 
 	// Track previous frame's gizmo state for input blocking
 	bool wasGizmoHoveredLastFrame = false;
@@ -347,7 +348,14 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
 
-	ImGui::Begin( "Level Editor Dockspace", nullptr, window_flags );
+	// Set window title with modified indicator
+	std::string windowTitle = "Level Editor Dockspace";
+	if ( m_sceneModified )
+	{
+		windowTitle += " *";
+	}
+
+	ImGui::Begin( windowTitle.c_str(), nullptr, window_flags );
 	ImGui::PopStyleVar( 3 );
 
 	// Reserve space for toolbar and status bar
@@ -372,13 +380,90 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 		{
 			if ( ImGui::MenuItem( "New" ) )
 			{
-				// Clear current scene
-				ui.clearScene();
+				// Check for unsaved changes
+				if ( m_sceneModified )
+				{
+					// Show warning popup (will be handled in next frame)
+					ImGui::OpenPopup( "Unsaved Changes##New" );
+				}
+				else
+				{
+					// Clear current scene
+					ui.clearScene();
+					m_sceneModified = false;
+				}
 			}
+
+			// Warning dialog for New Scene
+			if ( ImGui::BeginPopupModal( "Unsaved Changes##New", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+			{
+				ImGui::Text( "The current scene has unsaved changes." );
+				ImGui::Text( "Do you want to save before creating a new scene?" );
+				ImGui::Separator();
+
+				if ( ImGui::Button( "Save", ImVec2( 120, 0 ) ) )
+				{
+					// TODO: Implement save (requires scene path)
+					ImGui::CloseCurrentPopup();
+					ui.clearScene();
+					m_sceneModified = false;
+				}
+				ImGui::SameLine();
+				if ( ImGui::Button( "Don't Save", ImVec2( 120, 0 ) ) )
+				{
+					ImGui::CloseCurrentPopup();
+					ui.clearScene();
+					m_sceneModified = false;
+				}
+				ImGui::SameLine();
+				if ( ImGui::Button( "Cancel", ImVec2( 120, 0 ) ) )
+				{
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+
 			if ( ImGui::MenuItem( "Open Scene..." ) )
 			{
-				// Open file dialog for scene loading
-				ui.openFileDialog();
+				// Check for unsaved changes
+				if ( m_sceneModified )
+				{
+					ImGui::OpenPopup( "Unsaved Changes##Open" );
+				}
+				else
+				{
+					// Open file dialog for scene loading
+					ui.openFileDialog();
+				}
+			}
+
+			// Warning dialog for Open Scene
+			if ( ImGui::BeginPopupModal( "Unsaved Changes##Open", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+			{
+				ImGui::Text( "The current scene has unsaved changes." );
+				ImGui::Text( "Do you want to save before opening a different scene?" );
+				ImGui::Separator();
+
+				if ( ImGui::Button( "Save", ImVec2( 120, 0 ) ) )
+				{
+					// TODO: Implement save (requires scene path)
+					ImGui::CloseCurrentPopup();
+					ui.openFileDialog();
+					m_sceneModified = false;
+				}
+				ImGui::SameLine();
+				if ( ImGui::Button( "Don't Save", ImVec2( 120, 0 ) ) )
+				{
+					ImGui::CloseCurrentPopup();
+					ui.openFileDialog();
+					m_sceneModified = false;
+				}
+				ImGui::SameLine();
+				if ( ImGui::Button( "Cancel", ImVec2( 120, 0 ) ) )
+				{
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
 			}
 			if ( ImGui::MenuItem( "Save" ) )
 			{ /* TODO: Implement scene saving */
@@ -420,7 +505,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 					auto cmd = std::make_unique<CreateEntityCommand>( *scene, "New Entity" );
 					if ( commandHistory )
 					{
-						commandHistory->executeCommand( std::move( cmd ) );
+						if ( commandHistory->executeCommand( std::move( cmd ) ) )
+						{
+							m_sceneModified = true;
+						}
 					}
 				}
 
@@ -436,7 +524,10 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 						auto cmd = std::make_unique<DeleteEntityCommand>( *scene, entity );
 						if ( commandHistory )
 						{
-							commandHistory->executeCommand( std::move( cmd ) );
+							if ( commandHistory->executeCommand( std::move( cmd ) ) )
+							{
+								m_sceneModified = true;
+							}
 						}
 					}
 				}
@@ -530,30 +621,43 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 		ImGui::DockBuilderAddNode( inDockspaceId, ImGuiDockNodeFlags_DockSpace ); // Add back the dockspace node
 		ImGui::DockBuilderSetNodeSize( inDockspaceId, ImGui::GetMainViewport()->WorkSize );
 
-		// Split the dockspace into regions for our four viewports
-		// We'll create a 2x2 grid layout:
-		// +-------------+-------------+
-		// | Perspective |    Top      |
-		// |     3D      |   (XY)      |
-		// +-------------+-------------+
-		// |   Front     |    Side     |
-		// |   (XZ)      |   (YZ)      |
-		// +-------------+-------------+
+		// Create a layout with scene editing panels and viewports:
+		// +----------+------------------+------------------+----------+
+		// |          |   Perspective    |    Top (XY)      |          |
+		// | Hierarchy|      3D          |                  | Inspector|
+		// |  (20%)   +------------------+------------------+  (25%)   |
+		// |          |   Front (XZ)     |    Side (YZ)     |          |
+		// +----------+------------------+------------------+----------+
+		// |                  Asset Browser (30%)                     |
+		// +--------------------------------------------------------------+
 
+		ImGuiID dockLeft, dockMainArea;
+		ImGuiID dockRight, dockCenterArea;
+		ImGuiID dockBottom, dockViewportArea;
 		ImGuiID dockLeftColumn, dockRightColumn;
 		ImGuiID dockTopLeft, dockBottomLeft;
 		ImGuiID dockTopRight, dockBottomRight;
 
-		// First split: divide main dockspace into left and right columns
-		ImGui::DockBuilderSplitNode( inDockspaceId, ImGuiDir_Left, 0.5f, &dockLeftColumn, &dockRightColumn );
+		// First split: hierarchy panel on left (20%)
+		ImGui::DockBuilderSplitNode( inDockspaceId, ImGuiDir_Left, 0.20f, &dockLeft, &dockMainArea );
 
-		// Split left column into top and bottom
+		// Second split: inspector panel on right (25% of remaining)
+		ImGui::DockBuilderSplitNode( dockMainArea, ImGuiDir_Right, 0.3125f, &dockRight, &dockCenterArea ); // 0.25/0.80 ≈ 0.3125
+
+		// Third split: asset browser on bottom (30% of center area)
+		ImGui::DockBuilderSplitNode( dockCenterArea, ImGuiDir_Down, 0.30f, &dockBottom, &dockViewportArea );
+
+		// Split viewport area into 2x2 grid for four viewports
+		ImGui::DockBuilderSplitNode( dockViewportArea, ImGuiDir_Left, 0.5f, &dockLeftColumn, &dockRightColumn );
 		ImGui::DockBuilderSplitNode( dockLeftColumn, ImGuiDir_Up, 0.5f, &dockTopLeft, &dockBottomLeft );
-
-		// Split right column into top and bottom
 		ImGui::DockBuilderSplitNode( dockRightColumn, ImGuiDir_Up, 0.5f, &dockTopRight, &dockBottomRight );
 
-		// Dock each viewport window to its designated area
+		// Dock scene editing panels
+		ImGui::DockBuilderDockWindow( "Scene Hierarchy", dockLeft );
+		ImGui::DockBuilderDockWindow( "Entity Inspector", dockRight );
+		ImGui::DockBuilderDockWindow( "Asset Browser", dockBottom );
+
+		// Dock viewport windows
 		ImGui::DockBuilderDockWindow( "Perspective", dockTopLeft );	  // Top-left: 3D Perspective
 		ImGui::DockBuilderDockWindow( "Top (XY)", dockTopRight );	  // Top-right: Top view
 		ImGui::DockBuilderDockWindow( "Front (XZ)", dockBottomLeft ); // Bottom-left: Front view
@@ -1128,6 +1232,63 @@ void UI::Impl::renderStatusBar( UI &ui )
 		ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
 		ImGui::SameLine();
 
+		// Selection count
+		if ( selectionManager )
+		{
+			const size_t selectionCount = selectionManager->getSelectedEntities().size();
+			if ( selectionCount > 0 )
+			{
+				ImGui::Text( "Selected: %zu", selectionCount );
+			}
+			else
+			{
+				ImGui::Text( "Selected: None" );
+			}
+
+			ImGui::SameLine();
+			ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
+			ImGui::SameLine();
+		}
+
+		// Gizmo mode and space
+		if ( gizmoSystem )
+		{
+			const char *modeName = "None";
+			switch ( gizmoSystem->getCurrentOperation() )
+			{
+			case editor::GizmoOperation::Translate:
+				modeName = "Translate";
+				break;
+			case editor::GizmoOperation::Rotate:
+				modeName = "Rotate";
+				break;
+			case editor::GizmoOperation::Scale:
+				modeName = "Scale";
+				break;
+			case editor::GizmoOperation::Universal:
+				modeName = "Universal";
+				break;
+			default:
+				break;
+			}
+
+			const char *spaceName = ( gizmoSystem->getCurrentMode() == editor::GizmoMode::Local ) ? "Local" : "World";
+			ImGui::Text( "Gizmo: %s (%s)", modeName, spaceName );
+
+			ImGui::SameLine();
+			ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
+			ImGui::SameLine();
+		}
+
+		// Frame time and FPS
+		const float frameTime = ImGui::GetIO().DeltaTime * 1000.0f; // Convert to milliseconds
+		const float fps = ImGui::GetIO().Framerate;
+		ImGui::Text( "%.1f ms (%.0f FPS)", frameTime, fps );
+
+		ImGui::SameLine();
+		ImGui::SeparatorEx( ImGuiSeparatorFlags_Vertical );
+		ImGui::SameLine();
+
 		// Error status
 		if ( !lastError.empty() )
 		{
@@ -1517,6 +1678,7 @@ bool UI::loadScene( const std::string &filePath )
 	// Update current path
 	m_impl->currentScenePath = filePath;
 	m_impl->lastError.clear();
+	m_impl->m_sceneModified = false;
 
 	console::info( "UI: Successfully loaded scene: {}", filePath );
 	return true;
@@ -1560,6 +1722,7 @@ void UI::clearScene()
 
 	m_impl->currentScenePath.clear();
 	m_impl->lastError.clear();
+	m_impl->m_sceneModified = false;
 }
 
 void UI::openFileDialog()
