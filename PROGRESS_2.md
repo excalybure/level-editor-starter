@@ -1,5 +1,34 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-17 — Scene Serialization UI Integration Complete (M2-P6-T5.4)
+**Summary:** Completed Task 5.4 (Scene Editor Save/Load Integration) to wire scene serialization functionality into the editor UI File menu. Implemented newScene(), saveScene(filepath), and updated loadScene() methods in UI class to use scene::SceneSerializer instead of AssetManager/SceneImporter. Added File→Save and File→Save As menu items with Windows native file dialogs (.scene extension), enhanced File→New and File→Open unsaved changes warnings to offer save/don't save/cancel options, and integrated error handling with scene::SerializationErrorInfo for clear user feedback. Changed Open dialog filter from .gltf to .scene files. The editor now provides complete scene save/load workflow with protection against accidental data loss through unsaved changes prompts.
+
+**Atomic functionalities completed:**
+- AF5.4.1: newScene() implementation - Calls clearScene(), resets current scene path, clears error and modified flag
+- AF5.4.2: saveScene(filepath) implementation - Uses scene::SceneSerializer::saveScene() with std::expected error handling
+- AF5.4.3: Error message extraction - Switch statement for scene::SerializationError enum (FileAccessDenied, InvalidJSON, etc.)
+- AF5.4.4: openSaveFileDialog() implementation - Windows GetSaveFileNameA with .scene filter, OFN_OVERWRITEPROMPT flag
+- AF5.4.5: File→Save menu item - Calls saveScene() if path exists, otherwise openSaveFileDialog() (Ctrl+S shortcut)
+- AF5.4.6: File→Save As menu item - Calls openSaveFileDialog() unconditionally (Ctrl+Shift+S shortcut)
+- AF5.4.7: File→New unsaved changes prompt - Enhanced to save scene before new (save to current path or Save As dialog)
+- AF5.4.8: File→Open unsaved changes prompt - Enhanced to save scene before open (save to current path or Save As dialog)
+- AF5.4.9: loadScene() replacement - Replaced AssetManager/SceneImporter with scene::SceneSerializer::loadScene()
+- AF5.4.10: openFileDialog() update - Changed filter from "glTF Files\0*.gltf;*.glb\0" to "Scene Files\0*.scene\0"
+
+**Tests:** No new unit tests created (UI code requires full ImGui context + DirectX device per instructions §9). Serialization functionality validated via existing scene_serialization_tests.cpp (6 test cases, 24 assertions passing). Manual testing required for file dialog interactions and menu workflows.
+
+**Notes:**
+- SceneSerializer is in `scene::` namespace (not `runtime::`), required namespace fix in UI.cpp
+- SerializationErrorInfo struct used (not plain enum) - contains error enum + message + filePath + lineNumber
+- Error handling extracts `errorInfo.error` and falls back to `errorInfo.message` for detailed errors
+- Save As dialog pre-fills current filename if scene path exists (uses strncpy_s for safety)
+- Open dialog no longer loads .gltf assets - changed to .scene JSON files exclusively
+- AssetManager/SceneImporter imports removed from loadScene() - SceneSerializer handles all scene I/O
+- Unsaved changes dialogs provide three buttons: Save (with conditional Save As), Don't Save, Cancel
+- Save button logic: if current path exists → saveScene(path), else → openSaveFileDialog() then proceed
+- Build successful, all editor modules (runtime, editor, engine, level_editor) compile without errors
+- Task 5 (Scene Serialization) fully complete: T5.1 (format design), T5.2 (save impl), T5.3 (load impl), T5.4 (UI integration)
+
 ## 2025-01-17 — Scene Serialization Complete (M2-P6-T5.1-T5.3)
 **Summary:** Completed Task 5 (Scene Serialization) with strict TDD methodology. Designed comprehensive JSON schema version 1.0 with full documentation (docs/scene_format.md, 250+ lines), implemented SceneSerializer class with saveScene() and loadScene() static methods using std::expected<T,E> error handling, integrated nlohmann/json library via vcpkg, and created complete test suite with 6 test cases and 24 assertions. Save implementation serializes Transform, Visible, and MeshRenderer components with entity ID mapping and hierarchy preservation. Load implementation parses JSON, creates entities with ID remapping via std::unordered_map, deserializes components, and rebuilds parent-child hierarchy in two-pass algorithm. Round-trip testing confirms lossless save/load cycle. Fixed compilation error by adding Scene::getEntityCount() method to ecs::Scene class. AssetManager integration deferred (TODOs noted for future mesh path resolution).
 

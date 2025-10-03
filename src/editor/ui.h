@@ -122,11 +122,14 @@ public:
 		editor::SelectionManager &selectionManager );
 
 	// File operations
+	void newScene();
 	bool loadScene( const std::string &filePath );
+	bool saveScene( const std::string &filePath );
 	void clearScene();
 
 	// File dialog operations
 	void openFileDialog();
+	void openSaveFileDialog();
 
 	// Scene state queries
 	const std::string &getCurrentScenePath() const;

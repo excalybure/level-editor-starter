@@ -22,6 +22,7 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/scene_importer.h"
+#include "runtime/scene_serialization/SceneSerializer.h"
 #include "runtime/console.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
@@ -403,17 +404,24 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 				if ( ImGui::Button( "Save", ImVec2( 120, 0 ) ) )
 				{
-					// TODO: Implement save (requires scene path)
 					ImGui::CloseCurrentPopup();
-					ui.clearScene();
-					m_sceneModified = false;
+					// If we have a current scene path, save it; otherwise open Save As dialog
+					if ( !ui.getCurrentScenePath().empty() )
+					{
+						ui.saveScene( ui.getCurrentScenePath() );
+						ui.newScene();
+					}
+					else
+					{
+						ui.openSaveFileDialog();
+						ui.newScene();
+					}
 				}
 				ImGui::SameLine();
 				if ( ImGui::Button( "Don't Save", ImVec2( 120, 0 ) ) )
 				{
 					ImGui::CloseCurrentPopup();
-					ui.clearScene();
-					m_sceneModified = false;
+					ui.newScene();
 				}
 				ImGui::SameLine();
 				if ( ImGui::Button( "Cancel", ImVec2( 120, 0 ) ) )
@@ -446,17 +454,23 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 
 				if ( ImGui::Button( "Save", ImVec2( 120, 0 ) ) )
 				{
-					// TODO: Implement save (requires scene path)
 					ImGui::CloseCurrentPopup();
+					// If we have a current scene path, save it; otherwise open Save As dialog
+					if ( !ui.getCurrentScenePath().empty() )
+					{
+						ui.saveScene( ui.getCurrentScenePath() );
+					}
+					else
+					{
+						ui.openSaveFileDialog();
+					}
 					ui.openFileDialog();
-					m_sceneModified = false;
 				}
 				ImGui::SameLine();
 				if ( ImGui::Button( "Don't Save", ImVec2( 120, 0 ) ) )
 				{
 					ImGui::CloseCurrentPopup();
 					ui.openFileDialog();
-					m_sceneModified = false;
 				}
 				ImGui::SameLine();
 				if ( ImGui::Button( "Cancel", ImVec2( 120, 0 ) ) )
@@ -465,8 +479,21 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 				}
 				ImGui::EndPopup();
 			}
-			if ( ImGui::MenuItem( "Save" ) )
-			{ /* TODO: Implement scene saving */
+			if ( ImGui::MenuItem( "Save", "Ctrl+S" ) )
+			{
+				// If we have a current scene path, save to it; otherwise open Save As dialog
+				if ( !ui.getCurrentScenePath().empty() )
+				{
+					ui.saveScene( ui.getCurrentScenePath() );
+				}
+				else
+				{
+					ui.openSaveFileDialog();
+				}
+			}
+			if ( ImGui::MenuItem( "Save As...", "Ctrl+Shift+S" ) )
+			{
+				ui.openSaveFileDialog();
 			}
 			ImGui::Separator();
 			if ( ImGui::MenuItem( "Clear Scene" ) )
@@ -1639,43 +1666,45 @@ bool UI::loadScene( const std::string &filePath )
 		return false;
 	}
 
-	// Check if dependencies are available
-	if ( !m_impl->assetManager || !m_impl->scene || !m_impl->gpuManager )
+	// Check if scene is available
+	if ( !m_impl->scene )
 	{
-		m_impl->lastError = "Scene operation dependencies not available";
-		console::error( "UI: Cannot load scene - dependencies not initialized" );
+		m_impl->lastError = "Scene not available";
+		console::error( "UI: Cannot load scene - scene not initialized" );
 		return false;
 	}
 
 	// Clear existing scene first
 	clearScene();
 
-	// Load scene via AssetManager
-	auto assetScene = m_impl->assetManager->load<assets::Scene>( filePath );
-	if ( !assetScene )
+	// Load scene using SceneSerializer
+	const auto result = scene::SceneSerializer::loadScene( *m_impl->scene, filePath );
+	if ( !result )
 	{
-		m_impl->lastError = "Failed to load scene from file: " + filePath;
-		console::error( "UI: Failed to load scene from file: {}", filePath );
+		// Extract error message from SerializationError enum
+		std::string errorMsg;
+		switch ( result.error().error )
+		{
+		case scene::SerializationError::FileNotFound:
+			errorMsg = "Scene file not found";
+			break;
+		case scene::SerializationError::InvalidJSON:
+			errorMsg = "Invalid or corrupt scene file";
+			break;
+		case scene::SerializationError::UnsupportedVersion:
+			errorMsg = "Unsupported scene file version";
+			break;
+		default:
+			errorMsg = "Unknown error occurred";
+			break;
+		}
+
+		m_impl->lastError = errorMsg + ": " + filePath;
+		console::error( "UI: Failed to load scene: {}", m_impl->lastError );
 		return false;
 	}
 
-	// Import scene into ECS
-	if ( !runtime::SceneImporter::importScene( assetScene, *m_impl->scene ) )
-	{
-		m_impl->lastError = "Failed to import scene into ECS";
-		console::error( "UI: Failed to import scene into ECS" );
-		return false;
-	}
-
-	// Create GPU resources
-	if ( !runtime::SceneImporter::createGPUResources( assetScene, *m_impl->scene, *m_impl->gpuManager ) )
-	{
-		m_impl->lastError = "Failed to create GPU resources for scene";
-		console::error( "UI: Failed to create GPU resources for scene" );
-		return false;
-	}
-
-	// Update current path
+	// Update current path and clear modified flag
 	m_impl->currentScenePath = filePath;
 	m_impl->lastError.clear();
 	m_impl->m_sceneModified = false;
@@ -1725,6 +1754,70 @@ void UI::clearScene()
 	m_impl->m_sceneModified = false;
 }
 
+void UI::newScene()
+{
+	// Clear the current scene
+	clearScene();
+
+	// Reset scene path
+	m_impl->currentScenePath.clear();
+	m_impl->lastError.clear();
+	m_impl->m_sceneModified = false;
+
+	console::info( "UI: New scene created" );
+}
+
+bool UI::saveScene( const std::string &filePath )
+{
+	if ( filePath.empty() )
+	{
+		m_impl->lastError = "File path is empty";
+		console::error( "UI: Cannot save scene - file path is empty" );
+		return false;
+	}
+
+	// Check if scene is available
+	if ( !m_impl->scene )
+	{
+		m_impl->lastError = "Scene not available";
+		console::error( "UI: Cannot save scene - scene not initialized" );
+		return false;
+	}
+
+	// Save scene using SceneSerializer
+	const auto result = scene::SceneSerializer::saveScene( *m_impl->scene, filePath );
+	if ( !result )
+	{
+		// Extract error message from SerializationErrorInfo
+		const auto &errorInfo = result.error();
+		std::string errorMsg;
+		switch ( errorInfo.error )
+		{
+		case scene::SerializationError::FileAccessDenied:
+			errorMsg = "Failed to write scene file (access denied)";
+			break;
+		case scene::SerializationError::InvalidJSON:
+			errorMsg = "Invalid scene data (JSON error)";
+			break;
+		default:
+			errorMsg = errorInfo.message.empty() ? "Unknown error occurred" : errorInfo.message;
+			break;
+		}
+
+		m_impl->lastError = errorMsg + ": " + filePath;
+		console::error( "UI: Failed to save scene: {}", m_impl->lastError );
+		return false;
+	}
+
+	// Update current path and clear modified flag
+	m_impl->currentScenePath = filePath;
+	m_impl->lastError.clear();
+	m_impl->m_sceneModified = false;
+
+	console::info( "UI: Successfully saved scene: {}", filePath );
+	return true;
+}
+
 void UI::openFileDialog()
 {
 	// Check if we're in test mode (no ImGui context or headless environment)
@@ -1744,7 +1837,7 @@ void UI::openFileDialog()
 	ofn.lStructSize = sizeof( ofn );
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = sizeof( szFile );
-	ofn.lpstrFilter = "glTF Files\0*.gltf;*.glb\0All Files\0*.*\0";
+	ofn.lpstrFilter = "Scene Files\0*.scene\0All Files\0*.*\0";
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
@@ -1761,6 +1854,49 @@ void UI::openFileDialog()
 	// If GetOpenFileNameA returns FALSE, user cancelled - no action needed
 }
 
+void UI::openSaveFileDialog()
+{
+	// Check if we're in test mode (no ImGui context or headless environment)
+	if ( !ImGui::GetCurrentContext() )
+	{
+		// In test mode, don't show actual dialog to avoid blocking tests
+		console::info( "UI: Save file dialog skipped (test mode)" );
+		return;
+	}
+
+	// Use native Windows file dialog for saving
+	OPENFILENAMEA ofn;
+	char szFile[260] = { 0 };
+
+	// If we have a current scene path, use it as the default filename
+	if ( !m_impl->currentScenePath.empty() )
+	{
+		const auto filename = std::filesystem::path( m_impl->currentScenePath ).filename().string();
+		strncpy_s( szFile, sizeof( szFile ), filename.c_str(), _TRUNCATE );
+	}
+
+	// Initialize OPENFILENAME
+	ZeroMemory( &ofn, sizeof( ofn ) );
+	ofn.lStructSize = sizeof( ofn );
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof( szFile );
+	ofn.lpstrFilter = "Scene Files\0*.scene\0All Files\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.lpstrDefExt = "scene"; // Default extension
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+
+	// Display the save dialog box (blocks until user interaction)
+	if ( GetSaveFileNameA( &ofn ) == TRUE )
+	{
+		// User selected a file - save it
+		const std::string selectedFile( szFile );
+		saveScene( selectedFile );
+	}
+	// If GetSaveFileNameA returns FALSE, user cancelled - no action needed
+}
 
 const std::string &UI::getCurrentScenePath() const
 {
