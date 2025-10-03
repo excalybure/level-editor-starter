@@ -351,3 +351,62 @@ TEST_CASE( "Can remove components from entity via command", "[T2.7][entity_inspe
 	// Assert - Component should be removed again
 	REQUIRE( !scene.hasComponent<components::Visible>( entity ) );
 }
+
+// ============================================================================
+// T2.8: Multi-Selection Support Tests
+// ============================================================================
+
+TEST_CASE( "Multi-selection shows common components", "[T2.8][entity_inspector][multi_selection][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	// Create three entities with Transform and Visible components
+	const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+	const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+	const ecs::Entity entity3 = scene.createEntity( "Entity3" );
+
+	// Add Transform components
+	components::Transform transform;
+	transform.position = { 1.0f, 2.0f, 3.0f };
+	transform.rotation = { 0.0f, 0.0f, 0.0f };
+	transform.scale = { 1.0f, 1.0f, 1.0f };
+	scene.addComponent( entity1, transform );
+	scene.addComponent( entity2, transform );
+	scene.addComponent( entity3, transform );
+
+	// Add Visible components
+	components::Visible visible;
+	visible.visible = true;
+	visible.castShadows = true;
+	visible.receiveShadows = true;
+	scene.addComponent( entity1, visible );
+	scene.addComponent( entity2, visible );
+	scene.addComponent( entity3, visible );
+
+	// Select all three entities
+	selectionManager.select( entity1 );
+	selectionManager.select( entity2, true ); // additive = true
+	selectionManager.select( entity3, true ); // additive = true
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Assert - All entities should be selected
+	REQUIRE( selectionManager.getSelectionCount() == 3 );
+	REQUIRE( selectionManager.isSelected( entity1 ) );
+	REQUIRE( selectionManager.isSelected( entity2 ) );
+	REQUIRE( selectionManager.isSelected( entity3 ) );
+
+	// Assert - All entities have Transform (created by default)
+	REQUIRE( scene.hasComponent<components::Transform>( entity1 ) );
+	REQUIRE( scene.hasComponent<components::Transform>( entity2 ) );
+	REQUIRE( scene.hasComponent<components::Transform>( entity3 ) );
+
+	// Assert - All entities have Visible
+	REQUIRE( scene.hasComponent<components::Visible>( entity1 ) );
+	REQUIRE( scene.hasComponent<components::Visible>( entity2 ) );
+	REQUIRE( scene.hasComponent<components::Visible>( entity3 ) );
+}

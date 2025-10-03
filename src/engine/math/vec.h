@@ -62,6 +62,10 @@ struct Vec2
 		y /= rhs.y;
 		return *this;
 	}
+
+	// Comparison operators
+	constexpr bool operator==( const Vec2 &rhs ) const { return x == rhs.x && y == rhs.y; }
+	constexpr bool operator!=( const Vec2 &rhs ) const { return !( *this == rhs ); }
 };
 
 template <typename T>
@@ -136,6 +140,10 @@ struct Vec3
 		z /= r.z;
 		return *this;
 	}
+
+	// Comparison operators
+	constexpr bool operator==( const Vec3 &rhs ) const { return x == rhs.x && y == rhs.y && z == rhs.z; }
+	constexpr bool operator!=( const Vec3 &rhs ) const { return !( *this == rhs ); }
 };
 
 template <typename T>
@@ -225,6 +233,10 @@ struct Vec4
 		w /= r.w;
 		return *this;
 	}
+
+	// Comparison operators
+	constexpr bool operator==( const Vec4 &rhs ) const { return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w; }
+	constexpr bool operator!=( const Vec4 &rhs ) const { return !( *this == rhs ); }
 };
 
 template <typename T>

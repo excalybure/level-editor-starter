@@ -1,5 +1,44 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Multi-Selection Support (M2-P6-T2.8)
+**Summary:** Implemented multi-selection editing support in Entity Inspector Panel, enabling simultaneous editing of Transform and Visible components across multiple selected entities. The feature detects when multiple entities are selected and displays common components with mixed value indicators ("—") when properties differ across the selection. Batch edits are implemented using MacroCommand to group individual entity commands, ensuring atomic undo/redo operations that affect all selected entities together. Transform and Visible components support full multi-editing with proper before/after state tracking for each entity.
+
+**Atomic functionalities completed:**
+- AF2.8.1: allSelectedHaveComponent<T>() helper template - Added template method to check if all selected entities have a specific component type
+- AF2.8.2: renderMultiSelection() implementation - Replaced placeholder with full multi-selection UI showing common components (Transform, Visible)
+- AF2.8.3: renderMultiTransformComponent() - Implemented multi-edit for Transform with mixed value detection for position, rotation, scale
+- AF2.8.4: renderMultiVisibleComponent() - Implemented multi-edit for Visible with mixed value detection for visible, castShadows, receiveShadows
+- AF2.8.5: Mixed value indicators - Display "(Mixed Values)" text and "—" indicators when properties differ across selected entities
+- AF2.8.6: MacroCommand integration - Create batch commands grouping individual entity commands (TransformEntityCommand, ModifyVisibleCommand) for atomic undo/redo
+- AF2.8.7: Multi-selection edit state - Extended TransformEditState and VisibleEditState with vectors to track before states for all entities
+- AF2.8.8: Template instantiations - Added explicit instantiations for allSelectedHaveComponent<Transform> and allSelectedHaveComponent<Visible>
+
+**Tests:**
+- T2.8 test: 1 test case with 10 assertions (multi-selection component detection)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 53 assertions in 13 test cases
+- Commands: `unit_test_runner.exe "[T2.8]"` or `"[multi_selection]"`
+
+**Notes:**
+- Multi-selection UI shows "Multiple Selected (N entities)" header with count
+- Only Transform and Visible components support multi-editing (common use case)
+- Mixed value detection compares each property across all selected entities
+- Mixed values shown with gray text "(Mixed Values)" above controls and "—" for checkboxes
+- Editing any property applies the new value to ALL selected entities simultaneously
+- MacroCommand creates individual commands for each entity, preserving per-entity undo/redo
+- Before states captured for all entities when editing starts, ensuring perfect undo restoration
+- Command descriptions include entity count: "Transform 5 entities", "Modify Visible on 3 entities"
+- Edit state vectors (beforeTransforms, beforeVisibles) cleared after command creation
+- First entity's values used as reference for displaying current values in controls
+- All selected entities must have the component for it to be shown in multi-edit
+- Name and MeshRenderer components excluded from multi-edit (entity-specific nature)
+- Note displayed: "Only common components (Transform, Visible) support multi-editing"
+- MacroCommand ensures all entity edits are undone/redone as a single atomic operation
+- Added #include "editor/commands/MacroCommand.h" for batch command support
+- Selection API uses select(entity, true) with additive=true for multi-selection
+- TransformEntityCommand signature: entity first, then scene (order matters!)
+- ModifyVisibleCommand captures old state automatically, only needs new state parameter
+- Mixed value UI consistent with professional editors (Unity, Unreal, Blender conventions)
+
 ## 2025-10-02 — Remove Component Menu (M2-P6-T2.7)
 **Summary:** Implemented component context menu with "Remove Component" functionality in Entity Inspector Panel, enabling users to remove components via right-click context menus. The feature adds context menus to all component headers (Transform, Name, Visible, MeshRenderer) that appear on right-click. Essential components (Transform and Name) are protected from removal with disabled menu items and explanatory tooltips. The implementation uses the existing RemoveComponentCommand<T> template which captures component state before removal, ensuring proper restoration on undo with all original property values intact.
 

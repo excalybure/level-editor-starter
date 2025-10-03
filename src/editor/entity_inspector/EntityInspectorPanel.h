@@ -87,11 +87,18 @@ private:
 	template <components::Component T>
 	void renderComponentContextMenu( const char *componentName, ecs::Entity entity );
 
+	// Multi-selection helper methods
+	template <components::Component T>
+	bool allSelectedHaveComponent() const;
+	void renderMultiTransformComponent( const std::vector<ecs::Entity> &entities );
+	void renderMultiVisibleComponent( const std::vector<ecs::Entity> &entities );
+
 	// Transform editing state for command creation
 	struct TransformEditState
 	{
 		bool isEditing = false;
 		components::Transform beforeTransform;
+		std::vector<components::Transform> beforeTransforms; // For multi-selection
 	};
 	TransformEditState m_transformEditState;
 
@@ -109,6 +116,7 @@ private:
 	{
 		bool isEditing = false;
 		components::Visible beforeVisible;
+		std::vector<components::Visible> beforeVisibles; // For multi-selection
 	};
 	VisibleEditState m_visibleEditState;
 };

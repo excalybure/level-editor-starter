@@ -5,12 +5,14 @@
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
+#include "editor/commands/MacroCommand.h"
 #include "editor/transform_commands.h"
 #include "engine/math/math.h"
 #include "engine/gpu/mesh_gpu.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>
+#include <typeinfo>
 
 namespace editor
 {
@@ -107,10 +109,27 @@ void EntityInspectorPanel::renderSingleEntity( ecs::Entity entity )
 
 void EntityInspectorPanel::renderMultiSelection()
 {
-	const size_t selectionCount = m_selectionManager.getSelectionCount();
+	const std::vector<ecs::Entity> &selectedEntities = m_selectionManager.getSelectedEntities();
+	const size_t selectionCount = selectedEntities.size();
+
 	ImGui::Text( "Multiple Selected (%zu entities)", selectionCount );
 	ImGui::Separator();
-	ImGui::TextWrapped( "Multi-selection editing will be available soon." );
+
+	// Show Transform component if all selected entities have it
+	if ( allSelectedHaveComponent<components::Transform>() )
+	{
+		renderMultiTransformComponent( selectedEntities );
+	}
+
+	// Show Visible component if all selected entities have it
+	if ( allSelectedHaveComponent<components::Visible>() )
+	{
+		renderMultiVisibleComponent( selectedEntities );
+	}
+
+	// Show note about other components
+	ImGui::Separator();
+	ImGui::TextDisabled( "Note: Only common components (Transform, Visible) support multi-editing" );
 }
 
 void EntityInspectorPanel::renderEntityHeader( ecs::Entity entity )
@@ -523,11 +542,369 @@ void EntityInspectorPanel::renderComponentContextMenu( const char *componentName
 	}
 }
 
+// Multi-selection helper: check if all selected entities have a component
+template <components::Component T>
+bool EntityInspectorPanel::allSelectedHaveComponent() const
+{
+	const std::vector<ecs::Entity> &selectedEntities = m_selectionManager.getSelectedEntities();
+	for ( const auto &entity : selectedEntities )
+	{
+		if ( !m_scene.hasComponent<T>( entity ) )
+		{
+			return false;
+		}
+	}
+	return !selectedEntities.empty();
+}
+
+// Multi-selection Transform component editor
+void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs::Entity> &entities )
+{
+	if ( ImGui::CollapsingHeader( "Transform (Multi-Edit)", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::PushID( "MultiTransform" );
+
+		// Get first entity's transform as reference
+		const auto *firstTransform = m_scene.getComponent<components::Transform>( entities[0] );
+		if ( !firstTransform )
+		{
+			ImGui::PopID();
+			return;
+		}
+
+		// Check for mixed values
+		bool positionMixed = false;
+		bool rotationMixed = false;
+		bool scaleMixed = false;
+
+		for ( size_t i = 1; i < entities.size(); ++i )
+		{
+			const auto *transform = m_scene.getComponent<components::Transform>( entities[i] );
+			if ( !transform )
+				continue;
+
+			if ( !positionMixed && transform->position != firstTransform->position )
+			{
+				positionMixed = true;
+			}
+			if ( !rotationMixed && transform->rotation != firstTransform->rotation )
+			{
+				rotationMixed = true;
+			}
+			if ( !scaleMixed && transform->scale != firstTransform->scale )
+			{
+				scaleMixed = true;
+			}
+		}
+
+		bool valueChanged = false;
+
+		// Position control
+		math::Vec3f position = firstTransform->position;
+		if ( positionMixed )
+		{
+			ImGui::TextDisabled( "Position: (Mixed Values)" );
+		}
+		if ( ComponentUI::renderVec3Control( "Position", position, { 0.0f, 0.0f, 0.0f }, 0.1f ) )
+		{
+			if ( !m_transformEditState.isEditing )
+			{
+				// Capture before state for all entities
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransforms.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *t = m_scene.getComponent<components::Transform>( entity );
+					if ( t )
+						m_transformEditState.beforeTransforms.push_back( *t );
+				}
+			}
+
+			// Apply to all entities
+			for ( const auto &entity : entities )
+			{
+				auto *t = m_scene.getComponent<components::Transform>( entity );
+				if ( t )
+				{
+					t->position = position;
+					t->markDirty();
+				}
+			}
+			valueChanged = true;
+		}
+
+		// Rotation control (in degrees)
+		math::Vec3f rotation = math::degrees( firstTransform->rotation );
+		if ( rotationMixed )
+		{
+			ImGui::TextDisabled( "Rotation: (Mixed Values)" );
+		}
+		if ( ComponentUI::renderVec3Control( "Rotation", rotation, { 0.0f, 0.0f, 0.0f }, 1.0f ) )
+		{
+			if ( !m_transformEditState.isEditing )
+			{
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransforms.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *t = m_scene.getComponent<components::Transform>( entity );
+					if ( t )
+						m_transformEditState.beforeTransforms.push_back( *t );
+				}
+			}
+
+			const math::Vec3f rotationRadians = math::radians( rotation );
+			for ( const auto &entity : entities )
+			{
+				auto *t = m_scene.getComponent<components::Transform>( entity );
+				if ( t )
+				{
+					t->rotation = rotationRadians;
+					t->markDirty();
+				}
+			}
+			valueChanged = true;
+		}
+
+		// Scale control
+		math::Vec3f scale = firstTransform->scale;
+		if ( scaleMixed )
+		{
+			ImGui::TextDisabled( "Scale: (Mixed Values)" );
+		}
+		if ( ComponentUI::renderVec3Control( "Scale", scale, { 1.0f, 1.0f, 1.0f }, 0.1f ) )
+		{
+			if ( !m_transformEditState.isEditing )
+			{
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransforms.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *t = m_scene.getComponent<components::Transform>( entity );
+					if ( t )
+						m_transformEditState.beforeTransforms.push_back( *t );
+				}
+			}
+
+			for ( const auto &entity : entities )
+			{
+				auto *t = m_scene.getComponent<components::Transform>( entity );
+				if ( t )
+				{
+					t->scale = scale;
+					t->markDirty();
+				}
+			}
+			valueChanged = true;
+		}
+
+		// Check if editing has ended
+		if ( m_transformEditState.isEditing && !ImGui::IsAnyItemActive() )
+		{
+			// Create MacroCommand with individual TransformEntityCommand for each entity
+			auto macroCommand = std::make_unique<MacroCommand>( std::format( "Transform {} entities", entities.size() ) );
+
+			for ( size_t i = 0; i < entities.size(); ++i )
+			{
+				if ( i < m_transformEditState.beforeTransforms.size() )
+				{
+					const auto *afterTransform = m_scene.getComponent<components::Transform>( entities[i] );
+					if ( afterTransform )
+					{
+						auto cmd = std::make_unique<editor::TransformEntityCommand>(
+							entities[i], m_scene, m_transformEditState.beforeTransforms[i], *afterTransform );
+						macroCommand->addCommand( std::move( cmd ) );
+					}
+				}
+			}
+
+			if ( !macroCommand->isEmpty() )
+			{
+				m_commandHistory.executeCommand( std::move( macroCommand ) );
+			}
+
+			m_transformEditState.isEditing = false;
+			m_transformEditState.beforeTransforms.clear();
+		}
+
+		ImGui::PopID();
+	}
+}
+
+// Multi-selection Visible component editor
+void EntityInspectorPanel::renderMultiVisibleComponent( const std::vector<ecs::Entity> &entities )
+{
+	if ( ImGui::CollapsingHeader( "Visible (Multi-Edit)", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::PushID( "MultiVisible" );
+
+		// Get first entity's visible as reference
+		const auto *firstVisible = m_scene.getComponent<components::Visible>( entities[0] );
+		if ( !firstVisible )
+		{
+			ImGui::PopID();
+			return;
+		}
+
+		// Check for mixed values
+		bool visibleMixed = false;
+		bool castShadowsMixed = false;
+		bool receiveShadowsMixed = false;
+
+		for ( size_t i = 1; i < entities.size(); ++i )
+		{
+			const auto *visible = m_scene.getComponent<components::Visible>( entities[i] );
+			if ( !visible )
+				continue;
+
+			if ( visible->visible != firstVisible->visible )
+				visibleMixed = true;
+			if ( visible->castShadows != firstVisible->castShadows )
+				castShadowsMixed = true;
+			if ( visible->receiveShadows != firstVisible->receiveShadows )
+				receiveShadowsMixed = true;
+		}
+
+		bool valueChanged = false;
+		bool visibleValue = firstVisible->visible;
+		bool castShadowsValue = firstVisible->castShadows;
+		bool receiveShadowsValue = firstVisible->receiveShadows;
+
+		// Visible checkbox
+		if ( visibleMixed )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 0.7f, 0.7f, 0.7f, 1.0f ) );
+			ImGui::Text( "Visible: —" );
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+		}
+		if ( ImGui::Checkbox( "Visible", &visibleValue ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisibles.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *v = m_scene.getComponent<components::Visible>( entity );
+					if ( v )
+						m_visibleEditState.beforeVisibles.push_back( *v );
+				}
+			}
+
+			for ( const auto &entity : entities )
+			{
+				auto *v = m_scene.getComponent<components::Visible>( entity );
+				if ( v )
+					v->visible = visibleValue;
+			}
+			valueChanged = true;
+		}
+
+		// Cast Shadows checkbox
+		if ( castShadowsMixed )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 0.7f, 0.7f, 0.7f, 1.0f ) );
+			ImGui::Text( "Cast Shadows: —" );
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+		}
+		if ( ImGui::Checkbox( "Cast Shadows", &castShadowsValue ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisibles.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *v = m_scene.getComponent<components::Visible>( entity );
+					if ( v )
+						m_visibleEditState.beforeVisibles.push_back( *v );
+				}
+			}
+
+			for ( const auto &entity : entities )
+			{
+				auto *v = m_scene.getComponent<components::Visible>( entity );
+				if ( v )
+					v->castShadows = castShadowsValue;
+			}
+			valueChanged = true;
+		}
+
+		// Receive Shadows checkbox
+		if ( receiveShadowsMixed )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 0.7f, 0.7f, 0.7f, 1.0f ) );
+			ImGui::Text( "Receive Shadows: —" );
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+		}
+		if ( ImGui::Checkbox( "Receive Shadows", &receiveShadowsValue ) )
+		{
+			if ( !m_visibleEditState.isEditing )
+			{
+				m_visibleEditState.isEditing = true;
+				m_visibleEditState.beforeVisibles.clear();
+				for ( const auto &entity : entities )
+				{
+					const auto *v = m_scene.getComponent<components::Visible>( entity );
+					if ( v )
+						m_visibleEditState.beforeVisibles.push_back( *v );
+				}
+			}
+
+			for ( const auto &entity : entities )
+			{
+				auto *v = m_scene.getComponent<components::Visible>( entity );
+				if ( v )
+					v->receiveShadows = receiveShadowsValue;
+			}
+			valueChanged = true;
+		}
+
+		// Check if editing has ended
+		if ( m_visibleEditState.isEditing && !ImGui::IsAnyItemActive() )
+		{
+			// Create MacroCommand with individual ModifyVisibleCommand for each entity
+			auto macroCommand = std::make_unique<MacroCommand>( std::format( "Modify Visible on {} entities", entities.size() ) );
+
+			for ( size_t i = 0; i < entities.size(); ++i )
+			{
+				if ( i < m_visibleEditState.beforeVisibles.size() )
+				{
+					const auto *afterVisible = m_scene.getComponent<components::Visible>( entities[i] );
+					if ( afterVisible )
+					{
+						auto cmd = std::make_unique<editor::ModifyVisibleCommand>(
+							m_scene, entities[i], *afterVisible );
+						macroCommand->addCommand( std::move( cmd ) );
+					}
+				}
+			}
+
+			if ( !macroCommand->isEmpty() )
+			{
+				m_commandHistory.executeCommand( std::move( macroCommand ) );
+			}
+
+			m_visibleEditState.isEditing = false;
+			m_visibleEditState.beforeVisibles.clear();
+		}
+
+		ImGui::PopID();
+	}
+}
+
 // Explicit template instantiations for all component types
 template void EntityInspectorPanel::renderComponentContextMenu<components::Transform>( const char *, ecs::Entity );
 template void EntityInspectorPanel::renderComponentContextMenu<components::Name>( const char *, ecs::Entity );
 template void EntityInspectorPanel::renderComponentContextMenu<components::Visible>( const char *, ecs::Entity );
 template void EntityInspectorPanel::renderComponentContextMenu<components::MeshRenderer>( const char *, ecs::Entity );
 template void EntityInspectorPanel::renderComponentContextMenu<components::Selected>( const char *, ecs::Entity );
+
+// Explicit template instantiations for multi-selection helpers
+template bool EntityInspectorPanel::allSelectedHaveComponent<components::Transform>() const;
+template bool EntityInspectorPanel::allSelectedHaveComponent<components::Visible>() const;
 
 } // namespace editor
