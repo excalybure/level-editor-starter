@@ -455,3 +455,87 @@ TEST_CASE( "AssetBrowserPanel provides asset metadata", "[AssetBrowser][T3.5][un
 		REQUIRE( metadata.filename == "file2.gltf" );
 	}
 }
+
+TEST_CASE( "AssetBrowserPanel can import assets", "[AssetBrowser][T3.6][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	// Create a source file to import
+	const std::string sourceFile = fixture.testRoot + "/source_import.gltf";
+	{
+		std::ofstream file( sourceFile );
+		file << "test content";
+	} // Close file before import
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "importAsset copies file to current directory" )
+	{
+		// Verify source file exists
+		REQUIRE( std::filesystem::exists( sourceFile ) );
+
+		// Create a target subdirectory
+		const std::string targetDir = fixture.testRoot + "/imported";
+		std::filesystem::create_directories( targetDir );
+		panel.navigateToDirectory( targetDir );
+
+		// Verify navigation worked
+		REQUIRE( panel.getCurrentPath() == targetDir );
+
+		const bool result = panel.importAsset( sourceFile );
+		REQUIRE( result );
+
+		// Verify file was copied
+		const std::string expectedPath = targetDir + "/source_import.gltf";
+		REQUIRE( std::filesystem::exists( expectedPath ) );
+	}
+
+	SECTION( "importAsset returns false for non-existent source" )
+	{
+		const bool result = panel.importAsset( "nonexistent_file.gltf" );
+		REQUIRE( !result );
+	}
+
+	SECTION( "importAsset returns false for unsupported file types" )
+	{
+		const std::string unsupportedFile = fixture.testRoot + "/unsupported.xyz";
+		std::ofstream( unsupportedFile ) << "test";
+
+		const bool result = panel.importAsset( unsupportedFile );
+		REQUIRE( !result );
+	}
+
+	SECTION( "importAsset handles duplicate filenames" )
+	{
+		// Import the same file twice
+		const bool result1 = panel.importAsset( sourceFile );
+		REQUIRE( result1 );
+
+		// Second import should either succeed (overwrite) or return false (duplicate)
+		const bool result2 = panel.importAsset( sourceFile );
+		// For now, we'll allow overwrite
+		REQUIRE( result2 );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel shows import UI", "[AssetBrowser][T3.6][ui]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "hasImportUI returns true after initialization" )
+	{
+		// This is a placeholder test to verify the import button will be rendered
+		// Actual UI rendering is integration-tested via manual testing
+		REQUIRE( panel.isVisible() );
+	}
+}

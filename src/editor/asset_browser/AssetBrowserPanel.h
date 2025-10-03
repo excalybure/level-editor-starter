@@ -78,6 +78,9 @@ public:
 	// Asset metadata
 	AssetMetadata getAssetMetadata( const std::string &assetPath ) const;
 
+	// Asset import
+	bool importAsset( const std::string &sourceFilePath );
+
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;

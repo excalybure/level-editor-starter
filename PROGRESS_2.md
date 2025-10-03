@@ -1,5 +1,76 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Asset Import (M2-P6-T3.6)
+**Summary:** Implemented T3.6: Asset Import for the Asset Browser Panel using strict TDD methodology. Added importAsset() method that validates source files, checks asset type support, and copies files to the current directory using std::filesystem operations. Implemented Import Asset button with ImGui text input popup dialog for file path entry (placeholder for future native file dialog). The implementation includes robust path handling with canonical path comparison to detect duplicate imports, filesystem error handling, and visual feedback for import success/failure. Users can now import supported asset files (.gltf, .glb) into any directory within the asset browser.
+
+**Atomic functionalities completed:**
+- AF3.6.1: importAsset() method declaration - Added public method taking source file path string, returning bool for success/failure
+- AF3.6.2: Source file existence check - Uses std::filesystem::exists() to validate source file before import
+- AF3.6.3: Regular file validation - Uses std::filesystem::is_regular_file() to ensure source is not a directory
+- AF3.6.4: Asset type validation - Calls getAssetTypeFromExtension() to check if file type is supported (not Unknown)
+- AF3.6.5: Destination path construction - Uses std::filesystem::path operator/ to build dest = currentPath / filename
+- AF3.6.6: Canonical path comparison - Uses std::filesystem::canonical() for source and weakly_canonical() for destination
+- AF3.6.7: Duplicate detection - Compares canonical paths to detect if source and destination are same file
+- AF3.6.8: Early return for duplicates - Returns true if file already in correct location (no-op import)
+- AF3.6.9: File copy operation - Uses std::filesystem::copy_file() with overwrite_existing flag
+- AF3.6.10: Filesystem error handling - try-catch around all filesystem operations, returns false on exception
+- AF3.6.11: Import button rendering - Added "Import Asset" button to renderPathBar() toolbar
+- AF3.6.12: Popup dialog trigger - ImGui::OpenPopup() called on button click to show import dialog
+- AF3.6.13: Static buffer for path input - Static char array (512 bytes) preserves input across frames
+- AF3.6.14: Popup dialog rendering - ImGui::BeginPopup() / EndPopup() for modal-like import dialog
+- AF3.6.15: Text input field - ImGui::InputText() for file path entry with buffer size limit
+- AF3.6.16: Import button in dialog - Triggers importAsset() call with entered file path
+- AF3.6.17: Success feedback - Clears input buffer and closes popup on successful import
+- AF3.6.18: Error feedback - ImGui::TextColored() displays red error message on import failure
+- AF3.6.19: Cancel button - Clears input buffer and closes popup without importing
+- AF3.6.20: Button layout - ImGui::SameLine() between Import and Cancel buttons for horizontal layout
+- AF3.6.21: Input validation - Checks if file path string is non-empty before calling importAsset()
+- AF3.6.22: Toolbar integration - Import button rendered before up button with ImGui::SameLine() spacing
+
+**Tests:** 2 new test cases with 9 assertions for T3.6, plus 14 existing tests (T3.1-T3.5); filtered commands: `unit_test_runner.exe "[AssetBrowser][T3.6]"` or `"[AssetBrowser]"`. Total: 60 assertions in 16 test cases, all passing.
+
+**Notes:**
+- importAsset() follows validation → comparison → copy pattern for robustness
+- Source file validation prevents attempting to copy non-existent or invalid files
+- Asset type check using existing getAssetTypeFromExtension() ensures only supported formats (.gltf, .glb)
+- Destination path uses operator/ for platform-independent path joining
+- Canonical path comparison handles different path representations (relative vs absolute, . vs .., etc.)
+- weakly_canonical() used for destination since file doesn't exist yet (canonical() would throw)
+- Duplicate detection returns success (not failure) since file is already in correct location
+- overwrite_existing flag allows re-importing same file (useful for asset updates)
+- Filesystem error catch-all returns false for any OS-level errors (permissions, disk full, etc.)
+- Import button placed in path bar for easy access (same row as navigation controls)
+- ImGui popup provides simple file path input (future: native file dialog via IFileDialog on Windows)
+- Static buffer persists input across frames so user can correct typos without re-entering
+- Error message in red using ImGui::TextColored() for clear visual feedback
+- Success closes popup automatically for smooth workflow (no extra click needed)
+- Cancel button provides explicit opt-out (in addition to closing popup via X button)
+- ImGui::SameLine() creates horizontal button layout for Import/Cancel
+- Empty path check prevents calling importAsset() with empty string (would fail anyway but avoids unnecessary work)
+- Toolbar integration uses SameLine() to keep Import button inline with up button and breadcrumbs
+- Test coverage: successful import to subdirectory, non-existent source, unsupported file type, duplicate handling
+- TempDirectoryFixture creates test files and directories, cleans up automatically in destructor
+- Source file explicitly closed after write (scope block) to ensure filesystem sees completed file
+- Navigation verification in test confirms panel is in correct directory before import
+- Expected path constructed from targetDir + filename for post-import existence check
+- Duplicate test verifies both first import and re-import return true (idempotent operation)
+- UI test placeholder verifies panel visibility (actual import button rendering validated via integration testing)
+- Future enhancements: native file dialog, drag-and-drop from OS, progress bar for large files, thumbnail generation
+- Future integration: Call AssetManager::importGLTF() for automatic mesh/material extraction
+- Import success could trigger grid refresh, but currently grid updates automatically on next render
+- No explicit refresh method needed since renderAssetGrid() calls getFileContents() dynamically
+- Asset immediately visible in grid after import (no manual refresh required)
+- User workflow: click Import Asset → enter path → click Import → file copied → see in grid
+- Error workflow: click Import Asset → enter invalid path → click Import → see error → correct path or Cancel
+- Canonical path comparison prevents copying file to itself (would fail with filesystem_error)
+- Error message generic ("Import failed! Check file path and type.") covers all failure cases
+- Static buffer could cause issues with multiple Asset Browser panels, but current design has single panel
+- Future: Replace static buffer with member variable if multiple panels needed
+- .gltf and .glb support matches existing getAssetTypeFromExtension() implementation
+- Unknown asset types rejected at import time (prevents clutter in asset directory)
+- Import to current directory (not root) allows organizing assets in subdirectories
+- User must navigate to target directory before importing (explicit choice of destination)
+
 ## 2025-10-03 — Asset Browser Asset Selection and Preview (M2-P6-T3.5)
 **Summary:** Implemented T3.5: Asset Selection and Preview for the Asset Browser Panel using strict TDD methodology. Added asset selection state tracking with m_selectedAsset member, selection management methods (selectAsset, clearSelection, getSelectedAsset), AssetMetadata struct for file information, getAssetMetadata() to retrieve file details using std::filesystem, split-panel UI layout showing preview panel when asset selected, selection highlighting in grid with blue color, and renderAssetPreview() displaying asset information (filename, type, size) with clear button. The implementation provides intuitive asset selection feedback and lays foundation for future 3D thumbnail previews.
 

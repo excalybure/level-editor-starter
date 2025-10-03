@@ -304,6 +304,52 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 
 void AssetBrowserPanel::renderPathBar()
 {
+	// Import button
+	if ( ImGui::Button( "Import Asset" ) )
+	{
+		// For now, show a simple text input for file path
+		// Future: Use native file dialog
+		ImGui::OpenPopup( "Import Asset##popup" );
+	}
+
+	// Import dialog popup
+	static char importPathBuffer[512] = "";
+	if ( ImGui::BeginPopup( "Import Asset##popup" ) )
+	{
+		ImGui::Text( "Enter file path to import:" );
+		ImGui::InputText( "##importPath", importPathBuffer, sizeof( importPathBuffer ) );
+
+		if ( ImGui::Button( "Import" ) )
+		{
+			const std::string filePath( importPathBuffer );
+			if ( !filePath.empty() )
+			{
+				const bool success = importAsset( filePath );
+				if ( success )
+				{
+					// Clear the input
+					importPathBuffer[0] = '\0';
+					ImGui::CloseCurrentPopup();
+				}
+				else
+				{
+					ImGui::TextColored( ImVec4( 1.0f, 0.3f, 0.3f, 1.0f ), "Import failed! Check file path and type." );
+				}
+			}
+		}
+
+		ImGui::SameLine();
+		if ( ImGui::Button( "Cancel" ) )
+		{
+			importPathBuffer[0] = '\0';
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+	ImGui::SameLine();
+
 	// Up button
 	if ( m_currentPath != m_rootPath )
 	{
@@ -598,6 +644,55 @@ void AssetBrowserPanel::renderAssetPreview()
 	if ( ImGui::Button( "Clear Selection", ImVec2( -1, 0 ) ) )
 	{
 		clearSelection();
+	}
+}
+
+bool AssetBrowserPanel::importAsset( const std::string &sourceFilePath )
+{
+	try
+	{
+		const std::filesystem::path sourcePath( sourceFilePath );
+
+		// Check if source file exists
+		if ( !std::filesystem::exists( sourcePath ) )
+		{
+			return false;
+		}
+
+		// Check if source is a regular file
+		if ( !std::filesystem::is_regular_file( sourcePath ) )
+		{
+			return false;
+		}
+
+		// Check if file type is supported
+		const auto assetType = getAssetTypeFromExtension( sourcePath.filename().string() );
+		if ( assetType == AssetType::Unknown )
+		{
+			return false;
+		}
+
+		// Build destination path in current directory
+		const std::filesystem::path destPath = std::filesystem::path( m_currentPath ) / sourcePath.filename();
+
+		// Check if source and destination are the same (already imported)
+		// Use canonical paths for comparison to handle different path representations
+		const auto sourceCanonical = std::filesystem::canonical( sourcePath );
+		const auto destCanonical = std::filesystem::weakly_canonical( destPath ); // weakly_canonical works even if dest doesn't exist
+
+		if ( sourceCanonical == destCanonical )
+		{
+			return true; // Already in correct location, consider this success
+		}
+
+		// Copy file to destination (overwrite if exists)
+		std::filesystem::copy_file( sourcePath, destPath, std::filesystem::copy_options::overwrite_existing );
+
+		return true;
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		return false;
 	}
 }
 
