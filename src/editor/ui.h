@@ -23,6 +23,9 @@ namespace editor
 {
 class SelectionManager;
 class GizmoSystem;
+class SceneHierarchyPanel;
+class EntityInspectorPanel;
+class AssetBrowserPanel;
 } // namespace editor
 
 // Forward declarations
@@ -140,6 +143,14 @@ public:
 	void showCommandHistoryWindow( bool show = true );
 	bool isCommandHistoryWindowOpen() const;
 	class CommandHistory *getCommandHistory();
+
+	// Scene editing panels management
+	void showSceneHierarchyPanel( bool show = true );
+	bool isSceneHierarchyPanelOpen() const;
+	void showEntityInspectorPanel( bool show = true );
+	bool isEntityInspectorPanelOpen() const;
+	void showAssetBrowserPanel( bool show = true );
+	bool isAssetBrowserPanelOpen() const;
 
 	void processInputEvents( platform::Win32Window &window );
 	void updateViewports( const float deltaTime );

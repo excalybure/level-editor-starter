@@ -27,6 +27,11 @@
 #include "platform/win32/win32_window.h"
 #include "editor/commands/CommandUI.h"
 #include "gizmos.h"
+#include "editor/selection.h"
+#include "editor/scene_hierarchy/SceneHierarchyPanel.h"
+#include "editor/entity_inspector/EntityInspectorPanel.h"
+#include "editor/asset_browser/AssetBrowserPanel.h"
+#include "editor/commands/EcsCommands.h"
 
 namespace editor
 {
@@ -80,6 +85,15 @@ struct UI::Impl
 	std::unique_ptr<UndoRedoUI> undoRedoUI;
 	std::unique_ptr<CommandHistoryWindow> commandHistoryWindow;
 	bool showCommandHistoryWindow = false;
+
+	// Scene editing panels
+	SelectionManager *selectionManager = nullptr;
+	std::unique_ptr<SceneHierarchyPanel> hierarchyPanel;
+	std::unique_ptr<EntityInspectorPanel> inspectorPanel;
+	std::unique_ptr<AssetBrowserPanel> assetBrowserPanel;
+	bool showHierarchyPanel = true;
+	bool showInspectorPanel = true;
+	bool showAssetBrowserPanel = true;
 
 	std::string currentScenePath;
 	std::string lastError;
@@ -243,6 +257,20 @@ void UI::beginFrame()
 
 	// Render toolbar below menu bar
 	m_impl->renderToolbar();
+
+	// Render scene editing panels
+	if ( m_impl->hierarchyPanel && m_impl->showHierarchyPanel )
+	{
+		m_impl->hierarchyPanel->render();
+	}
+	if ( m_impl->inspectorPanel && m_impl->showInspectorPanel )
+	{
+		m_impl->inspectorPanel->render();
+	}
+	if ( m_impl->assetBrowserPanel && m_impl->showAssetBrowserPanel )
+	{
+		m_impl->assetBrowserPanel->render();
+	}
 }
 
 void UI::endFrame()
@@ -377,15 +405,78 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			{
 				undoRedoUI->renderMenuItems();
 			}
+
+			ImGui::Separator();
+
+			// Entity operations (require scene and selection manager)
+			if ( scene && selectionManager )
+			{
+				ImGui::SeparatorText( "Entity" );
+
+				// Create Entity operation
+				if ( ImGui::MenuItem( "Create Entity", "Ins" ) )
+				{
+					// Create a new entity at world origin
+					auto cmd = std::make_unique<CreateEntityCommand>( *scene, "New Entity" );
+					if ( commandHistory )
+					{
+						commandHistory->executeCommand( std::move( cmd ) );
+					}
+				}
+
+				const bool hasSelection = selectionManager && !selectionManager->getSelectedEntities().empty();
+
+				// Delete Entity operation (requires selection)
+				if ( ImGui::MenuItem( "Delete Entity", "Del", false, hasSelection ) )
+				{
+					// Delete all selected entities
+					const auto selected = selectionManager->getSelectedEntities();
+					for ( const auto entity : selected )
+					{
+						auto cmd = std::make_unique<DeleteEntityCommand>( *scene, entity );
+						if ( commandHistory )
+						{
+							commandHistory->executeCommand( std::move( cmd ) );
+						}
+					}
+				}
+
+				// Duplicate Entity operation (requires selection) - TODO: Implement DuplicateEntityCommand
+				if ( ImGui::MenuItem( "Duplicate Entity", "Ctrl+D", false, false ) ) // Disabled for now
+				{
+					// TODO: Implement DuplicateEntityCommand
+				}
+			}
+
 			ImGui::EndMenu();
 		}
 
 		if ( ImGui::BeginMenu( "View" ) )
 		{
+			// Viewport visibility toggles
+			ImGui::SeparatorText( "Viewports" );
 			for ( auto &pane : layout.panes )
 			{
 				ImGui::Checkbox( pane.name, &pane.isOpen );
 			}
+
+			ImGui::Separator();
+
+			// Scene editing panel visibility toggles
+			ImGui::SeparatorText( "Panels" );
+			if ( ImGui::MenuItem( "Scene Hierarchy", nullptr, showHierarchyPanel ) )
+			{
+				showHierarchyPanel = !showHierarchyPanel;
+			}
+			if ( ImGui::MenuItem( "Entity Inspector", nullptr, showInspectorPanel ) )
+			{
+				showInspectorPanel = !showInspectorPanel;
+			}
+			if ( ImGui::MenuItem( "Asset Browser", nullptr, showAssetBrowserPanel ) )
+			{
+				showAssetBrowserPanel = !showAssetBrowserPanel;
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -1328,12 +1419,54 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 	m_impl->systemManager = &systemManager;
 	m_impl->assetManager = &assetManager;
 	m_impl->gpuManager = &gpuManager;
+	m_impl->selectionManager = &selectionManager;
 
 	// Create GizmoSystem with SelectionManager, Scene, SystemManager, and CommandHistory
 	m_impl->gizmoSystem = std::make_unique<GizmoSystem>( selectionManager, scene, systemManager, m_impl->commandHistory.get() );
 
 	// Create GizmoUI with GizmoSystem dependency
 	m_impl->gizmoUI = std::make_unique<GizmoUI>( *m_impl->gizmoSystem );
+
+	// Create scene editing panels
+	m_impl->hierarchyPanel = std::make_unique<SceneHierarchyPanel>(
+		scene, selectionManager, *m_impl->commandHistory );
+	m_impl->inspectorPanel = std::make_unique<EntityInspectorPanel>(
+		scene, selectionManager, *m_impl->commandHistory );
+	m_impl->assetBrowserPanel = std::make_unique<AssetBrowserPanel>(
+		assetManager, scene, *m_impl->commandHistory );
+
+	// Configure asset browser root path
+	m_impl->assetBrowserPanel->setRootPath( "assets/" );
+
+	// Wire focus callback for hierarchy panel to focus camera on entity
+	m_impl->hierarchyPanel->setFocusCallback( [this]( ecs::Entity entity ) {
+		// Get the perspective viewport
+		auto *viewport = getViewport( ViewportType::Perspective );
+		if ( !viewport )
+			return;
+
+		// Get the camera controller
+		auto *controller = viewport->getController();
+		if ( !controller )
+			return;
+
+		// Try to cast to perspective camera controller for focusOnPoint
+		auto *perspController = dynamic_cast<camera::PerspectiveCameraController *>( controller );
+		if ( !perspController )
+			return;
+
+		// Get entity transform to determine focus point
+		if ( !m_impl->scene->hasComponent<components::Transform>( entity ) )
+			return;
+
+		const auto *transform = m_impl->scene->getComponent<components::Transform>( entity );
+		if ( !transform )
+			return;
+
+		// Focus camera on entity position with appropriate distance
+		const float focusDistance = 10.0f;
+		perspController->focusOnPoint( transform->position, focusDistance );
+	} );
 }
 
 bool UI::loadScene( const std::string &filePath )
@@ -1508,6 +1641,36 @@ bool UI::isCommandHistoryWindowOpen() const
 CommandHistory *UI::getCommandHistory()
 {
 	return m_impl->commandHistory.get();
+}
+
+void UI::showSceneHierarchyPanel( bool show )
+{
+	m_impl->showHierarchyPanel = show;
+}
+
+bool UI::isSceneHierarchyPanelOpen() const
+{
+	return m_impl->showHierarchyPanel;
+}
+
+void UI::showEntityInspectorPanel( bool show )
+{
+	m_impl->showInspectorPanel = show;
+}
+
+bool UI::isEntityInspectorPanelOpen() const
+{
+	return m_impl->showInspectorPanel;
+}
+
+void UI::showAssetBrowserPanel( bool show )
+{
+	m_impl->showAssetBrowserPanel = show;
+}
+
+bool UI::isAssetBrowserPanelOpen() const
+{
+	return m_impl->showAssetBrowserPanel;
 }
 
 } // namespace editor
