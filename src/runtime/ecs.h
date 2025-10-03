@@ -485,6 +485,12 @@ public:
 		return m_entityManager.getAllEntities();
 	}
 
+	// Get entity count
+	size_t getEntityCount() const
+	{
+		return m_entityManager.getAllEntities().size();
+	}
+
 	// Component iteration support
 	template <components::Component C>
 	ComponentStorage<C> *getComponentStorage()

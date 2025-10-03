@@ -13,7 +13,8 @@
     "glm",
     "winpixevent",
     "cgltf",
-    "imguizmo"
+    "imguizmo",
+    "nlohmann-json"
   ],
   "description": "Starter scaffold for a C++23 modular world editor with tests"
 }

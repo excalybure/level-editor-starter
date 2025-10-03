@@ -1,5 +1,52 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-17 — Scene Serialization Complete (M2-P6-T5.1-T5.3)
+**Summary:** Completed Task 5 (Scene Serialization) with strict TDD methodology. Designed comprehensive JSON schema version 1.0 with full documentation (docs/scene_format.md, 250+ lines), implemented SceneSerializer class with saveScene() and loadScene() static methods using std::expected<T,E> error handling, integrated nlohmann/json library via vcpkg, and created complete test suite with 6 test cases and 24 assertions. Save implementation serializes Transform, Visible, and MeshRenderer components with entity ID mapping and hierarchy preservation. Load implementation parses JSON, creates entities with ID remapping via std::unordered_map, deserializes components, and rebuilds parent-child hierarchy in two-pass algorithm. Round-trip testing confirms lossless save/load cycle. Fixed compilation error by adding Scene::getEntityCount() method to ecs::Scene class. AssetManager integration deferred (TODOs noted for future mesh path resolution).
+
+**Atomic functionalities completed:**
+- AF5.1.1: JSON schema design - Created version 1.0 schema with entities array, components object, metadata fields
+- AF5.1.2: Component schemas - Defined Transform (position[3], rotation[4], scale[3]), Visible (bool), MeshRenderer (meshPath string)
+- AF5.1.3: Hierarchy representation - Parent references stored as integer entity IDs (null for root entities)
+- AF5.1.4: Scene metadata - Added version, name, timestamp (ISO 8601 format) to top-level JSON
+- AF5.1.5: Documentation - Wrote comprehensive docs/scene_format.md with examples, validation rules, error handling
+- AF5.2.1: SceneSerializer class - Created static class with saveScene() method returning std::expected<void, SerializationError>
+- AF5.2.2: nlohmann/json integration - Added to vcpkg.json, CMakeLists.txt (find_package, target_link_libraries)
+- AF5.2.3: Entity iteration - Used scene.getAllEntities() to serialize all entities in scene
+- AF5.2.4: Component serialization - Implemented serializeTransform, serializeVisible, serializeMeshRenderer helpers
+- AF5.2.5: Entity ID mapping - Stored entity IDs as integers for JSON references
+- AF5.2.6: Hierarchy serialization - Saved parent entity IDs for all child entities
+- AF5.2.7: File writing - Used nlohmann::json::dump(2) for formatted JSON output with indentation
+- AF5.2.8: Error handling - Added FileWriteFailed error type, used std::ofstream with is_open() check
+- AF5.2.9: Metadata generation - Implemented getCurrentISO8601Timestamp() for timestamp field
+- AF5.2.10: Anonymous namespace - Used for private helper functions to avoid namespace pollution
+- AF5.3.1: loadScene() method - Added with std::expected<void, SerializationError> return type
+- AF5.3.2: JSON parsing - Used nlohmann::json::parse() with try-catch for parse exceptions
+- AF5.3.3: Scene clearing - Called destroyEntity() for all existing entities before load
+- AF5.3.4: Entity creation - Created entities from JSON array using scene.createEntity()
+- AF5.3.5: ID remapping - Built std::unordered_map<uint32_t, Entity> to map old→new entity IDs
+- AF5.3.6: Component deserialization - Implemented deserializeTransform, deserializeVisible, deserializeMeshRenderer
+- AF5.3.7: Hierarchy rebuilding - Two-pass: create all entities first, then set parent relationships
+- AF5.3.8: Error handling - Added FileNotFound, InvalidJSON error types with descriptive messages
+- AF5.3.9: Validation - Checked for missing required fields (id, components) before access
+- AF5.3.10: AssetManager integration - Added TODOs for mesh loading (deferred to future work)
+- AF5.3.11: Scene::getEntityCount() - Added missing method to ecs::Scene returning getAllEntities().size()
+
+**Tests:** 6 test cases, 24 assertions - all passing. Tests: `unit_test_runner.exe "[SceneSerializer]"`. Coverage: empty scene save/load, single entity round-trip, component serialization/deserialization, hierarchy preservation, error handling for invalid paths, lossless round-trip validation.
+
+**Notes:**
+- JSON schema follows best practices: version field for backward compatibility, ISO 8601 timestamps, human-readable formatting
+- Save/load operations use modern C++23 std::expected for error handling (no exceptions for predictable failures)
+- Entity ID remapping critical for load: JSON IDs sequential (1,2,3...) but runtime IDs vary, std::unordered_map translates references
+- Two-pass hierarchy rebuild: must create all entities before setting parents (parent entity must exist for setParent() call)
+- Helper functions in anonymous namespace: serializeTransform, deserializeTransform, etc. - file-local linkage prevents ODR violations
+- AssetManager::getInstance() calls commented out: AssetManager not yet available in runtime module, added TODO comments for future integration
+- Scene::getEntityCount() added to ecs.h line ~490: returns getAllEntities().size(), needed for test assertions
+- nlohmann/json forward declaration header (json_fwd.hpp) used in SceneSerializer.h to avoid including full library in header
+- Component serialization format: Transform as separate position/rotation/scale arrays, Visible as boolean, MeshRenderer as path string
+- Future enhancements noted: mesh asset loading, material serialization, custom component serialization, schema versioning migrations
+- All tests passing, build successful with only minor size_t→int warnings (lines 261, 453 in SceneSerializer.cpp)
+- T5.4 (UI Integration) deferred to next task - requires UI class modifications for File→Save/Load menu integration
+
 ## 2025-01-12 — Scene Editor Integration Complete (M2-P6-T4.3-T4.6)
 **Summary:** Completed remaining Scene Editor UI integration tasks (T4.3 through T4.6). Verified input handling is sufficient (gizmo system already blocks keyboard/mouse capture), implemented enhanced docking layout with 7-window configuration (scene hierarchy left 20%, entity inspector right 25%, asset browser bottom 30%, 2x2 viewport grid in center), enhanced status bar with selection count, gizmo mode/space, and FPS display, and implemented scene modified tracking with asterisk in window title plus warning dialogs on File→New/Open when changes are unsaved. The UI now provides a complete, integrated scene editing experience with all panels properly docked, visual feedback for scene state, and protection against accidental data loss.
 

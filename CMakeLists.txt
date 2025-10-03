@@ -12,6 +12,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 find_package(imgui CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
 # Libraries
@@ -70,6 +71,7 @@ add_library(runtime STATIC
   src/runtime/console.cpp
   src/runtime/mesh_rendering_system.cpp
   src/runtime/scene_importer.cpp
+  src/runtime/scene_serialization/SceneSerializer.cpp
   src/runtime/time.cpp
 )
 
@@ -78,6 +80,9 @@ target_include_directories(runtime PUBLIC
 )
 target_compile_features(runtime PUBLIC cxx_std_23)
 target_compile_definitions(runtime PUBLIC NOMINMAX)
+target_link_libraries(runtime PUBLIC
+  nlohmann_json::nlohmann_json
+)
 if (MSVC)
   target_compile_options(runtime PRIVATE /W4 /permissive- /std:c++latest)
 endif()
@@ -250,6 +255,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/scene_hierarchy_tests.cpp
     tests/entity_inspector_tests.cpp
     tests/asset_browser_tests.cpp
+    tests/scene_serialization_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor
