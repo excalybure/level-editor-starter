@@ -106,6 +106,12 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	// Check if this entity is being renamed
 	const bool isRenaming = m_renameEntity.isValid() && m_renameEntity.id == entity.id;
 
+	// Check if entity is invisible (for visual feedback)
+	const bool isInvisible = [&]() {
+		const auto *visible = m_scene.getComponent<components::Visible>( entity );
+		return visible && !visible->visible;
+	}();
+
 	// Setup tree node flags
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
 	if ( hasChildren )
@@ -157,8 +163,20 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 	}
 	else
 	{
+		// Apply gray color for invisible entities
+		if ( isInvisible )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 0.5f, 0.5f, 0.5f, 1.0f ) );
+		}
+
 		// Normal tree node rendering
 		nodeOpen = ImGui::TreeNodeEx( label.c_str(), flags );
+
+		// Restore color if it was changed
+		if ( isInvisible )
+		{
+			ImGui::PopStyleColor();
+		}
 
 		// Handle selection on click
 		if ( ImGui::IsItemClicked() )

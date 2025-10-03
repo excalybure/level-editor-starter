@@ -256,6 +256,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/entity_inspector_tests.cpp
     tests/asset_browser_tests.cpp
     tests/scene_serialization_tests.cpp
+    tests/visibility_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

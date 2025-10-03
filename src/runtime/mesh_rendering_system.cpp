@@ -122,6 +122,14 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 
 		if ( transform && meshRenderer )
 		{
+			// Check visibility - skip rendering if entity has Visible component with visible=false
+			const auto *visible = scene.getComponent<components::Visible>( entity );
+			if ( visible && !visible->visible )
+			{
+				// Entity is marked as invisible, skip rendering
+				continue;
+			}
+
 			renderEntity( *transform, *meshRenderer, camera );
 		}
 	}

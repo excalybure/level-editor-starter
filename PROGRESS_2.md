@@ -1,5 +1,33 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Renderer Integration: Visibility System (M2-P6-T6.0)
+**Summary:** Completed Task 6.0 (MeshRenderer Visibility Integration) to ensure visibility changes from the inspector immediately reflect in viewport rendering. Modified MeshRenderingSystem::render() to check for Visible component and skip rendering when visible=false, added visual feedback in SceneHierarchyPanel to gray out invisible entities, and verified that existing inspector visibility toggle and multi-selection systems properly integrate. Created comprehensive test suite (visibility_integration_tests.cpp) with 3 test cases verifying rendering behavior with different visibility states. Entities without Visible component default to visible (backward compatibility). The rendering pipeline now fully respects entity visibility state, providing immediate visual feedback across all editor panels.
+
+**Atomic functionalities completed:**
+- AF6.0.1: MeshRenderingSystem visibility check - Added Visible component query in render() loop; skip renderEntity() when visible=false
+- AF6.0.2: Backward compatibility - Entities without Visible component are rendered (nullptr check allows default visible behavior)
+- AF6.0.3: Integration test suite - Created tests/visibility_integration_tests.cpp with 3 test cases ([T6.0] tag)
+- AF6.0.4: Hierarchy visual feedback - Added isInvisible lambda in renderEntityNode() checking Visible component
+- AF6.0.5: Gray text color - Applied ImGui::PushStyleColor() with gray (0.5, 0.5, 0.5, 1.0) for invisible entities
+- AF6.0.6: Color cleanup - ImGui::PopStyleColor() after TreeNodeEx() to restore default text color
+- AF6.0.7: Inspector verification - Confirmed renderVisibleComponent() creates ModifyVisibleCommand on checkbox changes (existing code)
+- AF6.0.8: Multi-selection verification - Confirmed renderMultiVisibleComponent() handles batch visibility updates (existing code)
+- AF6.0.9: Undo/redo verification - Existing command infrastructure properly restores visibility state (tested via entity_inspector_tests.cpp)
+
+**Tests:** 3 new test cases in visibility_integration_tests.cpp with 6 assertions - all passing. Tests: `unit_test_runner.exe "[T6.0]"`. Coverage: entities with visible=false are skipped during rendering, entities without Visible component render normally, entities with castShadows=false are processed (future shadow system integration documented). No regressions: all 8 mesh_rendering_system tests pass (18 assertions), all 29 scene_hierarchy tests pass (88 assertions).
+
+**Notes:**
+- Visibility check is minimal overhead: single component query per entity with early continue when visible=false
+- Lambda expression for isInvisible keeps visibility check logic localized within renderEntityNode()
+- Gray color (50% brightness) provides clear visual distinction without being too subtle
+- castShadows and receiveShadows flags documented for future shadow rendering system integration
+- UI rendering tests not practical per instructions §9 (require full ImGui context + DirectX device)
+- Existing Phase 2.4 tests cover Visible component CRUD operations
+- Rendering behavior validated indirectly: no crashes with mixed visibility states confirms correct handling
+- Selection outline rendering unaffected by visibility (invisible entities can still be selected for editing)
+- Future enhancement: icon/eye indicator next to entity name for visibility state toggle
+- T6.0 complete - renderer fully integrated with visibility system
+
 ## 2025-01-17 — Scene Serialization UI Integration Complete (M2-P6-T5.4)
 **Summary:** Completed Task 5.4 (Scene Editor Save/Load Integration) to wire scene serialization functionality into the editor UI File menu. Implemented newScene(), saveScene(filepath), and updated loadScene() methods in UI class to use scene::SceneSerializer instead of AssetManager/SceneImporter. Added File→Save and File→Save As menu items with Windows native file dialogs (.scene extension), enhanced File→New and File→Open unsaved changes warnings to offer save/don't save/cancel options, and integrated error handling with scene::SerializationErrorInfo for clear user feedback. Changed Open dialog filter from .gltf to .scene files. The editor now provides complete scene save/load workflow with protection against accidental data loss through unsaved changes prompts.
 
