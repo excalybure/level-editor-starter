@@ -362,3 +362,96 @@ TEST_CASE( "AssetBrowserPanel filters files from directories", "[AssetBrowser][T
 		REQUIRE( files.empty() );
 	}
 }
+
+// ============================================================================
+// T3.5: Asset Selection and Preview
+// ============================================================================
+
+TEST_CASE( "AssetBrowserPanel tracks selected asset", "[AssetBrowser][T3.5][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "Initially no asset is selected" )
+	{
+		REQUIRE( panel.getSelectedAsset().empty() );
+	}
+
+	SECTION( "Can select an asset" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file1.txt";
+		panel.selectAsset( assetPath );
+		REQUIRE( panel.getSelectedAsset() == assetPath );
+	}
+
+	SECTION( "Can clear selection" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file1.txt";
+		panel.selectAsset( assetPath );
+		REQUIRE( !panel.getSelectedAsset().empty() );
+
+		panel.clearSelection();
+		REQUIRE( panel.getSelectedAsset().empty() );
+	}
+
+	SECTION( "Selecting new asset replaces previous selection" )
+	{
+		const std::string asset1 = fixture.testRoot + "/file1.txt";
+		const std::string asset2 = fixture.testRoot + "/file2.gltf";
+
+		panel.selectAsset( asset1 );
+		REQUIRE( panel.getSelectedAsset() == asset1 );
+
+		panel.selectAsset( asset2 );
+		REQUIRE( panel.getSelectedAsset() == asset2 );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel provides asset metadata", "[AssetBrowser][T3.5][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "getAssetMetadata returns file size" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file1.txt";
+		const auto metadata = panel.getAssetMetadata( assetPath );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.sizeBytes >= 0 );
+	}
+
+	SECTION( "getAssetMetadata returns asset type" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file2.gltf";
+		const auto metadata = panel.getAssetMetadata( assetPath );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.type == editor::AssetType::Mesh );
+	}
+
+	SECTION( "getAssetMetadata handles non-existent files" )
+	{
+		const auto metadata = panel.getAssetMetadata( "nonexistent.txt" );
+		REQUIRE( !metadata.exists );
+	}
+
+	SECTION( "getAssetMetadata returns filename" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file2.gltf";
+		const auto metadata = panel.getAssetMetadata( assetPath );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.filename == "file2.gltf" );
+	}
+}

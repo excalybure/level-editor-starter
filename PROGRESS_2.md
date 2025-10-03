@@ -1,5 +1,75 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Asset Selection and Preview (M2-P6-T3.5)
+**Summary:** Implemented T3.5: Asset Selection and Preview for the Asset Browser Panel using strict TDD methodology. Added asset selection state tracking with m_selectedAsset member, selection management methods (selectAsset, clearSelection, getSelectedAsset), AssetMetadata struct for file information, getAssetMetadata() to retrieve file details using std::filesystem, split-panel UI layout showing preview panel when asset selected, selection highlighting in grid with blue color, and renderAssetPreview() displaying asset information (filename, type, size) with clear button. The implementation provides intuitive asset selection feedback and lays foundation for future 3D thumbnail previews.
+
+**Atomic functionalities completed:**
+- AF3.5.1: AssetMetadata struct - Added struct with bool exists, AssetType type, std::string filename, std::size_t sizeBytes fields
+- AF3.5.2: m_selectedAsset member - Added string member to track currently selected asset path (empty string = no selection)
+- AF3.5.3: selectAsset() method - Sets m_selectedAsset to provided asset path for selection tracking
+- AF3.5.4: clearSelection() method - Clears m_selectedAsset (sets to empty string) to deselect
+- AF3.5.5: getSelectedAsset() inline method - Returns const reference to m_selectedAsset for query without copy
+- AF3.5.6: getAssetMetadata() method - Retrieves file information using std::filesystem and returns AssetMetadata struct
+- AF3.5.7: File existence check - Uses std::filesystem::exists() to populate metadata.exists field
+- AF3.5.8: Filename extraction - Uses std::filesystem::path::filename() to get display name
+- AF3.5.9: File size retrieval - Uses std::filesystem::file_size() for sizeBytes field
+- AF3.5.10: Type detection integration - Calls existing getAssetTypeFromExtension() for metadata.type field
+- AF3.5.11: Error handling - Returns exists=false AssetMetadata on std::filesystem::filesystem_error
+- AF3.5.12: Split layout in render() - Checks selection state, creates two child windows (grid + preview) or full-width grid
+- AF3.5.13: Conditional preview panel - 250px width preview child window shown only when hasSelection is true
+- AF3.5.14: Selection state check - Uses !m_selectedAsset.empty() to determine if asset selected
+- AF3.5.15: renderAssetGrid() highlighting - Checks if current file equals m_selectedAsset for blue highlight
+- AF3.5.16: Selection button style - ImGui::PushStyleColor(ImGuiCol_Button, blue) for selected item
+- AF3.5.17: Selection button click - Calls selectAsset(filePath) on button click to update selection
+- AF3.5.18: renderAssetPreview() implementation - Displays preview panel content or empty state message
+- AF3.5.19: Empty selection state - Shows "(no asset selected)" text when m_selectedAsset is empty
+- AF3.5.20: Missing file handling - Shows "Asset not found" and clear button if metadata.exists is false
+- AF3.5.21: Filename display - Uses ImGui::TextWrapped() for long filenames that may wrap in narrow panel
+- AF3.5.22: Type display - Shows "Type: " + AssetType as string (Mesh, Texture, Material, Unknown)
+- AF3.5.23: Size formatting - Displays size in KB (< 1MB) or MB (>= 1MB) with appropriate precision
+- AF3.5.24: Clear selection button - "Clear Selection" button at bottom calls clearSelection() on click
+- AF3.5.25: Grid layout preservation - Split layout maintains responsive grid column calculation in left panel
+
+**Tests:** 2 new test cases with 13 assertions for T3.5, plus 12 existing tests (T3.1-T3.4); filtered commands: `unit_test_runner.exe "[AssetBrowser][T3.5]"` or `"[AssetBrowser]"`. Total: 51 assertions in 14 test cases, all passing.
+
+**Notes:**
+- AssetMetadata struct provides type-safe bundle of file information (avoids multiple filesystem queries)
+- m_selectedAsset uses empty string convention for "no selection" (simpler than std::optional)
+- Selection methods minimal and focused: selectAsset (set), clearSelection (reset), getSelectedAsset (query)
+- getAssetMetadata() centralizes all filesystem queries: exists check, filename, size, type
+- Filesystem error handling: All operations in try-catch, returns exists=false on exception
+- Split layout strategy: BeginChild("AssetGrid") for left, BeginChild("AssetPreview") for right
+- Grid child window sized to (availWidth - 250px, 0) to leave room for preview
+- Preview child window fixed 250px width provides enough space for metadata without dominating
+- Selection state check (!m_selectedAsset.empty()) determines UI layout (split vs full-width)
+- renderAssetGrid() modified: Check isSelected = (filePath == m_selectedAsset) before each button
+- Highlight color ImVec4(0.3f, 0.5f, 0.8f, 1.0f) provides clear blue selection feedback
+- PushStyleColor/PopStyleColor pair ensures color only applies to selected button
+- Button click handling: if (ImGui::IsItemClicked()) selectAsset(filePath) after button rendering
+- renderAssetPreview() has three states: empty selection, missing file, valid file with metadata
+- Empty state message: ImGui::Text("(no asset selected)") with no additional UI
+- Missing file state: Shows warning message + clear button (asset may have been deleted externally)
+- Valid file state: Shows filename (wrapped), type label, size label, clear button
+- Filename wrapping with ImGui::TextWrapped() handles long names in narrow 250px panel
+- Type display: Maps AssetType enum to string (Mesh, Texture, Material, Unknown) for readability
+- Size formatting: if (sizeBytes < 1048576) show KB else show MB (1048576 = 1024*1024 bytes)
+- KB format: "%.1f KB" (one decimal place), MB format: "%.2f MB" (two decimal places)
+- Clear button at bottom of preview: if (ImGui::Button("Clear Selection")) clearSelection()
+- Clear button resets selection, causing UI to return to full-width grid layout (no preview)
+- Column count calculation preserved in split layout (uses available grid child width, not full window)
+- Selection persists across directory navigation (intended behavior for consistency)
+- Future enhancement: Clear selection automatically when navigating to different directory
+- Foundation complete for T3.6 (Asset Import) and T3.7 (Drag-and-Drop to Scene)
+- Test coverage: Selection state management (set, clear, replace), metadata retrieval (size, type, filename, missing files)
+- AssetMetadata.exists field enables robust missing file handling (file deleted between selection and preview)
+- Size display provides immediate feedback on asset file size (important for performance considerations)
+- Preview panel width 250px chosen to balance information density with grid space
+- Blue highlight color consistent with standard UI selection patterns (Windows, VS Code)
+- Selection highlighting provides immediate visual feedback for user action
+- Clear button provides explicit deselection affordance (in addition to clicking elsewhere)
+- Wrapped filename prevents horizontal scrolling in narrow preview panel
+- Type information helps users understand asset at glance without needing file extension
+
 ## 2025-10-03 — Asset Browser Grid View (M2-P6-T3.4)
 **Summary:** Implemented T3.4: Asset Grid View for the Asset Browser Panel using strict TDD methodology. Added AssetType enumeration for file type classification, getAssetTypeFromExtension() method with case-insensitive extension matching, getFileContents() helper that filters files from directories, and renderAssetGrid() that displays assets in a responsive grid layout with file type icons. The grid adapts column count based on available width (minimum 1, maximum based on 110px cells), displays placeholder icons for different asset types ([M] for meshes, [T] for textures, [Mat] for materials, [?] for unknown), and truncates long filenames for better display. Empty directories show an appropriate message instead of empty grid.
 

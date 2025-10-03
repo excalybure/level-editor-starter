@@ -28,6 +28,15 @@ enum class AssetType
 	Material
 };
 
+// Asset metadata structure
+struct AssetMetadata
+{
+	bool exists = false;
+	AssetType type = AssetType::Unknown;
+	std::string filename;
+	std::size_t sizeBytes = 0;
+};
+
 // Asset browser panel for importing and managing assets
 class AssetBrowserPanel
 {
@@ -61,6 +70,14 @@ public:
 	// File system queries (public for testability)
 	std::vector<std::string> getFileContents( const std::string &path ) const;
 
+	// Asset selection
+	void selectAsset( const std::string &assetPath );
+	void clearSelection();
+	const std::string &getSelectedAsset() const { return m_selectedAsset; }
+
+	// Asset metadata
+	AssetMetadata getAssetMetadata( const std::string &assetPath ) const;
+
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;
@@ -70,6 +87,7 @@ private:
 	void renderDirectoryTree( const std::string &path );
 	void renderPathBar();
 	void renderAssetGrid();
+	void renderAssetPreview();
 
 	// Reference members
 	assets::AssetManager &m_assetManager;
@@ -80,6 +98,7 @@ private:
 	bool m_visible = true;
 	std::string m_rootPath = "assets/";
 	std::string m_currentPath;
+	std::string m_selectedAsset;
 };
 
 } // namespace editor

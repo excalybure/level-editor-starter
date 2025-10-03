@@ -35,15 +35,36 @@ void AssetBrowserPanel::render()
 
 		ImGui::SameLine();
 
-		// Right panel: Current directory contents
+		// Right panel: Current directory contents and preview
 		ImGui::BeginChild( "DirectoryContents", ImVec2( 0, 0 ), true );
 
 		// Path breadcrumbs
 		renderPathBar();
 		ImGui::Separator();
 
-		// Asset grid view
-		renderAssetGrid();
+		// Split into grid view and preview panel
+		const float previewWidth = 250.0f;
+		const bool hasSelection = !m_selectedAsset.empty();
+
+		if ( hasSelection )
+		{
+			// Grid takes remaining width minus preview width
+			ImGui::BeginChild( "AssetGrid", ImVec2( -previewWidth - 10, 0 ), false );
+			renderAssetGrid();
+			ImGui::EndChild();
+
+			ImGui::SameLine();
+
+			// Preview panel on the right
+			ImGui::BeginChild( "AssetPreview", ImVec2( previewWidth, 0 ), true );
+			renderAssetPreview();
+			ImGui::EndChild();
+		}
+		else
+		{
+			// No selection, use full width for grid
+			renderAssetGrid();
+		}
 
 		ImGui::EndChild();
 	}
@@ -435,7 +456,21 @@ void AssetBrowserPanel::renderAssetGrid()
 		}
 
 		// Render icon as button (placeholder for thumbnail)
-		ImGui::Button( icon, ImVec2( cellSize, cellSize ) );
+		const bool isSelected = ( filePath == m_selectedAsset );
+		if ( isSelected )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.3f, 0.5f, 0.8f, 1.0f ) );
+		}
+
+		if ( ImGui::Button( icon, ImVec2( cellSize, cellSize ) ) )
+		{
+			selectAsset( filePath );
+		}
+
+		if ( isSelected )
+		{
+			ImGui::PopStyleColor();
+		}
 
 		// Display filename below icon (truncate if too long)
 		const float textWidth = ImGui::CalcTextSize( filename.c_str() ).x;
@@ -454,6 +489,115 @@ void AssetBrowserPanel::renderAssetGrid()
 
 		// Update column counter
 		currentColumn = ( currentColumn + 1 ) % columnCount;
+	}
+}
+
+void AssetBrowserPanel::selectAsset( const std::string &assetPath )
+{
+	m_selectedAsset = assetPath;
+}
+
+void AssetBrowserPanel::clearSelection()
+{
+	m_selectedAsset.clear();
+}
+
+AssetMetadata AssetBrowserPanel::getAssetMetadata( const std::string &assetPath ) const
+{
+	AssetMetadata metadata;
+
+	try
+	{
+		const std::filesystem::path path( assetPath );
+
+		// Check if file exists
+		if ( !std::filesystem::exists( path ) )
+		{
+			metadata.exists = false;
+			return metadata;
+		}
+
+		metadata.exists = true;
+		metadata.filename = path.filename().string();
+		metadata.type = getAssetTypeFromExtension( metadata.filename );
+
+		// Get file size
+		if ( std::filesystem::is_regular_file( path ) )
+		{
+			metadata.sizeBytes = std::filesystem::file_size( path );
+		}
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		metadata.exists = false;
+	}
+
+	return metadata;
+}
+
+void AssetBrowserPanel::renderAssetPreview()
+{
+	if ( m_selectedAsset.empty() )
+	{
+		ImGui::TextDisabled( "(no asset selected)" );
+		return;
+	}
+
+	const auto metadata = getAssetMetadata( m_selectedAsset );
+
+	if ( !metadata.exists )
+	{
+		ImGui::TextColored( ImVec4( 1.0f, 0.3f, 0.3f, 1.0f ), "Asset not found" );
+		if ( ImGui::Button( "Clear Selection" ) )
+		{
+			clearSelection();
+		}
+		return;
+	}
+
+	// Display asset information
+	ImGui::TextWrapped( "%s", metadata.filename.c_str() );
+	ImGui::Separator();
+
+	// Asset type
+	const char *typeStr = "Unknown";
+	switch ( metadata.type )
+	{
+	case AssetType::Mesh:
+		typeStr = "Mesh";
+		break;
+	case AssetType::Texture:
+		typeStr = "Texture";
+		break;
+	case AssetType::Material:
+		typeStr = "Material";
+		break;
+	case AssetType::Unknown:
+	default:
+		typeStr = "Unknown";
+		break;
+	}
+
+	ImGui::Text( "Type: %s", typeStr );
+
+	// File size
+	const double sizeKB = metadata.sizeBytes / 1024.0;
+	const double sizeMB = sizeKB / 1024.0;
+	if ( sizeMB >= 1.0 )
+	{
+		ImGui::Text( "Size: %.2f MB", sizeMB );
+	}
+	else
+	{
+		ImGui::Text( "Size: %.2f KB", sizeKB );
+	}
+
+	ImGui::Separator();
+
+	// Clear selection button
+	if ( ImGui::Button( "Clear Selection", ImVec2( -1, 0 ) ) )
+	{
+		clearSelection();
 	}
 }
 
