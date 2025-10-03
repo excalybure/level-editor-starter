@@ -1,5 +1,35 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Asset Browser Directory Tree View (M2-P6-T3.2)
+**Summary:** Implemented T3.2: Directory Tree View for the Asset Browser Panel using strict TDD methodology. Added hierarchical folder navigation with recursive ImGui tree nodes, enabling users to browse the folder structure in a left sidebar while viewing selected directory contents in the right panel. The implementation includes current directory highlighting, expand/collapse functionality, and robust handling of deep directory hierarchies. Navigation updates the current path and refreshes the content view automatically.
+
+**Atomic functionalities completed:**
+- AF3.2.1: navigateToDirectory() public method - Added method to change current directory with path validation (exists + is_directory check)
+- AF3.2.2: renderDirectoryTree() private method - Implemented recursive tree rendering starting from root path
+- AF3.2.3: Subdirectory enumeration - Uses std::filesystem::directory_iterator to find immediate subdirectories, sorted alphabetically
+- AF3.2.4: ImGui tree nodes - Renders each folder as ImGuiTreeNodeEx with OpenOnArrow and OpenOnDoubleClick flags
+- AF3.2.5: Current directory highlighting - Adds ImGuiTreeNodeFlags_Selected when folder matches m_currentPath
+- AF3.2.6: Leaf node detection - Checks for subdirectories and applies ImGuiTreeNodeFlags_Leaf when none found
+- AF3.2.7: Click handling - ImGui::IsItemClicked() triggers navigateToDirectory() to update current path
+- AF3.2.8: Split panel layout - Left panel (200px) for tree, right panel for contents, separated by ImGui::SameLine()
+- AF3.2.9: Recursive traversal - When node is open and has subdirectories, recursively calls renderDirectoryTree()
+
+**Tests:** 2 new test cases with 4 assertions for T3.2, plus 6 existing T3.1 tests; filtered commands: `unit_test_runner.exe "[AssetBrowser][T3.2]"` or `"[AssetBrowser]"`. Total: 18 assertions in 8 test cases, all passing.
+
+**Notes:**
+- Split-panel UI: 200px fixed-width left panel for directory tree, flexible-width right panel for current directory contents
+- Tree node flags: OpenOnArrow allows expanding without selecting, OpenOnDoubleClick for alternative expand method
+- Leaf node optimization: Folders without subdirectories marked as leaf nodes (no expand arrow, no TreePop needed)
+- Current path highlighting: Selected flag provides visual feedback for active directory in tree
+- Error handling: All filesystem operations wrapped in try-catch, silently ignore errors (e.g., permission denied)
+- Deep hierarchy support: Recursive renderDirectoryTree() handles arbitrary nesting depth
+- Subdirectory check: Iterates directory_iterator to detect if folder has children, breaks early on first match
+- Click vs expand: Clicking folder name navigates, clicking arrow expands/collapses without navigation
+- ImGui::TreePop() called only for non-leaf nodes after rendering children (proper tree stack management)
+- Navigation validation: navigateToDirectory() checks path exists and is directory before updating m_currentPath
+- Test strategy: Unit tests verify navigateToDirectory() logic and path tracking; UI rendering tested in application
+- Foundation ready for T3.3 (Path Breadcrumbs) and T3.4 (Asset Grid View)
+
 ## 2025-10-03 — Asset Browser Panel Foundation (M2-P6-T3.1)
 **Summary:** Implemented T3.1: Basic File System Navigation for the Asset Browser Panel using strict TDD methodology. Delivered AssetBrowserPanel class with file system navigation capabilities including directory enumeration, sorting (directories first, then alphabetically), and safe handling of empty/non-existent paths. The panel integrates with AssetManager, Scene, and CommandHistory, providing the foundation for asset management UI. All file system operations use C++17 std::filesystem with proper error handling.
 

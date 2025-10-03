@@ -26,7 +26,17 @@ void AssetBrowserPanel::render()
 
 	if ( ImGui::Begin( "Asset Browser", &m_visible ) )
 	{
-		// Display current path
+		// Left panel: Directory tree
+		ImGui::BeginChild( "DirectoryTree", ImVec2( 200, 0 ), true );
+		ImGui::Text( "Folders" );
+		ImGui::Separator();
+		renderDirectoryTree( m_rootPath );
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		// Right panel: Current directory contents
+		ImGui::BeginChild( "DirectoryContents", ImVec2( 0, 0 ), true );
 		ImGui::Text( "Path: %s", m_currentPath.c_str() );
 		ImGui::Separator();
 
@@ -56,6 +66,8 @@ void AssetBrowserPanel::render()
 		{
 			ImGui::TextDisabled( "(empty directory)" );
 		}
+
+		ImGui::EndChild();
 	}
 	ImGui::End();
 }
@@ -69,6 +81,15 @@ void AssetBrowserPanel::setRootPath( const std::string &path )
 		m_rootPath += '/';
 	}
 	m_currentPath = m_rootPath;
+}
+
+void AssetBrowserPanel::navigateToDirectory( const std::string &path )
+{
+	// Validate that the path exists and is a directory
+	if ( std::filesystem::exists( path ) && std::filesystem::is_directory( path ) )
+	{
+		m_currentPath = path;
+	}
 }
 
 std::vector<std::string> AssetBrowserPanel::getDirectoryContents( const std::string &path ) const
@@ -120,6 +141,89 @@ bool AssetBrowserPanel::isDirectory( const std::string &path ) const
 	catch ( const std::filesystem::filesystem_error & )
 	{
 		return false;
+	}
+}
+
+void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
+{
+	// Check if path exists
+	if ( !std::filesystem::exists( path ) )
+	{
+		return;
+	}
+
+	try
+	{
+		// Get immediate subdirectories
+		std::vector<std::string> subdirs;
+		for ( const auto &entry : std::filesystem::directory_iterator( path ) )
+		{
+			if ( entry.is_directory() )
+			{
+				subdirs.push_back( entry.path().string() );
+			}
+		}
+
+		// Sort alphabetically
+		std::sort( subdirs.begin(), subdirs.end() );
+
+		// Render tree nodes for each subdirectory
+		for ( const auto &subdir : subdirs )
+		{
+			const std::string displayName = std::filesystem::path( subdir ).filename().string();
+			const bool isCurrentPath = ( subdir == m_currentPath );
+
+			// Use different flags for current directory (highlight)
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+			if ( isCurrentPath )
+			{
+				flags |= ImGuiTreeNodeFlags_Selected;
+			}
+
+			// Check if this directory has subdirectories
+			bool hasSubdirs = false;
+			try
+			{
+				for ( const auto &entry : std::filesystem::directory_iterator( subdir ) )
+				{
+					if ( entry.is_directory() )
+					{
+						hasSubdirs = true;
+						break;
+					}
+				}
+			}
+			catch ( const std::filesystem::filesystem_error & )
+			{
+				// Ignore errors when checking for subdirectories
+			}
+
+			// If no subdirectories, make it a leaf node
+			if ( !hasSubdirs )
+			{
+				flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+			}
+
+			// Render tree node
+			const bool nodeOpen = ImGui::TreeNodeEx( displayName.c_str(), flags );
+
+			// Handle click on tree node
+			if ( ImGui::IsItemClicked() )
+			{
+				navigateToDirectory( subdir );
+			}
+
+			// Recursively render children if node is open and has subdirectories
+			if ( nodeOpen && hasSubdirs )
+			{
+				renderDirectoryTree( subdir );
+				ImGui::TreePop();
+			}
+		}
+	}
+	catch ( const std::filesystem::filesystem_error & )
+	{
+		// Silently handle errors
 	}
 }
 

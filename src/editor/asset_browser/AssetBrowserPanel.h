@@ -40,11 +40,15 @@ public:
 
 	// Current path navigation
 	const std::string &getCurrentPath() const { return m_currentPath; }
+	void navigateToDirectory( const std::string &path );
 
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;
 	bool isDirectory( const std::string &path ) const;
+
+	// UI rendering helpers
+	void renderDirectoryTree( const std::string &path );
 
 	// Reference members
 	assets::AssetManager &m_assetManager;

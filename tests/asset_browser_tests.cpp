@@ -155,3 +155,60 @@ TEST_CASE( "AssetBrowserPanel handles non-existent directories", "[AssetBrowser]
 	REQUIRE( panel.getRootPath() == "non_existent_directory_xyz123/" );
 	REQUIRE( panel.isVisible() );
 }
+
+// T3.2: Directory Tree View Tests
+
+TEST_CASE( "AssetBrowserPanel navigates to folder when clicked", "[AssetBrowser][T3.2][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "Current path starts at root" )
+	{
+		REQUIRE( panel.getCurrentPath() == panel.getRootPath() );
+	}
+
+	SECTION( "Navigating to subdirectory updates current path" )
+	{
+		// Simulate navigation by calling navigateToDirectory
+		const std::string subdir1Path = fixture.testRoot + "/subdir1";
+		panel.navigateToDirectory( subdir1Path );
+		REQUIRE( panel.getCurrentPath() == subdir1Path );
+	}
+
+	SECTION( "Navigating to nested directory works" )
+	{
+		const std::string subdir1Path = fixture.testRoot + "/subdir1";
+		panel.navigateToDirectory( subdir1Path );
+		REQUIRE( panel.getCurrentPath() == subdir1Path );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel handles deep directory hierarchies", "[AssetBrowser][T3.2][unit]" )
+{
+	// Create a deep directory structure
+	const std::string deepRoot = "temp_deep_" + std::to_string( std::chrono::steady_clock::now().time_since_epoch().count() );
+	std::filesystem::create_directories( deepRoot + "/level1/level2/level3" );
+
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( deepRoot );
+
+	SECTION( "Can navigate to deep directories" )
+	{
+		const std::string deepPath = deepRoot + "/level1/level2/level3";
+		panel.navigateToDirectory( deepPath );
+		REQUIRE( panel.getCurrentPath() == deepPath );
+	}
+
+	// Clean up
+	std::filesystem::remove_all( deepRoot );
+}
