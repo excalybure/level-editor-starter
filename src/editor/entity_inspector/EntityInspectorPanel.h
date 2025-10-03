@@ -80,6 +80,9 @@ private:
 	void renderVisibleComponent( ecs::Entity entity );
 	void renderMeshRendererComponent( ecs::Entity entity );
 
+	// Component management
+	void renderAddComponentMenu( ecs::Entity entity );
+
 	// Transform editing state for command creation
 	struct TransformEditState
 	{

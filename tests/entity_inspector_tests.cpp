@@ -2,6 +2,7 @@
 #include "editor/entity_inspector/EntityInspectorPanel.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
+#include "editor/commands/EcsCommands.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "runtime/systems.h"
@@ -250,4 +251,51 @@ TEST_CASE( "EntityInspectorPanel - Entity with MeshRenderer component can be ins
 	REQUIRE( meshRendererComp != nullptr );
 	REQUIRE( meshRendererComp->meshHandle == 42 );
 	REQUIRE( meshRendererComp->gpuMesh == nullptr ); // No GPU resources in test
+}
+
+// ============================================================================
+// T2.6: Add Component Menu Tests
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - Can add components to entity via command", "[T2.6][entity_inspector][add_component][unit]" )
+{
+	// Arrange
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	const ecs::Entity entity = scene.createEntity( "TestEntity" );
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+
+	// Initially, entity should not have Transform component
+	REQUIRE( !scene.hasComponent<components::Transform>( entity ) );
+
+	// Act - Create AddComponentCommand directly (simulating menu selection)
+	components::Transform transform;
+	transform.position = { 1.0f, 2.0f, 3.0f };
+	auto command = std::make_unique<editor::AddComponentCommand<components::Transform>>( scene, entity, transform );
+	commandHistory.executeCommand( std::move( command ) );
+
+	// Assert - Entity should now have Transform component with correct values
+	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
+	const auto *transformComp = scene.getComponent<components::Transform>( entity );
+	REQUIRE( transformComp != nullptr );
+	REQUIRE( transformComp->position.x == 1.0f );
+	REQUIRE( transformComp->position.y == 2.0f );
+	REQUIRE( transformComp->position.z == 3.0f );
+
+	// Act - Undo the add component command
+	commandHistory.undo();
+
+	// Assert - Component should be removed
+	REQUIRE( !scene.hasComponent<components::Transform>( entity ) );
+
+	// Act - Redo the add component command
+	commandHistory.redo();
+
+	// Assert - Component should be added back
+	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
 }

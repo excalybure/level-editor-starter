@@ -1,5 +1,36 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-02 — Add Component Menu (M2-P6-T2.6)
+**Summary:** Implemented "Add Component" menu in Entity Inspector Panel enabling users to add components to entities via an intuitive popup menu. The feature provides a full-width button that opens a popup listing all available component types (Transform, Name, Visible, MeshRenderer, Selected). Menu items are automatically disabled with tooltips when the component is already present on the entity, preventing duplicate component additions. Commands are created with sensible default values for each component type and support full undo/redo functionality through the command history system.
+
+**Atomic functionalities completed:**
+- AF2.6.1: renderAddComponentMenu() method - Added method declaration to EntityInspectorPanel.h for component addition UI
+- AF2.6.2: "Add Component" button - Implemented full-width button using ImVec2(-1, 0) opening popup "AddComponentPopup"
+- AF2.6.3: Component menu items - Added 5 menu items (Transform, Name, Visible, MeshRenderer, Selected) with hasComponent checks disabling items when already present
+- AF2.6.4: Component default values - Configured sensible defaults: Transform (zeros/ones), Name ("Entity"), Visible (all true), MeshRenderer (handle 0), Selected (isPrimary false)
+- AF2.6.5: Command creation - Reused existing AddComponentCommand<T> template, executing commands via m_commandHistory.executeCommand()
+- AF2.6.6: Menu integration - Wired renderAddComponentMenu() into renderSingleEntity() after separator following component editors
+
+**Tests:**
+- T2.6 test: 1 test case with 8 assertions (component addition with undo/redo validation)
+- All entity inspector tests passing: `unit_test_runner.exe "[entity_inspector]"` - 35 assertions in 11 test cases
+- Commands: `unit_test_runner.exe "[T2.6]"` or `"[add_component]"`
+
+**Notes:**
+- Menu button positioned after all component editors with ImGui::Separator() for visual separation
+- Component presence check (hasComponent<T>()) used to disable menu items, preventing duplicate components
+- Tooltip "Component already present" shown on hover over disabled items
+- AddComponentCommand<T> template already existed in EcsCommands.h, no new command class needed
+- Default component values match Scene::createEntity() conventions where applicable
+- Command execution through existing command history maintains consistency with other editor operations
+- ImGui::CloseCurrentPopup() called after command execution for smooth UX
+- Transform defaults: position(0,0,0), rotation(0,0,0), scale(1,1,1)
+- Name default: "Entity" (matches scene creation default)
+- Visible defaults: visible=true, castShadows=true, receiveShadows=true
+- MeshRenderer default: meshHandle=0 (user will assign actual mesh later)
+- Selected default: isPrimary=false
+- Ready for Remove Component Menu (T2.7) to complete component lifecycle management
+
 ## 2025-10-02 — MeshRenderer Component Editor (M2-P6-T2.5)
 **Summary:** Implemented read-only MeshRenderer component editor in Entity Inspector Panel displaying mesh handle, GPU upload status, and primitive count. The editor shows mesh handle value, color-coded GPU status (green="Uploaded", orange="Not Uploaded"), primitive count when GPU mesh is available, and LOD bias. This establishes the foundation for future asset selector functionality where users will be able to browse and assign mesh assets to entities.
 

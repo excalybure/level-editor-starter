@@ -100,7 +100,9 @@ void EntityInspectorPanel::renderSingleEntity( ecs::Entity entity )
 		renderMeshRendererComponent( entity );
 	}
 
-	// Additional component editors will be added in subsequent tasks
+	// Add Component menu
+	ImGui::Separator();
+	renderAddComponentMenu( entity );
 }
 
 void EntityInspectorPanel::renderMultiSelection()
@@ -384,6 +386,98 @@ void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 		ImGui::TextDisabled( "(Asset selector coming soon)" );
 
 		ImGui::PopID();
+	}
+}
+
+void EntityInspectorPanel::renderAddComponentMenu( ecs::Entity entity )
+{
+	// Add Component button
+	if ( ImGui::Button( "Add Component", ImVec2( -1, 0 ) ) )
+	{
+		ImGui::OpenPopup( "AddComponentPopup" );
+	}
+
+	// Popup menu with component options
+	if ( ImGui::BeginPopup( "AddComponentPopup" ) )
+	{
+		ImGui::TextDisabled( "Select Component Type" );
+		ImGui::Separator();
+
+		// Transform component
+		const bool hasTransform = m_scene.hasComponent<components::Transform>( entity );
+		if ( ImGui::MenuItem( "Transform", nullptr, false, !hasTransform ) )
+		{
+			components::Transform transform;
+			transform.position = { 0.0f, 0.0f, 0.0f };
+			transform.rotation = { 0.0f, 0.0f, 0.0f };
+			transform.scale = { 1.0f, 1.0f, 1.0f };
+			auto command = std::make_unique<editor::AddComponentCommand<components::Transform>>( m_scene, entity, transform );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+		if ( hasTransform && ImGui::IsItemHovered() )
+		{
+			ImGui::SetTooltip( "Component already present" );
+		}
+
+		// Name component
+		const bool hasName = m_scene.hasComponent<components::Name>( entity );
+		if ( ImGui::MenuItem( "Name", nullptr, false, !hasName ) )
+		{
+			components::Name name;
+			name.name = "Entity";
+			auto command = std::make_unique<editor::AddComponentCommand<components::Name>>( m_scene, entity, name );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+		if ( hasName && ImGui::IsItemHovered() )
+		{
+			ImGui::SetTooltip( "Component already present" );
+		}
+
+		// Visible component
+		const bool hasVisible = m_scene.hasComponent<components::Visible>( entity );
+		if ( ImGui::MenuItem( "Visible", nullptr, false, !hasVisible ) )
+		{
+			components::Visible visible;
+			visible.visible = true;
+			visible.castShadows = true;
+			visible.receiveShadows = true;
+			auto command = std::make_unique<editor::AddComponentCommand<components::Visible>>( m_scene, entity, visible );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+		if ( hasVisible && ImGui::IsItemHovered() )
+		{
+			ImGui::SetTooltip( "Component already present" );
+		}
+
+		// MeshRenderer component
+		const bool hasMeshRenderer = m_scene.hasComponent<components::MeshRenderer>( entity );
+		if ( ImGui::MenuItem( "MeshRenderer", nullptr, false, !hasMeshRenderer ) )
+		{
+			components::MeshRenderer meshRenderer;
+			meshRenderer.meshHandle = 0;
+			auto command = std::make_unique<editor::AddComponentCommand<components::MeshRenderer>>( m_scene, entity, meshRenderer );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+		if ( hasMeshRenderer && ImGui::IsItemHovered() )
+		{
+			ImGui::SetTooltip( "Component already present" );
+		}
+
+		// Selected component
+		const bool hasSelected = m_scene.hasComponent<components::Selected>( entity );
+		if ( ImGui::MenuItem( "Selected", nullptr, false, !hasSelected ) )
+		{
+			components::Selected selected;
+			selected.isPrimary = false;
+			auto command = std::make_unique<editor::AddComponentCommand<components::Selected>>( m_scene, entity, selected );
+			m_commandHistory.executeCommand( std::move( command ) );
+		}
+		if ( hasSelected && ImGui::IsItemHovered() )
+		{
+			ImGui::SetTooltip( "Component already present" );
+		}
+
+		ImGui::EndPopup();
 	}
 }
 
