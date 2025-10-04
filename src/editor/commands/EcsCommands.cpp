@@ -530,8 +530,8 @@ std::unique_ptr<ModifyVisibleCommand> EcsCommandFactory::modifyVisible( ecs::Sce
 }
 
 // CreateEntityFromAssetCommand implementation
-CreateEntityFromAssetCommand::CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent )
-	: m_scene( scene ), m_assetManager( assetManager ), m_assetPath( assetPath ), m_worldPosition( worldPosition ), m_parent( parent ), m_executed( false )
+CreateEntityFromAssetCommand::CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, engine::GPUResourceManager &gpuManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent )
+	: m_scene( scene ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_assetPath( assetPath ), m_worldPosition( worldPosition ), m_parent( parent ), m_executed( false )
 {
 }
 
@@ -552,6 +552,14 @@ bool CreateEntityFromAssetCommand::execute()
 	if ( !imported )
 	{
 		return false; // Import failed
+	}
+
+	// Create GPU resources for the imported meshes
+	const bool gpuResourcesCreated = runtime::SceneImporter::createGPUResources( assetScene, m_scene, m_gpuManager );
+	if ( !gpuResourcesCreated )
+	{
+		// Note: We don't fail the command if GPU upload fails, as the entities are still created
+		// The meshes just won't be visible until GPU resources are available
 	}
 
 	// Find the root entity created by the import

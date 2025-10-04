@@ -11,6 +11,11 @@
 #include <typeinfo>
 #include <vector>
 
+namespace engine
+{
+class GPUResourceManager;
+}
+
 namespace editor
 {
 
@@ -364,7 +369,7 @@ private:
 class CreateEntityFromAssetCommand : public Command
 {
 public:
-	CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent = {} );
+	CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, engine::GPUResourceManager &gpuManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent = {} );
 
 	bool execute() override;
 	bool undo() override;
@@ -380,6 +385,7 @@ public:
 private:
 	ecs::Scene &m_scene;
 	assets::AssetManager &m_assetManager;
+	engine::GPUResourceManager &m_gpuManager;
 	std::string m_assetPath;
 	math::Vec3f m_worldPosition;
 	ecs::Entity m_parent;

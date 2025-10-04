@@ -20,8 +20,9 @@ namespace editor
 SceneHierarchyPanel::SceneHierarchyPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
 	CommandHistory &commandHistory,
-	assets::AssetManager *assetManager )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_assetManager( assetManager ), m_visible( true )
+	assets::AssetManager *assetManager,
+	engine::GPUResourceManager *gpuManager )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_visible( true )
 {
 }
 
@@ -264,17 +265,24 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 						worldPosition = transform->position;
 					}
 
-					// Create entity from asset as child of dropped target
-					auto command = std::make_unique<editor::CreateEntityFromAssetCommand>(
-						m_scene, *m_assetManager, assetPath, worldPosition, entity );
-
-					if ( m_commandHistory.executeCommand( std::move( command ) ) )
+					// Create entity from asset as child of dropped target (with GPU upload if available)
+					if ( m_assetManager && m_gpuManager )
 					{
-						console::info( "Created child entity from asset: {}", assetPath );
+						auto command = std::make_unique<editor::CreateEntityFromAssetCommand>(
+							m_scene, *m_assetManager, *m_gpuManager, assetPath, worldPosition, entity );
+
+						if ( m_commandHistory.executeCommand( std::move( command ) ) )
+						{
+							console::info( "Created child entity from asset: {}", assetPath );
+						}
+						else
+						{
+							console::error( "Failed to create child entity from asset: {}", assetPath );
+						}
 					}
 					else
 					{
-						console::error( "Failed to create child entity from asset: {}", assetPath );
+						console::error( "Cannot create entity: AssetManager or GPUResourceManager not available" );
 					}
 				}
 			}

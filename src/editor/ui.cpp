@@ -826,10 +826,10 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 						// Future enhancement: Use ray-cast to find drop position in 3D space
 						const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
 
-						if ( scene && assetManager && commandHistory )
+						if ( scene && assetManager && commandHistory && gpuManager )
 						{
 							auto cmd = std::make_unique<editor::CreateEntityFromAssetCommand>(
-								*scene, *assetManager, assetPath, worldPosition );
+								*scene, *assetManager, *gpuManager, assetPath, worldPosition );
 
 							if ( commandHistory->executeCommand( std::move( cmd ) ) )
 							{
@@ -1787,7 +1787,7 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 
 	// Create scene editing panels
 	m_impl->hierarchyPanel = std::make_unique<SceneHierarchyPanel>(
-		scene, selectionManager, *m_impl->commandHistory, &assetManager );
+		scene, selectionManager, *m_impl->commandHistory, &assetManager, m_impl->gpuManager );
 	m_impl->inspectorPanel = std::make_unique<EntityInspectorPanel>(
 		scene, selectionManager, *m_impl->commandHistory );
 	m_impl->assetBrowserPanel = std::make_unique<AssetBrowserPanel>(
@@ -2103,10 +2103,10 @@ void UI::openAssetFileDialog()
 		// Create entity from asset at world origin (0, 0, 0)
 		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
 
-		if ( m_impl->scene && m_impl->assetManager && m_impl->commandHistory )
+		if ( m_impl->scene && m_impl->assetManager && m_impl->commandHistory && m_impl->gpuManager )
 		{
 			auto cmd = std::make_unique<editor::CreateEntityFromAssetCommand>(
-				*m_impl->scene, *m_impl->assetManager, assetPath, worldPosition );
+				*m_impl->scene, *m_impl->assetManager, *m_impl->gpuManager, assetPath, worldPosition );
 
 			if ( m_impl->commandHistory->executeCommand( std::move( cmd ) ) )
 			{

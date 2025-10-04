@@ -6,6 +6,22 @@
 #include "editor/commands/EcsCommands.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "platform/dx12/dx12_device.h"
+
+// Mock GPUResourceManager for testing (CPU-only tests don't need actual GPU resources)
+class MockGPUResourceManager : public engine::GPUResourceManager
+{
+public:
+	MockGPUResourceManager() : engine::GPUResourceManager( getMockDevice() ) {}
+
+private:
+	static dx12::Device &getMockDevice()
+	{
+		static dx12::Device device;
+		return device;
+	}
+};
 
 TEST_CASE( "CreateEntityCommand basic functionality", "[ecs-commands][unit][AF2.1]" )
 {
@@ -659,10 +675,11 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 	{
 		ecs::Scene scene;
 		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
 		const std::string assetPath = "test.gltf";
 		const math::Vec3f worldPosition{ 1.0f, 2.0f, 3.0f };
 
-		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, gpuManager, assetPath, worldPosition );
 
 		REQUIRE( cmd.getDescription() == "Create entity from test.gltf" );
 		REQUIRE( !cmd.getCreatedEntity().isValid() ); // Entity should not exist until execute
@@ -673,6 +690,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 		// Given a scene and asset manager with a valid glTF file
 		ecs::Scene scene;
 		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
 		const std::string assetPath = "assets/test/triangle.gltf";
 		const math::Vec3f worldPosition{ 5.0f, 10.0f, 15.0f };
 
@@ -691,7 +709,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 			return testScene;
 		} );
 
-		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, gpuManager, assetPath, worldPosition );
 
 		// When execute is called
 		const bool result = cmd.execute();
@@ -724,6 +742,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 		// Given a scene with an entity created from an asset
 		ecs::Scene scene;
 		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
 		const std::string assetPath = "assets/test/triangle.gltf";
 		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
 
@@ -740,7 +759,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 			return testScene;
 		} );
 
-		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, gpuManager, assetPath, worldPosition );
 		cmd.execute();
 
 		const ecs::Entity entity = cmd.getCreatedEntity();
@@ -762,6 +781,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 	{
 		ecs::Scene scene;
 		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
 		const std::string assetPath = "assets/test/triangle.gltf";
 		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
 
@@ -777,7 +797,7 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 			return testScene;
 		} );
 
-		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, gpuManager, assetPath, worldPosition );
 
 		REQUIRE( cmd.execute() == true );
 		REQUIRE( cmd.execute() == false ); // Second execution should fail
@@ -790,10 +810,11 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 	{
 		ecs::Scene scene;
 		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
 		const std::string assetPath = "non_existent_file.gltf";
 		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
 
-		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, gpuManager, assetPath, worldPosition );
 
 		// When execute is called with invalid asset
 		const bool result = cmd.execute();
