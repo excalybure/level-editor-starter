@@ -1,5 +1,34 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — Viewport Drop Target for Asset Instantiation Complete (M2-P6-T8.2)
+**Summary:** Completed Task 8.2 (Viewport Drop Target Implementation) integrating drag-and-drop asset instantiation into the viewport rendering system. Added ImGui::BeginDragDropTarget() after ImGui::Image() in viewport render loop (ui.cpp), accepting "ASSET_BROWSER_ITEM" payload from Asset Browser (implemented in T3.7). When asset is dropped on viewport, extracts asset path from payload, creates CreateEntityFromAssetCommand at world origin (0,0,0), and executes via CommandHistory for full undo/redo support. Implementation includes console logging for success/failure feedback. Per instructions §9, UI rendering code requiring full ImGui context + DirectX device is validated through manual testing rather than unit tests. This completes the viewport drop target infrastructure - users can now drag glTF/GLB files from Asset Browser and drop them into viewport to spawn entities at world origin.
+
+**Atomic functionalities completed:**
+- AF8.2.1: Import statement - Added #include "editor/commands/EcsCommands.h" to ui.cpp for CreateEntityFromAssetCommand access
+- AF8.2.2: Drop target detection - Added ImGui::BeginDragDropTarget() immediately after ImGui::Image() in viewport render
+- AF8.2.3: Payload acceptance - Call ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM") to receive asset path string
+- AF8.2.4: Asset path extraction - Cast payload->Data to const char* to extract asset file path
+- AF8.2.5: World position constant - Define worldPosition as Vec3f{0,0,0} for entity spawn location (world origin)
+- AF8.2.6: Null pointer guards - Check scene, assetManager, commandHistory are valid before command creation
+- AF8.2.7: Command instantiation - Create std::unique_ptr<CreateEntityFromAssetCommand> with scene, assetManager, assetPath, worldPosition
+- AF8.2.8: Command execution - Call commandHistory->executeCommand() (note: method is executeCommand not execute)
+- AF8.2.9: Success feedback - Log console::info() when entity created successfully
+- AF8.2.10: Failure feedback - Log console::error() when command execution fails
+- AF8.2.11: Drop target cleanup - Call ImGui::EndDragDropTarget() to close drop target region
+- AF8.2.12: Build verification - Clean rebuild confirmed all 137 ecs-command tests pass with no regressions
+
+**Tests:** No unit tests created per instructions §9 (UI code requires full ImGui context + DirectX device). Validation via manual testing: drag .gltf/.glb files from Asset Browser, drop onto viewport, verify entity creation at world origin, test undo/redo, verify console logging. Integration verified through existing CreateEntityFromAssetCommand tests (20 assertions passing).
+
+**Notes:**
+- Payload type "ASSET_BROWSER_ITEM" matches T3.7 drag source implementation (AssetBrowserPanel)
+- World origin (0,0,0) used for drop position - future enhancement: ray-cast from mouse to find 3D drop position
+- CommandHistory API uses executeCommand() not execute() (discovered during compilation)
+- console:: namespace directly accessible (not runtime::console::) as per existing ui.cpp usage patterns
+- Asset path includes full path string terminated with null character (payload.size() + 1)
+- Drop target only accepts drops when viewport is valid and has render target
+- Future: T8.3 will add similar drop target to hierarchy panel for child entity creation
+- T8.2 complete - basic viewport drop target functional, ready for T8.3 (Hierarchy Panel Drop Target)
+
 ## 2025-10-03 — CreateEntityFromAssetCommand Implementation Complete (M2-P6-T8.1)
 **Summary:** Completed Task 8.1 (CreateEntityFromAssetCommand Implementation) following strict TDD methodology with RED→GREEN→REFACTOR cycles. Implemented command class for creating entities from glTF/GLB asset files with full undo/redo support, integrated with AssetManager and SceneImporter to load and instantiate assets into the scene. Command loads asset via AssetManager, imports using SceneImporter, positions root entity at specified world coordinates, and optionally parents to existing entity. Undo destroys entire entity hierarchy in reverse order. Command properly integrates with existing command infrastructure (updateEntityReference, getRecreatedEntity, memory usage tracking). All tests pass including construction, execute, undo, double-execute prevention, and invalid asset handling.
 

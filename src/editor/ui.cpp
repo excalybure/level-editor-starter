@@ -27,6 +27,7 @@
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
 #include "editor/commands/CommandUI.h"
+#include "editor/commands/EcsCommands.h"
 #include "gizmos.h"
 #include "editor/selection.h"
 #include "editor/scene_hierarchy/SceneHierarchyPanel.h"
@@ -764,6 +765,38 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 			{
 				// Render the actual 3D viewport content
 				ImGui::Image( reinterpret_cast<ImTextureID>( textureHandle ), contentSize );
+
+				// Handle drag-drop for asset instantiation (T8.2)
+				if ( ImGui::BeginDragDropTarget() )
+				{
+					if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ASSET_BROWSER_ITEM" ) )
+					{
+						// Extract asset path from payload
+						const char *assetPath = static_cast<const char *>( payload->Data );
+
+						// Create entity from asset at world origin (0, 0, 0)
+						// Future enhancement: Use ray-cast to find drop position in 3D space
+						const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+
+						if ( scene && assetManager && commandHistory )
+						{
+							auto cmd = std::make_unique<editor::CreateEntityFromAssetCommand>(
+								*scene, *assetManager, assetPath, worldPosition );
+
+							if ( commandHistory->executeCommand( std::move( cmd ) ) )
+							{
+								// Entity created successfully
+								console::info( "Created entity from asset: {}", assetPath );
+							}
+							else
+							{
+								// Failed to create entity
+								console::error( "Failed to create entity from asset: {}", assetPath );
+							}
+						}
+					}
+					ImGui::EndDragDropTarget();
+				}
 
 				// Render gizmos on top of the viewport if gizmo system is available
 				if ( gizmoSystem && scene && viewport->areGizmosVisible() && gizmoSystem->isVisible() )
