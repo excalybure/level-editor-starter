@@ -30,8 +30,9 @@ void SceneHierarchyPanel::render()
 
 	// Render search bar at the top
 	char searchBuffer[256];
-	std::strncpy( searchBuffer, m_searchFilter.c_str(), sizeof( searchBuffer ) - 1 );
-	searchBuffer[sizeof( searchBuffer ) - 1] = '\0';
+	const size_t copyLen = std::min( m_searchFilter.size(), sizeof( searchBuffer ) - 1 );
+	m_searchFilter.copy( searchBuffer, copyLen );
+	searchBuffer[copyLen] = '\0';
 
 	ImGui::SetNextItemWidth( -1.0f ); // Full width
 	if ( ImGui::InputTextWithHint( "##search", "Search...", searchBuffer, sizeof( searchBuffer ) ) )
@@ -141,8 +142,9 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 
 		// Render input field
 		char buffer[256];
-		std::strncpy( buffer, m_renameBuffer.c_str(), sizeof( buffer ) - 1 );
-		buffer[sizeof( buffer ) - 1] = '\0';
+		const size_t copyLen = std::min( m_renameBuffer.size(), sizeof( buffer ) - 1 );
+		m_renameBuffer.copy( buffer, copyLen );
+		buffer[copyLen] = '\0';
 
 		if ( ImGui::InputText( std::format( "##input{}", entity.id ).c_str(), buffer, sizeof( buffer ), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll ) )
 		{

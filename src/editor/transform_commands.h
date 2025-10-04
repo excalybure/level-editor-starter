@@ -140,42 +140,6 @@ public:
 	 * @return Command for single entity or batch command for multiple entities
 	 */
 	static std::unique_ptr<Command> createCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
-
-	/**
-	 * @brief Create a transform command from gizmo manipulation results
-	 * @param gizmoResult The result of gizmo manipulation
-	 * @param entities The entities that were manipulated
-	 * @param scene The scene containing the entities
-	 * @return Command ready for execution and undo/redo history
-	 */
-	static std::unique_ptr<Command> createFromGizmoResult( const struct GizmoResult &gizmoResult,
-		const std::vector<ecs::Entity> &entities,
-		ecs::Scene &scene );
 };
-
-/**
- * @brief Utility functions for transform operations
- */
-namespace TransformUtils
-{
-
-/**
- * @brief Capture current transform states of entities
- * @param entities The entities to capture transforms for
- * @param scene The scene containing the entities
- * @return Vector of captured transform states
- */
-std::vector<components::Transform> captureTransforms( const std::vector<ecs::Entity> &entities, ecs::Scene &scene );
-
-/**
- * @brief Apply gizmo manipulation deltas to transform states
- * @param currentTransforms The current transform states
- * @param gizmoResult The gizmo manipulation result
- * @return Vector of updated transform states
- */
-std::vector<components::Transform> applyGizmoDeltas( const std::vector<components::Transform> &currentTransforms,
-	const struct GizmoResult &gizmoResult );
-
-} // namespace TransformUtils
 
 } // namespace editor
