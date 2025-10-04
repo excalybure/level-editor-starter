@@ -230,6 +230,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/scene_importer_tests.cpp
     tests/scene_importer_gpu_integration_tests.cpp
     tests/gltf_loader_tests.cpp
+    tests/gltf_node_naming_tests.cpp
     tests/gltf_accessor_tests.cpp
     tests/mesh_extraction_tdd_test.cpp
     tests/primitive_tests.cpp

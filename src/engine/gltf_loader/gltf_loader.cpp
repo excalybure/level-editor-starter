@@ -307,13 +307,13 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadFromString( const std::string &gl
 	}
 
 	// Process the parsed glTF data into a scene
-	auto scene = processSceneData( data );
+	auto scene = processSceneData( data, "" );
 
 	cgltf_free( data );
 	return scene;
 }
 
-std::unique_ptr<assets::Scene> GLTFLoader::processSceneData( cgltf_data *data ) const
+std::unique_ptr<assets::Scene> GLTFLoader::processSceneData( cgltf_data *data, const std::string &baseFilename ) const
 {
 	if ( !data )
 	{
@@ -379,7 +379,8 @@ std::unique_ptr<assets::Scene> GLTFLoader::processSceneData( cgltf_data *data ) 
 			cgltf_node *gltfNode = gltfScene->nodes[i];
 			if ( gltfNode )
 			{
-				auto sceneNode = processNode( gltfNode, data, meshHandles, materialHandles );
+				// Pass base filename as root node default name
+				auto sceneNode = processNode( gltfNode, data, meshHandles, materialHandles, baseFilename );
 				if ( sceneNode )
 				{
 					scene->addRootNode( std::move( sceneNode ) );
@@ -395,17 +396,22 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 	cgltf_node *gltfNode,
 	cgltf_data *data,
 	const std::vector<assets::MeshHandle> &meshHandles,
-	const std::vector<assets::MaterialHandle> &materialHandles ) const
+	const std::vector<assets::MaterialHandle> &materialHandles,
+	const std::string &rootNodeName ) const
 {
 	if ( !gltfNode )
 		return nullptr;
 
 	// Create scene node with name if available
-	// Priority: 1) node name, 2) mesh name (if node has mesh), 3) "UnnamedNode"
+	// Priority: 1) node name, 2) rootNodeName (for root nodes), 3) mesh name (if node has mesh), 4) "UnnamedNode"
 	std::string nodeName;
 	if ( gltfNode->name )
 	{
 		nodeName = gltfNode->name;
+	}
+	else if ( !rootNodeName.empty() )
+	{
+		nodeName = rootNodeName;
 	}
 	else if ( gltfNode->mesh && gltfNode->mesh->name )
 	{
@@ -433,11 +439,11 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 	const auto transform = extractTransformFromNode( gltfNode );
 	sceneNode->setTransform( transform );
 
-	// Process child nodes recursively
+	// Process child nodes recursively (without root node name)
 	for ( cgltf_size i = 0; i < gltfNode->children_count; ++i )
 	{
 		cgltf_node *childNode = gltfNode->children[i];
-		auto childSceneNode = processNode( childNode, data, meshHandles, materialHandles );
+		auto childSceneNode = processNode( childNode, data, meshHandles, materialHandles, "" );
 		if ( childSceneNode )
 		{
 			sceneNode->addChild( std::move( childSceneNode ) );

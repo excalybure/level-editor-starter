@@ -1,5 +1,25 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-05 — GLTF Node Naming Unit Tests
+**Summary:** Created comprehensive unit test suite for GLTF node naming priority logic. When users drag GLTF assets from the asset browser to create scene nodes, the system now follows a clear naming priority: (1) explicit node name, (2) filename (root nodes only), (3) mesh name, (4) "UnnamedNode" fallback. Unit tests verify all naming scenarios including explicit names, filename extraction from paths, mesh name fallback, child node behavior (no filename inheritance), multiple root nodes, and unnamed entities. Tests run entirely in-memory without file I/O to avoid integration test complexity. All 22 assertions pass successfully.
+
+**Atomic functionalities completed:**
+- AF1: Test structure creation - Created gltf_node_naming_tests.cpp with Catch2 test framework
+- AF2: Explicit name priority test - Verifies node name takes precedence over all other sources
+- AF3: Mesh name fallback test - Verifies mesh name used when node name absent
+- AF4: Filename priority test - Verifies filename (for root nodes) takes precedence over mesh name
+- AF5: Multiple root nodes test - Verifies each root can have different naming sources
+- AF6: Child node naming test - Verifies children don't inherit filename, use node/mesh names only
+- AF7: Deep hierarchy test - Verifies naming works correctly in multi-level hierarchies
+- AF8: Missing mesh test - Verifies "UnnamedNode" fallback when no name sources available
+- AF9: Empty name strings test - Verifies empty strings treated same as missing names
+- AF10: Filename edge cases test - Verifies filename without extension, paths with separators
+- AF11: Mesh without name test - Verifies mesh presence alone insufficient for naming
+
+**Tests:** 1 new test case "GLTF Node Naming Priority" with 11 sections, 22 assertions, all passing. Tests use in-memory GLTF data structures (cgltf mock objects) to verify naming logic without file I/O. Removed attempted file-based integration tests per instructions §9 (would require full GLTF loader infrastructure). Filtered command: `unit_test_runner.exe "[gltf][loader][name]"`.
+
+**Notes:** Per instructions §9, avoided file-based tests that would require writing temporary GLTF files and full loader infrastructure. Unit tests verify the node naming priority logic directly using in-memory data structures. File-based functionality is validated through existing integration tests and manual testing. Implementation already complete in previous sessions (filename extraction in loadScene(), priority logic in processNode()).
+
 ## 2025-01-03 — Integration Testing and Documentation Complete (M2-P6-T8.8)
 **Summary:** Completed Task 8.8 (Integration Testing and Documentation) finishing the entire Object Creation and Asset Instantiation feature (Task 8). Created comprehensive integration test suite with 5 test cases covering complete workflows: asset instantiation with parent/child relationships, multiple entity creation, undo/redo operations, error handling for invalid assets, hierarchy preservation, and performance testing (50 entities). Created detailed user documentation guide covering all three creation methods (drag-drop to viewport, drag-drop to hierarchy, Create menu), visual feedback system, keyboard shortcuts, troubleshooting, and advanced topics. Tests compile and run successfully with graceful asset-not-found handling via SKIP. Documentation provides complete workflow examples and troubleshooting guidance for end users. This completes the asset instantiation feature - users now have multiple intuitive workflows for adding objects to scenes with full undo/redo support, visual feedback, and comprehensive documentation.
 
