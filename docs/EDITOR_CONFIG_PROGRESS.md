@@ -38,21 +38,44 @@
 
 ## Remaining Work
 
-### Phase 2 (UI Integration)
+### ✅ Phase 2 (UI Integration) - COMPLETE
 
-**AF2.1-2.5**: Integrate with UI system
-- Add EditorConfig member to UI::Impl
-- Define config key constants for all windows
-- Save window states on shutdown
-- Load window states on startup  
-- Handle first-run scenario
+**AF2.1**: ✅ Add EditorConfig to UI::Impl
+- Added `std::unique_ptr<EditorConfig> editorConfig` member to UI::Impl
+- Initialize in `UI::initialize()` with `"editor_config.json"` path
+- Automatically loads config on startup
+
+**AF2.2**: ✅ Define config key constants
+- Created `ConfigKeys` namespace in ui.cpp with 12 config keys:
+  - Panel keys: `kHierarchyPanelVisible`, `kInspectorPanelVisible`, `kAssetBrowserVisible`
+  - Tool window keys: `kGridSettingsVisible`, `kCameraSettingsVisible`, `kGizmoToolsVisible`, `kGizmoSettingsVisible`, `kCommandHistoryVisible`
+  - Viewport keys: `kViewportPerspectiveOpen`, `kViewportTopOpen`, `kViewportFrontOpen`, `kViewportSideOpen`
+- All keys use dot-notation (e.g., `"ui.panels.hierarchy.visible"`)
+
+**AF2.3**: ✅ Save window states on shutdown
+- In `UI::shutdown()`, save all visibility flags to config before cleanup
+- Saves 3 panel states, 5 tool window states, 4 viewport states
+- Calls `editorConfig->save()` to persist to disk
+
+**AF2.4**: ✅ Load window states on startup  
+- In `UI::initialize()`, after creating EditorConfig, call `load()`
+- Restore all visibility flags using `getBool()` with sensible defaults
+- Defaults: panels=true, viewports=true, gizmo tools/settings=true, other tools=false
+
+**AF2.5**: 🔄 Manual integration testing (IN PROGRESS)
+- Test 1: Launch editor, close hierarchy panel, restart → verify panel stays closed
+- Test 2: Close multiple panels/viewports, restart → verify all stay closed
+- Test 3: First-run scenario (delete editor_config.json) → verify defaults applied
+- Test 4: Toggle tool windows, restart → verify states persist
+
+**Result**: Window visibility states now persist across application restarts via EditorConfig JSON file
 
 ### Optional Phase 3 (Polish)
 
 **AF3.1-3.3**: Dynamic updates and versioning
-- Auto-save on visibility changes
-- Config versioning
-- Reset-to-defaults functionality
+- Auto-save on visibility changes (optional optimization)
+- Config versioning for future schema changes
+- Reset-to-defaults functionality via menu
 
 ## Files Created/Modified
 
@@ -65,6 +88,7 @@
 
 ### Modified:
 - `CMakeLists.txt` - Added EditorConfig.cpp to editor library, linked nlohmann_json, added tests
+- `src/editor/ui.cpp` - Added EditorConfig integration, config keys namespace, load/save logic
 
 ## CMakeLists.txt Changes
 

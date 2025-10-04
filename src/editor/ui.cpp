@@ -34,11 +34,34 @@
 #include "editor/entity_inspector/EntityInspectorPanel.h"
 #include "editor/asset_browser/AssetBrowserPanel.h"
 #include "editor/commands/EcsCommands.h"
+#include "editor/config/EditorConfig.h"
 
 namespace editor
 {
 const float kStatusBarHeight = 23.0f;
 const float kStatusBarHeightPadding = 2.0f; // ImGui seems to be adding th
+
+// Config key constants for window visibility persistence
+namespace ConfigKeys
+{
+// Panel visibility keys
+static constexpr const char *kHierarchyPanelVisible = "ui.panels.hierarchy.visible";
+static constexpr const char *kInspectorPanelVisible = "ui.panels.inspector.visible";
+static constexpr const char *kAssetBrowserVisible = "ui.panels.assetBrowser.visible";
+
+// Tool window visibility keys
+static constexpr const char *kGridSettingsVisible = "ui.tools.gridSettings.visible";
+static constexpr const char *kCameraSettingsVisible = "ui.tools.cameraSettings.visible";
+static constexpr const char *kGizmoToolsVisible = "ui.tools.gizmoTools.visible";
+static constexpr const char *kGizmoSettingsVisible = "ui.tools.gizmoSettings.visible";
+static constexpr const char *kCommandHistoryVisible = "ui.tools.commandHistory.visible";
+
+// Viewport visibility keys
+static constexpr const char *kViewportPerspectiveOpen = "ui.viewports.perspective.open";
+static constexpr const char *kViewportTopOpen = "ui.viewports.top.open";
+static constexpr const char *kViewportFrontOpen = "ui.viewports.front.open";
+static constexpr const char *kViewportSideOpen = "ui.viewports.side.open";
+} // namespace ConfigKeys
 
 // Helper functions to convert between our Vec2 and ImVec2
 ImVec2 to_imgui_vec2( const Vec2 &v )
@@ -113,6 +136,9 @@ struct UI::Impl
 
 	// Track previous frame's gizmo state for input blocking
 	bool wasGizmoHoveredLastFrame = false;
+
+	// Editor configuration persistence
+	std::unique_ptr<EditorConfig> editorConfig;
 	bool wasGizmoUsingLastFrame = false;
 
 	// Setup the main dockspace
@@ -226,6 +252,29 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	m_impl->undoRedoUI = std::make_unique<UndoRedoUI>( *m_impl->commandHistory );
 	m_impl->commandHistoryWindow = std::make_unique<CommandHistoryWindow>( *m_impl->commandHistory );
 
+	// Initialize editor config and load saved window states
+	m_impl->editorConfig = std::make_unique<EditorConfig>( "editor_config.json" );
+	if ( m_impl->editorConfig->load() )
+	{
+		// Restore panel visibility states
+		m_impl->showHierarchyPanel = m_impl->editorConfig->getBool( ConfigKeys::kHierarchyPanelVisible, true );
+		m_impl->showInspectorPanel = m_impl->editorConfig->getBool( ConfigKeys::kInspectorPanelVisible, true );
+		m_impl->showAssetBrowserPanel = m_impl->editorConfig->getBool( ConfigKeys::kAssetBrowserVisible, true );
+
+		// Restore tool window visibility states
+		m_impl->showGridSettingsWindow = m_impl->editorConfig->getBool( ConfigKeys::kGridSettingsVisible, false );
+		m_impl->showCameraSettingsWindow = m_impl->editorConfig->getBool( ConfigKeys::kCameraSettingsVisible, false );
+		m_impl->showGizmoToolsWindow = m_impl->editorConfig->getBool( ConfigKeys::kGizmoToolsVisible, true );
+		m_impl->showGizmoSettingsWindow = m_impl->editorConfig->getBool( ConfigKeys::kGizmoSettingsVisible, true );
+		m_impl->showCommandHistoryWindow = m_impl->editorConfig->getBool( ConfigKeys::kCommandHistoryVisible, false );
+
+		// Restore viewport visibility states
+		m_layout.panes[0].isOpen = m_impl->editorConfig->getBool( ConfigKeys::kViewportPerspectiveOpen, true );
+		m_layout.panes[1].isOpen = m_impl->editorConfig->getBool( ConfigKeys::kViewportTopOpen, true );
+		m_layout.panes[2].isOpen = m_impl->editorConfig->getBool( ConfigKeys::kViewportFrontOpen, true );
+		m_layout.panes[3].isOpen = m_impl->editorConfig->getBool( ConfigKeys::kViewportSideOpen, true );
+	}
+
 	m_initialized = true;
 	return true;
 }
@@ -234,6 +283,31 @@ void UI::shutdown()
 {
 	if ( !m_initialized )
 		return;
+
+	// Save window visibility states to config before shutdown
+	if ( m_impl->editorConfig )
+	{
+		// Save panel visibility states
+		m_impl->editorConfig->setBool( ConfigKeys::kHierarchyPanelVisible, m_impl->showHierarchyPanel );
+		m_impl->editorConfig->setBool( ConfigKeys::kInspectorPanelVisible, m_impl->showInspectorPanel );
+		m_impl->editorConfig->setBool( ConfigKeys::kAssetBrowserVisible, m_impl->showAssetBrowserPanel );
+
+		// Save tool window visibility states
+		m_impl->editorConfig->setBool( ConfigKeys::kGridSettingsVisible, m_impl->showGridSettingsWindow );
+		m_impl->editorConfig->setBool( ConfigKeys::kCameraSettingsVisible, m_impl->showCameraSettingsWindow );
+		m_impl->editorConfig->setBool( ConfigKeys::kGizmoToolsVisible, m_impl->showGizmoToolsWindow );
+		m_impl->editorConfig->setBool( ConfigKeys::kGizmoSettingsVisible, m_impl->showGizmoSettingsWindow );
+		m_impl->editorConfig->setBool( ConfigKeys::kCommandHistoryVisible, m_impl->showCommandHistoryWindow );
+
+		// Save viewport visibility states
+		m_impl->editorConfig->setBool( ConfigKeys::kViewportPerspectiveOpen, m_layout.panes[0].isOpen );
+		m_impl->editorConfig->setBool( ConfigKeys::kViewportTopOpen, m_layout.panes[1].isOpen );
+		m_impl->editorConfig->setBool( ConfigKeys::kViewportFrontOpen, m_layout.panes[2].isOpen );
+		m_impl->editorConfig->setBool( ConfigKeys::kViewportSideOpen, m_layout.panes[3].isOpen );
+
+		// Write config to disk
+		m_impl->editorConfig->save();
+	}
 
 	// Shutdown viewports first
 	m_impl->shutdownViewports();

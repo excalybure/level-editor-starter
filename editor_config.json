@@ -1,0 +1,46 @@
+{
+  "ui": {
+    "panels": {
+      "assetBrowser": {
+        "visible": true
+      },
+      "hierarchy": {
+        "visible": true
+      },
+      "inspector": {
+        "visible": true
+      }
+    },
+    "tools": {
+      "cameraSettings": {
+        "visible": false
+      },
+      "commandHistory": {
+        "visible": true
+      },
+      "gizmoSettings": {
+        "visible": false
+      },
+      "gizmoTools": {
+        "visible": true
+      },
+      "gridSettings": {
+        "visible": false
+      }
+    },
+    "viewports": {
+      "front": {
+        "open": true
+      },
+      "perspective": {
+        "open": true
+      },
+      "side": {
+        "open": true
+      },
+      "top": {
+        "open": true
+      }
+    }
+  }
+}
