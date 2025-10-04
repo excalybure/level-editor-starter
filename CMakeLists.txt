@@ -147,6 +147,7 @@ add_library(editor STATIC
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
   src/editor/commands/EcsCommands.cpp
+  src/editor/config/EditorConfig.cpp
   src/editor/entity_inspector/ComponentUI.cpp
   src/editor/entity_inspector/EntityInspectorPanel.cpp
   src/editor/gizmos.cpp
@@ -176,6 +177,7 @@ target_link_libraries(editor PUBLIC
   math
   runtime
   platform
+  nlohmann_json::nlohmann_json
 )
 
 if (MSVC)
@@ -285,11 +287,11 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmo_command_integration_tests.cpp
     tests/scene_hierarchy_tests.cpp
     tests/entity_inspector_tests.cpp
-    tests/asset_browser_tests.cpp
     tests/scene_serialization_tests.cpp
     tests/visibility_integration_tests.cpp
     tests/scene_editor_integration_tests.cpp
     tests/object_creation_integration_tests.cpp
+    tests/editor_config_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     math
