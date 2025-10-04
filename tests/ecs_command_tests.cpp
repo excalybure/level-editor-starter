@@ -824,4 +824,71 @@ TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][u
 		REQUIRE( !cmd.getCreatedEntity().isValid() );
 		REQUIRE( scene.getEntityCount() == 0 );
 	}
+
+	SECTION( "CreateEntityFromAssetCommand does not reset existing entity positions" )
+	{
+		// Given a scene with an existing entity that has been moved
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		MockGPUResourceManager gpuManager;
+
+		// Setup glTF loader callback for creating test assets
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+			auto testScene = std::make_shared<assets::Scene>();
+			testScene->setPath( path );
+			testScene->setLoaded( true );
+
+			auto rootNode = std::make_unique<assets::SceneNode>( "TestNode" );
+			rootNode->setTransform( assets::Transform{} );
+			testScene->addRootNode( std::move( rootNode ) );
+
+			return testScene;
+		} );
+
+		// Create first entity at origin
+		const std::string assetPath1 = "assets/test/first.gltf";
+		const math::Vec3f firstPosition{ 0.0f, 0.0f, 0.0f };
+		editor::CreateEntityFromAssetCommand cmd1( scene, assetManager, gpuManager, assetPath1, firstPosition );
+		REQUIRE( cmd1.execute() == true );
+
+		const ecs::Entity firstEntity = cmd1.getCreatedEntity();
+		REQUIRE( firstEntity.isValid() );
+
+		// Move first entity away from origin
+		auto *firstTransform = scene.getComponent<components::Transform>( firstEntity );
+		REQUIRE( firstTransform != nullptr );
+		firstTransform->position = math::Vec3f{ 10.0f, 20.0f, 30.0f };
+
+		// Verify first entity has been moved
+		REQUIRE( firstTransform->position.x == 10.0f );
+		REQUIRE( firstTransform->position.y == 20.0f );
+		REQUIRE( firstTransform->position.z == 30.0f );
+
+		// When adding a second entity at a different position
+		const std::string assetPath2 = "assets/test/second.gltf";
+		const math::Vec3f secondPosition{ 5.0f, 5.0f, 5.0f };
+		editor::CreateEntityFromAssetCommand cmd2( scene, assetManager, gpuManager, assetPath2, secondPosition );
+		REQUIRE( cmd2.execute() == true );
+
+		const ecs::Entity secondEntity = cmd2.getCreatedEntity();
+		REQUIRE( secondEntity.isValid() );
+		REQUIRE( firstEntity.id != secondEntity.id ); // Ensure they are different entities
+
+		// Then first entity should still be at its moved position
+		const auto *firstTransformAfter = scene.getComponent<components::Transform>( firstEntity );
+		REQUIRE( firstTransformAfter != nullptr );
+		REQUIRE( firstTransformAfter->position.x == 10.0f );
+		REQUIRE( firstTransformAfter->position.y == 20.0f );
+		REQUIRE( firstTransformAfter->position.z == 30.0f );
+
+		// And second entity should be at its specified position
+		const auto *secondTransform = scene.getComponent<components::Transform>( secondEntity );
+		REQUIRE( secondTransform != nullptr );
+		REQUIRE( secondTransform->position.x == 5.0f );
+		REQUIRE( secondTransform->position.y == 5.0f );
+		REQUIRE( secondTransform->position.z == 5.0f );
+
+		// Cleanup
+		assets::AssetManager::clearSceneLoaderCallback();
+	}
 }

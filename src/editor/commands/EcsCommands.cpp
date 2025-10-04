@@ -1,5 +1,6 @@
 #include "editor/commands/EcsCommands.h"
 #include "runtime/scene_importer.h"
+#include <algorithm>
 #include <filesystem>
 
 namespace editor
@@ -547,6 +548,10 @@ bool CreateEntityFromAssetCommand::execute()
 		return false; // Asset loading failed
 	}
 
+	// Capture existing entities before import to identify new ones
+	// IMPORTANT: Copy the entities because getAllEntities() returns a span that may be invalidated
+	const std::vector<ecs::Entity> existingEntities( m_scene.getAllEntities().begin(), m_scene.getAllEntities().end() );
+
 	// Import scene using SceneImporter
 	const bool imported = runtime::SceneImporter::importScene( assetScene, m_scene );
 	if ( !imported )
@@ -562,26 +567,34 @@ bool CreateEntityFromAssetCommand::execute()
 		// The meshes just won't be visible until GPU resources are available
 	}
 
-	// Find the root entity created by the import
-	// SceneImporter creates entities for each root node in the asset
-	// For now, assume the last created entity is our root
-	// TODO: Track created entities properly during import
-
-	// Get all entities and find the newly created one(s)
-	// This is a simplification - in production we'd track entity IDs during import
+	// Find the root entity created by the import by comparing entities before and after
 	const auto allEntities = m_scene.getAllEntities();
-	if ( allEntities.empty() )
+	if ( allEntities.size() <= existingEntities.size() )
 	{
-		return false; // No entities created
+		return false; // No new entities created
 	}
 
-	// For now, take the first root node entity (entity without a parent)
+	// Build a set of existing entity IDs for faster lookup
+	std::vector<std::uint32_t> existingIds;
+	existingIds.reserve( existingEntities.size() );
+	for ( const auto &entity : existingEntities )
+	{
+		existingIds.push_back( entity.id );
+	}
+
+	// Find newly created root entities (entities without a parent that didn't exist before)
 	for ( const auto &entity : allEntities )
 	{
+		// Check if this entity is new by comparing IDs
+		const bool isNewEntity = std::find( existingIds.begin(), existingIds.end(), entity.id ) == existingIds.end();
+		if ( !isNewEntity )
+			continue;
+
+		// Check if it's a root entity
 		const auto parent = m_scene.getParent( entity );
 		if ( !parent.isValid() )
 		{
-			// Root entity found
+			// New root entity found
 			m_rootEntity = entity;
 			break;
 		}
@@ -589,7 +602,7 @@ bool CreateEntityFromAssetCommand::execute()
 
 	if ( !m_rootEntity.isValid() )
 	{
-		return false; // Couldn't find root entity
+		return false; // Couldn't find new root entity
 	}
 
 	// Set world position on root entity
