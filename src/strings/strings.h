@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace core
+namespace strings
 {
 
 /**
@@ -22,4 +22,4 @@ namespace core
  */
 std::string getBaseFilename( const std::string &filePath );
 
-} // namespace core
+} // namespace strings

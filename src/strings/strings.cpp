@@ -1,6 +1,6 @@
-#include "core/strings.h"
+#include "strings/strings.h"
 
-namespace core
+namespace strings
 {
 
 std::string getBaseFilename( const std::string &filePath )
@@ -39,4 +39,4 @@ std::string getBaseFilename( const std::string &filePath )
 	return baseFilename;
 }
 
-} // namespace core
+} // namespace strings

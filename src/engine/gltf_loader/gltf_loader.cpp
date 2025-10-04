@@ -8,7 +8,7 @@
 #include <span>
 #include <cstring>
 
-#include "core/strings.h"
+#include "strings/strings.h"
 #include "engine/assets/assets.h"
 #include "math/math.h"
 #include "math/vec.h"
@@ -275,7 +275,7 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 	}
 
 	// Extract base filename from path (remove directory and extension)
-	const std::string baseFilename = core::getBaseFilename( filePath );
+	const std::string baseFilename = strings::getBaseFilename( filePath );
 
 	// Process the parsed glTF data into a scene
 	auto scene = processSceneData( data, baseFilename );

@@ -80,7 +80,7 @@ endif()
 
 # Strings library - contains string utilities
 add_library(strings STATIC
-  src/core/strings.cpp
+  src/strings/strings.cpp
 )
 
 target_include_directories(strings PUBLIC 
