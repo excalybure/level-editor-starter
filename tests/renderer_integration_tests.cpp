@@ -11,7 +11,7 @@
 TEST_CASE( "Renderer windowed integration begin/end", "[renderer][integration]" )
 {
 	platform::Win32Window window;
-	if ( !window.create( "Test", 320, 240 ) )
+	if ( !window.create( "Test", 320, 240, false ) )
 	{
 		WARN( "Skipping renderer windowed integration: window creation failed" );
 		return;

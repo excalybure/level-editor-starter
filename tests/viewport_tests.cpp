@@ -282,7 +282,7 @@ TEST_CASE( "ViewportManager Basic Operations", "[viewport][manager]" )
 	SECTION( "Update and render operations" )
 	{
 		platform::Win32Window window;
-		if ( !window.create( "editor::Viewport Test", 640, 480 ) )
+		if ( !window.create( "editor::Viewport Test", 640, 480, false ) )
 		{
 			WARN( "Skipping Update and render operations: failed to create Win32 window" );
 			return;
@@ -830,7 +830,7 @@ TEST_CASE( "Viewport Coordinate Conversion", "[viewport][coordinates]" )
 		// Test coordinate conversion
 		// Formula: viewportPos = screenPos - contentOffset
 		const auto result = viewport.windowToViewport( { 50.0f, 0.0f } );
-		REQUIRE_THAT( result.x, WithinAbs( 40.0f, 0.001f ) ); // 50 - 10 = 40
+		REQUIRE_THAT( result.x, WithinAbs( 40.0f, 0.001f ) );  // 50 - 10 = 40
 		REQUIRE_THAT( result.y, WithinAbs( -25.0f, 0.001f ) ); // 0 - 25 = -25
 	}
 
@@ -848,7 +848,7 @@ TEST_CASE( "Viewport Coordinate Conversion", "[viewport][coordinates]" )
 		viewport.setOffsetFromWindow( { 5.0f, 10.0f } );
 		result = viewport.windowToViewport( { 25.0f, 15.0f } );
 		REQUIRE_THAT( result.x, WithinAbs( 20.0f, 0.001f ) ); // 25 - 5 = 20
-		REQUIRE_THAT( result.y, WithinAbs( 5.0f, 0.001f ) ); // 15 - 10 = 5
+		REQUIRE_THAT( result.y, WithinAbs( 5.0f, 0.001f ) );  // 15 - 10 = 5
 	}
 
 	SECTION( "setWindowPosition updates position validity" )

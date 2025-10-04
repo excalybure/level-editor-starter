@@ -68,7 +68,8 @@ public:
 	Win32Window &operator=( const Win32Window & ) = delete;
 
 	// Create the window
-	bool create( const char *title, int width, int height );
+	// @param visible: if false, window is created hidden (useful for unit tests)
+	bool create( const char *title, int width, int height, bool visible = true );
 
 	// Pump messages and return if window should close
 	bool poll();

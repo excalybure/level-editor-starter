@@ -15,7 +15,7 @@
 // Returns a std::pair<HWND, dx12::Device> if successful, otherwise emits a WARN and returns {nullptr, {}}.
 inline bool requireDevice( platform::Win32Window &window, dx12::Device &device, const char *windowTitle = "UI Test", int width = 640, int height = 480 )
 {
-	if ( !window.create( windowTitle, width, height ) )
+	if ( !window.create( windowTitle, width, height, false ) )
 	{
 		console::error( "Skipping UI integration: failed to create Win32 window" );
 		return false;

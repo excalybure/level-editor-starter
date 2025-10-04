@@ -349,7 +349,7 @@ TEST_CASE( "UI Grid Settings Integration", "[integration][ui][grid][viewport]" )
 	{
 		// Create test window and D3D12 device
 		platform::Win32Window window;
-		if ( !window.create( "Grid Settings Integration Test", 800, 600 ) )
+		if ( !window.create( "Grid Settings Integration Test", 800, 600, false ) )
 		{
 			WARN( "Skipping Grid Settings integration: failed to create Win32 window" );
 			return;

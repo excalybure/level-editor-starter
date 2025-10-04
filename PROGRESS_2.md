@@ -1,5 +1,20 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-04 — Hidden Windows During Unit Testing
+**Summary:** Enhanced Win32Window class to support hidden window creation for unit tests. Added optional `visible` parameter (default `true`) to `Win32Window::create()` method. When `visible=false`, windows are created with `SW_HIDE` flag and proper client area dimensions using `AdjustWindowRect`. Updated all unit test files to create hidden windows, preventing visual distraction during test execution. Main application continues to show window using default parameter. All 516 test cases pass (22808 assertions), confirming no regressions and windows remain hidden during testing.
+
+**Atomic functionalities completed:**
+- AF1: Header signature update - Added `bool visible = true` parameter to `Win32Window::create()` in win32_window.h with documentation
+- AF2: Window creation logic - Modified win32_window.cpp to use `ShowWindow(SW_SHOW/SW_HIDE)` based on visibility parameter; separated fullscreen (visible) vs windowed (hidden) window styles
+- AF3: Client area adjustment - Added `AdjustWindowRect` call for hidden windows to ensure correct client area size despite borders/title bar
+- AF4: Test file updates - Updated all test files (win32_window_tests.cpp, integration_tests.cpp, viewport_tests.cpp, test_dx12_helpers.h, renderer_integration_tests.cpp) to pass `visible=false`
+- AF5: Main application verification - Confirmed main.cpp uses default `visible=true` parameter to maintain visible window
+- AF6: Build and validation - Successfully built project and ran full test suite; all 516 test cases pass with 22808 assertions
+
+**Tests:** Updated 21 test calls to `window.create()` across 5 test files to pass `visible=false` parameter. Verified all Win32 window tests pass (128 assertions in 16 test cases). Ran full test suite: 516 test cases, 22808 assertions, all passed. Test command: `unit_test_runner.exe "[win32][window]"` for focused testing. No regressions detected.
+
+**Notes:** Design decision: Visible windows use fullscreen borderless style (WS_POPUP), while hidden test windows use windowed style (WS_OVERLAPPEDWINDOW) with proper client area calculation. This ensures test windows have exact requested dimensions while main application remains fullscreen. Alternative approaches considered: conditional compilation, environment variables, global test mode flag - rejected in favor of explicit parameter for clarity and flexibility. Future enhancement: Consider adding window style parameter for more control over window appearance in different contexts.
+
 ## 2025-01-05 — Strings Library Creation
 **Summary:** Extracted inline string manipulation code from gltf_loader.cpp into a new strings library containing reusable string utilities. Created core::getBaseFilename() function that extracts the base filename from a file path (removing directory and extension). Followed strict TDD: wrote comprehensive unit tests first (Red), created minimal strings library infrastructure, implemented function to pass tests (Green), then refactored gltf_loader.cpp to use the utility (Refactor). The strings library provides a focused utility library for string processing operations, providing clean separation of concerns and code reusability across the entire codebase. All 12 test assertions pass, all GLTF tests remain green (600 assertions), and full test suite passes with no regressions.
 

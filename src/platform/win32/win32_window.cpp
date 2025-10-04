@@ -26,7 +26,7 @@ Win32Window::~Win32Window()
 	}
 }
 
-bool Win32Window::create( const char *title, int width, int height )
+bool Win32Window::create( const char *title, int width, int height, bool visible )
 {
 #if defined( _WIN32 )
 	// Prevent double creation on the same instance (would otherwise leak the old HWND)
@@ -55,29 +55,50 @@ bool Win32Window::create( const char *title, int width, int height )
 			return false; // genuine failure
 	}
 
-	// Get monitor dimensions for fullscreen
-	const int screenWidth = GetSystemMetrics( SM_CXSCREEN );
-	const int screenHeight = GetSystemMetrics( SM_CYSCREEN );
+	// Determine window dimensions and style
+	// For hidden windows (tests), use requested dimensions
+	// For visible windows (main app), use fullscreen
+	int windowWidth = width;
+	int windowHeight = height;
+	DWORD windowStyle = WS_POPUP;
 
-	// Update stored dimensions to actual screen size
-	m_width = screenWidth;
-	m_height = screenHeight;
+	if ( visible )
+	{
+		// Fullscreen mode for visible windows
+		windowWidth = GetSystemMetrics( SM_CXSCREEN );
+		windowHeight = GetSystemMetrics( SM_CYSCREEN );
+	}
+	else
+	{
+		// Windowed mode with requested dimensions for hidden windows (tests)
+		windowStyle = WS_OVERLAPPEDWINDOW;
+
+		// Adjust window size to account for borders/title bar to get correct client area
+		RECT rect = { 0, 0, width, height };
+		AdjustWindowRect( &rect, windowStyle, FALSE );
+		windowWidth = rect.right - rect.left;
+		windowHeight = rect.bottom - rect.top;
+	}
+
+	// Store the requested dimensions (not screen dimensions)
+	m_width = width;
+	m_height = height;
 
 	// Convert title to wide string
 	const int title_len = MultiByteToWideChar( CP_UTF8, 0, title, -1, nullptr, 0 );
 	std::wstring wide_title( title_len, 0 );
 	MultiByteToWideChar( CP_UTF8, 0, title, -1, wide_title.data(), title_len );
 
-	// Create fullscreen borderless window
+	// Create window with determined dimensions and style
 	m_hwnd = CreateWindowExW(
 		0,
 		L"WorldEditorWindow",
 		wide_title.c_str(),
-		WS_POPUP | WS_VISIBLE,
+		windowStyle,
 		0,
 		0,
-		screenWidth,
-		screenHeight,
+		windowWidth,
+		windowHeight,
 		nullptr,
 		nullptr,
 		m_hinstance,
@@ -86,6 +107,9 @@ bool Win32Window::create( const char *title, int width, int height )
 
 	if ( !m_hwnd )
 		return false;
+
+	// Show or hide window based on visible parameter
+	ShowWindow( m_hwnd, visible ? SW_SHOW : SW_HIDE );
 
 	UpdateWindow( m_hwnd );
 
