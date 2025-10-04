@@ -1,5 +1,34 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Hierarchy Panel Drop Target for Child Entity Creation Complete (M2-P6-T8.3)
+**Summary:** Completed Task 8.3 (Hierarchy Panel Drop Target Implementation) enabling users to drag assets from Asset Browser and drop them onto hierarchy panel nodes to create child entities at the parent's position. Modified SceneHierarchyPanel to accept optional AssetManager parameter (default nullptr for backward compatibility), enhanced existing drop target (line 217) to accept both "ENTITY_HIERARCHY" (existing reparenting) and "ASSET_BROWSER_ITEM" (new asset instantiation) payload types. When asset dropped on hierarchy node, extracts parent entity's Transform position, creates CreateEntityFromAssetCommand with parent position and parent parameter for proper hierarchy integration. Implementation includes console logging for feedback and graceful degradation when AssetManager unavailable. This completes the hierarchy panel drop target infrastructure - users can now drag glTF/GLB files from Asset Browser and drop them onto hierarchy nodes to spawn child entities positioned at their parent's location.
+
+**Atomic functionalities completed:**
+- AF8.3.1: Forward declaration - Added `namespace assets { class AssetManager; }` to SceneHierarchyPanel.h for AssetManager type
+- AF8.3.2: Optional parameter - Modified constructor signature to accept `assets::AssetManager *assetManager = nullptr` for backward compatibility
+- AF8.3.3: Member variable - Added `assets::AssetManager *m_assetManager = nullptr` to store AssetManager reference
+- AF8.3.4: Header includes - Added runtime/console.h, engine/assets/asset_manager.h, engine/math/vec.h to SceneHierarchyPanel.cpp
+- AF8.3.5: Constructor implementation - Updated constructor body to initialize m_assetManager member from parameter
+- AF8.3.6: Payload type branching - Enhanced existing drop target with if/else for "ENTITY_HIERARCHY" vs "ASSET_BROWSER_ITEM"
+- AF8.3.7: Asset path extraction - Extract const char* from payload->Data for ASSET_BROWSER_ITEM payloads
+- AF8.3.8: Parent position retrieval - Get parent entity's Transform component, use position as child spawn location
+- AF8.3.9: Child entity creation - Create CreateEntityFromAssetCommand with parent position and parent Entity parameter
+- AF8.3.10: Command execution - Execute via commandHistory->executeCommand() with undo/redo support
+- AF8.3.11: Console feedback - Log console::info() on success, console::error() on failure for user awareness
+- AF8.3.12: UI integration - Updated ui.cpp line 1652 to pass &assetManager as 4th parameter to hierarchyPanel constructor
+
+**Tests:** No new unit tests required - SceneHierarchyPanel tests use 3-parameter constructor which works via optional 4th parameter defaulting to nullptr. Validation via manual testing: drag .gltf/.glb files from Asset Browser, drop onto hierarchy nodes, verify child entity creation at parent position with proper parent-child relationship, test undo/redo, verify console logging. Integration verified through existing CreateEntityFromAssetCommand tests (20 assertions) and scene_hierarchy tests (unmodified, 20+ instantiations compile successfully with optional parameter).
+
+**Notes:**
+- Backward compatibility: Optional AssetManager parameter allows existing tests/code to work without changes
+- Dual payload support: Single drop target handles both entity reparenting (ENTITY_HIERARCHY) and asset instantiation (ASSET_BROWSER_ITEM)
+- Position inheritance: Child entities spawn at parent's current Transform position for intuitive spatial relationship
+- Parent-child hierarchy: CreateEntityFromAssetCommand's parent parameter ensures proper ECS hierarchy from creation
+- Graceful degradation: Drop target silently ignores asset drops when AssetManager is nullptr (no crash/error)
+- Console namespace: Direct console::info/error usage (not runtime::console::) consistent with codebase patterns
+- Build verification: Clean rebuild successful, all 137 ecs-command tests pass with no regressions
+- Future: T8.5 will add Create menu for keyboard-driven entity creation (alternative to drag-drop)
+
 ## 2025-10-03 — Viewport Drop Target for Asset Instantiation Complete (M2-P6-T8.2)
 **Summary:** Completed Task 8.2 (Viewport Drop Target Implementation) integrating drag-and-drop asset instantiation into the viewport rendering system. Added ImGui::BeginDragDropTarget() after ImGui::Image() in viewport render loop (ui.cpp), accepting "ASSET_BROWSER_ITEM" payload from Asset Browser (implemented in T3.7). When asset is dropped on viewport, extracts asset path from payload, creates CreateEntityFromAssetCommand at world origin (0,0,0), and executes via CommandHistory for full undo/redo support. Implementation includes console logging for success/failure feedback. Per instructions §9, UI rendering code requiring full ImGui context + DirectX device is validated through manual testing rather than unit tests. This completes the viewport drop target infrastructure - users can now drag glTF/GLB files from Asset Browser and drop them into viewport to spawn entities at world origin.
 

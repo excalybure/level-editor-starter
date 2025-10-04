@@ -1,9 +1,12 @@
 #include "SceneHierarchyPanel.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
+#include "runtime/console.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/math/vec.h"
 #include <imgui.h>
 #include <format>
 #include <memory>
@@ -16,8 +19,9 @@ namespace editor
 
 SceneHierarchyPanel::SceneHierarchyPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
-	CommandHistory &commandHistory )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_visible( true )
+	CommandHistory &commandHistory,
+	assets::AssetManager *assetManager )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_assetManager( assetManager ), m_visible( true )
 {
 }
 
@@ -216,6 +220,7 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 		// Setup drop target
 		if ( ImGui::BeginDragDropTarget() )
 		{
+			// Accept entity hierarchy reparenting
 			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
 			{
 				const ecs::Entity draggedEntity = *static_cast<const ecs::Entity *>( payload->Data );
@@ -226,6 +231,36 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 					// Create and execute SetParentCommand
 					auto command = std::make_unique<SetParentCommand>( m_scene, draggedEntity, entity );
 					m_commandHistory.executeCommand( std::move( command ) );
+				}
+			}
+
+			// Accept asset browser items to create child entities (T8.3)
+			if ( m_assetManager )
+			{
+				if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ASSET_BROWSER_ITEM" ) )
+				{
+					// Extract asset path from payload
+					const char *assetPath = static_cast<const char *>( payload->Data );
+
+					// Get parent entity position for child placement
+					math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+					if ( const auto *transform = m_scene.getComponent<components::Transform>( entity ) )
+					{
+						worldPosition = transform->position;
+					}
+
+					// Create entity from asset as child of dropped target
+					auto command = std::make_unique<editor::CreateEntityFromAssetCommand>(
+						m_scene, *m_assetManager, assetPath, worldPosition, entity );
+
+					if ( m_commandHistory.executeCommand( std::move( command ) ) )
+					{
+						console::info( "Created child entity from asset: {}", assetPath );
+					}
+					else
+					{
+						console::error( "Failed to create child entity from asset: {}", assetPath );
+					}
 				}
 			}
 			ImGui::EndDragDropTarget();

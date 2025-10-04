@@ -9,6 +9,11 @@ namespace ecs
 class Scene;
 }
 
+namespace assets
+{
+class AssetManager;
+}
+
 namespace editor
 {
 class SelectionManager;
@@ -37,10 +42,12 @@ public:
 	 * @param scene The scene to display
 	 * @param selectionManager Selection manager for entity selection
 	 * @param commandHistory Command history for undo/redo support
+	 * @param assetManager Asset manager for asset loading (optional, for drag-drop support)
 	 */
 	SceneHierarchyPanel( ecs::Scene &scene,
 		SelectionManager &selectionManager,
-		CommandHistory &commandHistory );
+		CommandHistory &commandHistory,
+		assets::AssetManager *assetManager = nullptr );
 
 	/**
 	 * @brief Render the hierarchy panel UI
@@ -84,6 +91,7 @@ private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
+	assets::AssetManager *m_assetManager = nullptr; // Optional: for asset drag-drop
 	bool m_visible = true;
 	ecs::Entity m_contextMenuEntity{}; // Entity for which context menu is open
 

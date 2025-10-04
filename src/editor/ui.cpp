@@ -1650,7 +1650,7 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 
 	// Create scene editing panels
 	m_impl->hierarchyPanel = std::make_unique<SceneHierarchyPanel>(
-		scene, selectionManager, *m_impl->commandHistory );
+		scene, selectionManager, *m_impl->commandHistory, &assetManager );
 	m_impl->inspectorPanel = std::make_unique<EntityInspectorPanel>(
 		scene, selectionManager, *m_impl->commandHistory );
 	m_impl->assetBrowserPanel = std::make_unique<AssetBrowserPanel>(
