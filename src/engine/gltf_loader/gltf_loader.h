@@ -72,7 +72,7 @@ public:
 
 private:
 	// Helper methods for glTF processing (use void* to avoid forward declaration issues)
-	std::unique_ptr<assets::Scene> processSceneData( cgltf_data *data, const std::string &baseFilename = "" ) const;
+	std::unique_ptr<assets::Scene> processSceneData( cgltf_data *data, const std::string &baseFilename ) const;
 
 	std::unique_ptr<assets::SceneNode> processNode(
 		cgltf_node *gltfNode,

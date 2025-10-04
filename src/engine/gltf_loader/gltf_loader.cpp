@@ -273,8 +273,21 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 		// Continue anyway - some buffers might have loaded successfully
 	}
 
+	// Extract base filename from path (remove directory and extension)
+	std::string baseFilename = filePath;
+	const size_t lastSlash = baseFilename.find_last_of( "/\\" );
+	if ( lastSlash != std::string::npos )
+	{
+		baseFilename = baseFilename.substr( lastSlash + 1 );
+	}
+	const size_t lastDot = baseFilename.find_last_of( '.' );
+	if ( lastDot != std::string::npos )
+	{
+		baseFilename = baseFilename.substr( 0, lastDot );
+	}
+
 	// Process the parsed glTF data into a scene
-	auto scene = processSceneData( data );
+	auto scene = processSceneData( data, baseFilename );
 
 	cgltf_free( data );
 	return scene;
