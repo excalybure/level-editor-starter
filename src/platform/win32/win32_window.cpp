@@ -55,25 +55,29 @@ bool Win32Window::create( const char *title, int width, int height )
 			return false; // genuine failure
 	}
 
-	// Calculate window size including borders
-	RECT rect = { 0, 0, width, height };
-	AdjustWindowRect( &rect, WS_OVERLAPPEDWINDOW, FALSE );
+	// Get monitor dimensions for fullscreen
+	const int screenWidth = GetSystemMetrics( SM_CXSCREEN );
+	const int screenHeight = GetSystemMetrics( SM_CYSCREEN );
+
+	// Update stored dimensions to actual screen size
+	m_width = screenWidth;
+	m_height = screenHeight;
 
 	// Convert title to wide string
 	const int title_len = MultiByteToWideChar( CP_UTF8, 0, title, -1, nullptr, 0 );
 	std::wstring wide_title( title_len, 0 );
 	MultiByteToWideChar( CP_UTF8, 0, title, -1, wide_title.data(), title_len );
 
-	// Create window
+	// Create fullscreen borderless window
 	m_hwnd = CreateWindowExW(
 		0,
 		L"WorldEditorWindow",
 		wide_title.c_str(),
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		rect.right - rect.left,
-		rect.bottom - rect.top,
+		WS_POPUP | WS_VISIBLE,
+		0,
+		0,
+		screenWidth,
+		screenHeight,
 		nullptr,
 		nullptr,
 		m_hinstance,
@@ -83,7 +87,6 @@ bool Win32Window::create( const char *title, int width, int height )
 	if ( !m_hwnd )
 		return false;
 
-	ShowWindow( m_hwnd, SW_SHOW );
 	UpdateWindow( m_hwnd );
 
 	return true;
