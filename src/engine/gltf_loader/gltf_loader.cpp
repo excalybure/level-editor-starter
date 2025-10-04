@@ -401,7 +401,20 @@ std::unique_ptr<assets::SceneNode> GLTFLoader::processNode(
 		return nullptr;
 
 	// Create scene node with name if available
-	std::string nodeName = gltfNode->name ? gltfNode->name : "UnnamedNode";
+	// Priority: 1) node name, 2) mesh name (if node has mesh), 3) "UnnamedNode"
+	std::string nodeName;
+	if ( gltfNode->name )
+	{
+		nodeName = gltfNode->name;
+	}
+	else if ( gltfNode->mesh && gltfNode->mesh->name )
+	{
+		nodeName = gltfNode->mesh->name;
+	}
+	else
+	{
+		nodeName = "UnnamedNode";
+	}
 	auto sceneNode = std::make_unique<assets::SceneNode>( nodeName );
 
 	// Process mesh if node has one (using mesh index)
