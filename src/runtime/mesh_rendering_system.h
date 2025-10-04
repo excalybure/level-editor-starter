@@ -34,12 +34,11 @@ struct ObjectConstants
 class MeshRenderingSystem : public System
 {
 public:
-	// New constructor with ShaderManager (preferred)
-	MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
-
-	// Legacy constructor for backward compatibility (deprecated)
-	MeshRenderingSystem( renderer::Renderer &renderer );
-
+	// Constructor with ShaderManager and optional SystemManager for world transform support
+	// Pass nullptr for systemManager in tests that don't need hierarchy support
+	MeshRenderingSystem( renderer::Renderer &renderer,
+		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
+		systems::SystemManager *systemManager );
 	void update( ecs::Scene &scene, float deltaTime ) override;
 	void render( ecs::Scene &scene, const camera::Camera &camera );
 
@@ -48,10 +47,8 @@ public:
 		const components::Transform &transform,
 		const camera::Camera &camera );
 
-	// Public for testing
-	void renderEntity( const components::Transform &transform,
-		const components::MeshRenderer &meshRenderer,
-		const camera::Camera &camera );
+	// Render entity using world transform from TransformSystem (supports hierarchy)
+	void renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera );
 
 	// Pipeline state management for materials
 	ID3D12PipelineState *getMaterialPipelineState( const engine::gpu::MaterialGPU &material );
@@ -62,6 +59,7 @@ public:
 private:
 	renderer::Renderer &m_renderer;
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
+	systems::SystemManager *m_systemManager = nullptr;
 
 	// Shader handles for the unlit shader
 	shader_manager::ShaderHandle m_vertexShaderHandle = shader_manager::INVALID_SHADER_HANDLE;

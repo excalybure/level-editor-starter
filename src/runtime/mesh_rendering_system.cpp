@@ -15,8 +15,8 @@
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
-	: m_renderer( renderer ), m_shaderManager( shaderManager )
+MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
+	: m_renderer( renderer ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
 {
 	createRootSignature();
 
@@ -24,13 +24,11 @@ MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::sha
 	{
 		console::error( "MeshRenderingSystem: Failed to register shaders" );
 	}
-}
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer )
-	: m_renderer( renderer ), m_shaderManager( nullptr )
-{
-	createRootSignature();
-	console::warning( "MeshRenderingSystem: Created without ShaderManager - shader compilation will use legacy D3DCompileFromFile method" );
+	if ( !systemManager )
+	{
+		console::warning( "MeshRenderingSystem: Created without SystemManager - parent-child hierarchy transforms will not work correctly" );
+	}
 }
 
 void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
@@ -130,17 +128,23 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 				continue;
 			}
 
-			renderEntity( *transform, *meshRenderer, camera );
+			// Use the new hierarchy-aware renderEntity method
+			renderEntity( scene, entity, camera );
 		}
 	}
 }
 
-void MeshRenderingSystem::renderEntity( const components::Transform &transform,
-	const components::MeshRenderer &meshRenderer,
-	const camera::Camera &camera )
+void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera )
 {
+	// Get components
+	const auto *meshRenderer = scene.getComponent<components::MeshRenderer>( entity );
+	if ( !meshRenderer )
+	{
+		return;
+	}
+
 	// Early return if no GPU mesh available
-	if ( !meshRenderer.gpuMesh )
+	if ( !meshRenderer->gpuMesh )
 	{
 		// This is expected for entities that haven't been processed by GPUResourceManager yet
 		return;
@@ -160,11 +164,35 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 		return;
 	}
 
+	// Calculate world matrix using TransformSystem if available, otherwise use local transform
+	math::Mat4<> worldMatrix;
+	if ( m_systemManager )
+	{
+		auto *transformSystem = m_systemManager->getSystem<systems::TransformSystem>();
+		if ( transformSystem )
+		{
+			// Use world transform from TransformSystem (supports parent-child hierarchy)
+			worldMatrix = transformSystem->getWorldTransform( scene, entity );
+		}
+		else
+		{
+			// Fallback to local transform if TransformSystem not available
+			const auto *transform = scene.getComponent<components::Transform>( entity );
+			worldMatrix = transform ? transform->getLocalMatrix() : math::Mat4<>::identity();
+		}
+	}
+	else
+	{
+		// Fallback to local transform if SystemManager not available
+		const auto *transform = scene.getComponent<components::Transform>( entity );
+		worldMatrix = transform ? transform->getLocalMatrix() : math::Mat4<>::identity();
+	}
+
 	// Calculate object constants for this entity
 	ObjectConstants objectConstants;
 	// HLSL expects column-major matrices when using mul(matrix, vector)
 	// Our C++ matrices are row-major, so transpose before sending to GPU
-	objectConstants.worldMatrix = transform.getLocalMatrix().transpose();
+	objectConstants.worldMatrix = worldMatrix.transpose();
 	// For normal matrix, we need the inverse transpose of the world matrix
 	// For uniform scaling, we can use the world matrix directly
 	// TODO: Implement proper inverse transpose calculation for non-uniform scaling
@@ -173,7 +201,7 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 	// Bind object constants to register b1 using root constants
 	commandList->SetGraphicsRoot32BitConstants( 1, sizeof( ObjectConstants ) / 4, &objectConstants, 0 );
 
-	const auto &gpuMesh = *meshRenderer.gpuMesh;
+	const auto &gpuMesh = *meshRenderer->gpuMesh;
 	if ( !gpuMesh.isValid() )
 	{
 		return;
@@ -214,7 +242,7 @@ void MeshRenderingSystem::renderEntity( const components::Transform &transform,
 	}
 }
 
-math::Mat4<> MeshRenderingSystem::calculateMVPMatrix(
+math::Mat4f MeshRenderingSystem::calculateMVPMatrix(
 	const components::Transform &transform,
 	const camera::Camera &camera )
 {

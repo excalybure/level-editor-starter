@@ -110,8 +110,8 @@ int main()
 	// Add TransformSystem to handle hierarchical transforms
 	systemManager.addSystem<systems::TransformSystem>();
 
-	// Add MeshRenderingSystem to handle 3D mesh rendering
-	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager );
+	// Add MeshRenderingSystem to handle 3D mesh rendering with hierarchy support
+	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager, &systemManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );
