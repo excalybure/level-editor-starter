@@ -526,18 +526,30 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			{
 				ImGui::SeparatorText( "Entity" );
 
-				// Create Entity operation
-				if ( ImGui::MenuItem( "Create Entity", "Ins" ) )
+				// Create Entity submenu (T8.5)
+				if ( ImGui::BeginMenu( "Create Entity" ) )
 				{
-					// Create a new entity at world origin
-					auto cmd = std::make_unique<CreateEntityCommand>( *scene, "New Entity" );
-					if ( commandHistory )
+					// Create Empty Entity operation
+					if ( ImGui::MenuItem( "Empty Entity", "Ins" ) )
 					{
-						if ( commandHistory->executeCommand( std::move( cmd ) ) )
+						// Create a new entity at world origin
+						auto cmd = std::make_unique<CreateEntityCommand>( *scene, "New Entity" );
+						if ( commandHistory )
 						{
-							m_sceneModified = true;
+							if ( commandHistory->executeCommand( std::move( cmd ) ) )
+							{
+								m_sceneModified = true;
+							}
 						}
 					}
+
+					// Create Entity from Asset File operation
+					if ( ImGui::MenuItem( "From Asset File...", "Ctrl+Shift+N" ) )
+					{
+						ui.openAssetFileDialog();
+					}
+
+					ImGui::EndMenu();
 				}
 
 				const bool hasSelection = selectionManager && !selectionManager->getSelectedEntities().empty();
@@ -1929,6 +1941,62 @@ void UI::openSaveFileDialog()
 		saveScene( selectedFile );
 	}
 	// If GetSaveFileNameA returns FALSE, user cancelled - no action needed
+}
+
+void UI::openAssetFileDialog()
+{
+	// Check if we're in test mode (no ImGui context or headless environment)
+	if ( !ImGui::GetCurrentContext() )
+	{
+		// In test mode, don't show actual dialog to avoid blocking tests
+		console::info( "UI: Asset file dialog skipped (test mode)" );
+		return;
+	}
+
+	// Use native Windows file dialog for asset selection
+	OPENFILENAMEA ofn;
+	char szFile[260] = { 0 };
+
+	// Initialize OPENFILENAME
+	ZeroMemory( &ofn, sizeof( ofn ) );
+	ofn.lStructSize = sizeof( ofn );
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof( szFile );
+	ofn.lpstrFilter = "glTF Files\0*.gltf;*.glb\0glTF Text\0*.gltf\0glTF Binary\0*.glb\0All Files\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+	// Display the modal dialog box (blocks until user interaction)
+	if ( GetOpenFileNameA( &ofn ) == TRUE )
+	{
+		// User selected a file - create entity from asset
+		const std::string assetPath( szFile );
+
+		// Create entity from asset at world origin (0, 0, 0)
+		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+
+		if ( m_impl->scene && m_impl->assetManager && m_impl->commandHistory )
+		{
+			auto cmd = std::make_unique<editor::CreateEntityFromAssetCommand>(
+				*m_impl->scene, *m_impl->assetManager, assetPath, worldPosition );
+
+			if ( m_impl->commandHistory->executeCommand( std::move( cmd ) ) )
+			{
+				// Entity created successfully
+				console::info( "Created entity from asset: {}", assetPath );
+				m_impl->m_sceneModified = true;
+			}
+			else
+			{
+				// Failed to create entity
+				console::error( "Failed to create entity from asset: {}", assetPath );
+			}
+		}
+	}
+	// If GetOpenFileNameA returns FALSE, user cancelled - no action needed
 }
 
 const std::string &UI::getCurrentScenePath() const

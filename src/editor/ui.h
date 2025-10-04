@@ -130,6 +130,7 @@ public:
 	// File dialog operations
 	void openFileDialog();
 	void openSaveFileDialog();
+	void openAssetFileDialog(); // T8.5: Open asset file for entity creation
 
 	// Scene state queries
 	const std::string &getCurrentScenePath() const;

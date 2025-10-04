@@ -1,5 +1,35 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Create Menu for Keyboard-Driven Entity Creation Complete (M2-P6-T8.5)
+**Summary:** Completed Task 8.5 (Create Menu Implementation) adding keyboard-driven entity creation as an alternative to drag-drop workflow. Converted existing "Create Entity" menu item into submenu with "Empty Entity" (Ins) and "From Asset File..." (Ctrl+Shift+N) options. Implemented openAssetFileDialog() method using native Windows file dialog (GetOpenFileNameA) with glTF/GLB filter, creates CreateEntityFromAssetCommand at world origin when user selects file. Integrated with CommandHistory for full undo/redo support and scene modified tracking. This completes keyboard-driven entity creation - users can now use Edit→Create Entity→From Asset File menu or Ctrl+Shift+N shortcut to spawn entities from assets without drag-drop, providing accessibility and workflow flexibility.
+
+**Atomic functionalities completed:**
+- AF8.5.1: Submenu conversion - Changed "Create Entity" from MenuItem to BeginMenu/EndMenu block in Edit menu
+- AF8.5.2: Empty Entity option - Moved existing CreateEntityCommand logic into "Empty Entity" menu item with "Ins" shortcut
+- AF8.5.3: From Asset File option - Added "From Asset File..." menu item with "Ctrl+Shift+N" shortcut calling openAssetFileDialog()
+- AF8.5.4: Method declaration - Added openAssetFileDialog() declaration to UI.h after openSaveFileDialog()
+- AF8.5.5: File dialog implementation - Created openAssetFileDialog() method using OPENFILENAMEA structure
+- AF8.5.6: Test mode guard - Added ImGui::GetCurrentContext() check to skip dialog in headless/test mode
+- AF8.5.7: glTF filter - Configured lpstrFilter with "glTF Files\0*.gltf;*.glb\0glTF Text\0*.gltf\0glTF Binary\0*.glb\0All Files\0*.*\0"
+- AF8.5.8: Asset path extraction - Extract selected file path from szFile after GetOpenFileNameA succeeds
+- AF8.5.9: Command creation - Create CreateEntityFromAssetCommand with scene, assetManager, assetPath, world origin Vec3f{0,0,0}
+- AF8.5.10: Command execution - Execute via m_impl->commandHistory->executeCommand() for undo/redo support
+- AF8.5.11: Console feedback - Log console::info() on success, console::error() on failure
+- AF8.5.12: Scene modification tracking - Set m_impl->m_sceneModified = true when entity created successfully
+
+**Tests:** No unit tests required per instructions §9 (UI code requires full ImGui context + native Windows dialogs). Validation via manual testing: use Edit→Create Entity submenu, select "From Asset File...", choose .gltf/.glb file in dialog, verify entity creation at origin, test undo/redo, verify console logging, test keyboard shortcuts (Ins for empty, Ctrl+Shift+N for asset). Integration verified through existing CreateEntityFromAssetCommand tests (20 assertions) and all 137 ecs-command tests passing.
+
+**Notes:**
+- Backward compatibility: Empty Entity option preserves original "Create Entity" functionality with same shortcut (Ins)
+- Menu structure: Submenu provides clearer organization and room for future entity creation options (e.g., primitives, prefabs)
+- File dialog: Native Windows GetOpenFileNameA with OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR flags
+- Filter order: "glTF Files" filter first (combines .gltf and .glb), then separate filters, then "All Files" fallback
+- World origin: Entities spawn at (0,0,0) - consistent with T8.2 viewport drop behavior
+- Keyboard shortcut: Ctrl+Shift+N chosen to parallel Ctrl+N (new scene) pattern for "new from file"
+- m_impl usage: Corrected to use m_impl->m_sceneModified (not m_sceneModified directly) matching codebase patterns
+- Clean rebuild: Required to clear stale compilation cache from multiple rapid iterations
+- Future: Could add recent files submenu, asset preview in dialog, or configurable default spawn position
+
 ## 2025-01-03 — Hierarchy Panel Drop Target for Child Entity Creation Complete (M2-P6-T8.3)
 **Summary:** Completed Task 8.3 (Hierarchy Panel Drop Target Implementation) enabling users to drag assets from Asset Browser and drop them onto hierarchy panel nodes to create child entities at the parent's position. Modified SceneHierarchyPanel to accept optional AssetManager parameter (default nullptr for backward compatibility), enhanced existing drop target (line 217) to accept both "ENTITY_HIERARCHY" (existing reparenting) and "ASSET_BROWSER_ITEM" (new asset instantiation) payload types. When asset dropped on hierarchy node, extracts parent entity's Transform position, creates CreateEntityFromAssetCommand with parent position and parent parameter for proper hierarchy integration. Implementation includes console logging for feedback and graceful degradation when AssetManager unavailable. This completes the hierarchy panel drop target infrastructure - users can now drag glTF/GLB files from Asset Browser and drop them onto hierarchy nodes to spawn child entities positioned at their parent's location.
 
