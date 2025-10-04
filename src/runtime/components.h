@@ -4,9 +4,9 @@
 #include <vector>
 #include <memory>
 #include "engine/assets/assets.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
-#include "engine/math/bounding_box_3d.h"
+#include "math/vec.h"
+#include "math/matrix.h"
+#include "math/bounding_box_3d.h"
 #include "runtime/time.h"
 
 namespace engine::gpu

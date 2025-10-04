@@ -6,7 +6,7 @@
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include <imgui.h>
 #include <format>
 #include <memory>

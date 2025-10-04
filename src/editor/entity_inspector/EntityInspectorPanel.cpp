@@ -7,7 +7,7 @@
 #include "editor/commands/EcsCommands.h"
 #include "editor/commands/MacroCommand.h"
 #include "editor/transform_commands.h"
-#include "engine/math/math.h"
+#include "math/math.h"
 #include "engine/gpu/mesh_gpu.h"
 #include <imgui.h>
 #include <format>

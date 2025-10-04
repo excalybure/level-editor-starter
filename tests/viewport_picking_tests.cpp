@@ -3,7 +3,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "editor/viewport/viewport.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 using Catch::Matchers::WithinAbs;
 

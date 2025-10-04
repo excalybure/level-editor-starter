@@ -1,8 +1,8 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <numbers>
-#include "engine/math/math.h"
-#include "engine/math/vec.h"
+#include "math/math.h"
+#include "math/vec.h"
 
 using Catch::Matchers::WithinRel;
 

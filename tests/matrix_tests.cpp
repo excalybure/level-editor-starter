@@ -2,9 +2,9 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <numbers>
-#include "engine/math/math.h"
-#include "engine/math/matrix.h"
-#include "engine/math/vec.h"
+#include "math/math.h"
+#include "math/matrix.h"
+#include "math/vec.h"
 
 using Catch::Approx;
 

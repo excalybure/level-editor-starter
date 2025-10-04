@@ -3,7 +3,7 @@
 #include <string>
 
 #include "engine/assets/assets.h"
-#include "engine/math/bounding_box_3d.h"
+#include "math/bounding_box_3d.h"
 
 TEST_CASE( "Asset System Tests", "[assets]" )
 {

@@ -9,7 +9,7 @@
 #include "editor/commands/EcsCommands.h"
 #include "editor/commands/CommandHistory.h"
 #include "runtime/components.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 #include <filesystem>
 #include <fstream>

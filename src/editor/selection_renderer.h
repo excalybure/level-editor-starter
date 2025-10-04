@@ -2,8 +2,8 @@
 
 #include <d3d12.h>
 #include <wrl.h>
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 #include "runtime/entity.h"
 

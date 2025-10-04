@@ -3,9 +3,9 @@
 
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "engine/math/math.h"
-#include "engine/math/matrix.h"
-#include "engine/math/vec.h"
+#include "math/math.h"
+#include "math/matrix.h"
+#include "math/vec.h"
 
 using Catch::Approx;
 

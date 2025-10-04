@@ -11,8 +11,8 @@
 #include "editor/commands/CommandUI.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "engine/math/vec.h"
-#include "engine/math/quat.h"
+#include "math/vec.h"
+#include "math/quat.h"
 #include "editor/gizmos.h"
 #include "editor/transform_commands.h"
 

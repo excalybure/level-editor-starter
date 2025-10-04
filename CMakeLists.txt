@@ -39,6 +39,14 @@ if (MSVC)
   target_compile_options(ImGuizmo PRIVATE /W4 /permissive- /std:c++latest)
 endif()
 
+# Math library - contains all math utilities
+add_library(math INTERFACE)
+target_include_directories(math INTERFACE 
+  src
+)
+target_compile_features(math INTERFACE cxx_std_23)
+target_compile_definitions(math INTERFACE NOMINMAX)
+
 # Engine library
 add_library(engine STATIC
   src/engine/assets/asset_manager.cpp
@@ -60,6 +68,7 @@ target_include_directories(engine PUBLIC
   ${CGLTF_INCLUDE_DIRS}
 )
 target_link_libraries(engine PUBLIC
+  math
   strings
 )
 target_compile_features(engine PUBLIC cxx_std_23)
@@ -99,6 +108,7 @@ target_include_directories(runtime PUBLIC
 target_compile_features(runtime PUBLIC cxx_std_23)
 target_compile_definitions(runtime PUBLIC NOMINMAX)
 target_link_libraries(runtime PUBLIC
+  math
   nlohmann_json::nlohmann_json
 )
 if (MSVC)
@@ -163,6 +173,7 @@ target_link_libraries(editor PUBLIC
   d3d12
   dxgi
   d3dcompiler
+  math
   runtime
   platform
 )
@@ -281,6 +292,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/object_creation_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
+    math
     strings
     editor
     engine

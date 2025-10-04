@@ -4,8 +4,8 @@
 
 #include "engine/camera/camera_controller.h"
 #include "engine/camera/camera.h"
-#include "engine/math/vec.h"
-#include "engine/math/math.h"
+#include "math/vec.h"
+#include "math/math.h"
 
 using Catch::Approx;
 

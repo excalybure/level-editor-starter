@@ -2,8 +2,8 @@
 
 #include "editor/gizmos.h"
 #include "editor/selection.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/components.h"

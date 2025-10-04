@@ -6,7 +6,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "runtime/systems.h"
-#include "engine/math/math.h"
+#include "math/math.h"
 #include <cmath>
 
 // ============================================================================

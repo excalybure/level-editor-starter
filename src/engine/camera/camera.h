@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "../math/math.h"
-#include "../math/vec.h"
-#include "../math/matrix.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include <limits>
 
 // Camera module for 3D viewport management

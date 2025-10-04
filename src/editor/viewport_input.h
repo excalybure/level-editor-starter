@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <vector>
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include "runtime/entity.h"
 
 // Forward declarations

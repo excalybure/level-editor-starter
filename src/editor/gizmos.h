@@ -3,8 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include "runtime/entity.h"
 #include "runtime/components.h"
 

@@ -1,8 +1,8 @@
 ﻿#include <catch2/catch_all.hpp>
 
-#include "engine/math/curves.h"
-#include "engine/math/vec.h"
-#include "engine/math/math.h"
+#include "math/curves.h"
+#include "math/vec.h"
+#include "math/math.h"
 
 
 // Helper function for floating point comparison

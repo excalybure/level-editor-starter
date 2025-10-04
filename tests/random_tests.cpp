@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <set>
-#include "engine/math/random.h"
+#include "math/random.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Matchers::WithinAbs;

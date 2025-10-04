@@ -1,9 +1,9 @@
 ﻿// Camera Controller implementation
 #include "camera_controller.h"
 #include "camera.h"
-#include "engine/math/math.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include <algorithm>
 #include <cmath>
 #include <memory>

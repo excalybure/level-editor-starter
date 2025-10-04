@@ -10,8 +10,8 @@
 #include "runtime/entity.h"
 #include "runtime/components.h"
 #include "runtime/systems.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 
 namespace editor
 {

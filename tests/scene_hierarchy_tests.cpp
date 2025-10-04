@@ -7,7 +7,7 @@
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
 #include "runtime/systems.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 TEST_CASE( "SceneHierarchyPanel - Empty scene renders without errors", "[T1.1][scene_hierarchy][unit]" )
 {

@@ -9,9 +9,9 @@
 
 #include "platform/dx12/dx12_device.h"
 #include "engine/camera/camera.h"
-#include "engine/math/color.h"
-#include "engine/math/matrix.h"
-#include "engine/math/vec.h"
+#include "math/color.h"
+#include "math/matrix.h"
+#include "math/vec.h"
 #include "engine/renderer/renderer.h"
 #include "runtime/console.h"
 

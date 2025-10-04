@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "engine/math/bounding_box_3d.h"
-#include "engine/math/vec.h"
+#include "math/bounding_box_3d.h"
+#include "math/vec.h"
 
 // Forward declarations
 namespace assets

@@ -4,10 +4,10 @@
 #include <cgltf.h>
 #undef _CRT_SECURE_NO_WARNINGS
 
-#include "../math/math.h"
-#include "../math/vec.h"
-#include "../math/matrix.h"
-#include "../math/quat.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
+#include "math/quat.h"
 #include "../assets/assets.h"
 #include <memory>
 #include <vector>

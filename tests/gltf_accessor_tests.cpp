@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "engine/gltf_loader/gltf_loader.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 // RED Phase: Tests for accessor & buffer view handling (should fail initially)
 TEST_CASE( "GLTF Accessor Utilities", "[gltf][accessor][unit]" )

@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <cmath>
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 namespace math
 {

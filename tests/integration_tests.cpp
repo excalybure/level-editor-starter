@@ -5,7 +5,7 @@
 // Test the integration between UI and editor::Viewport systems
 #include "editor/ui.h"
 #include "editor/viewport/viewport.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
 #include "engine/shader_manager/shader_manager.h"

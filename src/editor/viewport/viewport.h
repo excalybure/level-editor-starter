@@ -9,8 +9,8 @@
 #include <array>
 #include "engine/camera/camera_controller.h"
 #include "engine/grid/grid.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 
 // Forward declarations
 // More forward declarations

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
-#include "engine/math/math.h"
+#include "math/math.h"
 
 namespace editor
 {

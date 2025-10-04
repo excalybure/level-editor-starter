@@ -1,8 +1,8 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include "engine/math/math.h"
-#include "engine/math/quat.h"
+#include "math/math.h"
+#include "math/quat.h"
 
 using Catch::Approx;
 

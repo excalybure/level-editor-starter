@@ -10,10 +10,10 @@
 
 #include "core/strings.h"
 #include "engine/assets/assets.h"
-#include "engine/math/math.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
-#include "engine/math/quat.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
+#include "math/quat.h"
 #include "runtime/console.h"
 
 namespace gltf_loader

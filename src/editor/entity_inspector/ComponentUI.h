@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 namespace editor
 {

@@ -8,7 +8,7 @@
 #include "runtime/scene_importer.h"
 #include "engine/gpu/gpu_resource_manager.h"
 #include "engine/assets/assets.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
 
 using Catch::Approx;

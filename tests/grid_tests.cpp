@@ -5,8 +5,8 @@
 
 #include "engine/grid/grid.h"
 #include "engine/camera/camera.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 
 TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )

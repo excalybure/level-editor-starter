@@ -5,7 +5,7 @@
 #include <vector>
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include "editor/commands/Command.h"
 
 // Forward declarations

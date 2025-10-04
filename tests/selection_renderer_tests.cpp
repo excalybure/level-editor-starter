@@ -5,9 +5,9 @@
 #include "runtime/components.h"
 #include "platform/dx12/dx12_device.h"
 #include "engine/shader_manager/shader_manager.h"
-#include "engine/math/math.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 
 namespace
 {

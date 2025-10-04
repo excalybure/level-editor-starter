@@ -5,8 +5,8 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "engine/math/math.h"
-#include "engine/math/matrix.h"
+#include "math/math.h"
+#include "math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 #include "systems.h"
 

@@ -2,9 +2,9 @@
 #include <catch2/catch_approx.hpp>
 
 #include "engine/camera/camera.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
-#include "engine/math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
+#include "math/math.h"
 
 using Catch::Approx;
 

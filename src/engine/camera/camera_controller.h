@@ -1,9 +1,9 @@
 ﻿#pragma once
 
 #include <memory>
-#include "../math/math.h"
-#include "../math/vec.h"
-#include "../math/matrix.h"
+#include "math/math.h"
+#include "math/vec.h"
+#include "math/matrix.h"
 
 // Camera Controller module for handling input and camera navigation
 // Provides high-level camera control with mouse/keyboard input abstraction

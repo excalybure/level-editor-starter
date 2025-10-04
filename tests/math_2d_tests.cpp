@@ -2,9 +2,9 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <vector>
 #include <cmath>
-#include "engine/math/vec.h"
-#include "engine/math/math_2d.h"
-#include "engine/math/bounding_box_2d.h"
+#include "math/vec.h"
+#include "math/math_2d.h"
+#include "math/bounding_box_2d.h"
 
 using Catch::Matchers::WithinRel;
 using Catch::Matchers::WithinAbs;

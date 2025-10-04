@@ -5,7 +5,7 @@
 #include <memory>
 #include <wrl.h>
 
-#include "engine/math/vec.h"
+#include "math/vec.h"
 
 // Forward declarations
 namespace assets

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include "runtime/entity.h"
 #include "runtime/systems.h"
 

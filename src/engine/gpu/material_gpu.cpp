@@ -5,8 +5,8 @@
 #include <cstring>
 
 #include "engine/assets/assets.h"
-#include "engine/math/matrix.h"
-#include "engine/math/vec.h"
+#include "math/matrix.h"
+#include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
 #include "runtime/console.h"
 

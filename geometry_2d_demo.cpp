@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
-#include "src/engine/math/vec.h"
-#include "src/engine/math/math_2d.h"
+#include "src/math/vec.h"
+#include "src/math/math_2d.h"
 
 int main()
 {

@@ -4,7 +4,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/math/vec.h"
+#include "math/vec.h"
 #include <string>
 #include <memory>
 #include <optional>

@@ -1,10 +1,10 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include "engine/math/math_3d.h"
-#include "engine/math/bounding_volumes.h"
-#include "engine/math/vec.h"
-#include "engine/math/math.h"
+#include "math/math_3d.h"
+#include "math/bounding_volumes.h"
+#include "math/vec.h"
+#include "math/math.h"
 
 using Catch::Approx;
 

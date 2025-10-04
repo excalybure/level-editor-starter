@@ -8,8 +8,8 @@
 #include "editor/commands/CommandHistory.h"
 #include "editor/transform_commands.h"
 #include "runtime/components.h"
-#include "engine/math/vec.h"
-#include "engine/math/quat.h"
+#include "math/vec.h"
+#include "math/quat.h"
 
 #include <filesystem>
 #include <memory>

@@ -1,8 +1,8 @@
 #include "picking.h"
 
-#include "engine/math/math_3d.h"
-#include "engine/math/bounding_volumes.h"
-#include "engine/math/matrix.h"
+#include "math/math_3d.h"
+#include "math/bounding_volumes.h"
+#include "math/matrix.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "runtime/entity.h"

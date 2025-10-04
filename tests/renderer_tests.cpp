@@ -6,9 +6,9 @@
 
 #include "engine/renderer/renderer.h"
 #include "platform/dx12/dx12_device.h"
-#include "engine/math/vec.h"
-#include "engine/math/matrix.h"
-#include "engine/math/color.h"
+#include "math/vec.h"
+#include "math/matrix.h"
+#include "math/color.h"
 #include "test_dx12_helpers.h"
 
 
