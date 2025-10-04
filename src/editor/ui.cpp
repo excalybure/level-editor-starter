@@ -255,6 +255,13 @@ void UI::beginFrame()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+	// Check for Alt-F4 keyboard shortcut
+	const ImGuiIO &io = ImGui::GetIO();
+	if ( io.KeyAlt && ImGui::IsKeyPressed( ImGuiKey_F4, false ) )
+	{
+		m_shouldExit = true;
+	}
+
 	// Initialize ImGuizmo context for this frame
 	ImGuizmo::BeginFrame();
 
@@ -522,7 +529,7 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 				ui.clearScene();
 			}
 			ImGui::Separator();
-			if ( ImGui::MenuItem( "Exit" ) )
+			if ( ImGui::MenuItem( "Exit", "Alt+F4" ) )
 			{
 				// Set the exit flag when user selects Exit from menu
 				ui.m_shouldExit = true;
