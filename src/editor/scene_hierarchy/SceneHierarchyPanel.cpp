@@ -220,6 +220,21 @@ void SceneHierarchyPanel::renderEntityNode( ecs::Entity entity )
 		// Setup drop target
 		if ( ImGui::BeginDragDropTarget() )
 		{
+			// Visual feedback: highlight node when dragging over (T8.7)
+			if ( const ImGuiPayload *payload = ImGui::GetDragDropPayload() )
+			{
+				if ( payload->IsDataType( "ENTITY_HIERARCHY" ) || payload->IsDataType( "ASSET_BROWSER_ITEM" ) )
+				{
+					// Draw subtle highlight behind tree node text
+					const ImVec2 minPos = ImGui::GetItemRectMin();
+					const ImVec2 maxPos = ImGui::GetItemRectMax();
+					const ImU32 highlightColor = payload->IsDataType( "ASSET_BROWSER_ITEM" ) ? IM_COL32( 100, 200, 255, 80 ) // Light blue for assets
+																							   :
+																							   IM_COL32( 255, 255, 100, 80 ); // Yellow for reparenting
+					ImGui::GetWindowDrawList()->AddRectFilled( minPos, maxPos, highlightColor );
+				}
+			}
+
 			// Accept entity hierarchy reparenting
 			if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ENTITY_HIERARCHY" ) )
 			{

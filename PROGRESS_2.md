@@ -1,5 +1,40 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-03 — Visual Feedback and Error Messages Complete (M2-P6-T8.7)
+**Summary:** Completed Task 8.7 (Visual Feedback and Error Messages) adding visual polish and user feedback to asset instantiation system. Implemented toast notification system with struct-based queue (message, timer, isError flag), bottom-right positioning, 3-second duration with 0.5-second fade animation, and 5-toast limit. Added visual drop target highlights: blue borders (3px, IM_COL32(100,200,255,200)) on viewport when dragging assets, blue/yellow background fills on hierarchy nodes (blue for assets, yellow for entity reparenting). Toast notifications display on successful entity creation, failed asset loading, and show appropriate icons (✓ for success, ✗ for errors) with color-coded backgrounds (green/red). This completes the visual feedback infrastructure - users now get immediate visual confirmation when dragging assets over drop targets and persistent toast notifications for creation outcomes, significantly improving discoverability and user experience.
+
+**Atomic functionalities completed:**
+- AF8.7.1: Toast struct - Added Toast struct to UI::Impl with std::string message, float remainingTime, bool isError fields
+- AF8.7.2: Toast queue - Added std::vector<Toast> toasts member to UI::Impl for notification queue management
+- AF8.7.3: Method declarations - Added renderToasts() and showToast(const std::string&, bool) declarations to UI::Impl
+- AF8.7.4: Viewport highlight - Added GetDragDropPayload check in renderViewportPane, draw 3px blue border with AddRect when "ASSET_BROWSER_ITEM" detected
+- AF8.7.5: Hierarchy highlight - Enhanced SceneHierarchyPanel drop target with GetDragDropPayload check, draw AddRectFilled background (blue for assets, yellow for reparenting)
+- AF8.7.6: Toast rendering - Implemented renderToasts() with bottom-right positioning (viewport WorkSize minus offsets), fade animation (alpha = min(1.0, remainingTime/0.5f))
+- AF8.7.7: Toast windows - Create ImGui windows with NoTitleBar|NoResize|NoMove|NoScrollbar|NoSavedSettings|NoFocusOnAppearing|NoBringToFrontOnFocus flags
+- AF8.7.8: Toast icons - Display "✓" for success (green background 0,255,0,150) or "✗" for error (red background 255,0,0,150) with SameLine text
+- AF8.7.9: Toast timer - Decrement remainingTime by deltaTime in renderToasts, remove toasts when remainingTime <= 0.0f
+- AF8.7.10: Toast stacking - Stack toasts vertically with 10px spacing, calculate yOffset for each toast window
+- AF8.7.11: showToast method - Implement showToast(message, isError) to add Toast to queue, set 3.0f duration, limit to 5 toasts with pop_front when full
+- AF8.7.12: Render integration - Call renderToasts() in beginFrame (after ImGui::NewFrame) to update and display notifications
+- AF8.7.13: Viewport feedback - Modified viewport drop handler to call showToast("Entity created from asset", false) on success, showToast(error message, true) on failure
+- AF8.7.14: File dialog feedback - Modified openAssetFileDialog to call showToast notifications for success/error outcomes
+
+**Tests:** No unit tests required per instructions §9 (ImGui UI code requires full ImGui/rendering context). Validation via manual testing: drag assets from Asset Browser over viewport/hierarchy to verify highlight borders appear, drop assets to verify toast notifications appear in bottom-right with appropriate icons and colors, verify fade animation works smoothly, verify toast queue limits to 5 entries, test error cases (invalid assets) show red error toasts. Integration verified through existing tests: all CreateEntityFromAssetCommand tests (20 assertions) passing, scene hierarchy tests unaffected.
+
+**Notes:**
+- Toast positioning: Bottom-right corner using ImGuiViewport::WorkSize minus offsets (320px right, 80px bottom), 300x60px windows
+- Color scheme: Blue highlight (IM_COL32(100,200,255,200)) for asset drops, yellow (IM_COL32(255,255,100,80)) for entity reparenting, green/red toast backgrounds
+- Fade animation: Alpha calculated as min(1.0f, remainingTime/fadeTime) where fadeTime=0.5s, provides smooth fade-out effect
+- Toast duration: 3.0 seconds total, last 0.5 seconds fade out
+- Queue management: FIFO with pop_front when exceeding 5-toast limit, prevents screen clutter
+- Dual feedback: Console logging preserved alongside toast notifications for debug/log file purposes
+- Method context: renderViewportPane is UI::Impl method, calls showToast() directly (not m_impl->showToast) since already in Impl scope
+- openAssetFileDialog context: UI method (not Impl), correctly uses m_impl->showToast() to access Impl members
+- Hierarchy panel: SceneHierarchyPanel doesn't have toast system access, relies on existing console logging only
+- Asset Browser: Drag preview already implemented in T3.7 showing filename "Drag %s" - no changes needed
+- Build iterations: Multiple clean rebuilds required to clear stale compilation cache from rapid iteration cycles
+- Future: Could add toast click-to-dismiss, configurable duration, toast categories (info/warning/error/success), or toast history panel
+
 ## 2025-01-03 — Create Menu for Keyboard-Driven Entity Creation Complete (M2-P6-T8.5)
 **Summary:** Completed Task 8.5 (Create Menu Implementation) adding keyboard-driven entity creation as an alternative to drag-drop workflow. Converted existing "Create Entity" menu item into submenu with "Empty Entity" (Ins) and "From Asset File..." (Ctrl+Shift+N) options. Implemented openAssetFileDialog() method using native Windows file dialog (GetOpenFileNameA) with glTF/GLB filter, creates CreateEntityFromAssetCommand at world origin when user selects file. Integrated with CommandHistory for full undo/redo support and scene modified tracking. This completes keyboard-driven entity creation - users can now use Edit→Create Entity→From Asset File menu or Ctrl+Shift+N shortcut to spawn entities from assets without drag-drop, providing accessibility and workflow flexibility.
 

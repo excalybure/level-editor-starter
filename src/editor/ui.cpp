@@ -101,6 +101,16 @@ struct UI::Impl
 	std::string lastError;
 	bool m_sceneModified = false;
 
+	// Toast notification system (T8.7)
+	struct Toast
+	{
+		std::string message;
+		float remainingTime = 0.0f;
+		bool isError = false;
+	};
+	std::vector<Toast> toasts;
+	static constexpr float kToastDuration = 3.0f; // 3 seconds
+
 	// Track previous frame's gizmo state for input blocking
 	bool wasGizmoHoveredLastFrame = false;
 	bool wasGizmoUsingLastFrame = false;
@@ -131,6 +141,12 @@ struct UI::Impl
 
 	// Render main toolbar below menu bar
 	void renderToolbar();
+
+	// Render toast notifications (T8.7)
+	void renderToasts();
+
+	// Show a toast notification
+	void showToast( const std::string &message, bool isError = false );
 
 	// Initialize viewports with D3D12 device
 	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager );
@@ -274,6 +290,9 @@ void UI::beginFrame()
 	{
 		m_impl->assetBrowserPanel->render();
 	}
+
+	// Render toast notifications (T8.7)
+	m_impl->renderToasts();
 }
 
 void UI::endFrame()
@@ -781,6 +800,23 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 				// Handle drag-drop for asset instantiation (T8.2)
 				if ( ImGui::BeginDragDropTarget() )
 				{
+					// Visual feedback: highlight viewport border when dragging asset (T8.7)
+					if ( const ImGuiPayload *payload = ImGui::GetDragDropPayload() )
+					{
+						if ( payload->IsDataType( "ASSET_BROWSER_ITEM" ) )
+						{
+							// Draw highlight border around viewport
+							const ImVec2 minPos = ImGui::GetItemRectMin();
+							const ImVec2 maxPos = ImGui::GetItemRectMax();
+							ImGui::GetWindowDrawList()->AddRect(
+								minPos, maxPos, IM_COL32( 100, 200, 255, 200 ), // Light blue highlight
+								0.0f,
+								0,
+								3.0f // No rounding, all corners, 3px thickness
+							);
+						}
+					}
+
 					if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ASSET_BROWSER_ITEM" ) )
 					{
 						// Extract asset path from payload
@@ -799,11 +835,13 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 							{
 								// Entity created successfully
 								console::info( "Created entity from asset: {}", assetPath );
+								showToast( "Entity created from asset", false );
 							}
 							else
 							{
 								// Failed to create entity
 								console::error( "Failed to create entity from asset: {}", assetPath );
+								showToast( "Failed to create entity from asset", true );
 							}
 						}
 					}
@@ -1424,6 +1462,93 @@ Viewport *UI::Impl::getViewport( ViewportType type )
 	return nullptr;
 }
 
+void UI::Impl::renderToasts()
+{
+	// Update and render toast notifications (T8.7)
+	const float deltaTime = ImGui::GetIO().DeltaTime;
+	const ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+	// Position toasts in bottom-right corner
+	const float padding = 20.0f;
+	const float toastWidth = 300.0f;
+	const float toastHeight = 60.0f;
+	float yOffset = viewport->WorkSize.y - padding;
+
+	// Update timers and render active toasts
+	for ( auto it = toasts.begin(); it != toasts.end(); )
+	{
+		it->remainingTime -= deltaTime;
+
+		if ( it->remainingTime <= 0.0f )
+		{
+			// Remove expired toast
+			it = toasts.erase( it );
+			continue;
+		}
+
+		// Calculate position for this toast
+		const float xPos = viewport->WorkPos.x + viewport->WorkSize.x - toastWidth - padding;
+		const float yPos = viewport->WorkPos.y + yOffset - toastHeight;
+		yOffset -= ( toastHeight + 10.0f ); // Stack toasts vertically
+
+		// Set window position and size
+		ImGui::SetNextWindowPos( ImVec2( xPos, yPos ), ImGuiCond_Always );
+		ImGui::SetNextWindowSize( ImVec2( toastWidth, toastHeight ), ImGuiCond_Always );
+
+		// Calculate fade alpha based on remaining time
+		const float fadeTime = 0.5f;
+		const float alpha = ( it->remainingTime < fadeTime ) ? ( it->remainingTime / fadeTime ) : 1.0f;
+
+		// Style the toast window
+		ImGui::PushStyleVar( ImGuiStyleVar_WindowRounding, 5.0f );
+		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 10.0f, 10.0f ) );
+		ImGui::PushStyleColor( ImGuiCol_WindowBg, ImVec4( 0.2f, 0.2f, 0.2f, alpha * 0.95f ) );
+		ImGui::PushStyleColor( ImGuiCol_Border, it->isError ? ImVec4( 1.0f, 0.3f, 0.3f, alpha ) : ImVec4( 0.3f, 0.7f, 1.0f, alpha ) );
+
+		// Unique window name for each toast
+		const std::string windowName = "##toast_" + std::to_string( reinterpret_cast<uintptr_t>( &( *it ) ) );
+
+		if ( ImGui::Begin( windowName.c_str(), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus ) )
+		{
+			// Icon and message
+			const char *icon = it->isError ? "  ✖" : "  ℹ";
+			const ImVec4 iconColor = it->isError ? ImVec4( 1.0f, 0.4f, 0.4f, alpha ) : ImVec4( 0.4f, 0.8f, 1.0f, alpha );
+
+			ImGui::PushStyleColor( ImGuiCol_Text, iconColor );
+			ImGui::Text( "%s", icon );
+			ImGui::PopStyleColor();
+
+			ImGui::SameLine();
+			ImGui::PushStyleColor( ImGuiCol_Text, ImVec4( 1.0f, 1.0f, 1.0f, alpha ) );
+			ImGui::TextWrapped( "%s", it->message.c_str() );
+			ImGui::PopStyleColor();
+
+			ImGui::End();
+		}
+
+		ImGui::PopStyleColor( 2 );
+		ImGui::PopStyleVar( 2 );
+
+		++it;
+	}
+}
+
+void UI::Impl::showToast( const std::string &message, bool isError )
+{
+	// Add new toast to the queue
+	Toast toast;
+	toast.message = message;
+	toast.remainingTime = kToastDuration;
+	toast.isError = isError;
+	toasts.push_back( toast );
+
+	// Limit to 5 toasts at once
+	if ( toasts.size() > 5 )
+	{
+		toasts.erase( toasts.begin() );
+	}
+}
+
 // UI public viewport access methods
 Viewport *UI::getViewport( ViewportType type )
 {
@@ -1988,11 +2113,13 @@ void UI::openAssetFileDialog()
 				// Entity created successfully
 				console::info( "Created entity from asset: {}", assetPath );
 				m_impl->m_sceneModified = true;
+				m_impl->showToast( "Entity created from asset", false );
 			}
 			else
 			{
 				// Failed to create entity
 				console::error( "Failed to create entity from asset: {}", assetPath );
+				m_impl->showToast( "Failed to create entity from asset", true );
 			}
 		}
 	}
