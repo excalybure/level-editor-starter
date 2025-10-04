@@ -59,10 +59,28 @@ target_include_directories(engine PUBLIC
   src
   ${CGLTF_INCLUDE_DIRS}
 )
+target_link_libraries(engine PUBLIC
+  strings
+)
 target_compile_features(engine PUBLIC cxx_std_23)
 target_compile_definitions(engine PUBLIC NOMINMAX)
 if (MSVC)
   target_compile_options(engine PRIVATE /W4 /permissive- /std:c++latest)
+endif()
+
+
+# Strings library - contains string utilities
+add_library(strings STATIC
+  src/core/strings.cpp
+)
+
+target_include_directories(strings PUBLIC 
+  src
+)
+target_compile_features(strings PUBLIC cxx_std_23)
+target_compile_definitions(strings PUBLIC NOMINMAX)
+if (MSVC)
+  target_compile_options(strings PRIVATE /W4 /permissive- /std:c++latest)
 endif()
 
 
@@ -190,6 +208,7 @@ endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
+    tests/string_util_tests.cpp
     tests/vec_tests.cpp
     tests/matrix_tests.cpp
     tests/quat_tests.cpp
@@ -262,6 +281,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/object_creation_integration_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
+    strings
     editor
     engine
     platform

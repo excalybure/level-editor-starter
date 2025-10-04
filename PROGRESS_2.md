@@ -1,5 +1,19 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-05 — Strings Library Creation
+**Summary:** Extracted inline string manipulation code from gltf_loader.cpp into a new strings library containing reusable string utilities. Created core::getBaseFilename() function that extracts the base filename from a file path (removing directory and extension). Followed strict TDD: wrote comprehensive unit tests first (Red), created minimal strings library infrastructure, implemented function to pass tests (Green), then refactored gltf_loader.cpp to use the utility (Refactor). The strings library provides a focused utility library for string processing operations, providing clean separation of concerns and code reusability across the entire codebase. All 12 test assertions pass, all GLTF tests remain green (600 assertions), and full test suite passes with no regressions.
+
+**Atomic functionalities completed:**
+- AF1: Test creation (Red) - Created string_util_tests.cpp with 12 comprehensive test sections covering normal paths, multiple directories, backslashes, mixed slashes, filenames without directories/extensions, multiple dots, empty strings, trailing slashes, root directory files, dot-only extensions, and hidden files
+- AF2: Strings library infrastructure - Added strings library to CMakeLists.txt with C++23, NOMINMAX, and MSVC compile options; added string_util_tests.cpp to unit_test_runner; linked strings library to both engine and unit_test_runner
+- AF3: Implementation (Green) - Created src/core/strings.h with getBaseFilename() declaration and documentation; created src/core/strings.cpp with implementation handling all edge cases including hidden files (dots at position 0)
+- AF4: GLTF loader refactoring - Added #include "core/strings.h" to gltf_loader.cpp; replaced 11 lines of inline filename extraction code with single call to core::getBaseFilename()
+- AF5: Testing and verification - Built project successfully; ran string utility tests (12/12 passed); ran GLTF tests (600/600 passed); ran full test suite (504/516 passed with no new failures)
+
+**Tests:** Created string_util_tests.cpp with 1 test case "getBaseFilename extracts base filename from path" containing 12 sections, all 12 assertions pass. Test coverage: normal paths with directories/extensions, multiple directory levels, Windows backslashes, mixed slashes, simple filenames, files without extensions, multiple dots (test.scene.v2.gltf), empty strings, trailing slashes, root directory files (/model.gltf), dot-only extensions (file.), hidden files (.gitignore). Verified no regressions: GLTF loader tests all pass (600 assertions), full test suite passes (22787 assertions, 504 test cases). Filtered command: `unit_test_runner.exe "*getBaseFilename*"`.
+
+**Notes:** Followed TDD strictly: Red (write failing tests) → Green (implement minimal code) → Refactor (clean up usage). Initial implementation failed for hidden files (.gitignore became empty string) - fixed by checking if dot position is 0 before removing extension. Strings library now provides foundation for future string utility functions (case conversion, path manipulation, etc.). Clean separation of concerns: gltf_loader.cpp reduced by 10 lines, functionality now testable independently of GLTF loading infrastructure.
+
 ## 2025-01-05 — GLTF Node Naming Unit Tests
 **Summary:** Created comprehensive unit test suite for GLTF node naming priority logic. When users drag GLTF assets from the asset browser to create scene nodes, the system now follows a clear naming priority: (1) explicit node name, (2) filename (root nodes only), (3) mesh name, (4) "UnnamedNode" fallback. Unit tests verify all naming scenarios including explicit names, filename extraction from paths, mesh name fallback, child node behavior (no filename inheritance), multiple root nodes, and unnamed entities. Tests run entirely in-memory without file I/O to avoid integration test complexity. All 22 assertions pass successfully.
 
