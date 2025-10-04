@@ -1,5 +1,34 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-03 — CreateEntityFromAssetCommand Implementation Complete (M2-P6-T8.1)
+**Summary:** Completed Task 8.1 (CreateEntityFromAssetCommand Implementation) following strict TDD methodology with RED→GREEN→REFACTOR cycles. Implemented command class for creating entities from glTF/GLB asset files with full undo/redo support, integrated with AssetManager and SceneImporter to load and instantiate assets into the scene. Command loads asset via AssetManager, imports using SceneImporter, positions root entity at specified world coordinates, and optionally parents to existing entity. Undo destroys entire entity hierarchy in reverse order. Command properly integrates with existing command infrastructure (updateEntityReference, getRecreatedEntity, memory usage tracking). All tests pass including construction, execute, undo, double-execute prevention, and invalid asset handling.
+
+**Atomic functionalities completed:**
+- AF8.1.1: Command class declaration - Added CreateEntityFromAssetCommand to EcsCommands.h with required Command interface methods
+- AF8.1.2: Constructor implementation - Takes Scene&, AssetManager&, assetPath, worldPosition (Vec3f), optional parent Entity
+- AF8.1.3: getDescription() - Returns "Create entity from [filename]" using std::filesystem::path
+- AF8.1.4: Test RED phase - Created failing test for execute() loading asset and creating entity with Transform at world position
+- AF8.1.5: execute() GREEN phase - Load asset via AssetManager::load<Scene>(), import via SceneImporter::importScene(), find root entity, set world position, capture created entities
+- AF8.1.6: Root entity detection - Iterate getAllEntities() to find entity without parent using getParent()
+- AF8.1.7: World position application - Modify Transform component position on root entity, set localMatrixDirty flag
+- AF8.1.8: Entity hierarchy capture - Implement captureCreatedEntities() recursively using getChildren()
+- AF8.1.9: undo() implementation - Destroy created entities in reverse order (children first), clear tracking vectors
+- AF8.1.10: Edge case tests - Added tests for undo, double-execute prevention, invalid asset path handling
+- AF8.1.11: Command infrastructure - Implemented updateEntityReference(), getRecreatedEntity(), getMemoryUsage(), canMergeWith(), mergeWith()
+- AF8.1.12: Vec3f template fix - Corrected Vec3 usage to Vec3f (Vec3<float>) throughout command and tests
+
+**Tests:** 4 test sections in ecs_command_tests.cpp ("[T8.1][AF1]" tag) with 20 assertions - all passing. Tests: `unit_test_runner.exe "*CreateEntityFromAssetCommand*"`. Coverage: command construction, asset loading via callback, entity creation with Name component from asset, Transform positioning at world coordinates, undo entity destruction, double-execute prevention, invalid asset graceful failure. No regressions: all 137 ecs-command assertions pass in 9 test cases.
+
+**Notes:**
+- Command uses SceneImporter for asset→entity conversion (maintains consistency with existing scene loading)
+- Root entity detection uses getParent() API (Scene hierarchy map, not Hierarchy component)
+- Asset loading callback pattern allows test mocking (AssetManager::setSceneLoaderCallback)
+- Entity capture is recursive via getChildren() to support multi-node glTF hierarchies
+- Parent assignment deferred until after entity creation (allows proper hierarchy setup)
+- Memory usage accounts for assetPath string + createdEntities vector size
+- Command cannot be merged (entity creation is discrete operation)
+- T8.1 complete - foundation ready for T8.2 (Viewport Drop Target) and T8.3 (Hierarchy Drop Target)
+
 ## 2025-01-19 — Scene Editor Integration Tests Foundation Complete (M2-P6-T7.1)
 **Summary:** Created comprehensive integration test suite for scene editor workflows, implementing 3 test sections covering Create→Transform→Save→Load cycles. During TDD process, discovered and fixed critical bug in Scene::getEntityCount() which was returning total entity slot count including destroyed (invalid) entities instead of counting only valid ones. Also fixed iterator invalidation bug in SceneSerializer::loadScene() where entities were being destroyed while iterating over getAllEntities() span. All integration tests now pass, validating basic scene editing workflows including entity creation via commands, component addition, scene serialization/deserialization, and data preservation across save/load cycles.
 

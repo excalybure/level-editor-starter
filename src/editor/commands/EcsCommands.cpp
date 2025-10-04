@@ -1,4 +1,6 @@
 #include "editor/commands/EcsCommands.h"
+#include "runtime/scene_importer.h"
+#include <filesystem>
 
 namespace editor
 {
@@ -525,6 +527,157 @@ std::unique_ptr<RenameEntityCommand> EcsCommandFactory::renameEntity( ecs::Scene
 std::unique_ptr<ModifyVisibleCommand> EcsCommandFactory::modifyVisible( ecs::Scene &scene, ecs::Entity entity, const components::Visible &newVisible )
 {
 	return std::make_unique<ModifyVisibleCommand>( scene, entity, newVisible );
+}
+
+// CreateEntityFromAssetCommand implementation
+CreateEntityFromAssetCommand::CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent )
+	: m_scene( scene ), m_assetManager( assetManager ), m_assetPath( assetPath ), m_worldPosition( worldPosition ), m_parent( parent ), m_executed( false )
+{
+}
+
+bool CreateEntityFromAssetCommand::execute()
+{
+	if ( m_executed )
+		return false;
+
+	// Load asset from file
+	auto assetScene = m_assetManager.load<assets::Scene>( m_assetPath );
+	if ( !assetScene || !assetScene->isLoaded() )
+	{
+		return false; // Asset loading failed
+	}
+
+	// Import scene using SceneImporter
+	const bool imported = runtime::SceneImporter::importScene( assetScene, m_scene );
+	if ( !imported )
+	{
+		return false; // Import failed
+	}
+
+	// Find the root entity created by the import
+	// SceneImporter creates entities for each root node in the asset
+	// For now, assume the last created entity is our root
+	// TODO: Track created entities properly during import
+
+	// Get all entities and find the newly created one(s)
+	// This is a simplification - in production we'd track entity IDs during import
+	const auto allEntities = m_scene.getAllEntities();
+	if ( allEntities.empty() )
+	{
+		return false; // No entities created
+	}
+
+	// For now, take the first root node entity (entity without a parent)
+	for ( const auto &entity : allEntities )
+	{
+		const auto parent = m_scene.getParent( entity );
+		if ( !parent.isValid() )
+		{
+			// Root entity found
+			m_rootEntity = entity;
+			break;
+		}
+	}
+
+	if ( !m_rootEntity.isValid() )
+	{
+		return false; // Couldn't find root entity
+	}
+
+	// Set world position on root entity
+	if ( m_scene.hasComponent<components::Transform>( m_rootEntity ) )
+	{
+		auto *transform = m_scene.getComponent<components::Transform>( m_rootEntity );
+		transform->position = m_worldPosition;
+		transform->localMatrixDirty = true;
+	}
+
+	// Set parent if specified
+	if ( m_parent.isValid() && m_scene.isValid( m_parent ) )
+	{
+		m_scene.setParent( m_rootEntity, m_parent );
+	}
+
+	// Capture all created entities for undo
+	captureCreatedEntities( m_rootEntity );
+
+	m_executed = true;
+	return true;
+}
+
+bool CreateEntityFromAssetCommand::undo()
+{
+	if ( !m_executed )
+		return false;
+
+	// Destroy all created entities in reverse order (children first)
+	for ( auto it = m_createdEntities.rbegin(); it != m_createdEntities.rend(); ++it )
+	{
+		if ( m_scene.isValid( *it ) )
+		{
+			m_scene.destroyEntity( *it );
+		}
+	}
+
+	m_createdEntities.clear();
+	m_rootEntity = ecs::Entity{};
+	m_executed = false;
+	return true;
+}
+
+std::string CreateEntityFromAssetCommand::getDescription() const
+{
+	const std::filesystem::path path( m_assetPath );
+	return "Create entity from " + path.filename().string();
+}
+
+size_t CreateEntityFromAssetCommand::getMemoryUsage() const
+{
+	return sizeof( *this ) + m_assetPath.size() + ( m_createdEntities.size() * sizeof( ecs::Entity ) );
+}
+
+bool CreateEntityFromAssetCommand::canMergeWith( const Command * /* other */ ) const
+{
+	return false;
+}
+
+bool CreateEntityFromAssetCommand::mergeWith( std::unique_ptr<Command> /* other */ )
+{
+	return false;
+}
+
+bool CreateEntityFromAssetCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	bool updated = editor::updateEntityReference( m_rootEntity, oldEntity, newEntity );
+	updated |= editor::updateEntityReference( m_parent, oldEntity, newEntity );
+
+	for ( auto &entity : m_createdEntities )
+	{
+		updated |= editor::updateEntityReference( entity, oldEntity, newEntity );
+	}
+
+	return updated;
+}
+
+ecs::Entity CreateEntityFromAssetCommand::getRecreatedEntity() const
+{
+	return m_rootEntity;
+}
+
+void CreateEntityFromAssetCommand::captureCreatedEntities( ecs::Entity root )
+{
+	if ( !root.isValid() )
+		return;
+
+	// Add root entity
+	m_createdEntities.push_back( root );
+
+	// Recursively capture all children
+	const auto children = m_scene.getChildren( root );
+	for ( const auto &child : children )
+	{
+		captureCreatedEntities( child );
+	}
 }
 
 } // namespace editor

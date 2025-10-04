@@ -3,10 +3,13 @@
 #include "editor/commands/Command.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/math/vec.h"
 #include <string>
 #include <memory>
 #include <optional>
 #include <typeinfo>
+#include <vector>
 
 namespace editor
 {
@@ -349,6 +352,44 @@ private:
 	bool m_hadVisibleComponent = false;
 
 	void captureOldVisible();
+};
+
+/**
+ * @brief Command for creating entities from asset files (glTF/GLB)
+ * 
+ * Loads an asset file, imports it into the scene using SceneImporter,
+ * and places the root entity at the specified world position.
+ * Supports full undo by destroying the created entity hierarchy.
+ */
+class CreateEntityFromAssetCommand : public Command
+{
+public:
+	CreateEntityFromAssetCommand( ecs::Scene &scene, assets::AssetManager &assetManager, const std::string &assetPath, const math::Vec3f &worldPosition, ecs::Entity parent = {} );
+
+	bool execute() override;
+	bool undo() override;
+	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command *other ) const override;
+	bool mergeWith( std::unique_ptr<Command> other ) override;
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+	ecs::Entity getRecreatedEntity() const override;
+
+	ecs::Entity getCreatedEntity() const { return m_rootEntity; }
+
+private:
+	ecs::Scene &m_scene;
+	assets::AssetManager &m_assetManager;
+	std::string m_assetPath;
+	math::Vec3f m_worldPosition;
+	ecs::Entity m_parent;
+	ecs::Entity m_rootEntity{};
+	bool m_executed = false;
+
+	// Store created entities for undo
+	std::vector<ecs::Entity> m_createdEntities;
+
+	void captureCreatedEntities( ecs::Entity root );
 };
 
 /**

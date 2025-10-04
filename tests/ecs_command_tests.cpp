@@ -652,3 +652,155 @@ TEST_CASE( "EcsCommandFactory convenient command creation", "[ecs-commands][unit
 		REQUIRE( renameCmd->getDescription() == "Rename Entity: TestEntity -> RenamedEntity" );
 	}
 }
+
+TEST_CASE( "CreateEntityFromAssetCommand basic functionality", "[ecs-commands][unit][T8.1][AF1]" )
+{
+	SECTION( "CreateEntityFromAssetCommand can be constructed with required parameters" )
+	{
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		const std::string assetPath = "test.gltf";
+		const math::Vec3f worldPosition{ 1.0f, 2.0f, 3.0f };
+
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+
+		REQUIRE( cmd.getDescription() == "Create entity from test.gltf" );
+		REQUIRE( !cmd.getCreatedEntity().isValid() ); // Entity should not exist until execute
+	}
+
+	SECTION( "CreateEntityFromAssetCommand execute loads asset and creates entity" )
+	{
+		// Given a scene and asset manager with a valid glTF file
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		const std::string assetPath = "assets/test/triangle.gltf";
+		const math::Vec3f worldPosition{ 5.0f, 10.0f, 15.0f };
+
+		// Setup glTF loader callback (from integration code)
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+			// Create a minimal test scene
+			auto testScene = std::make_shared<assets::Scene>();
+			testScene->setPath( path );
+			testScene->setLoaded( true );
+
+			// Create a simple node hierarchy
+			auto rootNode = std::make_unique<assets::SceneNode>( "RootNode" );
+			rootNode->setTransform( assets::Transform{} );
+			testScene->addRootNode( std::move( rootNode ) );
+
+			return testScene;
+		} );
+
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+
+		// When execute is called
+		const bool result = cmd.execute();
+
+		// Then entity should be created successfully
+		REQUIRE( result == true );
+
+		const ecs::Entity entity = cmd.getCreatedEntity();
+		REQUIRE( entity.isValid() );
+		REQUIRE( scene.isValid( entity ) );
+
+		// Entity should have Name component from asset
+		REQUIRE( scene.hasComponent<components::Name>( entity ) );
+		const auto *name = scene.getComponent<components::Name>( entity );
+		REQUIRE( name->name == "RootNode" );
+
+		// Entity should have Transform at world position
+		REQUIRE( scene.hasComponent<components::Transform>( entity ) );
+		const auto *transform = scene.getComponent<components::Transform>( entity );
+		REQUIRE( transform->position.x == 5.0f );
+		REQUIRE( transform->position.y == 10.0f );
+		REQUIRE( transform->position.z == 15.0f );
+
+		// Cleanup
+		assets::AssetManager::clearSceneLoaderCallback();
+	}
+
+	SECTION( "CreateEntityFromAssetCommand undo destroys created entity" )
+	{
+		// Given a scene with an entity created from an asset
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		const std::string assetPath = "assets/test/triangle.gltf";
+		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+
+		// Setup glTF loader callback
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+			auto testScene = std::make_shared<assets::Scene>();
+			testScene->setPath( path );
+			testScene->setLoaded( true );
+
+			auto rootNode = std::make_unique<assets::SceneNode>( "TestNode" );
+			rootNode->setTransform( assets::Transform{} );
+			testScene->addRootNode( std::move( rootNode ) );
+
+			return testScene;
+		} );
+
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+		cmd.execute();
+
+		const ecs::Entity entity = cmd.getCreatedEntity();
+		REQUIRE( scene.isValid( entity ) );
+
+		// When undo is called
+		const bool undoResult = cmd.undo();
+
+		// Then entity should be destroyed
+		REQUIRE( undoResult == true );
+		REQUIRE( !scene.isValid( entity ) );
+		REQUIRE( scene.getEntityCount() == 0 );
+
+		// Cleanup
+		assets::AssetManager::clearSceneLoaderCallback();
+	}
+
+	SECTION( "CreateEntityFromAssetCommand cannot execute twice" )
+	{
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		const std::string assetPath = "assets/test/triangle.gltf";
+		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+
+		// Setup glTF loader callback
+		assets::AssetManager::setSceneLoaderCallback( []( const std::string &path ) -> std::shared_ptr<assets::Scene> {
+			auto testScene = std::make_shared<assets::Scene>();
+			testScene->setPath( path );
+			testScene->setLoaded( true );
+
+			auto rootNode = std::make_unique<assets::SceneNode>( "TestNode" );
+			testScene->addRootNode( std::move( rootNode ) );
+
+			return testScene;
+		} );
+
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+
+		REQUIRE( cmd.execute() == true );
+		REQUIRE( cmd.execute() == false ); // Second execution should fail
+
+		// Cleanup
+		assets::AssetManager::clearSceneLoaderCallback();
+	}
+
+	SECTION( "CreateEntityFromAssetCommand handles invalid asset path" )
+	{
+		ecs::Scene scene;
+		assets::AssetManager assetManager;
+		const std::string assetPath = "non_existent_file.gltf";
+		const math::Vec3f worldPosition{ 0.0f, 0.0f, 0.0f };
+
+		editor::CreateEntityFromAssetCommand cmd( scene, assetManager, assetPath, worldPosition );
+
+		// When execute is called with invalid asset
+		const bool result = cmd.execute();
+
+		// Then it should fail gracefully
+		REQUIRE( result == false );
+		REQUIRE( !cmd.getCreatedEntity().isValid() );
+		REQUIRE( scene.getEntityCount() == 0 );
+	}
+}
