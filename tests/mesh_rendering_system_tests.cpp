@@ -231,7 +231,6 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	scene.addComponent( child, components::MeshRenderer{} );
 
 	// Set up hierarchy
-	// NEW BEHAVIOR: setParent preserves child's world position
 	// Child at world (11,0,0), parent at (10,0,0) → local becomes (1,0,0)
 	scene.setParent( child, parent );
 

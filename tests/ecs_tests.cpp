@@ -1131,8 +1131,6 @@ TEST_CASE( "Transform System Edge Cases", "[ecs][systems][transform][edge-cases]
 		scene.addComponent( child, childTransform );
 
 		// Set up hierarchy
-		// NEW BEHAVIOR: setParent preserves child's world position
-		// Child at world (11,22,33), parent at (10,20,30) → local becomes (1,2,3)
 		scene.setParent( child, parent );
 		transformSystem->markDirty( parent );
 		systemManager.update( scene, 0.016f );

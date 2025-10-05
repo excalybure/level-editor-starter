@@ -50,7 +50,6 @@ TEST_CASE( "TransformSystem hierarchy updates", "[systems][transform][hierarchy]
 	childTransform.position = { 11.0f, 2.0f, 3.0f }; // World position
 	REQUIRE( scene.addComponent( child, childTransform ) );
 	
-	// NEW BEHAVIOR: setParent preserves child's world position
 	// Child at world (11,2,3), parent at (10,0,0) → local becomes (1,2,3)
 	scene.setParent( child, parent );
 
@@ -274,7 +273,6 @@ TEST_CASE( "TransformSystem automatic marking on hierarchy changes", "[systems][
 	systemManager.update( scene, 0.016f );
 
 	// Set parent-child relationship
-	// NEW BEHAVIOR: setParent preserves world position
 	// Child at world (8,0,0), parent at (5,0,0) → local becomes (3,0,0)
 	scene.setParent( child, parent );
 

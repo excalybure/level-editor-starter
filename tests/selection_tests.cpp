@@ -406,7 +406,6 @@ TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spat
 	childTransform->position = math::Vec3<>{ 15.0f, 0.0f, 0.0f }; // World position (15,0,0)
 
 	// Set up parent-child relationship
-	// NEW BEHAVIOR: setParent preserves child's world position by adjusting local transform
 	// Child at world (15,0,0), parent at (10,0,0) → local becomes (5,0,0)
 	scene.setParent( child, parent );
 
