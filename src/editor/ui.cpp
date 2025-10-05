@@ -869,6 +869,11 @@ void UI::Impl::renderViewportPane( const ViewportLayout::ViewportPane &pane )
 			{
 				viewportManager.setFocusedViewport( viewport );
 			}
+			else if ( !hasFocus && viewportManager.getFocusedViewport() == viewport )
+			{
+				// Clear focused viewport when this viewport loses focus
+				viewportManager.setFocusedViewport( nullptr );
+			}
 
 			// Get render target texture for ImGui rendering
 			void *textureHandle = viewport->getImGuiTextureId();
