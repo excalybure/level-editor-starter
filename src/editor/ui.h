@@ -17,7 +17,8 @@ class GPUResourceManager;
 namespace platform
 {
 class Win32Window;
-}
+struct WindowEvent;
+} // namespace platform
 
 namespace editor
 {
@@ -158,6 +159,9 @@ public:
 
 	void processInputEvents( platform::Win32Window &window );
 	void updateViewports( const float deltaTime );
+
+	// Handle raw KeyPress WindowEvent; returns true if event was handled (consumed)
+	bool handleKeyPress( const platform::WindowEvent &windowEvent, ViewportInputEvent &viewportEvent );
 
 private:
 	ViewportLayout m_layout;

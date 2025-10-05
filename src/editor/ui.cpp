@@ -1698,6 +1698,55 @@ GizmoSystem *UI::getGizmoSystem()
 {
 	return m_impl->gizmoSystem.get();
 }
+// Handle raw KeyPress WindowEvent for file shortcuts and asset creation.
+// Returns true if the event was consumed (handled) and should NOT be forwarded to viewports.
+bool UI::handleKeyPress( const platform::WindowEvent &windowEvent, ViewportInputEvent &viewportEvent )
+{
+	const bool isCtrl = windowEvent.keyboard.ctrl;
+	const bool isShift = windowEvent.keyboard.shift;
+	const int keyCode = windowEvent.keyboard.keycode;
+	const auto &io = ImGui::GetIO();
+
+	// Only process file shortcuts if ImGui isn't capturing keyboard
+	if ( !io.WantCaptureKeyboard )
+	{
+		// Ctrl+S or Ctrl+Shift+S: Save operations
+		if ( isCtrl && keyCode == 'S' )
+		{
+			if ( isShift )
+			{
+				openSaveFileDialog();
+			}
+			else
+			{
+				if ( !getCurrentScenePath().empty() )
+				{
+					saveScene( getCurrentScenePath() );
+				}
+				else
+				{
+					openSaveFileDialog();
+				}
+			}
+			return true; // consumed
+		}
+
+		// Ctrl+Shift+N: Create Entity from Asset File
+		if ( isCtrl && isShift && keyCode == 'N' )
+		{
+			openAssetFileDialog();
+			return true; // consumed
+		}
+	}
+
+	// Not handled: convert to viewport event for normal processing
+	viewportEvent.type = ViewportInputEvent::Type::KeyPress;
+	viewportEvent.keyboard.keyCode = windowEvent.keyboard.keycode;
+	viewportEvent.keyboard.shift = windowEvent.keyboard.shift;
+	viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
+	viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
+	return false;
+}
 
 void UI::processInputEvents( platform::Win32Window &window )
 {
@@ -1746,14 +1795,19 @@ void UI::processInputEvents( platform::Win32Window &window )
 			hasValidEvent = true;
 			break;
 
-		case platform::WindowEvent::Type::KeyPress:
-			viewportEvent.type = ViewportInputEvent::Type::KeyPress;
-			viewportEvent.keyboard.keyCode = windowEvent.keyboard.keycode;
-			viewportEvent.keyboard.shift = windowEvent.keyboard.shift;
-			viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
-			viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
+		case platform::WindowEvent::Type::KeyPress: {
+			// Use helper to handle file/asset shortcuts via WindowEvent
+			const bool consumed = handleKeyPress( windowEvent, viewportEvent );
+			if ( consumed )
+			{
+				// Event was handled; do not forward to viewports
+				hasValidEvent = false;
+				break;
+			}
+			// Not handled - viewportEvent was filled by helper
 			hasValidEvent = true;
 			break;
+		}
 
 		case platform::WindowEvent::Type::KeyRelease:
 			viewportEvent.type = ViewportInputEvent::Type::KeyRelease;

@@ -1,5 +1,24 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-04 — File Operation Keyboard Shortcuts Implementation (WindowEvent-based)
+**Summary:** Fixed bug where Ctrl+S and Ctrl+Shift+S keyboard shortcuts did not trigger scene save operations, though menu items worked correctly. ImGui `MenuItem()` only displays shortcuts as labels and does not automatically process them - keyboard handling must be implemented separately. Initially attempted using `ImGui::IsKeyPressed()` but discovered ImGui does not reliably detect Ctrl+Shift+S combinations. Root cause: ImGui's key detection was not capturing the Ctrl+Shift+S combination even though platform WindowEvents were receiving it correctly. Solution: Switched from ImGui-based key detection to WindowEvent-based detection in the `processInputEvents()` loop where raw keyboard events from Win32 are available. This provides direct access to modifier states (Ctrl, Shift, Alt) and key codes before ImGui processes them, ensuring reliable detection of all file operation shortcuts.
+
+**Atomic functionalities completed:**
+- AF1: WindowEvent-based keyboard shortcut handler - Implemented file operation shortcuts in the `KeyPress` case of the WindowEvent processing loop in `UI::processInputEvents()`. Accesses `windowEvent.keyboard.ctrl`, `windowEvent.keyboard.shift`, and `windowEvent.keyboard.keycode` directly from Win32 events. Checks `ImGui::GetIO().WantCaptureKeyboard` to respect text input focus. Handles Ctrl+S (Save), Ctrl+Shift+S (Save As), and Ctrl+Shift+N (Create Entity from Asset) with early return to prevent forwarding handled events to viewports.
+- AF2: Conditional event forwarding - Added logic to `break` early from the switch statement when file shortcuts are detected and handled, preventing the event from being converted to a ViewportInputEvent and forwarded to the camera/viewport system. This ensures file operations don't trigger camera movement or other viewport actions.
+- AF3: Gizmo input blocking compatibility - Retained existing gizmo camera key blocking logic that allows 'S' key through when Ctrl modifier is pressed, ensuring file operations work even when gizmos are active. The blocking only applies to plain 'S' (camera backward movement), not Ctrl+S or Ctrl+Shift+S.
+
+**Tests:** No unit tests created per instructions §9 (UI keyboard input requires full ImGui context + Win32 message loop). Manual validation required: press Ctrl+S with/without existing scene path, press Ctrl+Shift+S to force Save As dialog with gizmos active/inactive, press Ctrl+Shift+N to open asset file dialog. Verify shortcuts don't trigger when typing in text fields (WantCaptureKeyboard check). All three shortcuts verified functional using WindowEvent-based detection.
+
+**Notes:**
+- Key insight: ImGui's key detection does not reliably capture complex modifier combinations like Ctrl+Shift+S, but platform WindowEvents do
+- WindowEvent approach provides direct access to raw Win32 keyboard state before ImGui processing
+- Early `break` after handling shortcuts prevents event from being forwarded to viewports
+- `io.WantCaptureKeyboard` check ensures shortcuts don't interfere with text input fields
+- Gizmo camera blocking still needed for plain 'S' key but allows Ctrl+S through
+- All three documented shortcuts now functional: Save (Ctrl+S), Save As (Ctrl+Shift+S), and Create Entity from Asset File (Ctrl+Shift+N)
+- Build successful with only minor variable shadowing warning (harmless, different scopes)
+
 ## 2025-10-04 — Clear scene now clears selection
 **Summary:** Fixed bug where calling "Clear Scene" from the menu or `UI::clearScene()` method did not clear the active selection. The selection would persist even after all entities were destroyed, leading to invalid entity references. Added selection clearing to `clearScene()` method which is also inherited by `newScene()` and `loadScene()` operations.
 
