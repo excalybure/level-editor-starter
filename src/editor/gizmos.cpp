@@ -32,6 +32,13 @@ math::Vec3<> GizmoSystem::calculateSelectionCenter() const
 		return math::Vec3<>{ 0.0f, 0.0f, 0.0f };
 	}
 
+	// Get TransformSystem for world position queries (if available)
+	systems::TransformSystem *transformSystem = nullptr;
+	if ( m_systemManager )
+	{
+		transformSystem = m_systemManager->getSystem<systems::TransformSystem>();
+	}
+
 	// Calculate average position of all selected entities
 	math::Vec3<> center{ 0.0f, 0.0f, 0.0f };
 	int validEntityCount = 0;
@@ -40,8 +47,20 @@ math::Vec3<> GizmoSystem::calculateSelectionCenter() const
 	{
 		if ( m_scene->hasComponent<components::Transform>( entity ) )
 		{
-			const auto *transform = m_scene->getComponent<components::Transform>( entity );
-			center += transform->position;
+			// Use world position if TransformSystem is available, otherwise use local position
+			math::Vec3<> position;
+			if ( transformSystem )
+			{
+				const auto worldMatrix = transformSystem->getWorldTransform( *m_scene, entity );
+				position = math::Vec3<>{ worldMatrix.row0.w, worldMatrix.row1.w, worldMatrix.row2.w };
+			}
+			else
+			{
+				const auto *transform = m_scene->getComponent<components::Transform>( entity );
+				position = transform->position;
+			}
+
+			center += position;
 			validEntityCount++;
 		}
 	}

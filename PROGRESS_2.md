@@ -1,26 +1,30 @@
 # 📊 Milestone 2 Progress Report
 
-## 2025-10-05 — Selection outline uses world transforms (rendering bugfix)
-**Summary:** Fixed a rendering bug where selecting a child entity drew its outline as if it were not parented. `SelectionRenderer` was using a component's local matrix; the renderer now prefers the canonical world matrix computed by the `TransformSystem`. Updated viewport plumbing to provide a `systems::SystemManager` pointer to `SelectionRenderer` and added a safe fallback to local matrices when a `SystemManager` is not available (preserves unit-test compatibility). Built the project and ran the full test suite — no regressions.
+## 2025-10-05 — Selection outline and gizmos use world transforms (rendering bugfix)
+**Summary:** Fixed rendering bugs where (1) selecting a child entity drew its outline as if it were not parented, and (2) gizmos positioned at local instead of world position for child entities. Both `SelectionRenderer` and `GizmoSystem` were using components' local positions/matrices; both now prefer the canonical world matrix/position computed by the `TransformSystem`. Updated viewport plumbing to provide a `systems::SystemManager` pointer to `SelectionRenderer` and added safe fallbacks when a `SystemManager` is not available (preserves unit-test compatibility). Built the project and ran the full test suite — no regressions.
 
 **Atomic functionalities completed:**
 - AF1: `SelectionRenderer` now queries `TransformSystem::getWorldTransform(scene, entity)` when a `systems::SystemManager*` is provided; falls back to `Transform::getLocalMatrix()` otherwise.
 - AF2: Threaded `systems::SystemManager*` through `SelectionRenderer` constructor and `Viewport` setup to allow hierarchy-aware transforms.
-- AF3: Added forward declarations / includes and fixed minor compile issues introduced by the change.
+- AF3: `GizmoSystem::calculateSelectionCenter()` now uses `TransformSystem::getWorldTransform()` to extract world positions when `SystemManager` is available; falls back to local positions otherwise.
+- AF4: Added forward declarations / includes and fixed minor compile issues introduced by the changes.
 
 **Files changed (high level):**
 - `src/editor/selection_renderer.h` — accept `systems::SystemManager*` and store a pointer
-- `src/editor/selection_renderer.cpp` — use `TransformSystem::getWorldTransform()` when available
+- `src/editor/selection_renderer.cpp` — use `TransformSystem::getWorldTransform()` when available in `getEntityWorldMatrix()`
 - `src/editor/viewport/viewport.h` / `viewport.cpp` — forward `SystemManager*` into `SelectionRenderer`
+- `src/editor/gizmos.cpp` — use `TransformSystem::getWorldTransform()` in `calculateSelectionCenter()` to extract world positions
 
 **Tests & verification:**
 - Full test run: `unit_test_runner.exe` — test cases: 511 | 507 passed | 4 skipped
-- Assertions: 22784 passed
-- No new test failures related to selection/reparenting; selection and reparenting tests checked specifically and passed.
+- Gizmo tests: `unit_test_runner.exe "*gizmo*"` — 30 test cases, 291 assertions, all passed
+- Reparenting tests: `unit_test_runner.exe "*reparenting*"` — 1 test case, 51 assertions, all passed
+- No new test failures related to selection/reparenting/gizmos
 
 **Notes / next steps:**
-- Added a fallback path so existing unit tests that don't set up a `SystemManager` remain unaffected.
-- Recommended follow-up: add a focused unit/integration test that asserts `SelectionRenderer` uses world matrices for outlines (requires wiring a testable hook or small integration test).  
+- Added fallback paths so existing unit tests that don't set up a `SystemManager` remain unaffected.
+- Both SelectionRenderer and GizmoSystem now consistently use world transforms for hierarchical entities.
+- Recommended follow-up: add focused unit/integration tests that assert both systems use world matrices for outlines and gizmos (requires wiring testable hooks or small integration tests).  
 
 ## 2025-01-05 — Clean Up MeshRenderingSystem API (Constructor and Deprecated Method)
 **Summary:** Completed comprehensive API cleanup for `MeshRenderingSystem` by (1) consolidating constructors to single version with nullable SystemManager pointer and (2) removing deprecated `renderEntity(Transform&, MeshRenderer&, Camera&)` method that used local transforms instead of world transforms. Previously had three constructor overloads causing API ambiguity, and a deprecated renderEntity overload that bypassed hierarchy support. Consolidated to single constructor `MeshRenderingSystem(Renderer&, shared_ptr<ShaderManager>, SystemManager*)` where SystemManager is nullable - clients without SystemManager (unit tests) explicitly pass `nullptr` with clear warning. Removed deprecated renderEntity overload and refactored 2 unit tests to use scene-based `renderEntity(Scene&, Entity, Camera&)` method. All 516+ tests pass including 23 mesh rendering system assertions and 54 integration test cases.
