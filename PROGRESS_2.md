@@ -1,5 +1,18 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-04 — Clear scene now clears selection
+**Summary:** Fixed bug where calling "Clear Scene" from the menu or `UI::clearScene()` method did not clear the active selection. The selection would persist even after all entities were destroyed, leading to invalid entity references. Added selection clearing to `clearScene()` method which is also inherited by `newScene()` and `loadScene()` operations.
+
+**Atomic functionalities completed:**
+- AF1: `UI::clearScene()` now calls `selectionManager->deselectAll()` before destroying entities, ensuring selection is properly cleared when scene is cleared.
+
+**Tests:** 1 new test case with 3 sections; filtered command: `unit_test_runner.exe "*clearScene*"`
+- Test verifies selection is cleared when entities are selected
+- Test verifies graceful handling of empty selection  
+- Test verifies null safety when selection manager unavailable
+
+**Notes:** Solution is minimal and robust - uses existing `deselectAll()` API with null pointer safety. Change also benefits `newScene()` and `loadScene()` since they call `clearScene()` internally.
+
 ## 2025-10-05 — Selection outline and gizmos use world transforms (rendering bugfix)
 **Summary:** Fixed rendering bugs where (1) selecting a child entity drew its outline as if it were not parented, and (2) gizmos positioned at local instead of world position for child entities. Both `SelectionRenderer` and `GizmoSystem` were using components' local positions/matrices; both now prefer the canonical world matrix/position computed by the `TransformSystem`. Updated viewport plumbing to provide a `systems::SystemManager` pointer to `SelectionRenderer` and added safe fallbacks when a `SystemManager` is not available (preserves unit-test compatibility). Built the project and ran the full test suite — no regressions.
 

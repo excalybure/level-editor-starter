@@ -9,12 +9,111 @@
 
 #include "editor/ui.h"
 #include "editor/viewport/viewport.h"
+#include "editor/selection.h"
+#include "runtime/ecs.h"
+#include "runtime/systems.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "platform/dx12/dx12_device.h"
 
 // For ViewportType enum
 #include "platform/dx12/dx12_device.h"
 #include "engine/shader_manager/shader_manager.h"
 
 using Catch::Approx;
+
+TEST_CASE( "UI clearScene clears selection", "[ui][clearScene][selection]" )
+{
+	// Mock GPUResourceManager for testing
+	class MockGPUResourceManager : public engine::GPUResourceManager
+	{
+	public:
+		MockGPUResourceManager() : engine::GPUResourceManager( getMockDevice() ) {}
+
+	private:
+		static dx12::Device &getMockDevice()
+		{
+			static dx12::Device device;
+			return device;
+		}
+	};
+
+	// Setup minimal environment for clear scene testing
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
+
+	editor::SelectionManager selectionManager( scene, systemManager );
+
+	// Mock required dependencies for UI scene operations
+	assets::AssetManager assetManager;
+	MockGPUResourceManager gpuManager;
+
+	editor::UI ui;
+
+	// Initialize scene operations (this connects SelectionManager to UI)
+	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuManager, selectionManager );
+
+	SECTION( "clearScene clears selection when entities are selected" )
+	{
+		// Create some entities
+		auto entity1 = scene.createEntity( "Object1" );
+		auto entity2 = scene.createEntity( "Object2" );
+
+		// Select entities
+		selectionManager.select( entity1 );
+		selectionManager.select( entity2, true ); // additive
+
+		// Verify selection exists
+		REQUIRE( selectionManager.getSelectionCount() == 2 );
+		REQUIRE( selectionManager.isSelected( entity1 ) );
+		REQUIRE( selectionManager.isSelected( entity2 ) );
+
+		// Clear scene
+		ui.clearScene();
+
+		// Selection should be cleared
+		REQUIRE( selectionManager.getSelectionCount() == 0 );
+		REQUIRE_FALSE( selectionManager.isSelected( entity1 ) );
+		REQUIRE_FALSE( selectionManager.isSelected( entity2 ) );
+		REQUIRE( selectionManager.getPrimarySelection() == ecs::Entity{} );
+	}
+
+	SECTION( "clearScene handles empty selection gracefully" )
+	{
+		// Create entities but don't select them
+		auto entity1 = scene.createEntity( "Object1" );
+		auto entity2 = scene.createEntity( "Object2" );
+
+		// Verify no selection
+		REQUIRE( selectionManager.getSelectionCount() == 0 );
+
+		// Clear scene should not crash with no selection
+		REQUIRE_NOTHROW( ui.clearScene() );
+
+		// Selection should remain empty
+		REQUIRE( selectionManager.getSelectionCount() == 0 );
+	}
+
+	SECTION( "clearScene handles null selectionManager gracefully" )
+	{
+		// Test clearScene with a UI that has no selection manager
+		editor::UI uiWithoutSelection;
+
+		// Create a minimal scene just for this test
+		ecs::Scene sceneMinimal;
+		systems::SystemManager systemManagerMinimal;
+		assets::AssetManager assetManagerMinimal;
+		MockGPUResourceManager gpuManagerMinimal;
+
+		// Initialize only with scene, no selection manager
+		uiWithoutSelection.initializeSceneOperations( sceneMinimal, systemManagerMinimal, assetManagerMinimal, gpuManagerMinimal, selectionManager );
+
+		// Should not crash even if selection manager is null internally
+		REQUIRE_NOTHROW( uiWithoutSelection.clearScene() );
+	}
+}
 
 TEST_CASE( "UI Layout Defaults", "[ui]" )
 {

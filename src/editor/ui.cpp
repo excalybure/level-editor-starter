@@ -1972,6 +1972,12 @@ void UI::clearScene()
 		return;
 	}
 
+	// Clear selection before clearing scene
+	if ( m_impl->selectionManager )
+	{
+		m_impl->selectionManager->deselectAll();
+	}
+
 	// Queue GPU resources for deferred deletion before destroying entities
 	if ( m_impl->gpuManager )
 	{
