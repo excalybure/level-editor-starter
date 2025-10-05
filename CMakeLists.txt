@@ -244,6 +244,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/ecs_tests.cpp
     tests/systems_tests.cpp
     tests/components_tests.cpp
+    tests/reparenting_transform_tests.cpp
     tests/selection_tests.cpp
     tests/selection_renderer_tests.cpp
     tests/app_tests.cpp

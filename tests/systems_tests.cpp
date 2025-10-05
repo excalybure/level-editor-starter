@@ -47,8 +47,11 @@ TEST_CASE( "TransformSystem hierarchy updates", "[systems][transform][hierarchy]
 	// Child entity
 	ecs::Entity child = scene.createEntity( "Child" );
 	components::Transform childTransform;
-	childTransform.position = { 1.0f, 2.0f, 3.0f };
+	childTransform.position = { 11.0f, 2.0f, 3.0f }; // World position
 	REQUIRE( scene.addComponent( child, childTransform ) );
+	
+	// NEW BEHAVIOR: setParent preserves child's world position
+	// Child at world (11,2,3), parent at (10,0,0) → local becomes (1,2,3)
 	scene.setParent( child, parent );
 
 	transformSystem->markDirty( parent );
@@ -56,7 +59,7 @@ TEST_CASE( "TransformSystem hierarchy updates", "[systems][transform][hierarchy]
 	systemManager.update( scene, 0.016f );
 
 	const auto childWorldMatrix = transformSystem->getWorldTransform( scene, child );
-	// Child's world position should be parent's position + child's local position
+	// Child's world position should remain at (11, 2, 3) after reparenting
 	REQUIRE( childWorldMatrix.m03() == Catch::Approx( 11.0f ) );
 	REQUIRE( childWorldMatrix.m13() == Catch::Approx( 2.0f ) );
 	REQUIRE( childWorldMatrix.m23() == Catch::Approx( 3.0f ) );
@@ -264,19 +267,21 @@ TEST_CASE( "TransformSystem automatic marking on hierarchy changes", "[systems][
 	REQUIRE( scene.addComponent( parent, parentTransform ) );
 
 	components::Transform childTransform;
-	childTransform.position = { 3.0f, 0.0f, 0.0f };
+	childTransform.position = { 8.0f, 0.0f, 0.0f }; // World position
 	REQUIRE( scene.addComponent( child, childTransform ) );
 
 	// Update after adding components
 	systemManager.update( scene, 0.016f );
 
-	// Set parent-child relationship - should automatically mark both as dirty
+	// Set parent-child relationship
+	// NEW BEHAVIOR: setParent preserves world position
+	// Child at world (8,0,0), parent at (5,0,0) → local becomes (3,0,0)
 	scene.setParent( child, parent );
 
 	// Update again - should recalculate world transforms
 	systemManager.update( scene, 0.016f );
 
-	// Child should now have world position (8, 0, 0) = parent(5,0,0) + child(3,0,0)
+	// Child should remain at world position (8, 0, 0) after reparenting
 	const auto childWorldMatrix = transformSystem->getWorldTransform( scene, child );
 	REQUIRE( childWorldMatrix.m03() == Catch::Approx( 8.0f ) );
 }

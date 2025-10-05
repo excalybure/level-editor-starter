@@ -224,13 +224,15 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	scene.addComponent( parent, parentTransform );
 
 	components::Transform childTransform;
-	childTransform.position = { 1.0f, 0.0f, 0.0f }; // Local offset
+	childTransform.position = { 11.0f, 0.0f, 0.0f }; // World position
 	scene.addComponent( child, childTransform );
 
 	// Add MeshRenderer to child
 	scene.addComponent( child, components::MeshRenderer{} );
 
 	// Set up hierarchy
+	// NEW BEHAVIOR: setParent preserves child's world position
+	// Child at world (11,0,0), parent at (10,0,0) → local becomes (1,0,0)
 	scene.setParent( child, parent );
 
 	// Update transform system to compute world matrices
@@ -239,7 +241,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	// Get child's world transform from TransformSystem
 	const auto childWorldTransform = transformSystem->getWorldTransform( scene, child );
 
-	// The child's world position should be parent(10,0,0) + child(1,0,0) = (11,0,0)
+	// The child's world position should remain at (11,0,0) after reparenting
 	REQUIRE( childWorldTransform.m03() == Catch::Approx( 11.0f ) );
 
 	// Act: Call the new renderEntity that uses world transforms

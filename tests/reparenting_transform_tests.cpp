@@ -1,6 +1,63 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
+
+TEST_CASE( "Reparenting - Child retains world position when moved to new parent", "[reparenting][transform][hierarchy][preserve]" )
+{
+	// This test verifies that when reparenting an entity to a new parent,
+	// the child RETAINS its world position by adjusting its local transform
+	// rather than moving with the new parent.
+	
+	// Arrange: Create scene with transform system
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
+	systemManager.initialize( scene );
+
+	// Create two potential parents and a child
+	const ecs::Entity parent1 = scene.createEntity( "Parent1" );
+	const ecs::Entity parent2 = scene.createEntity( "Parent2" );
+	const ecs::Entity child = scene.createEntity( "Child" );
+
+	// Parent1 at origin, Parent2 at (100, 0, 0)
+	components::Transform parent1Transform;
+	parent1Transform.position = { 0.0f, 0.0f, 0.0f };
+	scene.addComponent( parent1, parent1Transform );
+
+	components::Transform parent2Transform;
+	parent2Transform.position = { 100.0f, 0.0f, 0.0f };
+	scene.addComponent( parent2, parent2Transform );
+
+	// Child at (10, 0, 0) local offset (world position is also (10, 0, 0) since parent1 is at origin)
+	components::Transform childTransform;
+	childTransform.position = { 10.0f, 0.0f, 0.0f };
+	scene.addComponent( child, childTransform );
+
+	// Initially parent child to parent1
+	scene.setParent( child, parent1 );
+	systemManager.update( scene, 0.016f );
+
+	// Verify child's world position is parent1(0) + child(10) = (10, 0, 0)
+	const auto childWorldWithParent1 = transformSystem->getWorldTransform( scene, child );
+	REQUIRE( childWorldWithParent1.m03() == Catch::Approx( 10.0f ).epsilon( 0.001f ) );
+
+	// Act: Reparent child from parent1 to parent2
+	// Desired behavior: child should RETAIN its world position (10,0,0)
+	// This means its local transform should be adjusted to (-90, 0, 0) relative to parent2 at (100,0,0)
+	scene.setParent( child, parent2 );
+	systemManager.update( scene, 0.016f );
+
+	// Assert: Child should remain at world position (10, 0, 0)
+	const auto childWorldWithParent2 = transformSystem->getWorldTransform( scene, child );
+	REQUIRE( childWorldWithParent2.m03() == Catch::Approx( 10.0f ).epsilon( 0.001f ) );
+	
+	// Verify local transform was adjusted: should be (10 - 100) = (-90, 0, 0)
+	const auto *childTransformPtr = scene.getComponent<components::Transform>( child );
+	REQUIRE( childTransformPtr->position.x == Catch::Approx( -90.0f ).epsilon( 0.001f ) );
+
+	systemManager.shutdown( scene );
+}
 
 TEST_CASE( "Reparenting - Moving parent updates child world position", "[reparenting][transform][hierarchy]" )
 {
@@ -129,23 +186,26 @@ TEST_CASE( "Reparenting - Deep hierarchy updates when grandparent moves", "[repa
 	scene.addComponent( grandparent, grandparentTransform );
 
 	components::Transform parentTransform;
-	parentTransform.position = { 1.0f, 0.0f, 0.0f };
+	parentTransform.position = { 1.0f, 0.0f, 0.0f }; // World position
 	scene.addComponent( parent, parentTransform );
 
 	components::Transform childTransform;
-	childTransform.position = { 1.0f, 0.0f, 0.0f };
+	childTransform.position = { 2.0f, 0.0f, 0.0f }; // World position (will become local after reparenting)
 	scene.addComponent( child, childTransform );
 
 	// Set up hierarchy
+	// NEW BEHAVIOR: setParent preserves world positions
+	// Parent at world (1,0,0) under grandparent(0,0,0) → local stays (1,0,0)
 	scene.setParent( parent, grandparent );
+	// Child at world (2,0,0) under parent(1,0,0) → local becomes (1,0,0)
 	scene.setParent( child, parent );
 
 	// Initial system update
 	systemManager.update( scene, 0.016f );
 
-	// Verify initial positions
+	// Verify initial positions - child world should be preserved at (2,0,0)
 	const auto childWorldInitial = transformSystem->getWorldTransform( scene, child );
-	REQUIRE( childWorldInitial.m03() == Catch::Approx( 2.0f ).epsilon( 0.001f ) ); // GP(0) + P(1) + C(1)
+	REQUIRE( childWorldInitial.m03() == Catch::Approx( 2.0f ).epsilon( 0.001f ) ); // GP(0) + P(1) + C_local(1)
 
 	// Act: Move grandparent
 	auto *grandparentTransformPtr = scene.getComponent<components::Transform>( grandparent );

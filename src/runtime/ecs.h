@@ -392,12 +392,45 @@ public:
 			return;
 		}
 
+		// Preserve world position by adjusting local transform
+		// Get child's current world transform
+		math::Mat4f childWorldTransform;
+		if ( hasComponent<components::Transform>( child ) )
+		{
+			childWorldTransform = computeWorldTransform( child );
+		}
+
 		// Remove from old parent first
 		removeParent( child );
 
 		// Set new parent
 		m_parentMap[child] = parent;
 		m_childrenMap[parent].push_back( child );
+
+		// Adjust child's local transform to preserve world position
+		if ( hasComponent<components::Transform>( child ) && hasComponent<components::Transform>( parent ) )
+		{
+			const math::Mat4f parentWorldTransform = computeWorldTransform( parent );
+			// The inverse() function returns the transpose of the actual inverse, so we transpose it back
+			const math::Mat4f parentWorldInverse = parentWorldTransform.inverse().transpose();
+			const math::Mat4f newLocalTransform = parentWorldInverse * childWorldTransform;
+
+			// Extract position, rotation, and scale from the new local transform
+			auto *childTransform = getComponent<components::Transform>( child );
+			if ( childTransform )
+			{
+				// Extract translation from the right column (m03, m13, m23)
+				childTransform->position.x = newLocalTransform.m03();
+				childTransform->position.y = newLocalTransform.m13();
+				childTransform->position.z = newLocalTransform.m23();
+
+				// For now, keep rotation and scale unchanged (simplified approach)
+				// A full implementation would extract rotation and scale from the matrix
+				// TODO: Implement full matrix decomposition if rotation/scale preservation is needed
+
+				childTransform->markDirty();
+			}
+		}
 
 		// Notify Transform modification callbacks for hierarchy change
 		for ( auto &callback : m_transformModificationCallbacks )
@@ -430,6 +463,28 @@ public:
 	}
 
 private:
+	// Helper to compute world transform by traversing hierarchy
+	math::Mat4f computeWorldTransform( Entity entity ) const
+	{
+		if ( !hasComponent<components::Transform>( entity ) )
+		{
+			return math::Mat4f::identity();
+		}
+
+		const auto *transform = getComponent<components::Transform>( entity );
+		math::Mat4f localMatrix = transform->getLocalMatrix();
+
+		// Traverse up the hierarchy to accumulate transforms
+		const Entity parent = getParent( entity );
+		if ( parent.isValid() && hasComponent<components::Transform>( parent ) )
+		{
+			const math::Mat4f parentWorld = computeWorldTransform( parent );
+			return parentWorld * localMatrix;
+		}
+
+		return localMatrix;
+	}
+
 	// Helper to check if 'ancestor' is an ancestor of 'descendant'
 	bool isAncestor( Entity ancestor, Entity descendant ) const
 	{

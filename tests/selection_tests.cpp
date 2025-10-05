@@ -399,13 +399,15 @@ TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spat
 	};
 	scene.addComponent( parent, parentMesh );
 
-	// Create child entity with local offset
+	// Create child entity with world position
 	auto child = scene.createEntity( "Child" );
 	scene.addComponent( child, components::Transform{} );
 	auto *childTransform = scene.getComponent<components::Transform>( child );
-	childTransform->position = math::Vec3<>{ 5.0f, 0.0f, 0.0f }; // Local offset (5,0,0)
+	childTransform->position = math::Vec3<>{ 15.0f, 0.0f, 0.0f }; // World position (15,0,0)
 
 	// Set up parent-child relationship
+	// NEW BEHAVIOR: setParent preserves child's world position by adjusting local transform
+	// Child at world (15,0,0), parent at (10,0,0) → local becomes (5,0,0)
 	scene.setParent( child, parent );
 
 	components::MeshRenderer childMesh;
@@ -427,7 +429,7 @@ TEST_CASE( "SelectionManager - Hierarchical transform bounds", "[selection][spat
 
 		REQUIRE( bounds.isValid() );
 
-		// Child should be at world position (15, 0, 0) = parent(10,0,0) + local(5,0,0)
+		// Child should remain at world position (15, 0, 0) after reparenting
 		// With bounds extending from (14, -1, -1) to (16, 1, 1)
 		REQUIRE( bounds.min.x == Catch::Approx( 14.0f ) ); // 15.0 - 1.0
 		REQUIRE( bounds.max.x == Catch::Approx( 16.0f ) ); // 15.0 + 1.0

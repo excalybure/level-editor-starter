@@ -1125,17 +1125,19 @@ TEST_CASE( "Transform System Edge Cases", "[ecs][systems][transform][edge-cases]
 		components::Transform parentTransform;
 		parentTransform.position = { 10.0f, 20.0f, 30.0f };
 		components::Transform childTransform;
-		childTransform.position = { 1.0f, 2.0f, 3.0f };
+		childTransform.position = { 11.0f, 22.0f, 33.0f }; // World position
 
 		scene.addComponent( parent, parentTransform );
 		scene.addComponent( child, childTransform );
 
-		// First set up hierarchy
+		// Set up hierarchy
+		// NEW BEHAVIOR: setParent preserves child's world position
+		// Child at world (11,22,33), parent at (10,20,30) → local becomes (1,2,3)
 		scene.setParent( child, parent );
 		transformSystem->markDirty( parent );
 		systemManager.update( scene, 0.016f );
 
-		// Verify child world position includes parent
+		// Verify child world position is preserved at (11, 22, 33)
 		const auto childWorldWithParent = transformSystem->getWorldTransform( scene, child );
 		REQUIRE( childWorldWithParent.m03() == Catch::Approx( 11.0f ) );
 
@@ -1146,7 +1148,7 @@ TEST_CASE( "Transform System Edge Cases", "[ecs][systems][transform][edge-cases]
 		transformSystem->markDirty( child );
 		systemManager.update( scene, 0.016f );
 
-		// Child should now have only its local transform as world transform
+		// After orphaning, child's local transform (1,2,3) becomes its world transform
 		const auto childWorldOrphaned = transformSystem->getWorldTransform( scene, child );
 		REQUIRE( childWorldOrphaned.m03() == Catch::Approx( 1.0f ) );
 		REQUIRE( childWorldOrphaned.m13() == Catch::Approx( 2.0f ) );
