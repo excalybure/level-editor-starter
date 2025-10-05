@@ -1809,16 +1809,18 @@ void UI::processInputEvents( platform::Win32Window &window )
 					shouldBlockCameraInput = ImGuizmo::IsUsing() || m_impl->wasGizmoHoveredLastFrame;
 				}
 
-				// Block keyboard events for gizmo shortcut keys ONLY when gizmos are active
+				// Block all camera movement keys when gizmos are active to prevent conflicts
 				if ( viewportEvent.type == ViewportInputEvent::Type::KeyPress )
 				{
 					const char key = static_cast<char>( viewportEvent.keyboard.keyCode );
-					// Only block gizmo shortcut keys when gizmos are visible and there's a valid selection
+					// Block camera keys when gizmos are visible and there's a valid selection
 					const bool gizmosAreActive = m_impl->gizmoSystem &&
 						m_impl->gizmoSystem->isVisible() &&
 						m_impl->gizmoSystem->hasValidSelection();
 
-					if ( gizmosAreActive && ( key == 'W' || key == 'E' || key == 'R' || key == 'X' || key == 'G' ) )
+					// Block all camera movement keys (W/A/S/D/Q/E) when gizmos are active
+					// This prevents conflicts between camera controls and gizmo operations
+					if ( gizmosAreActive && ( key == 'W' || key == 'A' || key == 'S' || key == 'D' || key == 'Q' || key == 'E' || key == 'R' || key == 'X' || key == 'G' ) )
 					{
 						shouldBlockCameraInput = true;
 					}
