@@ -19,8 +19,9 @@ namespace editor
 
 EntityInspectorPanel::EntityInspectorPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
-	CommandHistory &commandHistory )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_visible( true )
+	CommandHistory &commandHistory,
+	systems::SystemManager &systemManager )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_visible( true )
 {
 }
 
@@ -159,25 +160,19 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 		ImGui::PushID( "Transform" );
 
 		bool valueChanged = false;
-		bool editingStarted = false;
 		bool editingEnded = false;
-
-		// Check if any drag control is being activated this frame
-		if ( ImGui::IsItemActivated() )
-		{
-			editingStarted = true;
-		}
 
 		// Position control
 		math::Vec3f position = transform->position;
 		if ( ComponentUI::renderVec3Control( "Position", position, { 0.0f, 0.0f, 0.0f }, 0.1f ) )
 		{
+			// Capture before state if not already editing
 			if ( !m_transformEditState.isEditing )
 			{
-				editingStarted = true;
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransform = *transform;
 			}
 			transform->position = position;
-			transform->markDirty();
 			valueChanged = true;
 		}
 
@@ -185,13 +180,14 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 		math::Vec3f rotationDegrees = math::degrees( transform->rotation );
 		if ( ComponentUI::renderVec3Control( "Rotation", rotationDegrees, { 0.0f, 0.0f, 0.0f }, 1.0f ) )
 		{
+			// Capture before state if not already editing
 			if ( !m_transformEditState.isEditing )
 			{
-				editingStarted = true;
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransform = *transform;
 			}
 			// Convert back to radians for storage
 			transform->rotation = math::radians( rotationDegrees );
-			transform->markDirty();
 			valueChanged = true;
 		}
 
@@ -199,13 +195,24 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 		math::Vec3f scale = transform->scale;
 		if ( ComponentUI::renderVec3Control( "Scale", scale, { 1.0f, 1.0f, 1.0f }, 0.1f ) )
 		{
+			// Capture before state if not already editing
 			if ( !m_transformEditState.isEditing )
 			{
-				editingStarted = true;
+				m_transformEditState.isEditing = true;
+				m_transformEditState.beforeTransform = *transform;
 			}
 			transform->scale = scale;
-			transform->markDirty();
 			valueChanged = true;
+		}
+
+		// If any value changed, mark local component dirty once and notify TransformSystem
+		if ( valueChanged )
+		{
+			transform->markDirty();
+			if ( auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>() )
+			{
+				transformSystem->markDirty( entity );
+			}
 		}
 
 		// Check if editing has ended (mouse released after drag)
@@ -214,20 +221,13 @@ void EntityInspectorPanel::renderTransformComponent( ecs::Entity entity )
 			editingEnded = true;
 		}
 
-		// Handle edit state transitions
-		if ( editingStarted && !m_transformEditState.isEditing )
-		{
-			// Capture before state
-			m_transformEditState.isEditing = true;
-			m_transformEditState.beforeTransform = *transform;
-		}
-
+		// Handle edit state end - create and execute command
 		if ( editingEnded && m_transformEditState.isEditing )
 		{
 			// Create and execute transform command
 			const components::Transform afterTransform = *transform;
 			auto command = std::make_unique<editor::TransformEntityCommand>(
-				entity, m_scene, m_transformEditState.beforeTransform, afterTransform );
+				entity, m_scene, m_transformEditState.beforeTransform, afterTransform, &m_systemManager );
 
 			m_commandHistory.executeCommand( std::move( command ) );
 
@@ -627,7 +627,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 				if ( t )
 				{
 					t->position = position;
-					t->markDirty();
+					// defer markDirty until after all fields are applied
 				}
 			}
 			valueChanged = true;
@@ -660,7 +660,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 				if ( t )
 				{
 					t->rotation = rotationRadians;
-					t->markDirty();
+					// defer markDirty until after all fields are applied
 				}
 			}
 			valueChanged = true;
@@ -692,7 +692,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 				if ( t )
 				{
 					t->scale = scale;
-					t->markDirty();
+					// defer markDirty until after all fields are applied
 				}
 			}
 			valueChanged = true;
@@ -701,6 +701,22 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 		// Check if editing has ended
 		if ( m_transformEditState.isEditing && !ImGui::IsAnyItemActive() )
 		{
+			// After all fields applied, mark each entity dirty and notify TransformSystem once per entity
+			if ( valueChanged )
+			{
+				for ( const auto &entity : entities )
+				{
+					if ( auto *t = m_scene.getComponent<components::Transform>( entity ) )
+					{
+						t->markDirty();
+						if ( auto *transformSystem = m_systemManager.getSystem<systems::TransformSystem>() )
+						{
+							transformSystem->markDirty( entity );
+						}
+					}
+				}
+			}
+
 			// Create MacroCommand with individual TransformEntityCommand for each entity
 			auto macroCommand = std::make_unique<MacroCommand>( std::format( "Transform {} entities", entities.size() ) );
 
@@ -712,7 +728,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 					if ( afterTransform )
 					{
 						auto cmd = std::make_unique<editor::TransformEntityCommand>(
-							entities[i], m_scene, m_transformEditState.beforeTransforms[i], *afterTransform );
+							entities[i], m_scene, m_transformEditState.beforeTransforms[i], *afterTransform, &m_systemManager );
 						macroCommand->addCommand( std::move( cmd ) );
 					}
 				}

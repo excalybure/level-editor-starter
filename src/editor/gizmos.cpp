@@ -445,7 +445,8 @@ void GizmoSystem::endManipulation() noexcept
 					snapshot.entity,
 					*m_scene,
 					snapshot.beforeTransform, // before
-					*afterTransform			  // after
+					*afterTransform,		  // after
+					m_systemManager			  // systemManager
 				);
 				m_commandHistory->executeCommand( std::move( command ) );
 			}
@@ -457,7 +458,8 @@ void GizmoSystem::endManipulation() noexcept
 			std::vector<ecs::Entity> emptyEntities;
 			auto batchCommand = std::make_unique<BatchTransformCommand>(
 				emptyEntities,
-				*m_scene );
+				*m_scene,
+				m_systemManager );
 
 			// Add each transform with before/after states
 			for ( const auto &snapshot : m_manipulationSnapshots )

@@ -1,11 +1,14 @@
 #include "transform_commands.h"
+#include "runtime/ecs.h"
+#include "runtime/systems.h"
+#include <format>
 #include <typeinfo>
 
 namespace editor
 {
 
-TransformEntityCommand::TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene ) noexcept
-	: m_entity( entity ), m_scene( &scene )
+TransformEntityCommand::TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, systems::SystemManager *systemManager ) noexcept
+	: m_entity( entity ), m_scene( &scene ), m_systemManager( systemManager )
 {
 	// Capture the current transform state as the "before" state
 	if ( const auto *transform = m_scene->getComponent<components::Transform>( m_entity ) )
@@ -15,8 +18,8 @@ TransformEntityCommand::TransformEntityCommand( ecs::Entity entity, ecs::Scene &
 	}
 }
 
-TransformEntityCommand::TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, const components::Transform &beforeTransform, const components::Transform &afterTransform ) noexcept
-	: m_entity( entity ), m_scene( &scene ), m_beforeTransform( beforeTransform ), m_afterTransform( afterTransform ),
+TransformEntityCommand::TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, const components::Transform &beforeTransform, const components::Transform &afterTransform, systems::SystemManager *systemManager ) noexcept
+	: m_entity( entity ), m_scene( &scene ), m_systemManager( systemManager ), m_beforeTransform( beforeTransform ), m_afterTransform( afterTransform ),
 	  m_hasBeforeState( true ), m_hasAfterState( true )
 {
 }
@@ -42,6 +45,11 @@ bool TransformEntityCommand::execute()
 	if ( auto *transform = m_scene->getComponent<components::Transform>( m_entity ) )
 	{
 		*transform = m_afterTransform;
+		transform->markDirty();
+
+		// Notify TransformSystem to recalculate world matrix (if available)
+		notifyTransformSystemDirty();
+
 		return true;
 	}
 	else
@@ -62,6 +70,10 @@ bool TransformEntityCommand::undo()
 	if ( auto *transform = m_scene->getComponent<components::Transform>( m_entity ) )
 	{
 		*transform = m_beforeTransform;
+		transform->markDirty();
+
+		notifyTransformSystemDirty();
+
 		return true;
 	}
 	else
@@ -117,6 +129,18 @@ bool TransformEntityCommand::mergeWith( std::unique_ptr<Command> other )
 	return false;
 }
 
+void TransformEntityCommand::notifyTransformSystemDirty() const noexcept
+{
+	// Notify TransformSystem to recalculate world matrix (if available)
+	if ( m_systemManager )
+	{
+		if ( auto *transformSystem = m_systemManager->getSystem<systems::TransformSystem>() )
+		{
+			transformSystem->markDirty( m_entity );
+		}
+	}
+}
+
 bool TransformEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
 {
 	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
@@ -130,8 +154,8 @@ void TransformEntityCommand::updateAfterTransform( const components::Transform &
 
 // BatchTransformCommand implementation
 
-BatchTransformCommand::BatchTransformCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene ) noexcept
-	: m_scene( &scene )
+BatchTransformCommand::BatchTransformCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene, systems::SystemManager *systemManager ) noexcept
+	: m_scene( &scene ), m_systemManager( systemManager )
 {
 	// Create individual transform commands for each entity
 	m_commands.reserve( entities.size() );
@@ -139,14 +163,14 @@ BatchTransformCommand::BatchTransformCommand( const std::vector<ecs::Entity> &en
 	{
 		if ( scene.hasComponent<components::Transform>( entity ) )
 		{
-			m_commands.emplace_back( std::make_unique<TransformEntityCommand>( entity, scene ) );
+			m_commands.emplace_back( std::make_unique<TransformEntityCommand>( entity, scene, m_systemManager ) );
 		}
 	}
 }
 
 void BatchTransformCommand::addTransform( ecs::Entity entity, const components::Transform &beforeTransform, const components::Transform &afterTransform )
 {
-	m_commands.emplace_back( std::make_unique<TransformEntityCommand>( entity, *m_scene, beforeTransform, afterTransform ) );
+	m_commands.emplace_back( std::make_unique<TransformEntityCommand>( entity, *m_scene, beforeTransform, afterTransform, m_systemManager ) );
 }
 
 bool BatchTransformCommand::execute()

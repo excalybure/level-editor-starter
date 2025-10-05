@@ -9,6 +9,11 @@ namespace ecs
 class Scene;
 }
 
+namespace systems
+{
+class SystemManager;
+}
+
 namespace editor
 {
 class SelectionManager;
@@ -36,10 +41,12 @@ public:
 	 * @param scene The scene containing entities to inspect
 	 * @param selectionManager Selection manager for tracking selected entities
 	 * @param commandHistory Command history for undo/redo support
+	 * @param systemManager System manager for accessing TransformSystem
 	 */
 	EntityInspectorPanel( ecs::Scene &scene,
 		SelectionManager &selectionManager,
-		CommandHistory &commandHistory );
+		CommandHistory &commandHistory,
+		systems::SystemManager &systemManager );
 
 	/**
 	 * @brief Render the inspector panel UI
@@ -66,6 +73,7 @@ private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
+	systems::SystemManager &m_systemManager;
 	bool m_visible;
 
 	// Rendering methods for different states

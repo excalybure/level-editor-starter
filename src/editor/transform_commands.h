@@ -9,6 +9,11 @@
 #include "editor/commands/Command.h"
 
 // Forward declarations
+namespace systems
+{
+class SystemManager;
+}
+
 namespace editor
 {
 struct GizmoResult;
@@ -31,8 +36,9 @@ public:
 	 * @brief Construct a transform command for a single entity
 	 * @param entity The entity to transform
 	 * @param scene The scene containing the entity
+	 * @param systemManager Optional pointer to SystemManager (can be nullptr)
 	 */
-	TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene ) noexcept;
+	TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, systems::SystemManager *systemManager = nullptr ) noexcept;
 
 	/**
 	 * @brief Construct a transform command with explicit before/after states
@@ -40,8 +46,9 @@ public:
 	 * @param scene The scene containing the entity
 	 * @param beforeTransform The transform state before the change
 	 * @param afterTransform The transform state after the change
+	 * @param systemManager Optional pointer to SystemManager (can be nullptr)
 	 */
-	TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, const components::Transform &beforeTransform, const components::Transform &afterTransform ) noexcept;
+	TransformEntityCommand( ecs::Entity entity, ecs::Scene &scene, const components::Transform &beforeTransform, const components::Transform &afterTransform, systems::SystemManager *systemManager = nullptr ) noexcept;
 
 	// Command interface implementation
 	bool execute() override;
@@ -67,10 +74,16 @@ public:
 private:
 	ecs::Entity m_entity;
 	ecs::Scene *m_scene;
+	systems::SystemManager *m_systemManager; // Optional, can be nullptr
 	components::Transform m_beforeTransform;
 	components::Transform m_afterTransform;
 	bool m_hasBeforeState = false;
 	bool m_hasAfterState = false;
+
+	// Helper to notify the TransformSystem (if available) that this entity's
+	// world transform needs to be recalculated. Extracted to reduce
+	// duplication between execute() and undo().
+	void notifyTransformSystemDirty() const noexcept;
 };
 
 /**
@@ -87,8 +100,9 @@ public:
 	 * @brief Construct a batch transform command for multiple entities
 	 * @param entities The entities to transform
 	 * @param scene The scene containing the entities
+	 * @param systemManager Optional pointer to SystemManager (can be nullptr)
 	 */
-	BatchTransformCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene ) noexcept;
+	BatchTransformCommand( const std::vector<ecs::Entity> &entities, ecs::Scene &scene, systems::SystemManager *systemManager = nullptr ) noexcept;
 
 	/**
 	 * @brief Add a transform for a specific entity with explicit before/after states
@@ -121,6 +135,7 @@ public:
 
 private:
 	ecs::Scene *m_scene;
+	systems::SystemManager *m_systemManager; // Optional, can be nullptr
 	std::vector<std::unique_ptr<TransformEntityCommand>> m_commands;
 };
 

@@ -16,10 +16,10 @@
         "visible": false
       },
       "commandHistory": {
-        "visible": true
+        "visible": false
       },
       "gizmoSettings": {
-        "visible": false
+        "visible": true
       },
       "gizmoTools": {
         "visible": true
@@ -30,16 +30,16 @@
     },
     "viewports": {
       "front": {
-        "open": false
+        "open": true
       },
       "perspective": {
         "open": false
       },
       "side": {
-        "open": false
+        "open": true
       },
       "top": {
-        "open": false
+        "open": true
       }
     }
   }

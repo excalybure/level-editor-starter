@@ -22,7 +22,7 @@ TEST_CASE( "EntityInspectorPanel - Panel can be constructed", "[T2.1][entity_ins
 	CommandHistory commandHistory;
 
 	// Act
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert
 	REQUIRE( panel.isVisible() ); // Should be visible by default
@@ -36,7 +36,7 @@ TEST_CASE( "EntityInspectorPanel - Panel visibility can be toggled", "[T2.1][ent
 	editor::SelectionManager selectionManager( scene, systemManager );
 	CommandHistory commandHistory;
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Act
 	panel.setVisible( false );
@@ -59,7 +59,7 @@ TEST_CASE( "EntityInspectorPanel - No selection shows empty state", "[T2.1][enti
 	editor::SelectionManager selectionManager( scene, systemManager );
 	CommandHistory commandHistory;
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Act - No entities selected
 	// Nothing to do here
@@ -80,7 +80,7 @@ TEST_CASE( "EntityInspectorPanel - Single selection shows entity info", "[T2.1][
 	const ecs::Entity entity = scene.createEntity( "TestEntity" );
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Act - Single entity selected
 	// Nothing to do here
@@ -103,7 +103,7 @@ TEST_CASE( "EntityInspectorPanel - Multiple selection shows multi-select state",
 	selectionManager.select( entity1, false );
 	selectionManager.select( entity2, true );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Act - Multiple entities selected
 	// Nothing to do here
@@ -122,7 +122,7 @@ TEST_CASE( "EntityInspectorPanel - Panel can be hidden and shown", "[T2.1][entit
 	editor::SelectionManager selectionManager( scene, systemManager );
 	CommandHistory commandHistory;
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Act & Assert - Toggle visibility multiple times
 	panel.setVisible( false );
@@ -162,7 +162,7 @@ TEST_CASE( "EntityInspectorPanel - Entity with Transform component can be inspec
 
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert - Panel should be able to access Transform component
 	REQUIRE( scene.hasComponent<components::Transform>( entity ) );
@@ -190,7 +190,7 @@ TEST_CASE( "EntityInspectorPanel - Entity with Name component can be inspected",
 
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert - Panel should be able to access Name component
 	const auto *name = scene.getComponent<components::Name>( entity );
@@ -217,7 +217,7 @@ TEST_CASE( "EntityInspectorPanel - Entity with Visible component can be inspecte
 
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert - Panel should be able to access Visible component
 	const auto *visibleComp = scene.getComponent<components::Visible>( entity );
@@ -244,7 +244,7 @@ TEST_CASE( "EntityInspectorPanel - Entity with MeshRenderer component can be ins
 
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert - Panel should be able to access MeshRenderer component
 	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
@@ -268,7 +268,7 @@ TEST_CASE( "EntityInspectorPanel - Can add components to entity via command", "[
 	const ecs::Entity entity = scene.createEntity( "TestEntity" );
 	selectionManager.select( entity );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Initially, entity should not have Transform component
 	REQUIRE( !scene.hasComponent<components::Transform>( entity ) );
@@ -322,7 +322,7 @@ TEST_CASE( "Can remove components from entity via command", "[T2.7][entity_inspe
 	visible.receiveShadows = false;
 	scene.addComponent( entity, visible );
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Initially, entity should have Visible component
 	REQUIRE( scene.hasComponent<components::Visible>( entity ) );
@@ -392,7 +392,7 @@ TEST_CASE( "Multi-selection shows common components", "[T2.8][entity_inspector][
 	selectionManager.select( entity2, true ); // additive = true
 	selectionManager.select( entity3, true ); // additive = true
 
-	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory );
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
 
 	// Assert - All entities should be selected
 	REQUIRE( selectionManager.getSelectionCount() == 3 );
