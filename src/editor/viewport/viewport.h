@@ -153,7 +153,7 @@ public:
 	void setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager );
 
 	// Setup selection renderer for visual feedback
-	void setupSelectionRenderer( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	void setupSelectionRenderer( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager = nullptr );
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations

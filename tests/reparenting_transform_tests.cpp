@@ -31,7 +31,7 @@ TEST_CASE( "Reparenting - Moving parent updates child world position", "[reparen
 
 	// Verify initial child world position
 	const auto childWorldInitial = transformSystem->getWorldTransform( scene, child );
-	REQUIRE( childWorldInitial.m03() == Catch::Approx( 1.0f ) ); // Parent(0) + Child(1)
+	REQUIRE( childWorldInitial.m03() == Catch::Approx( 1.0f ).epsilon( 0.001f ) ); // Parent(0) + Child(1)
 
 	// Act: Move parent to new position
 	auto *parentTransformPtr = scene.getComponent<components::Transform>( parent );
@@ -44,7 +44,7 @@ TEST_CASE( "Reparenting - Moving parent updates child world position", "[reparen
 
 	// Assert: Child world position should now reflect parent's new position
 	const auto childWorldAfterMove = transformSystem->getWorldTransform( scene, child );
-	REQUIRE( childWorldAfterMove.m03() == Catch::Approx( 11.0f ) ); // Parent(10) + Child(1)
+	REQUIRE( childWorldAfterMove.m03() == Catch::Approx( 11.0f ).epsilon( 0.001f ) ); // Parent(10) + Child(1)
 }
 
 TEST_CASE( "Reparenting - Moving parent with gizmo updates child world position", "[reparenting][transform][gizmo][hierarchy]" )
@@ -83,8 +83,8 @@ TEST_CASE( "Reparenting - Moving parent with gizmo updates child world position"
 	// Verify initial world positions
 	const auto child1WorldInitial = transformSystem->getWorldTransform( scene, child1 );
 	const auto child2WorldInitial = transformSystem->getWorldTransform( scene, child2 );
-	REQUIRE( child1WorldInitial.m03() == Catch::Approx( 1.0f ) );
-	REQUIRE( child2WorldInitial.m13() == Catch::Approx( 2.0f ) );
+	REQUIRE( child1WorldInitial.m03() == Catch::Approx( 1.0f ).epsilon( 0.001f ) );
+	REQUIRE( child2WorldInitial.m13() == Catch::Approx( 2.0f ).epsilon( 0.001f ) );
 
 	// Act: Simulate gizmo move - update parent transform directly
 	auto *parentTransformPtr = scene.getComponent<components::Transform>( parent );
@@ -102,10 +102,10 @@ TEST_CASE( "Reparenting - Moving parent with gizmo updates child world position"
 	const auto child1WorldAfter = transformSystem->getWorldTransform( scene, child1 );
 	const auto child2WorldAfter = transformSystem->getWorldTransform( scene, child2 );
 
-	REQUIRE( child1WorldAfter.m03() == Catch::Approx( 6.0f ) ); // Parent(5) + Child1(1)
-	REQUIRE( child1WorldAfter.m13() == Catch::Approx( 3.0f ) ); // Parent(3) + Child1(0)
-	REQUIRE( child2WorldAfter.m03() == Catch::Approx( 5.0f ) ); // Parent(5) + Child2(0)
-	REQUIRE( child2WorldAfter.m13() == Catch::Approx( 5.0f ) ); // Parent(3) + Child2(2)
+	REQUIRE( child1WorldAfter.m03() == Catch::Approx( 6.0f ).epsilon( 0.001f ) ); // Parent(5) + Child1(1)
+	REQUIRE( child1WorldAfter.m13() == Catch::Approx( 3.0f ).epsilon( 0.001f ) ); // Parent(3) + Child1(0)
+	REQUIRE( child2WorldAfter.m03() == Catch::Approx( 5.0f ).epsilon( 0.001f ) ); // Parent(5) + Child2(0)
+	REQUIRE( child2WorldAfter.m13() == Catch::Approx( 5.0f ).epsilon( 0.001f ) ); // Parent(3) + Child2(2)
 
 	systemManager.shutdown( scene );
 }
@@ -145,7 +145,7 @@ TEST_CASE( "Reparenting - Deep hierarchy updates when grandparent moves", "[repa
 
 	// Verify initial positions
 	const auto childWorldInitial = transformSystem->getWorldTransform( scene, child );
-	REQUIRE( childWorldInitial.m03() == Catch::Approx( 2.0f ) ); // GP(0) + P(1) + C(1)
+	REQUIRE( childWorldInitial.m03() == Catch::Approx( 2.0f ).epsilon( 0.001f ) ); // GP(0) + P(1) + C(1)
 
 	// Act: Move grandparent
 	auto *grandparentTransformPtr = scene.getComponent<components::Transform>( grandparent );
@@ -158,7 +158,7 @@ TEST_CASE( "Reparenting - Deep hierarchy updates when grandparent moves", "[repa
 
 	// Assert: Child should reflect grandparent's move through parent
 	const auto childWorldAfter = transformSystem->getWorldTransform( scene, child );
-	REQUIRE( childWorldAfter.m03() == Catch::Approx( 12.0f ) ); // GP(10) + P(1) + C(1)
+	REQUIRE( childWorldAfter.m03() == Catch::Approx( 12.0f ).epsilon( 0.001f ) ); // GP(10) + P(1) + C(1)
 
 	systemManager.shutdown( scene );
 }

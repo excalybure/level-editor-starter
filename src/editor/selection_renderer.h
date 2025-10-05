@@ -13,6 +13,11 @@ namespace ecs
 class Scene;
 }
 
+namespace systems
+{
+	class SystemManager;
+}
+
 namespace editor
 {
 
@@ -32,7 +37,7 @@ struct SelectionStyle
 class SelectionRenderer
 {
 public:
-	SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager );
+	SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager = nullptr );
 	~SelectionRenderer() = default;
 
 	// No copy/move for now
@@ -70,6 +75,7 @@ public:
 private:
 	dx12::Device &m_device;
 	shader_manager::ShaderManager &m_shaderManager;
+	systems::SystemManager *m_systemManager = nullptr;
 	SelectionStyle m_style;
 
 	// Shader handles

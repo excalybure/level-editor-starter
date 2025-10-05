@@ -15,12 +15,13 @@
 #include "runtime/time.h"
 #include "engine/shader_manager/shader_manager.h"
 #include "engine/gpu/mesh_gpu.h"
+#include "runtime/systems.h"
 
 namespace editor
 {
 
-SelectionRenderer::SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager )
-	: m_device( device ), m_shaderManager( shaderManager )
+SelectionRenderer::SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager )
+	: m_device( device ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
 {
 	setupRenderingResources();
 }
@@ -312,6 +313,16 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 
 math::Mat4<> SelectionRenderer::getEntityWorldMatrix( ecs::Entity entity, ecs::Scene &scene ) const
 {
+	// Prefer the TransformSystem world transform if available (handles hierarchy)
+	if ( m_systemManager )
+	{
+		if ( auto *transformSystem = m_systemManager->getSystem<systems::TransformSystem>() )
+		{
+			return transformSystem->getWorldTransform( scene, entity );
+		}
+	}
+
+	// Fallback to local matrix if no system manager or transform system
 	if ( auto *transform = scene.getComponent<components::Transform>( entity ) )
 	{
 		return transform->getLocalMatrix();

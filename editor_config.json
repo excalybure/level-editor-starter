@@ -30,16 +30,16 @@
     },
     "viewports": {
       "front": {
-        "open": true
-      },
-      "perspective": {
         "open": false
       },
-      "side": {
+      "perspective": {
         "open": true
       },
+      "side": {
+        "open": false
+      },
       "top": {
-        "open": true
+        "open": false
       }
     }
   }

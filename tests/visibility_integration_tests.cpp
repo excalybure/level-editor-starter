@@ -17,7 +17,7 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with Transform, MeshRenderer, and Visible components
@@ -74,7 +74,7 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity without Visible component (should still render)
@@ -99,7 +99,7 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with castShadows=false

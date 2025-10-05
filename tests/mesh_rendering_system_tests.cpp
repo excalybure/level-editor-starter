@@ -31,7 +31,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 
 	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	systems::MeshRenderingSystem system( renderer, shaderManager );
+	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
