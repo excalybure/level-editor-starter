@@ -632,6 +632,56 @@ TEST_CASE( "Name Component Auto-Add on Creation", "[ecs][name][creation]" )
 	}
 }
 
+TEST_CASE( "Visible Component Auto-Add on Creation", "[ecs][visible][creation]" )
+{
+	ecs::Scene scene;
+
+	SECTION( "Default entity creation auto-adds Visible component" )
+	{
+		const ecs::Entity entity = scene.createEntity();
+		REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+
+		const auto *visible = scene.getComponent<components::Visible>( entity );
+		REQUIRE( visible != nullptr );
+		REQUIRE( visible->visible == true );
+		REQUIRE( visible->castShadows == true );
+		REQUIRE( visible->receiveShadows == true );
+	}
+
+	SECTION( "Custom name entity creation auto-adds Visible component" )
+	{
+		const ecs::Entity entity = scene.createEntity( "TestEntity" );
+		REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+
+		const auto *visible = scene.getComponent<components::Visible>( entity );
+		REQUIRE( visible != nullptr );
+		REQUIRE( visible->visible == true );
+		REQUIRE( visible->castShadows == true );
+		REQUIRE( visible->receiveShadows == true );
+	}
+
+	SECTION( "Empty name entity creation auto-adds Visible component" )
+	{
+		const ecs::Entity entity = scene.createEntity( "" );
+		REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+
+		const auto *visible = scene.getComponent<components::Visible>( entity );
+		REQUIRE( visible != nullptr );
+		REQUIRE( visible->visible == true );
+	}
+
+	SECTION( "Multiple entities all have Visible component" )
+	{
+		const ecs::Entity entity1 = scene.createEntity( "Entity1" );
+		const ecs::Entity entity2 = scene.createEntity( "Entity2" );
+		const ecs::Entity entity3 = scene.createEntity();
+
+		REQUIRE( scene.hasComponent<components::Visible>( entity1 ) );
+		REQUIRE( scene.hasComponent<components::Visible>( entity2 ) );
+		REQUIRE( scene.hasComponent<components::Visible>( entity3 ) );
+	}
+}
+
 TEST_CASE( "Component Types Validation", "[ecs][components]" )
 {
 	// Verify all components satisfy the Component concept
@@ -1291,13 +1341,18 @@ TEST_CASE( "forEach Utility Comprehensive Coverage", "[ecs][iteration][forEach]"
 	{
 		const ecs::Entity visible1 = scene.createEntity( "Visible1" );
 		const ecs::Entity visible2 = scene.createEntity( "Visible2" );
-		const ecs::Entity noVisible = scene.createEntity( "NoVisible" );
+		const ecs::Entity visible3 = scene.createEntity( "Visible3" );
 
-		components::Visible v1, v2;
-		v1.visible = true;
-		v2.visible = false;
-		scene.addComponent( visible1, v1 );
-		scene.addComponent( visible2, v2 );
+		// All entities now have auto-added Visible components
+		// Modify some to test different states
+		auto *v1 = scene.getComponent<components::Visible>( visible1 );
+		v1->visible = true;
+
+		auto *v2 = scene.getComponent<components::Visible>( visible2 );
+		v2->visible = false;
+
+		auto *v3 = scene.getComponent<components::Visible>( visible3 );
+		v3->visible = true;
 
 		// Test forEach with Visible
 		int visibleCount = 0;
@@ -1311,8 +1366,8 @@ TEST_CASE( "forEach Utility Comprehensive Coverage", "[ecs][iteration][forEach]"
 				falseCount++;
 		} );
 
-		REQUIRE( visibleCount == 2 );
-		REQUIRE( trueCount == 1 );
+		REQUIRE( visibleCount == 3 );
+		REQUIRE( trueCount == 2 );
 		REQUIRE( falseCount == 1 );
 	}
 

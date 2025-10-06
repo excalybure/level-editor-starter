@@ -209,6 +209,9 @@ public:
 			addComponent( entity, components::Name{ name } );
 		}
 
+		// Auto-add Visible component with default visible state
+		addComponent( entity, components::Visible{ true, true, true } );
+
 		return entity;
 	}
 

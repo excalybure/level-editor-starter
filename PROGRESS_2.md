@@ -1,5 +1,29 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-06 — Auto-Add Visible Component to Created Entities
+**Summary:** Fixed oversight where entities were not automatically created with a `Visible` component, causing inconsistent behavior between rendering (which defaults to visible) and UI (which requires the component for editing). Implemented TDD fix: entities now auto-add `components::Visible{true, true, true}` in `Scene::createEntity()`, ensuring all entities have visibility control from creation and can be edited in the Entity Inspector immediately.
+
+**Atomic functionalities completed:**
+- AF1: Write failing tests - Added new test case "Visible Component Auto-Add on Creation" with 4 sections verifying default entity, custom name entity, empty name entity, and multiple entities all have auto-added Visible components
+- AF2: Implement auto-add feature - Modified `Scene::createEntity()` to call `addComponent(entity, components::Visible{true, true, true})` after entity creation
+- AF3: Fix existing tests - Updated `forEach with Visible components` test to expect 3 entities (all with auto-added components) and modified `AddComponentCommand` test to use `MeshRenderer` instead of `Visible`
+
+**Tests:** 4 new test sections with 16 assertions in new test case; fixed 2 existing tests. Filtered commands: `unit_test_runner.exe "[ecs][visible][creation]"` for new tests, full suite passes with 22,945 assertions (525 test cases)
+
+**Acceptance:**
+- ✅ All entities created with `Scene::createEntity()` automatically have `Visible` component
+- ✅ Default visible state: `{visible=true, castShadows=true, receiveShadows=true}`
+- ✅ Entity Inspector can display/edit visibility immediately without manual component addition
+- ✅ Consistent behavior: no implicit "visible by default" fallback needed in rendering system
+- ✅ No regressions: all existing tests pass after adjustments
+
+**Notes:**
+- Similar pattern to `Name` component auto-add (for non-default names)
+- Visibility is now a first-class property of all entities, not an optional component
+- Rendering system's fallback (entities without Visible treated as visible) still in place for backward compatibility with any edge cases
+
+---
+
 ## 2025-10-06 — Fullscreen Toggle with Alt+Enter and View Menu
 **Summary:** Implemented fullscreen toggle functionality for the editor window, allowing users to switch between fullscreen and windowed mode using Alt+Enter keyboard shortcut or via the View menu. The `Win32Window` class now supports fullscreen state management with proper restoration of windowed position and size. The UI integrates the fullscreen control through both keyboard shortcut handling and a menu item with visual state indicator.
 

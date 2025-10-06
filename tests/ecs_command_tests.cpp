@@ -344,20 +344,18 @@ TEST_CASE( "AddComponentCommand template functionality", "[ecs-commands][unit][A
 		ecs::Scene scene;
 		const ecs::Entity entity = scene.createEntity( "TestEntity" );
 
-		components::Visible visible;
-		visible.visible = false;
-		visible.castShadows = true;
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = 42;
 
-		editor::AddComponentCommand<components::Visible> cmd( scene, entity, visible );
+		editor::AddComponentCommand<components::MeshRenderer> cmd( scene, entity, meshRenderer );
 
-		REQUIRE( !scene.hasComponent<components::Visible>( entity ) );
+		REQUIRE( !scene.hasComponent<components::MeshRenderer>( entity ) );
 		REQUIRE( cmd.execute() );
-		REQUIRE( scene.hasComponent<components::Visible>( entity ) );
+		REQUIRE( scene.hasComponent<components::MeshRenderer>( entity ) );
 
 		// Verify component values
-		const auto *visibleComp = scene.getComponent<components::Visible>( entity );
-		REQUIRE( !visibleComp->visible );
-		REQUIRE( visibleComp->castShadows );
+		const auto *meshComp = scene.getComponent<components::MeshRenderer>( entity );
+		REQUIRE( meshComp->meshHandle == 42 );
 	}
 
 	SECTION( "AddComponentCommand undo removes component from entity" )
