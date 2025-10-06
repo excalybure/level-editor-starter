@@ -56,29 +56,15 @@ bool Win32Window::create( const char *title, int width, int height, bool visible
 	}
 
 	// Determine window dimensions and style
-	// For hidden windows (tests), use requested dimensions
-	// For visible windows (main app), use fullscreen
-	int windowWidth = width;
-	int windowHeight = height;
-	DWORD windowStyle = WS_POPUP;
+	// Always create in windowed mode initially (fullscreen can be applied after creation)
+	DWORD windowStyle = visible ? WS_OVERLAPPEDWINDOW : WS_OVERLAPPEDWINDOW;
+	m_isFullscreen = false; // Start windowed
 
-	if ( visible )
-	{
-		// Fullscreen mode for visible windows
-		windowWidth = GetSystemMetrics( SM_CXSCREEN );
-		windowHeight = GetSystemMetrics( SM_CYSCREEN );
-	}
-	else
-	{
-		// Windowed mode with requested dimensions for hidden windows (tests)
-		windowStyle = WS_OVERLAPPEDWINDOW;
-
-		// Adjust window size to account for borders/title bar to get correct client area
-		RECT rect = { 0, 0, width, height };
-		AdjustWindowRect( &rect, windowStyle, FALSE );
-		windowWidth = rect.right - rect.left;
-		windowHeight = rect.bottom - rect.top;
-	}
+	// Adjust window size to account for borders/title bar to get correct client area
+	RECT rect = { 0, 0, width, height };
+	AdjustWindowRect( &rect, windowStyle, FALSE );
+	const int windowWidth = rect.right - rect.left;
+	const int windowHeight = rect.bottom - rect.top;
 
 	// Store the requested dimensions (not screen dimensions)
 	m_width = width;
@@ -157,6 +143,61 @@ void Win32Window::getSize( int &width, int &height ) const
 void Win32Window::addEvent( const WindowEvent &event )
 {
 	m_eventQueue.push( event );
+}
+
+void Win32Window::setFullscreen( bool fullscreen )
+{
+#if defined( _WIN32 )
+	if ( !m_hwnd || m_isFullscreen == fullscreen )
+		return; // No change needed
+
+	if ( fullscreen )
+	{
+		// Transitioning to fullscreen
+		// Save current windowed position and size
+		RECT rect;
+		GetWindowRect( m_hwnd, &rect );
+		m_savedX = rect.left;
+		m_savedY = rect.top;
+		m_savedWidth = m_width;
+		m_savedHeight = m_height;
+
+		// Get screen dimensions
+		const int screenWidth = GetSystemMetrics( SM_CXSCREEN );
+		const int screenHeight = GetSystemMetrics( SM_CYSCREEN );
+
+		// Change to popup style (no borders)
+		SetWindowLongW( m_hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE );
+
+		// Move to top-left corner and resize to screen dimensions
+		SetWindowPos( m_hwnd, HWND_TOP, 0, 0, screenWidth, screenHeight, SWP_FRAMECHANGED );
+
+		// Update internal size tracking
+		m_width = screenWidth;
+		m_height = screenHeight;
+		m_isFullscreen = true;
+	}
+	else
+	{
+		// Transitioning to windowed mode
+		// Restore windowed style (with borders)
+		SetWindowLongW( m_hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE );
+
+		// Calculate window dimensions including borders/title bar
+		RECT rect = { 0, 0, m_savedWidth, m_savedHeight };
+		AdjustWindowRect( &rect, WS_OVERLAPPEDWINDOW, FALSE );
+		const int windowWidth = rect.right - rect.left;
+		const int windowHeight = rect.bottom - rect.top;
+
+		// Restore position and size
+		SetWindowPos( m_hwnd, nullptr, m_savedX, m_savedY, windowWidth, windowHeight, SWP_FRAMECHANGED | SWP_NOZORDER );
+
+		// Update internal size tracking
+		m_width = m_savedWidth;
+		m_height = m_savedHeight;
+		m_isFullscreen = false;
+	}
+#endif
 }
 
 #if defined( _WIN32 )

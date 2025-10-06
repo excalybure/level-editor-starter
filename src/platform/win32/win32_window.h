@@ -81,6 +81,10 @@ public:
 	void getSize( int &width, int &height ) const;
 	bool isFocused() const { return m_focused; }
 
+	// Fullscreen management
+	void setFullscreen( bool fullscreen );
+	bool isFullscreen() const { return m_isFullscreen; }
+
 	// Native handles for graphics API integration
 	HWND getHandle() const { return m_hwnd; }
 	HINSTANCE getInstance() const { return m_hinstance; }
@@ -92,6 +96,13 @@ private:
 	bool m_focused = true;
 	int m_width = 0;
 	int m_height = 0;
+
+	// Fullscreen state
+	bool m_isFullscreen = false;
+	int m_savedX = 0;
+	int m_savedY = 0;
+	int m_savedWidth = 0;
+	int m_savedHeight = 0;
 
 	// Event queue
 	std::queue<WindowEvent> m_eventQueue;

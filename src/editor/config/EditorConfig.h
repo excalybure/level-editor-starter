@@ -70,6 +70,21 @@ public:
 	 */
 	void setBool( const std::string &key, bool value );
 
+	/**
+	 * @brief Get integer value from configuration
+	 * @param key Hierarchical key path (e.g., "window.width")
+	 * @param defaultValue Value to return if key doesn't exist
+	 * @return Integer value or default
+	 */
+	int getInt( const std::string &key, int defaultValue ) const;
+
+	/**
+	 * @brief Set integer value in configuration
+	 * @param key Hierarchical key path (e.g., "window.width")
+	 * @param value Integer value to store
+	 */
+	void setInt( const std::string &key, int value );
+
 private:
 	std::string m_filePath;
 	std::unique_ptr<nlohmann::json> m_data;

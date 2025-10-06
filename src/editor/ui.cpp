@@ -61,6 +61,13 @@ static constexpr const char *kViewportPerspectiveOpen = "ui.viewports.perspectiv
 static constexpr const char *kViewportTopOpen = "ui.viewports.top.open";
 static constexpr const char *kViewportFrontOpen = "ui.viewports.front.open";
 static constexpr const char *kViewportSideOpen = "ui.viewports.side.open";
+
+// Window state keys
+static constexpr const char *kWindowFullscreen = "window.fullscreen";
+static constexpr const char *kWindowWidth = "window.width";
+static constexpr const char *kWindowHeight = "window.height";
+static constexpr const char *kWindowX = "window.x";
+static constexpr const char *kWindowY = "window.y";
 } // namespace ConfigKeys
 
 // Helper functions to convert between our Vec2 and ImVec2
@@ -84,6 +91,9 @@ struct UI::Impl
 
 	// Store device reference for swap chain resize operations
 	dx12::Device *device = nullptr;
+
+	// Store window reference for fullscreen toggle
+	platform::Win32Window *window = nullptr;
 
 	// Grid settings window state
 	bool showGridSettingsWindow = false;
@@ -304,6 +314,20 @@ void UI::shutdown()
 		m_impl->editorConfig->setBool( ConfigKeys::kViewportTopOpen, m_layout.panes[1].isOpen );
 		m_impl->editorConfig->setBool( ConfigKeys::kViewportFrontOpen, m_layout.panes[2].isOpen );
 		m_impl->editorConfig->setBool( ConfigKeys::kViewportSideOpen, m_layout.panes[3].isOpen );
+
+		// Save window state (fullscreen and dimensions)
+		if ( m_impl->window )
+		{
+			m_impl->editorConfig->setBool( ConfigKeys::kWindowFullscreen, m_impl->window->isFullscreen() );
+
+			int width = 0, height = 0;
+			m_impl->window->getSize( width, height );
+			m_impl->editorConfig->setInt( ConfigKeys::kWindowWidth, width );
+			m_impl->editorConfig->setInt( ConfigKeys::kWindowHeight, height );
+
+			// Note: Window position (x, y) could be saved here if Win32Window provided getPosition()
+			// For now, we save size and fullscreen state
+		}
 
 		// Write config to disk
 		m_impl->editorConfig->save();
@@ -706,6 +730,14 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 			if ( ImGui::MenuItem( "Asset Browser", nullptr, showAssetBrowserPanel ) )
 			{
 				showAssetBrowserPanel = !showAssetBrowserPanel;
+			}
+
+			ImGui::Separator();
+
+			// Fullscreen toggle
+			if ( ImGui::MenuItem( "Fullscreen", "Alt+Enter", ui.m_impl->window->isFullscreen() ) )
+			{
+				ui.m_impl->window->setFullscreen( !ui.m_impl->window->isFullscreen() );
 			}
 
 			ImGui::EndMenu();
@@ -1704,12 +1736,21 @@ bool UI::handleKeyPress( const platform::WindowEvent &windowEvent, ViewportInput
 {
 	const bool isCtrl = windowEvent.keyboard.ctrl;
 	const bool isShift = windowEvent.keyboard.shift;
+	const bool isAlt = windowEvent.keyboard.alt;
 	const int keyCode = windowEvent.keyboard.keycode;
 	const auto &io = ImGui::GetIO();
 
 	// Only process file shortcuts if ImGui isn't capturing keyboard
 	if ( !io.WantCaptureKeyboard )
 	{
+		// Check for Alt+Enter fullscreen toggle first
+		if ( isAlt && keyCode == VK_RETURN )
+		{
+			// Toggle fullscreen
+			m_impl->window->setFullscreen( !m_impl->window->isFullscreen() );
+			return true; // consumed
+		}
+
 		// Ctrl+S or Ctrl+Shift+S: Save operations
 		if ( isCtrl && keyCode == 'S' )
 		{
@@ -1741,10 +1782,10 @@ bool UI::handleKeyPress( const platform::WindowEvent &windowEvent, ViewportInput
 
 	// Not handled: convert to viewport event for normal processing
 	viewportEvent.type = ViewportInputEvent::Type::KeyPress;
-	viewportEvent.keyboard.keyCode = windowEvent.keyboard.keycode;
-	viewportEvent.keyboard.shift = windowEvent.keyboard.shift;
-	viewportEvent.keyboard.ctrl = windowEvent.keyboard.ctrl;
-	viewportEvent.keyboard.alt = windowEvent.keyboard.alt;
+	viewportEvent.keyboard.keyCode = keyCode;
+	viewportEvent.keyboard.shift = isShift;
+	viewportEvent.keyboard.ctrl = isCtrl;
+	viewportEvent.keyboard.alt = isAlt;
 	return false;
 }
 
@@ -1752,6 +1793,9 @@ void UI::processInputEvents( platform::Win32Window &window )
 {
 	if ( !m_initialized )
 		return;
+
+	// Store window reference for menu access
+	m_impl->window = &window;
 
 	platform::WindowEvent windowEvent;
 	while ( window.getEvent( windowEvent ) )

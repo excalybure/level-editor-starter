@@ -1,5 +1,6 @@
 #include "editor/ui.h"
 #include "editor/selection.h"
+#include "editor/config/EditorConfig.h"
 #include "engine/assets/asset_manager.h"
 #include "engine/gpu/gpu_resource_manager.h"
 #include "engine/integration/asset_gltf_integration.h"
@@ -69,13 +70,25 @@ int main()
 	// Fix current working directory - search for shaders folder
 	fixWorkingDirectory();
 
-	// Create the window
+	// Load editor config to restore window state
+	editor::EditorConfig editorConfig( "editor_config.json" );
+	const bool configLoaded = editorConfig.load();
+
+	// Determine window dimensions from config or use defaults
+	const int windowWidth = configLoaded ? editorConfig.getInt( "window.width", 1600 ) : 1600;
+	const int windowHeight = configLoaded ? editorConfig.getInt( "window.height", 900 ) : 900;
+	const bool startFullscreen = configLoaded ? editorConfig.getBool( "window.fullscreen", true ) : true;
+
+	// Create the window with loaded or default dimensions
 	platform::Win32Window window;
-	if ( !window.create( "Level Editor - Multi-Viewport", 1600, 900 ) )
+	if ( !window.create( "Level Editor - Multi-Viewport", windowWidth, windowHeight ) )
 	{
 		console::fatal( "Failed to create window" );
 		return 1;
 	}
+
+	// Apply fullscreen state from config (default to fullscreen per user requirements)
+	window.setFullscreen( startFullscreen );
 
 	// Initialize D3D12 device
 	dx12::Device device;

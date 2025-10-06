@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-06 — Fullscreen Toggle with Alt+Enter and View Menu
+**Summary:** Implemented fullscreen toggle functionality for the editor window, allowing users to switch between fullscreen and windowed mode using Alt+Enter keyboard shortcut or via the View menu. The `Win32Window` class now supports fullscreen state management with proper restoration of windowed position and size. The UI integrates the fullscreen control through both keyboard shortcut handling and a menu item with visual state indicator.
+
+**Atomic functionalities completed:**
+- AF1: Add fullscreen state tracking to `Win32Window` - Added `m_isFullscreen`, `m_savedX`, `m_savedY`, `m_savedWidth`, and `m_savedHeight` member variables to track fullscreen state and preserve windowed mode configuration.
+- AF2: Implement `setFullscreen(true)` to switch to fullscreen mode - Saves current window position/size, changes window style to `WS_POPUP`, and resizes to screen dimensions using Win32 APIs (`SetWindowLongW`, `SetWindowPos`, `GetSystemMetrics`).
+- AF3: Implement `setFullscreen(false)` to restore windowed mode - Restores `WS_OVERLAPPEDWINDOW` style, calculates adjusted window dimensions with borders, and repositions to saved coordinates.
+- AF4: Add `isFullscreen()` query method - Simple const accessor returning `m_isFullscreen` boolean state.
+- AF5: Handle Alt+Enter keyboard shortcut in UI - Intercepts Alt+Enter in `UI::processInputEvents()` before forwarding to viewports, toggles fullscreen state via stored window pointer.
+- AF6: Add "Fullscreen" menu item to View menu - Added separator and menu item at bottom of View menu with Alt+Enter shortcut label and checkmark visual indicator of current state.
+
+**Tests:** 3 new test cases with 25 assertions; filtered command: `unit_test_runner.exe "[fullscreen]"`
+- `Win32Window starts in windowed mode by default` - Verifies default `isFullscreen()` returns false
+- `Win32Window can toggle to fullscreen and back` - Tests complete cycle: windowed→fullscreen→windowed, verifying window styles (`WS_POPUP`, `WS_OVERLAPPEDWINDOW`), screen dimensions, and size restoration
+- `Win32Window preserves windowed position when toggling fullscreen` - Verifies window position is saved and restored when toggling (with margin for DPI/border adjustments)
+
+**Notes:**
+- Fullscreen implementation uses standard Win32 pattern: style changes + repositioning rather than display mode changes
+- Window reference stored in `UI::Impl::window` when `processInputEvents()` is called, allowing menu to access window
+- Alt+Enter handled early in event processing (before `handleKeyPress()`) to ensure reliable detection
+- Menu item shows checkmark when fullscreen active, matching standard editor conventions
+- Windowed position/size preserved across fullscreen transitions for smooth user experience
+- Solution maintains existing window creation behavior (fullscreen for visible windows, windowed for tests)
+- Tests verify both API functionality and proper Win32 window state transitions
+- Build successful, all 25 fullscreen tests pass
+
 ## 2025-10-04 — File Operation Keyboard Shortcuts Implementation (WindowEvent-based)
 **Summary:** Fixed bug where Ctrl+S and Ctrl+Shift+S keyboard shortcuts did not trigger scene save operations, though menu items worked correctly. ImGui `MenuItem()` only displays shortcuts as labels and does not automatically process them - keyboard handling must be implemented separately. Initially attempted using `ImGui::IsKeyPressed()` but discovered ImGui does not reliably detect Ctrl+Shift+S combinations. Root cause: ImGui's key detection was not capturing the Ctrl+Shift+S combination even though platform WindowEvents were receiving it correctly. Solution: Switched from ImGui-based key detection to WindowEvent-based detection in the `processInputEvents()` loop where raw keyboard events from Win32 are available. This provides direct access to modifier states (Ctrl, Shift, Alt) and key codes before ImGui processes them, ensuring reliable detection of all file operation shortcuts.
 

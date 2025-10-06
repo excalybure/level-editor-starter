@@ -199,3 +199,80 @@ TEST_CASE( "EditorConfig setBool/getBool persists through save/load", "[editor-c
 
 	deleteTestConfigFile( testPath );
 }
+// ============================================================================
+// AF1: Test integer get/set support
+// ============================================================================
+TEST_CASE( "EditorConfig can store and retrieve integers", "[editor-config][unit][integers]" )
+{
+	const std::string testPath = "test_int_config.json";
+	deleteTestConfigFile( testPath );
+
+	editor::EditorConfig config( testPath );
+
+	// Test setting integers
+	config.setInt( "window.width", 1920 );
+	config.setInt( "window.height", 1080 );
+	config.setInt( "window.x", 100 );
+	config.setInt( "window.y", 50 );
+
+	// Save to disk
+	REQUIRE( config.save() );
+
+	// Load in new instance and verify
+	{
+		editor::EditorConfig config2( testPath );
+		REQUIRE( config2.load() );
+
+		REQUIRE( config2.getInt( "window.width", 0 ) == 1920 );
+		REQUIRE( config2.getInt( "window.height", 0 ) == 1080 );
+		REQUIRE( config2.getInt( "window.x", 0 ) == 100 );
+		REQUIRE( config2.getInt( "window.y", 0 ) == 50 );
+	}
+
+	deleteTestConfigFile( testPath );
+}
+
+TEST_CASE( "EditorConfig getInt returns default for missing keys", "[editor-config][unit][integers]" )
+{
+	const std::string testPath = "test_int_default_config.json";
+	deleteTestConfigFile( testPath );
+
+	editor::EditorConfig config( testPath );
+	config.load(); // Load empty/missing file
+
+	// Should return defaults for missing keys
+	REQUIRE( config.getInt( "missing.key", 42 ) == 42 );
+	REQUIRE( config.getInt( "another.missing", -1 ) == -1 );
+
+	deleteTestConfigFile( testPath );
+}
+
+TEST_CASE( "EditorConfig can mix booleans and integers", "[editor-config][unit][integers]" )
+{
+	const std::string testPath = "test_mixed_config.json";
+	deleteTestConfigFile( testPath );
+
+	editor::EditorConfig config( testPath );
+
+	// Set mix of types
+	config.setBool( "window.fullscreen", true );
+	config.setInt( "window.width", 1600 );
+	config.setInt( "window.height", 900 );
+	config.setBool( "ui.panels.visible", false );
+
+	// Save and reload
+	REQUIRE( config.save() );
+
+	{
+		editor::EditorConfig config2( testPath );
+		REQUIRE( config2.load() );
+
+		// Verify both types work
+		REQUIRE( config2.getBool( "window.fullscreen", false ) == true );
+		REQUIRE( config2.getInt( "window.width", 0 ) == 1600 );
+		REQUIRE( config2.getInt( "window.height", 0 ) == 900 );
+		REQUIRE( config2.getBool( "ui.panels.visible", true ) == false );
+	}
+
+	deleteTestConfigFile( testPath );
+}

@@ -42,5 +42,10 @@
         "open": false
       }
     }
+  },
+  "window": {
+    "fullscreen": true,
+    "height": 1440,
+    "width": 3440
   }
 }

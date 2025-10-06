@@ -214,4 +214,89 @@ void EditorConfig::setBool( const std::string &key, const bool value )
 	}
 }
 
+
+int EditorConfig::getInt( const std::string &key, const int defaultValue ) const
+{
+	const std::vector<std::string> segments = splitKey( key );
+	if ( segments.empty() )
+	{
+		return defaultValue;
+	}
+
+	try
+	{
+		const json *current = m_data.get();
+
+		// Navigate through the path
+		for ( size_t i = 0; i < segments.size(); ++i )
+		{
+			const std::string &segment = segments[i];
+
+			if ( !current->contains( segment ) )
+			{
+				return defaultValue;
+			}
+
+			if ( i == segments.size() - 1 )
+			{
+				// Last segment - get the value
+				const auto &value = ( *current )[segment];
+				if ( value.is_number_integer() )
+				{
+					return value.get<int>();
+				}
+				return defaultValue;
+			}
+
+			// Not last segment - navigate deeper
+			current = &( ( *current )[segment] );
+		}
+
+		return defaultValue;
+	}
+	catch ( const std::exception & )
+	{
+		return defaultValue;
+	}
+}
+
+void EditorConfig::setInt( const std::string &key, const int value )
+{
+	const std::vector<std::string> segments = splitKey( key );
+	if ( segments.empty() )
+	{
+		return;
+	}
+
+	try
+	{
+		json *current = m_data.get();
+
+		// Navigate/create the path
+		for ( size_t i = 0; i < segments.size(); ++i )
+		{
+			const std::string &segment = segments[i];
+
+			if ( i == segments.size() - 1 )
+			{
+				// Last segment - set the value
+				( *current )[segment] = value;
+				return;
+			}
+
+			// Not last segment - ensure it's an object and navigate
+			if ( !current->contains( segment ) || !( *current )[segment].is_object() )
+			{
+				( *current )[segment] = json::object();
+			}
+
+			current = &( ( *current )[segment] );
+		}
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "Error setting int value for key {}: {}", key, e.what() );
+	}
+}
+
 } // namespace editor

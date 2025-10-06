@@ -555,3 +555,120 @@ TEST_CASE( "Win32Window ImGui input integration", "[win32][window][imgui]" )
 	WARN( "Win32 window ImGui integration tests skipped: not on Win32 platform" );
 #endif
 }
+
+// ============================================================================
+// AF1: Test fullscreen state tracking
+// ============================================================================
+TEST_CASE( "Win32Window starts in windowed mode by default", "[win32][window][fullscreen]" )
+{
+#if defined( _WIN32 )
+	platform::Win32Window window;
+	REQUIRE( window.create( "FullscreenTestWindow", 800, 600, false ) );
+	drainAllEvents( window );
+
+	// Window should start in windowed mode (not fullscreen)
+	REQUIRE_FALSE( window.isFullscreen() );
+#else
+	WARN( "Win32 window fullscreen tests skipped: not on Win32 platform" );
+#endif
+}
+
+// ============================================================================
+// AF2 & AF3: Test setFullscreen() toggle
+// ============================================================================
+TEST_CASE( "Win32Window can toggle to fullscreen and back", "[win32][window][fullscreen]" )
+{
+#if defined( _WIN32 )
+	platform::Win32Window window;
+	REQUIRE( window.create( "FullscreenToggleWindow", 800, 600, false ) );
+	drainAllEvents( window );
+
+	const HWND hwnd = static_cast<HWND>( window.getHandle() );
+	REQUIRE( hwnd != nullptr );
+
+	// Start in windowed mode
+	REQUIRE_FALSE( window.isFullscreen() );
+	const LONG initialStyle = GetWindowLongW( hwnd, GWL_STYLE );
+	REQUIRE( ( initialStyle & WS_OVERLAPPEDWINDOW ) != 0 ); // Should have window frame
+
+	// Toggle to fullscreen
+	window.setFullscreen( true );
+	REQUIRE( window.poll() ); // Process any messages
+	drainAllEvents( window );
+
+	REQUIRE( window.isFullscreen() );
+	const LONG fullscreenStyle = GetWindowLongW( hwnd, GWL_STYLE );
+	REQUIRE( ( fullscreenStyle & WS_POPUP ) != 0 );			   // Should be popup style
+	REQUIRE( ( fullscreenStyle & WS_OVERLAPPEDWINDOW ) == 0 ); // No window frame
+
+	// Window should be at screen dimensions
+	int fullscreenW = 0, fullscreenH = 0;
+	window.getSize( fullscreenW, fullscreenH );
+	const int screenW = GetSystemMetrics( SM_CXSCREEN );
+	const int screenH = GetSystemMetrics( SM_CYSCREEN );
+	REQUIRE( fullscreenW == screenW );
+	REQUIRE( fullscreenH == screenH );
+
+	// Toggle back to windowed
+	window.setFullscreen( false );
+	REQUIRE( window.poll() ); // Process any messages
+	drainAllEvents( window );
+
+	REQUIRE_FALSE( window.isFullscreen() );
+	const LONG windowedStyle = GetWindowLongW( hwnd, GWL_STYLE );
+	REQUIRE( ( windowedStyle & WS_OVERLAPPEDWINDOW ) != 0 ); // Should have window frame again
+
+	// Window should restore to original size
+	int restoredW = 0, restoredH = 0;
+	window.getSize( restoredW, restoredH );
+	REQUIRE( restoredW == 800 );
+	REQUIRE( restoredH == 600 );
+#else
+	WARN( "Win32 window fullscreen tests skipped: not on Win32 platform" );
+#endif
+}
+
+// ============================================================================
+// AF3: Test windowed size/position restoration
+// ============================================================================
+TEST_CASE( "Win32Window preserves windowed position when toggling fullscreen", "[win32][window][fullscreen]" )
+{
+#if defined( _WIN32 )
+	platform::Win32Window window;
+	REQUIRE( window.create( "PositionRestoreWindow", 640, 480, false ) );
+	drainAllEvents( window );
+
+	const HWND hwnd = static_cast<HWND>( window.getHandle() );
+
+	// Move window to specific position
+	const int testX = 100, testY = 150;
+	SetWindowPos( hwnd, nullptr, testX, testY, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+	REQUIRE( window.poll() );
+	drainAllEvents( window );
+
+	RECT beforeRect;
+	GetWindowRect( hwnd, &beforeRect );
+	const int savedX = beforeRect.left;
+	const int savedY = beforeRect.top;
+
+	// Toggle to fullscreen
+	window.setFullscreen( true );
+	REQUIRE( window.poll() );
+	drainAllEvents( window );
+	REQUIRE( window.isFullscreen() );
+
+	// Toggle back to windowed
+	window.setFullscreen( false );
+	REQUIRE( window.poll() );
+	drainAllEvents( window );
+	REQUIRE_FALSE( window.isFullscreen() );
+
+	// Position should be restored (approximately, accounting for DPI/borders)
+	RECT afterRect;
+	GetWindowRect( hwnd, &afterRect );
+	REQUIRE( afterRect.left == Approx( savedX ).margin( 50 ) );
+	REQUIRE( afterRect.top == Approx( savedY ).margin( 50 ) );
+#else
+	WARN( "Win32 window fullscreen tests skipped: not on Win32 platform" );
+#endif
+}
