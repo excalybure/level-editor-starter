@@ -285,6 +285,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/command_performance_tests.cpp
     tests/command_integration_tests.cpp
     tests/entity_fixup_test.cpp
+    tests/duplicate_entity_tests.cpp
     tests/gizmo_command_integration_tests.cpp
     tests/scene_hierarchy_tests.cpp
     tests/entity_inspector_tests.cpp

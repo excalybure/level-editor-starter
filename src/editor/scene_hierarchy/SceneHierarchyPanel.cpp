@@ -357,12 +357,44 @@ void SceneHierarchyPanel::renderContextMenu( ecs::Entity entity )
 		if ( ImGui::MenuItem( "Duplicate" ) )
 		{
 			// TODO: Implement DuplicateEntityCommand
-			// For now, just create a new entity with same name
+			// For now, create a new entity and manually copy all components
 			const auto *name = m_scene.getComponent<components::Name>( entity );
 			const std::string newName = name ? name->name + " Copy" : "Entity Copy";
 
-			auto command = std::make_unique<CreateEntityCommand>( m_scene, newName );
-			m_commandHistory.executeCommand( std::move( command ) );
+			// Create the entity command and keep a pointer before moving it
+			auto createCommand = std::make_unique<CreateEntityCommand>( m_scene, newName );
+			CreateEntityCommand *createCmdPtr = createCommand.get();
+
+			if ( m_commandHistory.executeCommand( std::move( createCommand ) ) )
+			{
+				const ecs::Entity newEntity = createCmdPtr->getCreatedEntity();
+
+				// Copy Transform component if it exists
+				if ( m_scene.hasComponent<components::Transform>( entity ) )
+				{
+					const auto *transform = m_scene.getComponent<components::Transform>( entity );
+					auto addTransformCmd = std::make_unique<AddComponentCommand<components::Transform>>( m_scene, newEntity, *transform );
+					m_commandHistory.executeCommand( std::move( addTransformCmd ) );
+				}
+
+				// Copy Visible component if it exists
+				if ( m_scene.hasComponent<components::Visible>( entity ) )
+				{
+					const auto *visible = m_scene.getComponent<components::Visible>( entity );
+					auto addVisibleCmd = std::make_unique<AddComponentCommand<components::Visible>>( m_scene, newEntity, *visible );
+					m_commandHistory.executeCommand( std::move( addVisibleCmd ) );
+				}
+
+				// Copy MeshRenderer component if it exists
+				if ( m_scene.hasComponent<components::MeshRenderer>( entity ) )
+				{
+					const auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
+					auto addMeshRendererCmd = std::make_unique<AddComponentCommand<components::MeshRenderer>>( m_scene, newEntity, *meshRenderer );
+					m_commandHistory.executeCommand( std::move( addMeshRendererCmd ) );
+				}
+
+				// Note: We don't copy the Selected component - duplicated entities should not be selected by default
+			}
 		}
 
 		// Delete
