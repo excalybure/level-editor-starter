@@ -84,6 +84,10 @@ private:
 	std::optional<components::MeshRenderer> m_meshRenderer;
 	std::optional<components::Selected> m_selected;
 
+	// Hierarchy state
+	ecs::Entity m_parent;
+	bool m_hadParent = false;
+
 	void captureEntityState();
 	void restoreEntityState();
 };

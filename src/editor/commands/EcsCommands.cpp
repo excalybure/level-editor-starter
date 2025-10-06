@@ -153,7 +153,9 @@ bool DeleteEntityCommand::mergeWith( std::unique_ptr<Command> /* other */ )
 
 bool DeleteEntityCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
 {
-	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+	bool updated = editor::updateEntityReference( m_entity, oldEntity, newEntity );
+	updated |= editor::updateEntityReference( m_parent, oldEntity, newEntity );
+	return updated;
 }
 
 ecs::Entity DeleteEntityCommand::getRecreatedEntity() const
@@ -189,6 +191,10 @@ void DeleteEntityCommand::captureEntityState()
 	{
 		m_selected = *m_scene.getComponent<components::Selected>( m_entity );
 	}
+
+	// Capture parent-child hierarchy relationship
+	m_parent = m_scene.getParent( m_entity );
+	m_hadParent = m_parent.isValid();
 }
 
 void DeleteEntityCommand::restoreEntityState()
@@ -212,6 +218,12 @@ void DeleteEntityCommand::restoreEntityState()
 	if ( m_selected.has_value() )
 	{
 		m_scene.addComponent( m_entity, m_selected.value() );
+	}
+
+	// Restore parent-child hierarchy relationship
+	if ( m_hadParent )
+	{
+		m_scene.setParent( m_entity, m_parent );
 	}
 }
 

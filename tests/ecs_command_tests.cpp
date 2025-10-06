@@ -233,6 +233,43 @@ TEST_CASE( "DeleteEntityCommand with complete component restoration", "[ecs-comm
 		REQUIRE( !cmd1.canMergeWith( &cmd2 ) );
 		REQUIRE( !cmd1.mergeWith( std::make_unique<editor::DeleteEntityCommand>( scene, entity2 ) ) );
 	}
+
+	SECTION( "DeleteEntityCommand preserves parent-child hierarchy on undo" )
+	{
+		ecs::Scene scene;
+		const ecs::Entity parent = scene.createEntity( "Parent" );
+		const ecs::Entity child = scene.createEntity( "Child" );
+
+		// Set up parent-child relationship
+		scene.setParent( child, parent );
+		REQUIRE( scene.getParent( child ) == parent );
+		const auto children = scene.getChildren( parent );
+		REQUIRE( children.size() == 1 );
+		REQUIRE( children[0] == child );
+
+		// Delete the child entity
+		editor::DeleteEntityCommand cmd( scene, child );
+		REQUIRE( cmd.execute() );
+		REQUIRE( !scene.isValid( child ) );
+		REQUIRE( scene.getChildren( parent ).empty() );
+
+		// Undo should recreate child AND restore parent relationship
+		REQUIRE( cmd.undo() );
+
+		// Find the recreated child by name
+		const auto recreatedChild = scene.findEntityByName( "Child" );
+		REQUIRE( recreatedChild.isValid() );
+
+		// Verify parent relationship is restored
+		const ecs::Entity restoredParent = scene.getParent( recreatedChild );
+		REQUIRE( restoredParent.isValid() );
+		REQUIRE( restoredParent == parent );
+
+		// Verify parent's children list includes the recreated child
+		const auto restoredChildren = scene.getChildren( parent );
+		REQUIRE( restoredChildren.size() == 1 );
+		REQUIRE( restoredChildren[0] == recreatedChild );
+	}
 }
 
 TEST_CASE( "AddComponentCommand template functionality", "[ecs-commands][unit][AF2.3]" )
