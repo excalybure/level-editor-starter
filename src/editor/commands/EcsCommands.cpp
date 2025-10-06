@@ -199,6 +199,16 @@ void DeleteEntityCommand::captureEntityState()
 
 void DeleteEntityCommand::restoreEntityState()
 {
+	// IMPORTANT: Restore parent-child hierarchy relationship FIRST
+	// This must be done before adding Transform component because Scene::setParent
+	// will adjust the child's Transform from world space to local space.
+	// Since we captured the Transform in local space, we need to set the parent
+	// first so that the Transform we restore is interpreted as local coordinates.
+	if ( m_hadParent )
+	{
+		m_scene.setParent( m_entity, m_parent );
+	}
+
 	// Restore all captured components
 	if ( m_transform.has_value() )
 	{
@@ -218,12 +228,6 @@ void DeleteEntityCommand::restoreEntityState()
 	if ( m_selected.has_value() )
 	{
 		m_scene.addComponent( m_entity, m_selected.value() );
-	}
-
-	// Restore parent-child hierarchy relationship
-	if ( m_hadParent )
-	{
-		m_scene.setParent( m_entity, m_parent );
 	}
 }
 

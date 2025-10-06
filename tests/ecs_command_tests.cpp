@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <memory>
 #include <string>
 
@@ -269,6 +270,57 @@ TEST_CASE( "DeleteEntityCommand with complete component restoration", "[ecs-comm
 		const auto restoredChildren = scene.getChildren( parent );
 		REQUIRE( restoredChildren.size() == 1 );
 		REQUIRE( restoredChildren[0] == recreatedChild );
+	}
+
+	SECTION( "DeleteEntityCommand preserves Transform correctly when entity has parent" )
+	{
+		ecs::Scene scene;
+		// Arrange: Create parent and child with specific transforms
+		const ecs::Entity parent = scene.createEntity( "Parent" );
+		const ecs::Entity child = scene.createEntity( "Child" );
+
+		// Parent at world position (10, 20, 30)
+		components::Transform parentTransform;
+		parentTransform.position = { 10.0f, 20.0f, 30.0f };
+		scene.addComponent( parent, parentTransform );
+
+		// Child starts at world position (15, 25, 35)
+		components::Transform childTransform;
+		childTransform.position = { 15.0f, 25.0f, 35.0f };
+		scene.addComponent( child, childTransform );
+
+		// Set up parent-child relationship
+		// After setParent, child's local transform will be adjusted to (5, 5, 5)
+		// so that world position remains (15, 25, 35)
+		scene.setParent( child, parent );
+
+		// Capture the child's local transform (should be 5, 5, 5 relative to parent)
+		const auto *childTransformPtr = scene.getComponent<components::Transform>( child );
+		const float localX = childTransformPtr->position.x;
+		const float localY = childTransformPtr->position.y;
+		const float localZ = childTransformPtr->position.z;
+
+		// Act: Delete the child entity
+		editor::DeleteEntityCommand cmd( scene, child );
+		REQUIRE( cmd.execute() );
+		REQUIRE( !scene.isValid( child ) );
+
+		// Undo: Recreate the child
+		REQUIRE( cmd.undo() );
+
+		// Assert: Find the recreated child
+		const auto recreatedChild = scene.findEntityByName( "Child" );
+		REQUIRE( recreatedChild.isValid() );
+
+		// Verify the Transform is restored correctly (local coordinates, not world)
+		const auto *restoredTransform = scene.getComponent<components::Transform>( recreatedChild );
+		REQUIRE( restoredTransform != nullptr );
+		REQUIRE( restoredTransform->position.x == Catch::Approx( localX ).epsilon( 0.001f ) );
+		REQUIRE( restoredTransform->position.y == Catch::Approx( localY ).epsilon( 0.001f ) );
+		REQUIRE( restoredTransform->position.z == Catch::Approx( localZ ).epsilon( 0.001f ) );
+
+		// Verify parent relationship is also restored
+		REQUIRE( scene.getParent( recreatedChild ) == parent );
 	}
 }
 
