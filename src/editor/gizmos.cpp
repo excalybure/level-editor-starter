@@ -86,6 +86,12 @@ math::Mat4<> GizmoSystem::calculateGizmoMatrix() const
 		return math::Mat4<>::identity();
 	}
 
+	// Check if any selected entity is valid and has a Transform component
+	if ( !hasValidSelection() )
+	{
+		return math::Mat4<>::identity();
+	}
+
 	// For now, we'll create a translation matrix positioned at the selection center
 	// In the future, this could account for rotation based on gizmo mode (local vs world)
 	const auto center = calculateSelectionCenter();
@@ -217,6 +223,12 @@ GizmoResult GizmoSystem::renderGizmo() noexcept
 
 	const auto &selectedEntities = m_selectionManager->getSelectedEntities();
 	if ( selectedEntities.empty() || !m_visible )
+	{
+		return result;
+	}
+
+	// Check if any selected entity is valid and has a Transform component
+	if ( !hasValidSelection() )
 	{
 		return result;
 	}

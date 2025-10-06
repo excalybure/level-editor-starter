@@ -627,3 +627,90 @@ TEST_CASE( "GizmoSystem - Rotation Delta Units Issue", "[gizmos][rotation][units
 		REQUIRE_THAT( actualRotationInDegrees, WithinAbs( 45.0f, 0.1f ) );
 	}
 }
+
+TEST_CASE( "GizmoSystem handles deleted selected entity gracefully", "[gizmos][integration][bugfix]" )
+{
+	SECTION( "Gizmo disappears when selected entity is deleted" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
+
+		// Create entity with transform
+		const auto entity = scene.createEntity( "TestEntity" );
+		scene.addComponent<components::Transform>( entity,
+			components::Transform{ math::Vec3f{ 5.0f, 10.0f, 15.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
+
+		// Select the entity
+		selectionManager.select( entity );
+		REQUIRE( gizmoSystem.hasValidSelection() );
+
+		// Verify gizmo is at entity position
+		const auto gizmoMatrixBefore = gizmoSystem.calculateGizmoMatrix();
+		REQUIRE_THAT( gizmoMatrixBefore.row0.w, WithinAbs( 5.0f, 0.001f ) );
+		REQUIRE_THAT( gizmoMatrixBefore.row1.w, WithinAbs( 10.0f, 0.001f ) );
+		REQUIRE_THAT( gizmoMatrixBefore.row2.w, WithinAbs( 15.0f, 0.001f ) );
+
+		// Delete the entity (this is what happens in DeleteEntityCommand::execute())
+		scene.destroyEntity( entity );
+
+		// Selection manager still has the deleted entity in its list
+		REQUIRE_FALSE( selectionManager.getSelectedEntities().empty() ); // Selection list not empty!
+
+		// But hasValidSelection should return false
+		REQUIRE_FALSE( gizmoSystem.hasValidSelection() );
+
+		// The bug: calculateSelectionCenter() returns origin when all entities are invalid
+		const auto centerAfterDelete = gizmoSystem.calculateSelectionCenter();
+		// Currently this returns (0,0,0) which is THE BUG
+		// It should either return the last valid position OR the gizmo should not render at all
+
+		// With no valid selection, gizmo matrix should be identity
+		const auto gizmoMatrixAfter = gizmoSystem.calculateGizmoMatrix();
+		const auto identity = math::Mat4<>::identity();
+
+		// Check translation components (should be at origin only because matrix is identity, not because of bug)
+		REQUIRE_THAT( gizmoMatrixAfter.row0.w, WithinAbs( identity.row0.w, 0.001f ) );
+		REQUIRE_THAT( gizmoMatrixAfter.row1.w, WithinAbs( identity.row1.w, 0.001f ) );
+		REQUIRE_THAT( gizmoMatrixAfter.row2.w, WithinAbs( identity.row2.w, 0.001f ) );
+	}
+
+	SECTION( "Gizmo position updates correctly with remaining entities after one is deleted" )
+	{
+		ecs::Scene scene;
+		systems::SystemManager systemManager;
+		editor::SelectionManager selectionManager( scene, systemManager );
+		editor::GizmoSystem gizmoSystem( selectionManager, scene, systemManager );
+
+		// Create two entities
+		const auto entity1 = scene.createEntity( "Entity1" );
+		scene.addComponent<components::Transform>( entity1,
+			components::Transform{ math::Vec3f{ 0.0f, 0.0f, 0.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
+
+		const auto entity2 = scene.createEntity( "Entity2" );
+		scene.addComponent<components::Transform>( entity2,
+			components::Transform{ math::Vec3f{ 10.0f, 0.0f, 0.0f }, math::Vec3f{ 0, 0, 0 }, math::Vec3f{ 1, 1, 1 } } );
+
+		// Select both entities
+		selectionManager.select( entity1 );
+		selectionManager.select( entity2, true );
+		REQUIRE( gizmoSystem.hasValidSelection() );
+
+		// Gizmo should be at average position (5, 0, 0)
+		const auto centerBefore = gizmoSystem.calculateSelectionCenter();
+		REQUIRE_THAT( centerBefore.x, WithinAbs( 5.0f, 0.001f ) );
+
+		// Delete entity1
+		scene.destroyEntity( entity1 );
+
+		// Gizmo should still be valid (entity2 is still selected and valid)
+		REQUIRE( gizmoSystem.hasValidSelection() );
+
+		// Gizmo should now be at entity2's position (10, 0, 0), not origin
+		const auto centerAfter = gizmoSystem.calculateSelectionCenter();
+		REQUIRE_THAT( centerAfter.x, WithinAbs( 10.0f, 0.001f ) );
+		REQUIRE_THAT( centerAfter.y, WithinAbs( 0.0f, 0.001f ) );
+		REQUIRE_THAT( centerAfter.z, WithinAbs( 0.0f, 0.001f ) );
+	}
+}
