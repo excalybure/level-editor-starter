@@ -12,6 +12,32 @@
 #include <wrl.h>
 #include <cstring>
 
+namespace
+{
+/**
+ * Checks if an entity is effectively visible by walking up the parent chain.
+ * An entity is effectively visible only if it and all its ancestors have visible=true.
+ * 
+ * @param scene The scene containing the entity hierarchy
+ * @param entity The entity to check
+ * @return true if the entity and all ancestors are visible, false otherwise
+ */
+bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
+{
+	ecs::Entity current = entity;
+	while ( current.isValid() )
+	{
+		const auto *visible = scene.getComponent<components::Visible>( current );
+		if ( !visible || !visible->visible )
+		{
+			return false;
+		}
+		current = scene.getParent( current );
+	}
+	return true;
+}
+} // anonymous namespace
+
 namespace systems
 {
 
@@ -120,11 +146,10 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 
 		if ( transform && meshRenderer )
 		{
-			// Check visibility - skip rendering if entity has Visible component with visible=false
-			const auto *visible = scene.getComponent<components::Visible>( entity );
-			if ( visible && !visible->visible )
+			// Check hierarchical visibility - skip rendering if entity or any ancestor is invisible
+			if ( !isEffectivelyVisible( scene, entity ) )
 			{
-				// Entity is marked as invisible, skip rendering
+				// Entity or one of its ancestors is marked as invisible, skip rendering
 				continue;
 			}
 

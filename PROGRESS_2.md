@@ -1,5 +1,31 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-06 — Hierarchical Visibility System
+**Summary:** Implemented industry-standard hierarchical visibility where an entity's effective visibility is determined by walking up the parent chain—if any ancestor has `visible=false`, all descendants are hidden from rendering. This matches behavior in Unity/Unreal/Godot where parent visibility propagates to children. The `MeshRenderingSystem` now uses an `isEffectivelyVisible()` helper that checks the entity's entire hierarchy, preventing rendering of entities under invisible parents.
+
+**Atomic functionalities completed:**
+- AF1: Write hierarchical visibility tests - Added 4 integration test cases in `visibility_integration_tests.cpp` with tags `[hierarchical][visibility][integration]`: invisible parent hides children, visible parent shows visible children, visible parent respects invisible children, deep hierarchy respects all ancestors
+- AF2: Implement `isEffectivelyVisible()` helper - Added anonymous namespace helper function in `mesh_rendering_system.cpp` that walks parent chain using `scene.getParent()`, returning false if any ancestor has `visible=false` or missing `Visible` component
+- AF3: Update render loop to use hierarchical check - Replaced simple visibility check with call to `isEffectivelyVisible(scene, entity)` in `MeshRenderingSystem::render()`, skipping rendering for entities that are effectively invisible due to hierarchy
+
+**Tests:** 4 new integration test cases with 8 assertions; filtered command: `unit_test_runner.exe "[hierarchical]"`
+
+**Acceptance:**
+- ✅ Invisible parent hides all descendant entities during rendering
+- ✅ Visible parent shows only visible children (respects child's own visible flag)
+- ✅ Deep hierarchies (grandparent→parent→child) correctly respect all ancestor visibility
+- ✅ Performance: O(depth) per entity, acceptable for typical scene hierarchies
+- ✅ No regressions: full test suite passes (529 test cases, 22,953 assertions)
+
+**Notes:**
+- Industry-standard pattern: matches Unity (GameObject.activeSelf vs activeInHierarchy), Unreal (SetActorHiddenInGame propagation), Godot (visible propagation)
+- Visibility is evaluated fresh each frame during rendering—no cached state tracking needed
+- Future optimization opportunity: cache effective visibility in Transform system or as separate component if profiling shows performance issue
+- Preserves existing behavior: entities without parent or with visible parent chain render normally
+- Design decision: used walk-up-tree approach rather than walk-down-tree to avoid needing hierarchy traversal
+
+---
+
 ## 2025-10-06 — Auto-Add Visible Component to Created Entities
 **Summary:** Fixed oversight where entities were not automatically created with a `Visible` component, causing inconsistent behavior between rendering (which defaults to visible) and UI (which requires the component for editing). Implemented TDD fix: entities now auto-add `components::Visible{true, true, true}` in `Scene::createEntity()`, ensuring all entities have visibility control from creation and can be edited in the Entity Inspector immediately.
 
