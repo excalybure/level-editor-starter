@@ -29,6 +29,9 @@ bool CommandHistory::undo()
 			// Fixup all commands to use the new entity reference
 			fixupEntityReferences( originalEntity, recreatedEntity );
 		}
+
+		// Notify that history has changed
+		notifyHistoryChanged();
 	}
 
 	return success;
@@ -75,6 +78,9 @@ bool CommandHistory::redo()
 		}
 
 		++m_currentIndex;
+
+		// Notify that history has changed
+		notifyHistoryChanged();
 	}
 	return success;
 }

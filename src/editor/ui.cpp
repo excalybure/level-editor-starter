@@ -262,6 +262,11 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	m_impl->undoRedoUI = std::make_unique<UndoRedoUI>( *m_impl->commandHistory );
 	m_impl->commandHistoryWindow = std::make_unique<CommandHistoryWindow>( *m_impl->commandHistory );
 
+	// Set up callback to track scene modifications
+	m_impl->commandHistory->setOnHistoryChangedCallback( [this]() {
+		m_impl->m_sceneModified = true;
+	} );
+
 	// Initialize editor config and load saved window states
 	m_impl->editorConfig = std::make_unique<EditorConfig>( "editor_config.json" );
 	if ( m_impl->editorConfig->load() )
@@ -485,9 +490,8 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	ImGui::PopStyleVar( 3 );
 
 	// Reserve space for toolbar and status bar
-	const float kToolbarHeight = 32.0f;
 	const ImVec2 availableRegion = ImGui::GetContentRegionAvail();
-	const ImVec2 dockspaceSize = ImVec2( availableRegion.x, availableRegion.y - ( kToolbarHeight + kStatusBarHeight + 2 * kStatusBarHeightPadding ) );
+	const ImVec2 dockspaceSize = ImVec2( availableRegion.x, availableRegion.y - ( kStatusBarHeight + 2 * kStatusBarHeightPadding ) );
 
 	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
 	ImGui::DockSpace( dockspaceId, dockspaceSize, ImGuiDockNodeFlags_None );
@@ -660,10 +664,7 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 						auto cmd = std::make_unique<CreateEntityCommand>( *scene, "New Entity" );
 						if ( commandHistory )
 						{
-							if ( commandHistory->executeCommand( std::move( cmd ) ) )
-							{
-								m_sceneModified = true;
-							}
+							commandHistory->executeCommand( std::move( cmd ) );
 						}
 					}
 
@@ -688,10 +689,7 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 						auto cmd = std::make_unique<DeleteEntityCommand>( *scene, entity );
 						if ( commandHistory )
 						{
-							if ( commandHistory->executeCommand( std::move( cmd ) ) )
-							{
-								m_sceneModified = true;
-							}
+							commandHistory->executeCommand( std::move( cmd ) );
 						}
 					}
 				}
@@ -2304,7 +2302,6 @@ void UI::openAssetFileDialog()
 			{
 				// Entity created successfully
 				console::info( "Created entity from asset: {}", assetPath );
-				m_impl->m_sceneModified = true;
 				m_impl->showToast( "Entity created from asset", false );
 			}
 			else

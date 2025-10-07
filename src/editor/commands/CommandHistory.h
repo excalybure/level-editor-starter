@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <functional>
 
 /**
  * @brief Manages command history with configurable size and memory limits
@@ -18,6 +19,7 @@ class CommandHistory
 {
 public:
 	using CommandPtr = std::unique_ptr<Command>;
+	using HistoryChangedCallback = std::function<void()>;
 
 	// Default configuration
 	static constexpr size_t kDefaultMaxCommands = 100;
@@ -148,6 +150,9 @@ public:
 			cleanupOldCommands();
 		}
 
+		// Notify that history has changed
+		notifyHistoryChanged();
+
 		return true;
 	}
 
@@ -189,6 +194,10 @@ public:
 						// Update the context with new timestamp and memory usage
 						lastEntry.context.updateTimestamp( now );
 						lastEntry.context.updateMemoryUsage( lastEntry.command->getMemoryUsage() );
+
+						// Notify that history has changed (even on merge)
+						notifyHistoryChanged();
+
 						return true;
 					}
 					else
@@ -260,6 +269,23 @@ public:
      * @return Number of commands that were updated
      */
 	size_t fixupEntityReferences( ecs::Entity oldEntity, ecs::Entity newEntity );
+
+	/**
+	 * @brief Set callback that is invoked when history changes (execute, undo, redo)
+	 * @param callback Function to call when history changes
+	 */
+	void setOnHistoryChangedCallback( HistoryChangedCallback callback )
+	{
+		m_onHistoryChanged = std::move( callback );
+	}
+
+	/**
+	 * @brief Clear the history changed callback
+	 */
+	void clearOnHistoryChangedCallback()
+	{
+		m_onHistoryChanged = nullptr;
+	}
 
 private:
 	/**
@@ -338,4 +364,16 @@ private:
 	size_t m_maxMemoryUsage;
 	size_t m_currentIndex;
 	size_t m_currentMemoryUsage;
+	HistoryChangedCallback m_onHistoryChanged;
+
+	/**
+	 * @brief Notify callback that history has changed
+	 */
+	void notifyHistoryChanged()
+	{
+		if ( m_onHistoryChanged )
+		{
+			m_onHistoryChanged();
+		}
+	}
 };
