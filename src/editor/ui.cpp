@@ -84,7 +84,6 @@ Vec2 from_imgui_vec2( const ImVec2 &v )
 struct UI::Impl
 {
 	ImGuiID dockspaceId = 0;
-	bool firstLayout = true;
 
 	// Viewport manager for coordinated viewport management
 	ViewportManager viewportManager;
@@ -150,6 +149,9 @@ struct UI::Impl
 	// Editor configuration persistence
 	std::unique_ptr<EditorConfig> editorConfig;
 	bool wasGizmoUsingLastFrame = false;
+
+	// Layout reset flag
+	bool shouldResetLayout = false;
 
 	// Setup the main dockspace
 	void setupDockspace( ViewportLayout &layout, UI &ui );
@@ -513,12 +515,8 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	dockspaceId = ImGui::GetID( "LevelEditorDockspace" );
 	ImGui::DockSpace( dockspaceId, dockspaceSize, ImGuiDockNodeFlags_None );
 
-	// Setup initial layout on first run
-	if ( firstLayout )
-	{
-		setupInitialLayout( dockspaceId );
-		firstLayout = false;
-	}
+	// Setup initial layout on first run or when reset is requested
+	setupInitialLayout( dockspaceId );
 
 	// Add menu bar
 	if ( ImGui::BeginMenuBar() )
@@ -755,6 +753,12 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 				ui.m_impl->window->setFullscreen( !ui.m_impl->window->isFullscreen() );
 			}
 
+			// Reset Layout option
+			if ( ImGui::MenuItem( "Reset Layout" ) )
+			{
+				shouldResetLayout = true;
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -801,7 +805,7 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 	// Only set up the initial layout if the dockspace is empty (first run or reset)
 	// This preserves user's layout modifications between runs
 	ImGuiDockNode *node = ImGui::DockBuilderGetNode( inDockspaceId );
-	if ( node == nullptr || node->IsEmpty() )
+	if ( node == nullptr || node->IsEmpty() || shouldResetLayout )
 	{
 		// Clear any existing layout and rebuild
 		ImGui::DockBuilderRemoveNode( inDockspaceId );							  // Clear out existing layout
@@ -810,13 +814,13 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 
 		// Create a layout with scene editing panels and viewports:
 		// +----------+------------------+------------------+----------+
-		// |          |   Perspective    |    Top (XY)      |          |
-		// | Hierarchy|      3D          |                  | Inspector|
-		// |  (20%)   +------------------+------------------+  (25%)   |
-		// |          |   Front (XZ)     |    Side (YZ)     |          |
-		// +----------+------------------+------------------+----------+
-		// |                  Asset Browser (30%)                     |
-		// +--------------------------------------------------------------+
+		// | Hierarchy|   Perspective    |    Top (XY)      |          |
+		// | (15%)    |      3D          |                  | Inspector|
+		// |----------|------------------+------------------|  (15%)   |
+		// |Gizmo Tool|   Front (XZ)     |    Side (YZ)     |          |
+		// |----------|------------------+------------------|          |
+		// |Cmd Histor|       Asset Browser (30%)           |          |
+		// +-----------------------------------------------------------+
 
 		ImGuiID dockLeft, dockMainArea;
 		ImGuiID dockRight, dockCenterArea;
@@ -824,12 +828,16 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 		ImGuiID dockLeftColumn, dockRightColumn;
 		ImGuiID dockTopLeft, dockBottomLeft;
 		ImGuiID dockTopRight, dockBottomRight;
+		ImGuiID dockMainLeft, dockSceneHierarchy;
+		ImGuiID dockGizmoTools, dockCommandHistory;
 
 		// First split: hierarchy panel on left (20%)
-		ImGui::DockBuilderSplitNode( inDockspaceId, ImGuiDir_Left, 0.20f, &dockLeft, &dockMainArea );
+		ImGui::DockBuilderSplitNode( inDockspaceId, ImGuiDir_Left, 0.15f, &dockLeft, &dockMainArea );
+		ImGui::DockBuilderSplitNode( dockLeft, ImGuiDir_Up, 0.5f, &dockSceneHierarchy, &dockMainLeft );
+		ImGui::DockBuilderSplitNode( dockMainLeft, ImGuiDir_Up, 0.5f, &dockGizmoTools, &dockCommandHistory );
 
 		// Second split: inspector panel on right (25% of remaining)
-		ImGui::DockBuilderSplitNode( dockMainArea, ImGuiDir_Right, 0.3125f, &dockRight, &dockCenterArea ); // 0.25/0.80 ≈ 0.3125
+		ImGui::DockBuilderSplitNode( dockMainArea, ImGuiDir_Right, 0.1765f, &dockRight, &dockCenterArea ); // 0.15/0.85 ≈ 0.1765
 
 		// Third split: asset browser on bottom (30% of center area)
 		ImGui::DockBuilderSplitNode( dockCenterArea, ImGuiDir_Down, 0.30f, &dockBottom, &dockViewportArea );
@@ -840,7 +848,9 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 		ImGui::DockBuilderSplitNode( dockRightColumn, ImGuiDir_Up, 0.5f, &dockTopRight, &dockBottomRight );
 
 		// Dock scene editing panels
-		ImGui::DockBuilderDockWindow( "Scene Hierarchy", dockLeft );
+		ImGui::DockBuilderDockWindow( "Scene Hierarchy", dockSceneHierarchy );
+		ImGui::DockBuilderDockWindow( "Gizmo Tools", dockGizmoTools );
+		ImGui::DockBuilderDockWindow( "Command History", dockCommandHistory );
 		ImGui::DockBuilderDockWindow( "Entity Inspector", dockRight );
 		ImGui::DockBuilderDockWindow( "Asset Browser", dockBottom );
 
@@ -852,6 +862,8 @@ void UI::Impl::setupInitialLayout( ImGuiID inDockspaceId )
 
 		// Finalize the layout
 		ImGui::DockBuilderFinish( inDockspaceId );
+
+		shouldResetLayout = false;
 	}
 }
 
