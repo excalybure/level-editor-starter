@@ -6,6 +6,8 @@
 #include <sstream>
 #include "runtime/components.h"
 #include "engine/assets/asset_manager.h"
+#include "engine/gpu/gpu_resource_manager.h"
+#include "runtime/scene_importer.h"
 
 using json = nlohmann::json;
 
@@ -473,6 +475,62 @@ std::expected<void, SerializationErrorInfo> SceneSerializer::validateSceneFile(
 	{
 		return std::unexpected( makeError( SerializationError::Unknown, std::string( "Unknown error: " ) + e.what(), filepath ) );
 	}
+}
+
+int SceneSerializer::resolveSceneAssets(
+	ecs::Scene &scene,
+	assets::AssetManager &assetManager,
+	engine::GPUResourceManager &gpuManager )
+{
+	int resolvedCount = 0;
+	const auto entities = scene.getAllEntities();
+
+	for ( const auto entity : entities )
+	{
+		// Only process entities with MeshRenderer component
+		if ( !scene.hasComponent<components::MeshRenderer>( entity ) )
+			continue;
+
+		auto *meshRenderer = scene.getComponent<components::MeshRenderer>( entity );
+		if ( !meshRenderer )
+			continue;
+
+		// Skip if no path or already has GPU resources
+		if ( meshRenderer->meshPath.empty() || meshRenderer->gpuMesh != nullptr )
+			continue;
+
+		// Attempt to load the asset
+		auto assetScene = assetManager.load<assets::Scene>( meshRenderer->meshPath );
+		if ( !assetScene || !assetScene->isLoaded() )
+		{
+			// Asset load failed - leave unresolved
+			continue;
+		}
+
+		// Asset loaded - get the first mesh (consistent with SceneImporter behavior)
+		if ( assetScene->getMeshCount() > 0 )
+		{
+			const auto mesh = assetScene->getMesh( 0 );
+			if ( !mesh )
+				continue;
+
+			// Create GPU resources for the mesh
+			auto gpuMesh = gpuManager.getMeshGPU( mesh );
+			if ( gpuMesh )
+			{
+				// Configure materials on the GPU mesh
+				gpuMesh->configureMaterials( gpuManager, *assetScene, *mesh );
+
+				// Update the component with GPU mesh and bounds
+				meshRenderer->meshHandle = 0; // First mesh index
+				meshRenderer->gpuMesh = std::move( gpuMesh );
+				meshRenderer->bounds = mesh->getBounds();
+				resolvedCount++;
+			}
+		}
+	}
+
+	return resolvedCount;
 }
 
 } // namespace scene

@@ -2075,6 +2075,17 @@ bool UI::loadScene( const std::string &filePath )
 		return false;
 	}
 
+	// Resolve asset paths to load meshes and create GPU resources
+	const int resolvedAssets = scene::SceneSerializer::resolveSceneAssets(
+		*m_impl->scene,
+		*m_impl->assetManager,
+		*m_impl->gpuManager );
+
+	if ( resolvedAssets > 0 )
+	{
+		console::info( "UI: Resolved {} asset(s) after scene load", resolvedAssets );
+	}
+
 	// Update current path and clear modified flag
 	m_impl->currentScenePath = filePath;
 	m_impl->lastError.clear();

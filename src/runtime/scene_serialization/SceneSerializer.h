@@ -6,6 +6,16 @@
 #include <nlohmann/json_fwd.hpp>
 #include "runtime/ecs.h"
 
+namespace assets
+{
+class AssetManager;
+}
+
+namespace engine
+{
+class GPUResourceManager;
+}
+
 namespace scene
 {
 
@@ -63,6 +73,13 @@ public:
 	// Validate scene file format
 	static std::expected<void, SerializationErrorInfo> validateSceneFile(
 		const std::filesystem::path &filepath );
+
+	// Resolve asset paths after loading scene
+	// Returns count of successfully resolved assets
+	static int resolveSceneAssets(
+		ecs::Scene &scene,
+		assets::AssetManager &assetManager,
+		engine::GPUResourceManager &gpuManager );
 
 private:
 	SceneSerializer() = delete; // Static class only
