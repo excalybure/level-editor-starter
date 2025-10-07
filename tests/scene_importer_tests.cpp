@@ -486,3 +486,77 @@ TEST_CASE( "SceneImporter bounds calculation matches mesh getBoundsCenter and ge
 	REQUIRE( rendererComp->bounds.max.y == Catch::Approx( expectedMax.y ) );
 	REQUIRE( rendererComp->bounds.max.z == Catch::Approx( expectedMax.z ) );
 }
+
+TEST_CASE( "SceneImporter populates meshPath from asset scene path", "[scene_importer][meshpath][AF1]" )
+{
+	// Arrange: Create an asset scene with a known path
+	auto assetScene = std::make_shared<assets::Scene>();
+	assetScene->setPath( "assets/models/imported_model.gltf" );
+	assetScene->setLoaded( true );
+
+	// Create a mesh and add it to the scene
+	auto mesh = std::make_shared<assets::Mesh>();
+	mesh->setPath( "assets/models/imported_model.gltf" ); // Mesh uses same path as scene
+	const auto meshHandle = assetScene->addMesh( mesh );
+
+	// Create a node with this mesh
+	auto rootNode = std::make_unique<assets::SceneNode>( "ImportedNode" );
+	rootNode->addMeshHandle( meshHandle );
+	assetScene->addRootNode( std::move( rootNode ) );
+
+	// Act: Import the scene
+	ecs::Scene ecsScene;
+	const bool result = SceneImporter::importScene( assetScene, ecsScene );
+
+	// Assert: Import succeeded
+	REQUIRE( result );
+
+	// Verify the imported entity has meshPath set
+	const auto entities = ecsScene.getAllEntities();
+	REQUIRE( entities.size() == 1 );
+
+	const ecs::Entity entity = entities[0];
+	REQUIRE( ecsScene.hasComponent<components::MeshRenderer>( entity ) );
+
+	const auto *meshRenderer = ecsScene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRenderer != nullptr );
+	REQUIRE( meshRenderer->meshHandle == meshHandle );
+
+	// Key assertion: meshPath should be populated with the asset path
+	REQUIRE( meshRenderer->meshPath == "assets/models/imported_model.gltf" );
+}
+
+TEST_CASE( "SceneImporter uses scene path as fallback when mesh has no path", "[scene_importer][meshpath][AF2]" )
+{
+	// Arrange: Create an asset scene with path
+	auto assetScene = std::make_shared<assets::Scene>();
+	assetScene->setPath( "assets/models/fallback_scene.gltf" );
+	assetScene->setLoaded( true );
+
+	// Create a mesh WITHOUT setting its path
+	auto mesh = std::make_shared<assets::Mesh>();
+	// mesh->setPath() is NOT called - path will be empty
+	const auto meshHandle = assetScene->addMesh( mesh );
+
+	// Create a node with this mesh
+	auto rootNode = std::make_unique<assets::SceneNode>( "FallbackNode" );
+	rootNode->addMeshHandle( meshHandle );
+	assetScene->addRootNode( std::move( rootNode ) );
+
+	// Act: Import the scene
+	ecs::Scene ecsScene;
+	const bool result = SceneImporter::importScene( assetScene, ecsScene );
+
+	// Assert: Import succeeded
+	REQUIRE( result );
+
+	const auto entities = ecsScene.getAllEntities();
+	REQUIRE( entities.size() == 1 );
+
+	const ecs::Entity entity = entities[0];
+	const auto *meshRenderer = ecsScene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRenderer != nullptr );
+
+	// When mesh has no path, should fall back to scene path
+	REQUIRE( meshRenderer->meshPath == "assets/models/fallback_scene.gltf" );
+}

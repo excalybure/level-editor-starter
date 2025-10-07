@@ -48,9 +48,17 @@ void serializeVisible( json &componentJson, const components::Visible &visible )
 
 void serializeMeshRenderer( json &componentJson, const components::MeshRenderer &meshRenderer )
 {
-	// TODO: Get asset path from asset manager when AssetManager::getInstance() is available
-	// For now, just serialize the handle
-	componentJson["meshHandle"] = meshRenderer.meshHandle;
+	// Serialize meshPath if present; otherwise fall back to meshHandle for programmatic entities
+	if ( !meshRenderer.meshPath.empty() )
+	{
+		componentJson["meshPath"] = meshRenderer.meshPath;
+	}
+	else
+	{
+		// Fallback for entities created programmatically without asset reference
+		componentJson["meshHandle"] = meshRenderer.meshHandle;
+	}
+
 	componentJson["lodBias"] = meshRenderer.lodBias;
 }
 
@@ -98,15 +106,19 @@ void deserializeVisible( const json &componentJson, components::Visible &visible
 
 void deserializeMeshRenderer( const json &componentJson, components::MeshRenderer &meshRenderer )
 {
-	if ( componentJson.contains( "meshHandle" ) )
+	// Try to load meshPath first (new format)
+	if ( componentJson.contains( "meshPath" ) )
+	{
+		meshRenderer.meshPath = componentJson["meshPath"];
+		// Set handle to 0 as placeholder (will be resolved during asset loading)
+		meshRenderer.meshHandle = 0;
+	}
+	// Fall back to meshHandle for backward compatibility with old format
+	else if ( componentJson.contains( "meshHandle" ) )
 	{
 		meshRenderer.meshHandle = componentJson["meshHandle"];
-	}
-	else if ( componentJson.contains( "meshPath" ) )
-	{
-		// TODO: Load asset through asset manager when AssetManager::getInstance() is available
-		// For now, just set handle to 0
-		meshRenderer.meshHandle = 0;
+		// Leave meshPath empty for old format files
+		meshRenderer.meshPath = "";
 	}
 
 	if ( componentJson.contains( "lodBias" ) )

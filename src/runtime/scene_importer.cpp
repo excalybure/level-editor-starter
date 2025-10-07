@@ -139,6 +139,19 @@ void SceneImporter::setupMeshRenderer( assets::MeshHandle meshHandle, ecs::Entit
 	{
 		components::MeshRenderer renderer( meshHandle );
 
+		// Populate meshPath for scene serialization portability
+		// First try to use the mesh's own path
+		const std::string meshPath = mesh->getPath();
+		if ( !meshPath.empty() )
+		{
+			renderer.meshPath = meshPath;
+		}
+		else
+		{
+			// Fall back to the asset scene's path if mesh has no path
+			renderer.meshPath = assetScene->getPath();
+		}
+
 		renderer.bounds = mesh->getBounds();
 		targetScene.addComponent( entity, renderer );
 	}

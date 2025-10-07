@@ -1,5 +1,52 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-06 — Scene Serialization Now Saves meshPath for Portability
+**Summary:** Successfully implemented `meshPath` serialization in scene files to make scenes portable across different environments. Previously, scenes saved only `meshHandle` (numeric indices into asset Scene arrays), which had no meaning outside their original context, making saved scenes non-portable. Now `MeshRenderer` components store and serialize the source asset file path, enabling independent scene loading without requiring the original asset Scene to be loaded first.
+
+**Atomic functionalities completed:**
+- AF1: Added `meshPath` field to `MeshRenderer` component - Extended `components::MeshRenderer` struct with `std::string meshPath` field to track source asset file path (relative to working directory)
+- AF2: Updated scene serialization to save `meshPath` - Modified `serializeMeshRenderer()` to write `meshPath` to JSON when non-empty, falling back to `meshHandle` only for programmatically created entities without asset references
+- AF3: Updated scene deserialization to load `meshPath` - Modified `deserializeMeshRenderer()` to read `meshPath` from JSON (new format) with backward compatibility fallback to `meshHandle` (old format)
+- AF4: Populated `meshPath` during asset import - Updated `SceneImporter::setupMeshRenderer()` to set `meshPath` from mesh's own path or asset scene path as fallback
+- AF5: Added comprehensive test coverage - Created 5 new serialization tests and 2 new import tests covering save/load round-trips, backward compatibility, empty path handling, and asset import workflows
+
+**Tests:** All 7 new meshPath tests pass (52 assertions). All 15 scene_importer tests pass (138 assertions). All 534 existing tests pass with no regressions. Filtered commands: `unit_test_runner.exe "[meshpath]"` and `unit_test_runner.exe "[scene_importer]"`
+
+**Files Modified:**
+- `src/runtime/components.h` - Added `std::string meshPath` field to `MeshRenderer`
+- `src/runtime/scene_serialization/SceneSerializer.cpp` - Updated serialize/deserialize logic
+- `src/runtime/scene_importer.cpp` - Updated `setupMeshRenderer()` to populate `meshPath`
+- `tests/scene_serialization_meshpath_tests.cpp` - Created comprehensive test suite
+- `tests/scene_importer_tests.cpp` - Added import tests for `meshPath` population
+- `CMakeLists.txt` - Added new test file to build
+
+**Implementation Details:**
+- **Serialization Strategy**: Save `meshPath` if present; fallback to `meshHandle` for programmatic entities
+- **Deserialization Strategy**: Load `meshPath` if present (new format); fallback to `meshHandle` for backward compatibility
+- **Import Strategy**: Use mesh's own path if set; fallback to asset scene path if mesh has no path
+- **Path Format**: Relative paths (e.g., `"assets/models/cube.gltf"`) for portability across machines
+
+**Backward Compatibility:**
+- Old `.scene` files with `meshHandle` still load correctly (deserializer checks both fields)
+- New `.scene` files with `meshPath` are forward-compatible
+- Mixed scenarios (some entities with `meshPath`, some with `meshHandle`) supported
+
+**Impact:**
+- ✅ Scene files are now portable - can be loaded on different machines with same asset structure
+- ✅ Scenes can be loaded independently without loading source asset Scene first
+- ✅ Documentation in `docs/scene_format.md` already describes `meshPath` format
+- ✅ Future asset resolution (Phase 3) will use `meshPath` to reload assets on scene load
+- ✅ No breaking changes - all existing tests pass
+
+**Future Work (Not in Scope):**
+- Phase 3: Asset resolution after load - iterate entities, load assets via `meshPath`, populate GPU resources
+- Phase 5: Manual entity creation UI - populate `meshPath` when user drags asset from browser
+- Asset path remapping tool for moved/renamed assets
+
+**Notes:** Implementation followed strict TDD workflow (Red → Green → Refactor) as specified in project guidelines. All tests written before implementation changes. Comprehensive coverage includes positive cases, edge cases, backward compatibility, and round-trip validation.
+
+---
+
 ## 2025-10-06 — Fixed Selection Outline Rendering for Multiple Selected Objects
 **Summary:** Fixed a critical DirectX 12 synchronization bug where selection outlines were incorrectly rendering at the position of the last selected object when multiple objects were selected. The issue was caused by all draw commands sharing a single constant buffer that was being overwritten for each entity, resulting in the GPU reading only the final entity's transform data for all draw calls. Solution: converted outline rendering to use root constants (`SetGraphicsRoot32BitConstants`) instead of a constant buffer, ensuring each draw call has unique per-entity transform data without aliasing.
 

@@ -83,6 +83,7 @@ struct Visible
 struct MeshRenderer
 {
 	assets::MeshHandle meshHandle = 0; // Handle to the source mesh asset
+	std::string meshPath;			   // Path to source asset file (relative to working directory)
 	std::shared_ptr<engine::gpu::MeshGPU> gpuMesh;
 	math::BoundingBox3Df bounds; // Local space bounding box
 	float lodBias = 0.0f;		 // Level of detail bias for rendering
