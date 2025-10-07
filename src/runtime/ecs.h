@@ -16,6 +16,13 @@
 namespace ecs
 {
 
+// Enum to specify the coordinate space of a child entity when setting parent
+enum class TransformSpace
+{
+	Local, // Child's transform is in local space (relative to new parent) - used during scene loading
+	World  // Child's transform is in world space (will be converted to local) - used during editor operations
+};
+
 // Developer note:
 // - This ECS implementation is intentionally single-threaded. All public
 //   APIs (create/destroy/add/remove/get/forEach/modifyComponent) assume
@@ -376,7 +383,10 @@ public:
 	}
 
 	// Hierarchy management
-	void setParent( Entity child, Entity parent )
+	// transformSpace: Specifies whether child's current transform is in Local or World space
+	//   - TransformSpace::Local: Child transform is already in local space (scene loading)
+	//   - TransformSpace::World: Child transform is in world space, will be converted to local (editor operations)
+	void setParent( Entity child, Entity parent, TransformSpace transformSpace = TransformSpace::World )
 	{
 		if ( !m_entityManager.isValid( child ) || !m_entityManager.isValid( parent ) )
 		{
@@ -395,11 +405,11 @@ public:
 			return;
 		}
 
-		// Preserve world position by adjusting local transform
-		// Get child's current world transform
+		// Only need to preserve world position if child is currently in world space
 		math::Mat4f childWorldTransform;
-		if ( hasComponent<components::Transform>( child ) )
+		if ( transformSpace == TransformSpace::World && hasComponent<components::Transform>( child ) )
 		{
+			// Get child's current world transform (before reparenting)
 			childWorldTransform = computeWorldTransform( child );
 		}
 
@@ -410,19 +420,18 @@ public:
 		m_parentMap[child] = parent;
 		m_childrenMap[parent].push_back( child );
 
-		// Adjust child's local transform to preserve world position
+		// Adjust child's local transform based on the transform space
 		if ( hasComponent<components::Transform>( child ) && hasComponent<components::Transform>( parent ) )
 		{
-			const math::Mat4f parentWorldTransform = computeWorldTransform( parent );
-			// The inverse() function returns the transpose of the actual inverse, so we transpose it back
-			const math::Mat4f parentWorldInverse = parentWorldTransform.inverse().transpose();
-			const math::Mat4f newLocalTransform = parentWorldInverse * childWorldTransform;
-
-			// Extract position, rotation, and scale from the new local transform
 			auto *childTransform = getComponent<components::Transform>( child );
-			if ( childTransform )
+			if ( childTransform && transformSpace == TransformSpace::World )
 			{
-				// Extract translation from the right column (m03, m13, m23)
+				// Child was in world space - convert to local space relative to new parent
+				const math::Mat4f parentWorldTransform = computeWorldTransform( parent );
+				const math::Mat4f parentWorldInverse = parentWorldTransform.inverse().transpose();
+				const math::Mat4f newLocalTransform = parentWorldInverse * childWorldTransform;
+
+				// Extract translation from the matrix
 				childTransform->position.x = newLocalTransform.m03();
 				childTransform->position.y = newLocalTransform.m13();
 				childTransform->position.z = newLocalTransform.m23();

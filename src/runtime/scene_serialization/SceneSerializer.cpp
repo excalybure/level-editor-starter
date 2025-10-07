@@ -366,7 +366,7 @@ std::expected<void, SerializationErrorInfo> SceneSerializer::loadScene(
 				if ( idToEntity.find( parentID ) != idToEntity.end() )
 				{
 					const auto parent = idToEntity[parentID];
-					scene.setParent( entity, parent );
+					scene.setParent( entity, parent, ecs::TransformSpace::Local );
 				}
 				else
 				{

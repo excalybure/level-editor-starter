@@ -65,9 +65,10 @@ ecs::Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene
 	ecs::Entity entity = targetScene.createEntity( node.getName() );
 
 	// Set parent relationship if provided
+	// Use TransformSpace::Local because GLTF nodes have transforms in local space
 	if ( parent.isValid() )
 	{
-		targetScene.setParent( entity, parent );
+		targetScene.setParent( entity, parent, ecs::TransformSpace::Local );
 	}
 
 	// Setup Transform component (always add, use node data if available)
@@ -85,11 +86,11 @@ ecs::Entity SceneImporter::importNode( std::shared_ptr<assets::Scene> assetScene
 
 			if ( meshEntity != entity && parent.isValid() )
 			{
-				targetScene.setParent( meshEntity, parent );
+				targetScene.setParent( meshEntity, parent, ecs::TransformSpace::Local );
 			}
 			else if ( meshEntity != entity )
 			{
-				targetScene.setParent( meshEntity, entity );
+				targetScene.setParent( meshEntity, entity, ecs::TransformSpace::Local );
 			}
 
 			// Setup MeshRenderer (CPU-only)
