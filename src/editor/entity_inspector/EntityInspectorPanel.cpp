@@ -510,8 +510,10 @@ void EntityInspectorPanel::renderAddComponentMenu( ecs::Entity entity )
 template <components::Component T>
 void EntityInspectorPanel::renderComponentContextMenu( const char *componentName, ecs::Entity entity )
 {
-	// Check if this is an essential component (Transform or Name) - cannot be removed
-	const bool isEssential = std::is_same_v<T, components::Transform> || std::is_same_v<T, components::Name>;
+	// Check if this is an essential component (Transform, Name, or Visible) - cannot be removed
+	const bool isEssential = std::is_same_v<T, components::Transform> ||
+		std::is_same_v<T, components::Name> ||
+		std::is_same_v<T, components::Visible>;
 
 	// Open context menu on right-click
 	const std::string popupId = std::format( "##ComponentContext_{}", componentName );

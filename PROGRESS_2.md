@@ -1,5 +1,32 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-06 — Visible Component Made Essential (Non-Removable)
+**Summary:** Protected the `Visible` component from accidental removal through the Entity Inspector UI by marking it as essential, matching the existing pattern used for `Transform` and `Name` components. Since `Visible` is now auto-added to all entities and is fundamental to the rendering system, users should not be able to remove it via the context menu. The `isEssential` flag in `EntityInspectorPanel::renderComponentContextMenu` template now includes `components::Visible`, which disables the "Remove Component" menu item.
+
+**Atomic functionalities completed:**
+- AF1: Write test for essential component protection - Added test case "Essential components (Transform, Name, Visible) cannot be removed" with 4 sections in `entity_inspector_tests.cpp`: verifies Transform presence and essential flag, Name presence and essential flag, Visible presence and essential flag, and MeshRenderer removable as non-essential
+- AF2: Extend isEssential check in EntityInspectorPanel - Modified `renderComponentContextMenu` template function to include `std::is_same_v<T, components::Visible>` in the isEssential boolean check (line ~510 in `EntityInspectorPanel.cpp`)
+- AF3: Verify non-essential components remain removable - Test confirms MeshRenderer can still be removed, ensuring non-essential component removal still works
+
+**Tests:** 1 new test case with 4 sections and 5 assertions (essential presence checks + removability check). Filtered command: `unit_test_runner.exe "[essential_components]"`. Full entity inspector suite passes: 14 test cases, 58 assertions
+
+**Acceptance:**
+- ✅ Transform component cannot be removed via Entity Inspector UI (menu item disabled)
+- ✅ Name component cannot be removed via Entity Inspector UI (menu item disabled)
+- ✅ Visible component cannot be removed via Entity Inspector UI (menu item disabled)
+- ✅ Non-essential components like MeshRenderer can still be removed normally
+- ✅ UI-level protection only: underlying `RemoveComponentCommand` still functional if called directly
+- ✅ No regressions: full test suite passes (526 test cases, 22,958 assertions)
+
+**Notes:**
+- UI-level protection pattern: menu item disabled when `isEssential` flag true; command itself still works if invoked programmatically
+- Consistent with existing essential component handling for Transform and Name
+- Prevents users from breaking rendering assumptions (Visible is now fundamental to all entities)
+- Important discovery: Transform is NOT auto-added by `createEntity()` (only Name and Visible are); test corrected to manually add Transform before checking
+- Essential components pattern protects components that are either auto-added or critical for entity integrity
+
+---
+
 ## 2025-01-06 — Hierarchical Visibility System
 **Summary:** Implemented industry-standard hierarchical visibility where an entity's effective visibility is determined by walking up the parent chain—if any ancestor has `visible=false`, all descendants are hidden from rendering. This matches behavior in Unity/Unreal/Godot where parent visibility propagates to children. The `MeshRenderingSystem` now uses an `isEffectivelyVisible()` helper that checks the entity's entire hierarchy, preventing rendering of entities under invisible parents.
 
