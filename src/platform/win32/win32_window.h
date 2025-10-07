@@ -80,6 +80,7 @@ public:
 	// Window properties
 	void getSize( int &width, int &height ) const;
 	bool isFocused() const { return m_focused; }
+	void setTitle( const char *title );
 
 	// Fullscreen management
 	void setFullscreen( bool fullscreen );

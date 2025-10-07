@@ -140,6 +140,14 @@ void Win32Window::getSize( int &width, int &height ) const
 	height = m_height;
 }
 
+void Win32Window::setTitle( const char *title )
+{
+	if ( m_hwnd && title )
+	{
+		SetWindowTextA( m_hwnd, title );
+	}
+}
+
 void Win32Window::addEvent( const WindowEvent &event )
 {
 	m_eventQueue.push( event );

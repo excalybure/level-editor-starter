@@ -479,11 +479,28 @@ void UI::Impl::setupDockspace( ViewportLayout &layout, UI &ui )
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2( 0.0f, 0.0f ) );
 
-	// Set window title with modified indicator
-	std::string windowTitle = "Level Editor Dockspace";
+	// Build window title with scene name and modified indicator
+	std::string windowTitle = "Level Editor";
+	if ( !currentScenePath.empty() )
+	{
+		// Extract just the filename from the path
+		std::filesystem::path scenePath( currentScenePath );
+		windowTitle += " - " + scenePath.filename().string();
+	}
+	else
+	{
+		windowTitle += " - Untitled";
+	}
+
 	if ( m_sceneModified )
 	{
 		windowTitle += " *";
+	}
+
+	// Update the actual OS window title
+	if ( window )
+	{
+		window->setTitle( windowTitle.c_str() );
 	}
 
 	ImGui::Begin( windowTitle.c_str(), nullptr, window_flags );
