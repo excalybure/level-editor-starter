@@ -165,8 +165,8 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		// Copy to constant buffer
 		memcpy( m_constantBufferData, &constants, sizeof( constants ) );
 
-		// Set constant buffer for rendering
-		commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
+		// Set constant buffer for rendering (now at root parameter index 1)
+		commandList->SetGraphicsRootConstantBufferView( 1, m_constantBuffer->GetGPUVirtualAddress() );
 	}
 
 	// Set vertex and index buffers
@@ -263,28 +263,28 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 		commandList->SetPipelineState( m_outlinePipelineState.Get() );
 	}
 
-	// Update constant buffer with outline constants
-	if ( m_constantBuffer && m_constantBufferData )
+	// Set per-entity constants using root constants
+	// This ensures each draw call has its own unique matrix and color data
 	{
 		struct OutlineConstants
 		{
 			math::Mat4<> worldViewProj;
 			math::Vec4<> outlineColor;
 			math::Vec4<> screenParams; // width, height, outlineWidth, time
-			math::Vec4<> padding;	   // Padding for 256-byte alignment
 		};
 
 		OutlineConstants constants;
 		constants.worldViewProj = worldViewProj;
 		constants.outlineColor = color;
 		constants.screenParams = math::Vec4<>{ viewportSize.x, viewportSize.y, m_style.outlineWidth, getAnimationTime() };
-		constants.padding = math::Vec4<>{ 0.0f, 0.0f, 0.0f, 0.0f };
 
-		// Copy to constant buffer
-		memcpy( m_constantBufferData, &constants, sizeof( constants ) );
-
-		// Set constant buffer for rendering
-		commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
+		// Set root constants (24 DWORD values = 16 matrix + 4 color + 4 screen params)
+		commandList->SetGraphicsRoot32BitConstants(
+			0,			// Root parameter index
+			24,			// Number of 32-bit values
+			&constants, // Source data
+			0			// Destination offset in constants
+		);
 	}
 
 	// Render the mesh with outline effect
@@ -355,16 +355,27 @@ void SelectionRenderer::createRootSignature()
 {
 	if ( m_device.isValid() )
 	{
-		// Create root signature with one constant buffer parameter for rectangle constants
-		D3D12_ROOT_PARAMETER rootParam = {};
-		rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		rootParam.Descriptor.ShaderRegister = 0;
-		rootParam.Descriptor.RegisterSpace = 0;
-		rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		// Create root signature with root constants for per-entity outline data
+		// Root constants allow us to set unique data per draw call without buffer aliasing
+		D3D12_ROOT_PARAMETER rootParams[2] = {};
+
+		// Root constants for outline rendering (worldViewProj + outlineColor + screenParams)
+		// 16 floats (matrix) + 4 floats (color) + 4 floats (screen params) = 24 DWORD values
+		rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParams[0].Constants.ShaderRegister = 0;
+		rootParams[0].Constants.RegisterSpace = 0;
+		rootParams[0].Constants.Num32BitValues = 24; // Mat4 + Vec4 + Vec4
+		rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		// Constant buffer for rectangle selection (less frequent updates)
+		rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParams[1].Descriptor.ShaderRegister = 1;
+		rootParams[1].Descriptor.RegisterSpace = 0;
+		rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-		rootSigDesc.NumParameters = 1;
-		rootSigDesc.pParameters = &rootParam;
+		rootSigDesc.NumParameters = 2;
+		rootSigDesc.pParameters = rootParams;
 		rootSigDesc.NumStaticSamplers = 0;
 		rootSigDesc.pStaticSamplers = nullptr;
 		rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;

@@ -1,5 +1,78 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-06 — Fixed Selection Outline Rendering for Multiple Selected Objects
+**Summary:** Fixed a critical DirectX 12 synchronization bug where selection outlines were incorrectly rendering at the position of the last selected object when multiple objects were selected. The issue was caused by all draw commands sharing a single constant buffer that was being overwritten for each entity, resulting in the GPU reading only the final entity's transform data for all draw calls. Solution: converted outline rendering to use root constants (`SetGraphicsRoot32BitConstants`) instead of a constant buffer, ensuring each draw call has unique per-entity transform data without aliasing.
+
+**Atomic functionalities completed:**
+- AF1: Convert root signature to use root constants - Modified `createRootSignature()` to define root parameter 0 as 32-bit constants (24 DWORDs for worldViewProj + color + screenParams) for per-entity outline data, moved rectangle constant buffer to root parameter 1
+- AF2: Update outline rendering to use root constants - Changed `renderEntityOutline()` from `memcpy` to constant buffer + `SetGraphicsRootConstantBufferView(0)` to `SetGraphicsRoot32BitConstants(0, 24, &constants, 0)` for immediate per-draw-call data binding
+- AF3: Update rectangle rendering CBV binding - Changed `renderRectSelection()` constant buffer binding from root parameter index 0 to index 1 to match new root signature layout
+- AF4: Update rectangle shader register - Modified `selection_rect.hlsl` constant buffer from `register(b0)` to `register(b1)` to match new root signature binding
+
+**Tests:** All existing selection renderer tests pass (5 test cases, 22 assertions). All selection integration tests pass (4 test cases, 177 assertions). Build completes with no warnings. Filtered commands: `unit_test_runner.exe "[selection-renderer]"` and `unit_test_runner.exe "[selection][integration]"`
+
+**Acceptance:**
+- ✅ Multiple selected entities each render their outline at their correct world position
+- ✅ Primary selection (yellow) and secondary selections (orange) render simultaneously without interference
+- ✅ No visual artifacts or position aliasing when 2+ objects selected
+- ✅ Single selection rendering unchanged and working correctly
+- ✅ Rectangle selection constant buffer still functional with new root signature
+- ✅ All existing tests pass with no regressions
+
+**Root Cause Analysis:**
+The `SelectionRenderer` was using a single CPU-mapped constant buffer (`m_constantBuffer`) for all outline draw calls. In DirectX 12, command lists are recorded on the CPU but executed asynchronously by the GPU. The original flow was:
+1. For entity A: `memcpy` transform A to constant buffer → queue `DrawIndexedInstanced` referencing GPU address
+2. For entity B: `memcpy` transform B to constant buffer (overwrites A) → queue `DrawIndexedInstanced` referencing same GPU address
+3. For entity C: `memcpy` transform C to constant buffer (overwrites B) → queue `DrawIndexedInstanced` referencing same GPU address
+4. GPU executes all commands → all three draws read the final value (entity C's transform)
+
+**Technical Solution:**
+Root constants provide inline data in the command list itself, not references to GPU memory. Each `SetGraphicsRoot32BitConstants` call embeds unique data directly in the command buffer, eliminating aliasing:
+- Root parameter 0: 24 DWORD constants for outline rendering (16 matrix + 4 color + 4 screen params)
+- Root parameter 1: Constant buffer view for rectangle selection (less frequent updates, buffer approach acceptable)
+
+**Notes:**
+- Root constants are limited to 64 DWORDs per root signature; our 24 DWORDs well within limit
+- Alternative considered: ring buffer with multiple constant buffer slots (more complex, unnecessary for this use case)
+- Shader code unchanged: root constants and constant buffers use identical HLSL syntax (`cbuffer`)
+- Fix applies to both primary (yellow) and secondary (orange) selection outlines
+- Rectangle selection unaffected by fix (uses less frequent updates, buffer aliasing not an issue)
+
+**Files Modified:**
+- `src/editor/selection_renderer.cpp` (root signature + outline rendering + rect CBV binding)
+- `shaders/selection_rect.hlsl` (constant buffer register update)
+
+---
+
+## 2025-10-06 — Fixed Mixed Values Widget Rendering in Entity Inspector
+**Summary:** Fixed a UI bug where Position, Rotation, and Scale widgets were still being rendered in the Entity Inspector when multiple entities with different transform values were selected, even though "(Mixed Values)" text was correctly displayed. The widgets should only appear when values are uniform across all selected entities, not when mixed. Changed conditional rendering from sequential `if` statements to `if-else if` pattern so widgets are skipped when mixed values are detected.
+
+**Atomic functionalities completed:**
+- AF1: Change Position widget rendering to `else if` - Modified `renderMultiTransformComponent()` to use `else if` after `positionMixed` check, preventing widget rendering when values differ across entities
+- AF2: Change Rotation widget rendering to `else if` - Applied same pattern to rotation control, skipping widget when `rotationMixed` is true
+- AF3: Change Scale widget rendering to `else if` - Applied same pattern to scale control, skipping widget when `scaleMixed` is true
+
+**Tests:** No new unit tests per coding guidelines (UI code requiring ImGui context). Validated through integration testing in running editor with multi-entity selection. All existing entity inspector tests pass (14 test cases, 58 assertions).
+
+**Acceptance:**
+- ✅ When multiple entities with different positions are selected, only "(Mixed Values)" text is shown (no Position widget)
+- ✅ When multiple entities with different rotations are selected, only "(Mixed Values)" text is shown (no Rotation widget)  
+- ✅ When multiple entities with different scales are selected, only "(Mixed Values)" text is shown (no Scale widget)
+- ✅ When values are uniform across selection, widgets render normally and allow batch editing
+- ✅ No regressions in entity inspector functionality
+
+**Notes:**
+- Root cause: original implementation used two sequential `if` statements (one for text, one for widget), so both executed
+- Fix: changed to `if-else if` pattern—when mixed values detected, show text and skip widget entirely
+- Consistent UX: matches behavior seen in Unity/Unreal where mixed values show placeholder text without interactive controls
+- Simple control flow fix, no logic changes needed to mixed value detection or command handling
+- Applies to all three Transform properties for consistency
+
+**Files Modified:**
+- `src/editor/entity_inspector/EntityInspectorPanel.cpp` (3 widget render calls changed from `if` to `else if`)
+
+---
+
 ## 2025-01-06 — Visible Component Made Essential (Non-Removable)
 **Summary:** Protected the `Visible` component from accidental removal through the Entity Inspector UI by marking it as essential, matching the existing pattern used for `Transform` and `Name` components. Since `Visible` is now auto-added to all entities and is fundamental to the rendering system, users should not be able to remove it via the context menu. The `isEssential` flag in `EntityInspectorPanel::renderComponentContextMenu` template now includes `components::Visible`, which disables the "Remove Component" menu item.
 

@@ -18,7 +18,7 @@ struct VertexOutput
 };
 
 // Rectangle selection constants
-cbuffer RectConstants : register(b0)
+cbuffer RectConstants : register(b1)
 {
     float4 rectColor;           // Selection rectangle color (RGBA)
     float4 rectBounds;          // minX, minY, maxX, maxY in normalized screen coordinates

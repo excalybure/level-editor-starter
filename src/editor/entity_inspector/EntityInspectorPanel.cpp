@@ -607,7 +607,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 		{
 			ImGui::TextDisabled( "Position: (Mixed Values)" );
 		}
-		if ( ComponentUI::renderVec3Control( "Position", position, { 0.0f, 0.0f, 0.0f }, 0.1f ) )
+		else if ( ComponentUI::renderVec3Control( "Position", position, { 0.0f, 0.0f, 0.0f }, 0.1f ) )
 		{
 			if ( !m_transformEditState.isEditing )
 			{
@@ -641,7 +641,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 		{
 			ImGui::TextDisabled( "Rotation: (Mixed Values)" );
 		}
-		if ( ComponentUI::renderVec3Control( "Rotation", rotation, { 0.0f, 0.0f, 0.0f }, 1.0f ) )
+		else if ( ComponentUI::renderVec3Control( "Rotation", rotation, { 0.0f, 0.0f, 0.0f }, 1.0f ) )
 		{
 			if ( !m_transformEditState.isEditing )
 			{
@@ -674,7 +674,7 @@ void EntityInspectorPanel::renderMultiTransformComponent( const std::vector<ecs:
 		{
 			ImGui::TextDisabled( "Scale: (Mixed Values)" );
 		}
-		if ( ComponentUI::renderVec3Control( "Scale", scale, { 1.0f, 1.0f, 1.0f }, 0.1f ) )
+		else if ( ComponentUI::renderVec3Control( "Scale", scale, { 1.0f, 1.0f, 1.0f }, 0.1f ) )
 		{
 			if ( !m_transformEditState.isEditing )
 			{
