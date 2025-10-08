@@ -1,5 +1,87 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-07 — Mouse Wheel Zoom Fixed for Focused Viewports
+**Summary:** Fixed critical mouse wheel zoom functionality that was broken due to incorrect viewport bounds checking. Mouse wheel events are now processed for focused viewports regardless of cursor position, while maintaining proper bounds checking for mouse button and move events. This fix ensures users can zoom in/out using the mouse wheel even when the cursor is outside the viewport boundaries.
+
+**Atomic functionalities completed:**
+- AF1: Analyzed viewport input flow - Identified that mouse wheel events were incorrectly filtered by `isPointInViewport()` bounds checking in `Viewport::handleInput()`
+- AF2: Separated mouse wheel from other mouse events - Modified bounds checking logic to treat wheel events separately from button/move events
+- AF3: Implemented selective bounds checking - Mouse wheel events now bypass viewport bounds checks for focused viewports while preserving bounds checking for mouse button and mouse move events
+- AF4: Verified fix with integration tests - Confirmed all existing viewport and camera controller tests continue to pass
+
+**Tests:** 33 viewport tests and 10 camera controller tests all pass; filtered commands: `unit_test_runner.exe "*viewport*"` and `unit_test_runner.exe "*camera*"`
+
+**Notes:** The fix maintains backward compatibility and doesn't affect other mouse input handling. Mouse wheel zoom now works consistently whether the cursor is inside or outside viewport bounds, improving user experience during camera navigation.
+
+## 2025-10-07 — Reset Layout Enhanced to Use Saved ImGui .ini Data
+**Summary:** Enhanced the "Reset Layout" feature to capture and restore the actual ImGui docking layout from memory instead of rebuilding it programmatically. The editor now saves a snapshot of the initial layout after it's established, then restores from that snapshot when reset is requested. This approach respects the exact docking structure from `imgui.ini` and provides a more accurate restoration.
+
+**Atomic functionalities completed:**
+- AF1: Added layout snapshot storage - Introduced `defaultLayoutIniData` string member and tracking flags (`framesSinceLayoutSetup`, `defaultLayoutCaptured`) to store the initial layout state
+- AF2: Implemented layout capture logic - After initial setup, wait 3 frames for layout to stabilize, then capture the complete ImGui settings using `ImGui::SaveIniSettingsToMemory()`
+- AF3: Modified reset to use saved snapshot - When reset is triggered, restore layout using `ImGui::LoadIniSettingsFromMemory()` with the captured default layout data
+- AF4: Maintained panel visibility reset - Keep the existing logic to reset all panel and viewport visibility flags to their defaults
+
+**Tests:** Manual testing confirms the feature works correctly. The layout is captured after initial setup and accurately restored when "View → Reset Layout" is clicked. All panels, viewports, and docking structure return to their initial configuration.
+
+**Files Modified:**
+- `src/editor/ui.cpp` - Added layout snapshot storage, capture logic after stabilization, and restore mechanism using ImGui's ini settings API
+
+**Implementation Details:**
+- **Capture Timing**: Waits 3 frames after `setupInitialLayout()` to allow ImGui's docking system to fully establish the layout before capturing
+- **Storage Format**: Uses ImGui's native ini format string (from `SaveIniSettingsToMemory()`) which includes all docking, window positions, and sizes
+- **Restore Mechanism**: Calls `ImGui::LoadIniSettingsFromMemory()` which properly reconstructs the entire docking tree and window states
+- **Fallback Behavior**: If no snapshot exists yet (shouldn't happen in normal use), falls back to programmatic setup via `setupInitialLayout()`
+- **Benefits Over Previous Approach**: 
+  - Restores the exact layout from the initial configuration
+  - Respects complex docking relationships and sizes from `imgui.ini`
+  - Uses ImGui's native serialization format for compatibility
+  - More maintainable than manually rebuilding the docking tree
+
+**Technical Notes:**
+- Frame delay is necessary because ImGui's docking system processes layout changes over multiple frames
+- The captured ini data includes all [Docking][Data] information, window positions, and DockSpace configuration
+- `LoadIniSettingsFromMemory()` is safe to call at runtime and properly updates the active docking state
+- Panel visibility flags are still reset manually since they're application-level state, not ImGui window state
+
+**Notes:**
+- This approach provides more accurate restoration by using ImGui's own serialization
+- The layout snapshot is taken once at startup and reused for all subsequent resets
+- Future enhancement could allow users to "save current layout as default" to customize the reset target
+
+## 2025-10-07 — Reset Layout Menu Option Added to View Menu
+**Summary:** Implemented a "Reset Layout" menu option under the View menu to restore all docked windows and panels to their default positions and visibility. This addresses the issue where the docked view layout sometimes gets lost or becomes unusable due to user modifications or accidental changes.
+
+**Atomic functionalities completed:**
+- AF1: Added `shouldResetLayout` flag to `UI::Impl` - Introduced a boolean flag to track when layout reset is requested by the user
+- AF2: Added "Reset Layout" menu item - Created new menu item in View menu (after Fullscreen option) that sets the reset flag when clicked
+- AF3: Implemented layout reset logic - Modified the dockspace setup to detect the reset flag, call `setupInitialLayout()`, and restore all panel and viewport visibility to defaults
+- AF4: Ensured complete state restoration - Reset includes: docking layout (via `ImGui::DockBuilderRemoveNode/AddNode`), all four viewport panes visibility, and all three panel visibility flags (Scene Hierarchy, Entity Inspector, Asset Browser)
+
+**Tests:** Manual testing confirms the feature works correctly. When "View → Reset Layout" is clicked, all panels and viewports return to their default 2x2 grid layout with side panels, and all windows become visible again.
+
+**Files Modified:**
+- `src/editor/ui.cpp` - Added `shouldResetLayout` flag, menu item handler, and reset logic that restores default layout and visibility
+
+**Implementation Details:**
+- **Menu Location**: View → Reset Layout (appears after Fullscreen option)
+- **Reset Trigger**: Sets `shouldResetLayout = true` when menu item is clicked
+- **Layout Reset**: Reuses existing `setupInitialLayout(dockspaceId)` function which properly rebuilds the docking tree
+- **Visibility Restoration**: Sets all panels to visible (`showHierarchyPanel`, `showInspectorPanel`, `showAssetBrowserPanel` = true) and all viewport panes (`pane.isOpen = true`)
+- **Flag Management**: Flag is cleared after reset completes to prevent repeated resets
+
+**User Experience:**
+- Single menu click restores entire editor layout
+- No need to manually reopen closed windows or rearrange panels
+- Useful when layout becomes corrupted or user wants to return to default arrangement
+- Works seamlessly with existing ImGui docking system
+
+**Notes:**
+- This is a quality-of-life improvement addressing a common pain point in dock-based editors
+- Layout is only reset when explicitly requested by the user via the menu
+- The existing first-run layout initialization logic is preserved and continues to work
+- No changes to serialization or persistence - this is a runtime-only operation
+
 ## 2025-10-07 — Asset Resolution After Scene Load (Phase 3)
 **Summary:** Completed Phase 3 of meshPath serialization implementation. After loading a scene from disk, the editor now automatically resolves `meshPath` references to load corresponding assets and create GPU resources, enabling complete asset resolution workflow without requiring original import context.
 

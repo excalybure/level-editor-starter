@@ -305,9 +305,10 @@ void Viewport::handleInput( const ViewportInputEvent &event )
 		return;
 
 	// Check if this is a mouse event outside viewport bounds
+	// Mouse wheel events should be processed regardless of cursor position for focused viewport
 	const bool isMouseEvent = ( event.type == ViewportInputEvent::Type::MouseButton ||
-		event.type == ViewportInputEvent::Type::MouseMove ||
-		event.type == ViewportInputEvent::Type::MouseWheel );
+		event.type == ViewportInputEvent::Type::MouseMove );
+	const bool isWheelEvent = ( event.type == ViewportInputEvent::Type::MouseWheel );
 
 	bool isOutsideViewport = false;
 	if ( isMouseEvent )
@@ -316,8 +317,8 @@ void Viewport::handleInput( const ViewportInputEvent &event )
 		isOutsideViewport = !isPointInViewport( windowPos );
 	}
 
-	// Only update input state if the event is inside viewport bounds (or not a mouse event)
-	if ( !isOutsideViewport )
+	// Update input state for wheel events regardless of bounds, or for other events inside bounds
+	if ( isWheelEvent || !isOutsideViewport )
 	{
 		updateInputState( event );
 	}
@@ -325,9 +326,8 @@ void Viewport::handleInput( const ViewportInputEvent &event )
 	// Try selection input first (for left mouse button and selection operations)
 	bool selectionHandled = handleSelectionInput( event );
 
-	// If selection didn't handle it (e.g., right click, keyboard), handle camera controls
-	// But only if the event is inside viewport bounds (or not a mouse event)
-	if ( !selectionHandled && !isOutsideViewport )
+	// Handle camera controls for wheel events regardless of bounds, or for other events inside bounds
+	if ( !selectionHandled && ( isWheelEvent || !isOutsideViewport ) )
 	{
 		handleCameraInput( event );
 	}
