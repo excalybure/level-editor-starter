@@ -2,6 +2,7 @@
 #include "engine/assets/asset_manager.h"
 #include "runtime/ecs.h"
 #include "editor/commands/CommandHistory.h"
+#include "runtime/console.h"
 
 #include <imgui.h>
 #include <filesystem>
@@ -235,7 +236,15 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 		{
 			if ( entry.is_directory() )
 			{
-				subdirs.push_back( entry.path().string() );
+				try
+				{
+					const std::string subdirPath = entry.path().string();
+					subdirs.push_back( subdirPath );
+				}
+				catch ( const std::exception &e )
+				{
+					console::error( "Exception trying to parse directory: {}", e.what() );
+				}
 			}
 		}
 
