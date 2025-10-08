@@ -43,3 +43,6 @@ imgui.ini
 # Test temp
 Testing/Temporary/
 /.vs
+
+# Sample assets
+**/assets/glTF-Sample-Assets
