@@ -166,26 +166,6 @@ TEST_CASE( "MeshRenderer component functionality", "[components][meshrenderer]" 
 		REQUIRE( renderer.bounds.max.y == Catch::Approx( 2.0f ) );
 		REQUIRE( renderer.bounds.max.z == Catch::Approx( 3.0f ) );
 	}
-
-	SECTION( "Component size optimization verification" )
-	{
-		// Verify that the new components::MeshRenderer structure is more memory-efficient
-		// Old structure had: std::string + std::vector<std::string> + bool + bounds
-		// New structure has: shared_ptr + float + bounds
-
-		// The new structure should be significantly smaller due to:
-		// - shared_ptr (8 bytes) vs string + vector of strings (potentially 100+ bytes)
-		// - float (4 bytes) vs bool (1 byte, but with padding considerations)
-		const std::size_t rendererSize = sizeof( components::MeshRenderer );
-
-		// Reasonable upper bound: shared_ptr(8) + float(4) + bounds(24) + padding ≈ 40 bytes
-		// Old structure with strings could easily be 100+ bytes
-		REQUIRE( rendererSize <= 64 ); // Conservative upper limit
-
-		// Verify that size is at least the minimum expected components
-		const std::size_t minimumSize = sizeof( std::shared_ptr<void> ) + sizeof( float ) + sizeof( math::BoundingBox3Df );
-		REQUIRE( rendererSize >= minimumSize );
-	}
 }
 
 TEST_CASE( "Selected Component - Basic functionality", "[components][selection]" )

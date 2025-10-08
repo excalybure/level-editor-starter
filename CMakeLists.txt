@@ -238,6 +238,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
+    tests/viewport_input_tests.cpp
     tests/viewport_input_handler_tests.cpp
     tests/viewport_input_integration_tests.cpp
     tests/grid_tests.cpp
