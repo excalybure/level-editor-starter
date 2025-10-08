@@ -22,6 +22,13 @@
     "testMate.cpp.test.executables": "${workspaceFolder}/build/vs2022-x64/Debug/unit_test_runner.exe",
     "testMate.cpp.test.workingDirectory": "${workspaceFolder}",
     "chat.tools.autoApprove": true,
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
     "chat.tools.terminal.autoApprove": {
         "rm": true,
         "rmdir": false,
@@ -49,7 +56,9 @@
         "/^.*Get-Content\\b/i": true,
         "/^.*Set-Content\\b/i": true,
         "/^.*Select-Object\\b/i": true,
-        "/^powershell -Command \"Get-Content\\b/i": true
+        "/^powershell -Command \"Get-Content\\b/i": true,
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/ps/": true
     },
     "files.associations": {
         "xutility": "cpp",
