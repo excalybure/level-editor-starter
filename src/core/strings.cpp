@@ -20,7 +20,7 @@ std::string getBaseFilename( const std::string &filePath )
 	const size_t lastDot = filePath.find_last_of( '.' );
 
 	// If no extension found, or dot is before the last slash, return everything after the slash
-	if ( lastDot == std::string::npos || lastDot < start )
+	if ( lastDot == std::string::npos || lastDot <= start )
 	{
 		return filePath.substr( start );
 	}

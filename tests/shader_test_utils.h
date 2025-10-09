@@ -2,8 +2,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <random>
+#include <sstream>
 #include <string_view>
 #include <system_error>
 
@@ -20,11 +23,22 @@ inline const std::filesystem::path &tempDirectory()
 	return directory;
 }
 
+inline std::string generateUniqueFilename( std::string_view prefix = "shader-" )
+{
+	static std::atomic<uint32_t> counter{ 0 };
+	const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+	const auto count = counter.fetch_add( 1, std::memory_order_relaxed );
+
+	std::ostringstream oss;
+	oss << prefix << timestamp << "-" << count;
+	return oss.str();
+}
+
 class TempShaderFile
 {
 public:
 	explicit TempShaderFile( std::string_view content, std::string_view extension = ".hlsl", const std::filesystem::path &directory = tempDirectory() )
-		: m_path( directory / std::filesystem::unique_path( "shader-%%%%%%%%" ) )
+		: m_path( directory / generateUniqueFilename() )
 	{
 		m_path.replace_extension( extension );
 		std::ofstream file( m_path, std::ios::binary );
