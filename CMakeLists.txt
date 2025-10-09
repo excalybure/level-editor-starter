@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.29)
 project(LevelEditorStarter LANGUAGES CXX)
 
-# Standard & modules
+# Standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-# Help CMake/Ninja with MSVC module dependency scanning
-set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 # Find vcpkg packages
 find_package(imgui CONFIG REQUIRED)
