@@ -11,9 +11,14 @@
 #include "engine/grid/grid.h"
 #include "math/vec.h"
 #include "math/matrix.h"
+#include "platform/dx12/dx12_device.h"
 
 // Forward declarations
 // More forward declarations
+namespace dx12
+{
+class Device;
+}
 namespace camera
 {
 enum class ViewType;

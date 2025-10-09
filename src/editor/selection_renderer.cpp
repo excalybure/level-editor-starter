@@ -16,6 +16,7 @@
 #include "engine/shader_manager/shader_manager.h"
 #include "engine/gpu/mesh_gpu.h"
 #include "runtime/systems.h"
+#include "platform/dx12/dx12_device.h"
 
 namespace editor
 {

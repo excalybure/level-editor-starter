@@ -413,7 +413,7 @@ TEST_CASE( "ShaderManager Callback System", "[shader_manager][callbacks]" )
 		shader_manager::ShaderHandle callbackHandle = INVALID_SHADER_HANDLE;
 
 		// Register callback
-		manager.registerReloadCallback( [&callbackTriggered, &callbackHandle]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob & ) {
+		manager.registerReloadCallback( [&callbackTriggered, &callbackHandle]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob & ) {
 			callbackTriggered = true;
 			callbackHandle = handle;
 		} );
@@ -436,7 +436,7 @@ TEST_CASE( "ShaderManager Callback System", "[shader_manager][callbacks]" )
 	{
 		bool callbackTriggered = false;
 
-		manager.registerReloadCallback( [&callbackTriggered]( shader_manager::ShaderHandle, const renderer::ShaderBlob & ) {
+		manager.registerReloadCallback( [&callbackTriggered]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
 			callbackTriggered = true;
 		} );
 
@@ -459,7 +459,7 @@ TEST_CASE( "ShaderManager File Change Detection", "[shader_manager][file_watchin
 	{
 		bool callbackTriggered = false;
 
-		manager.registerReloadCallback( [&callbackTriggered]( shader_manager::ShaderHandle, const renderer::ShaderBlob & ) {
+		manager.registerReloadCallback( [&callbackTriggered]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
 			callbackTriggered = true;
 		} );
 
@@ -502,15 +502,15 @@ TEST_CASE( "ShaderManager Multiple Callbacks", "[shader_manager][callbacks]" )
 		bool callback2Triggered = false;
 		bool callback3Triggered = false;
 
-		auto callbackHandle1 = manager.registerReloadCallback( [&callback1Triggered]( shader_manager::ShaderHandle, const renderer::ShaderBlob & ) {
+		auto callbackHandle1 = manager.registerReloadCallback( [&callback1Triggered]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
 			callback1Triggered = true;
 		} );
 
-		auto callbackHandle2 = manager.registerReloadCallback( [&callback2Triggered]( shader_manager::ShaderHandle, const renderer::ShaderBlob & ) {
+		auto callbackHandle2 = manager.registerReloadCallback( [&callback2Triggered]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
 			callback2Triggered = true;
 		} );
 
-		auto callbackHandle3 = manager.registerReloadCallback( [&callback3Triggered]( shader_manager::ShaderHandle, const renderer::ShaderBlob & ) {
+		auto callbackHandle3 = manager.registerReloadCallback( [&callback3Triggered]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
 			callback3Triggered = true;
 		} );
 

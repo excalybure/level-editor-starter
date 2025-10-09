@@ -10,6 +10,11 @@
 #include "engine/shader_manager/shader_manager.h"
 #include "systems.h"
 
+namespace renderer
+{
+class Renderer;
+}
+
 namespace camera
 {
 class Camera;

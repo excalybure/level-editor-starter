@@ -3,7 +3,7 @@
 #include <shared_mutex>
 #include <windows.h>
 
-#include "engine/renderer/renderer.h"
+#include "shader_compiler.h"
 #include "core/console.h"
 
 namespace shader_manager
@@ -99,7 +99,7 @@ void ShaderManager::unregisterReloadCallback( CallbackHandle callbackHandle )
 	}
 }
 
-const renderer::ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) const
+const ShaderBlob *ShaderManager::getShaderBlob( ShaderHandle handle ) const
 {
 	std::shared_lock<std::shared_mutex> lock( m_shaderMutex );
 	auto it = m_shaders.find( handle );
@@ -116,7 +116,7 @@ void ShaderManager::update()
 	struct CallbackInfo
 	{
 		ShaderHandle handle;
-		renderer::ShaderBlob blob;
+		ShaderBlob blob;
 	};
 	std::vector<CallbackInfo> callbacksToInvoke;
 
@@ -210,7 +210,7 @@ void ShaderManager::update()
 bool ShaderManager::forceRecompile( ShaderHandle handle )
 {
 	// Compilation phase - collect callback info
-	renderer::ShaderBlob compiledBlob;
+	ShaderBlob compiledBlob;
 	bool compilationSuccess = false;
 
 	{
@@ -317,7 +317,7 @@ bool ShaderManager::compileShader( ShaderInfo &shaderInfo )
 	try
 	{
 		// Use the existing shader compiler
-		shaderInfo.compiledBlob = renderer::ShaderCompiler::CompileFromFile(
+		shaderInfo.compiledBlob = ShaderCompiler::CompileFromFile(
 			shaderInfo.filePath,
 			shaderInfo.entryPoint,
 			shaderInfo.target );

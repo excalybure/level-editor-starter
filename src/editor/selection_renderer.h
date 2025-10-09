@@ -5,6 +5,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
+#include "platform/dx12/dx12_device.h"
 #include "runtime/entity.h"
 
 // Forward declarations
@@ -15,7 +16,7 @@ class Scene;
 
 namespace systems
 {
-	class SystemManager;
+class SystemManager;
 }
 
 namespace editor

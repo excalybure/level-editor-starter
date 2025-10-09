@@ -68,6 +68,7 @@ add_library(engine STATIC
   src/engine/grid/grid.cpp
   src/engine/renderer/renderer.cpp
   src/engine/shader_manager/shader_manager.cpp
+  src/engine/shader_manager/shader_compiler.cpp
   src/engine/picking.cpp
 )
 

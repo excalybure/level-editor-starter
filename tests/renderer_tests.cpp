@@ -6,6 +6,7 @@
 
 #include "engine/renderer/renderer.h"
 #include "engine/shader_manager/shader_manager.h"
+#include "engine/shader_manager/shader_compiler.h"
 #include "platform/dx12/dx12_device.h"
 #include "math/vec.h"
 #include "math/matrix.h"
@@ -46,7 +47,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                     }
                 )";
 
-				const auto blob = renderer::ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
 				REQUIRE( blob.isValid() );
 				REQUIRE( blob.entryPoint == "main" );
 				REQUIRE( blob.profile == "vs_5_0" );
@@ -70,7 +71,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
                     }
                 )";
 
-				const auto blob = renderer::ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
 				REQUIRE( blob.isValid() );
 			}
 			catch ( const std::runtime_error &e )
@@ -161,7 +162,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 				#endif
 				float4 main(float3 pos:POSITION):SV_POSITION { return float4(pos,1); }
 			)";
-			REQUIRE_NOTHROW( renderer::ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
+			REQUIRE_NOTHROW( shader_manager::ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
 		}
 		catch ( const std::runtime_error &e )
 		{
@@ -173,7 +174,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			renderer::ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
+			shader_manager::ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
 		}
 		catch ( const std::runtime_error & )
 		{
@@ -186,7 +187,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			renderer::ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
+			shader_manager::ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
 		}
 		catch ( const std::runtime_error & )
 		{
@@ -429,7 +430,8 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	renderer::Renderer renderer( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer renderer( device, shaderManager );
 	device.beginFrame();
 	renderer.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );

@@ -2,7 +2,8 @@
 
 #include <shared_mutex>
 #include <filesystem>
-#include "engine/renderer/renderer.h"
+#include <functional>
+#include "shader_compiler.h"
 
 // Shader Manager - Automatic shader reloading and hot recompilation
 // Watches shader files for changes and automatically recompiles and reloads them
@@ -36,13 +37,13 @@ struct ShaderInfo
 	std::filesystem::file_time_type lastModified;
 	std::vector<std::filesystem::path> includedFiles;					// List of included files for dependency tracking
 	std::vector<std::filesystem::file_time_type> includedFilesModTimes; // Modification times of included files
-	renderer::ShaderBlob compiledBlob;
+	ShaderBlob compiledBlob;
 	bool isValid = false;
 };
 
 // Callback function type for shader reload notifications
 // Called when a shader is successfully recompiled
-using ShaderReloadCallback = std::function<void( ShaderHandle handle, const renderer::ShaderBlob &newBlob )>;
+using ShaderReloadCallback = std::function<void( ShaderHandle handle, const ShaderBlob &newBlob )>;
 
 // Callback registration handle - used to unregister callbacks
 using CallbackHandle = size_t;
@@ -74,7 +75,7 @@ public:
 	void unregisterReloadCallback( CallbackHandle callbackHandle );
 
 	// Get the current compiled blob for a shader
-	const renderer::ShaderBlob *getShaderBlob( ShaderHandle handle ) const;
+	const ShaderBlob *getShaderBlob( ShaderHandle handle ) const;
 
 	// Check for file changes and recompile if necessary
 	// Should be called regularly (e.g., every frame)

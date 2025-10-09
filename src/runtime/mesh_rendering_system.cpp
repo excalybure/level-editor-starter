@@ -99,7 +99,7 @@ bool MeshRenderingSystem::registerShaders()
 
 	// Set up reload callback for shader hot reloading
 	m_callbackHandle = m_shaderManager->registerReloadCallback(
-		[this]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader ) {
+		[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader ) {
 			// When shaders are reloaded, invalidate pipeline state cache
 			if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
 			{
@@ -369,8 +369,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialP
 	if ( m_shaderManager )
 	{
 		// Get current shader blobs from shader manager
-		const renderer::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
-		const renderer::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
+		const shader_manager::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
+		const shader_manager::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
 
 		if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
 		{

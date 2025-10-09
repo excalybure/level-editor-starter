@@ -4,6 +4,7 @@
 #include "platform/win32/win32_window.h"
 #include "platform/dx12/dx12_device.h"
 #include "engine/renderer/renderer.h"
+#include "engine/shader_manager/shader_compiler.h"
 #include "test_dx12_helpers.h"
 
 
@@ -44,7 +45,7 @@ TEST_CASE( "Renderer shader compile failure path", "[renderer][shader][error]" )
 	bool threw = false;
 	try
 	{
-		auto blob = renderer::ShaderCompiler::CompileFromSource( badShader, "main", "vs_5_0" );
+		auto blob = shader_manager::ShaderCompiler::CompileFromSource( badShader, "main", "vs_5_0" );
 		(void)blob;
 	}
 	catch ( const std::runtime_error & )

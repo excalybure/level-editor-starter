@@ -298,7 +298,7 @@ bool GridRenderer::registerShaders()
 
 	// Set up reload callback for shader hot reloading
 	m_callbackHandle = m_shaderManager->registerReloadCallback(
-		[this]( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader ) {
+		[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader ) {
 			this->onShaderReloaded( handle, newShader );
 		} );
 
@@ -311,7 +311,7 @@ bool GridRenderer::registerShaders()
 	return true;
 }
 
-void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob & /*newShader*/ )
+void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob & /*newShader*/ )
 {
 	// Check if the reloaded shader is one of ours
 	if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
@@ -361,8 +361,8 @@ bool GridRenderer::createRootSignature()
 bool GridRenderer::createPipelineState()
 {
 	// Get current shader blobs from shader manager
-	const renderer::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
-	const renderer::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
+	const shader_manager::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
+	const shader_manager::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
 
 	if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
 	{

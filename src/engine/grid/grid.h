@@ -11,6 +11,11 @@
 #include "math/matrix.h"
 #include "engine/shader_manager/shader_manager.h"
 
+namespace dx12
+{
+class Device;
+}
+
 namespace camera
 {
 class Camera;
@@ -114,7 +119,7 @@ private:
 
 	// Helper functions
 	bool registerShaders();
-	void onShaderReloaded( shader_manager::ShaderHandle handle, const renderer::ShaderBlob &newShader );
+	void onShaderReloaded( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader );
 	bool createRootSignature();
 	bool createPipelineState();
 	bool createConstantBuffer();
