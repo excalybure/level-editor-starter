@@ -17,8 +17,8 @@
 
 #include "engine/assets/asset_manager.h"
 #include "engine/camera/camera.h"
-#include "engine/gpu/gpu_resource_manager.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/scene_importer.h"

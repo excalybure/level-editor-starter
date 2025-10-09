@@ -13,8 +13,8 @@
 #include "core/console.h"
 #include "runtime/ecs.h"
 #include "core/time.h"
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/gpu/mesh_gpu.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/gpu/mesh_gpu.h"
 #include "runtime/systems.h"
 #include "platform/dx12/dx12_device.h"
 

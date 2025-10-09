@@ -8,8 +8,8 @@
 #include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/grid/grid.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/grid/grid.h"
 #include "engine/camera/camera.h"
 
 using Catch::Matchers::WithinAbs;

@@ -3,13 +3,13 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
-#include "engine/renderer/renderer.h"
+#include "graphics/renderer/renderer.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "editor/ui.h"
 #include "editor/selection.h"
 #include "platform/dx12/dx12_device.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 
 TEST_CASE( "Asset loading to rendering integration initializes correctly", "[integration][asset-rendering]" )
 {

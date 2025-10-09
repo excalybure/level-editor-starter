@@ -5,7 +5,7 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
 // Mock GPUResourceManager for testing

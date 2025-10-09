@@ -10,7 +10,7 @@
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
 #include "engine/camera/camera.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "test_dx12_helpers.h"
 
 using Catch::Matchers::WithinAbs;

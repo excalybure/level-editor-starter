@@ -4,7 +4,7 @@
 // Integration tests for Task 8: Object Creation and Asset Instantiation
 #include "runtime/ecs.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "editor/commands/EcsCommands.h"
 #include "editor/commands/CommandHistory.h"

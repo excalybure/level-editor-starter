@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include "math/math.h"
 #include "math/matrix.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "systems.h"
 
 namespace renderer

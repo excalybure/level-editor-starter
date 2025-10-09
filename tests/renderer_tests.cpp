@@ -9,9 +9,9 @@
 
 #include "shader_test_utils.h"
 
-#include "engine/renderer/renderer.h"
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/shader_manager/shader_compiler.h"
+#include "graphics/renderer/renderer.h"
+#include "graphics/shader_manager/shader_compiler.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "math/vec.h"
 #include "math/matrix.h"

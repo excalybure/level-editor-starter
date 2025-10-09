@@ -12,7 +12,7 @@
 #include "math/color.h"
 #include "math/matrix.h"
 #include "math/vec.h"
-#include "engine/renderer/renderer.h"
+#include "graphics/renderer/renderer.h"
 #include "core/console.h"
 
 using namespace grid;

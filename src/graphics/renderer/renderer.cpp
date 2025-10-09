@@ -4,8 +4,8 @@
 #include <wrl.h>
 
 #include "core/console.h"
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/shader_manager/shader_compiler.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_compiler.h"
 
 namespace renderer
 {

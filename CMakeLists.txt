@@ -55,6 +55,30 @@ if (MSVC)
   target_compile_options(ImGuizmo PRIVATE /W4 /permissive- /std:c++latest)
 endif()
 
+# Graphics library - rendering, GPU resources, shader management
+add_library(graphics STATIC
+  src/graphics/gpu/gpu_resource_manager.cpp
+  src/graphics/gpu/material_gpu.cpp
+  src/graphics/gpu/mesh_gpu.cpp
+  src/graphics/grid/grid.cpp
+  src/graphics/renderer/renderer.cpp
+  src/graphics/shader_manager/shader_compiler.cpp
+  src/graphics/shader_manager/shader_manager.cpp
+)
+
+target_include_directories(graphics PUBLIC 
+  src
+)
+target_link_libraries(graphics PUBLIC
+  core
+  platform
+)
+target_compile_features(graphics PUBLIC cxx_std_23)
+target_compile_definitions(graphics PUBLIC NOMINMAX)
+if (MSVC)
+  target_compile_options(graphics PRIVATE /W4 /permissive- /std:c++latest)
+endif()
+
 # Engine library
 add_library(engine STATIC
   src/engine/assets/asset_manager.cpp
@@ -62,13 +86,6 @@ add_library(engine STATIC
   src/engine/camera/camera.cpp
   src/engine/camera/camera_controller.cpp
   src/engine/gltf_loader/gltf_loader.cpp
-  src/engine/gpu/gpu_resource_manager.cpp
-  src/engine/gpu/material_gpu.cpp
-  src/engine/gpu/mesh_gpu.cpp
-  src/engine/grid/grid.cpp
-  src/engine/renderer/renderer.cpp
-  src/engine/shader_manager/shader_manager.cpp
-  src/engine/shader_manager/shader_compiler.cpp
   src/engine/picking.cpp
 )
 
@@ -100,6 +117,7 @@ target_compile_features(runtime PUBLIC cxx_std_23)
 target_compile_definitions(runtime PUBLIC NOMINMAX)
 target_link_libraries(runtime PUBLIC
   core
+  graphics
   nlohmann_json::nlohmann_json
 )
 if (MSVC)
@@ -161,6 +179,7 @@ target_compile_definitions(editor PUBLIC NOMINMAX PIX_AVAILABLE)
 target_link_libraries(editor PUBLIC 
   imgui::imgui
   ImGuizmo
+  graphics
   Microsoft::DirectX-Headers
   Microsoft::WinPixEventRuntime
   d3d12
@@ -181,6 +200,7 @@ add_executable(level_editor src/main.cpp)
 target_link_libraries(level_editor PRIVATE
   editor
   engine
+  graphics
   platform
   runtime
   imgui::imgui
@@ -294,6 +314,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   target_link_libraries(unit_test_runner PRIVATE 
     editor
     engine
+    graphics
     platform
     runtime
     imgui::imgui

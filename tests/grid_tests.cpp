@@ -3,11 +3,11 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "test_dx12_helpers.h"
 
-#include "engine/grid/grid.h"
+#include "graphics/grid/grid.h"
 #include "engine/camera/camera.h"
 #include "math/vec.h"
 #include "math/matrix.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 
 TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 {

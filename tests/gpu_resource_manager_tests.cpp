@@ -1,11 +1,11 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "engine/assets/assets.h"
-#include "engine/gpu/mesh_gpu.h"
-#include "engine/gpu/material_gpu.h"
+#include "graphics/gpu/mesh_gpu.h"
+#include "graphics/gpu/material_gpu.h"
 
 TEST_CASE( "GPUResourceManager can be instantiated", "[gpu_resource_manager][unit]" )
 {

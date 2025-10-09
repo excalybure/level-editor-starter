@@ -7,7 +7,7 @@
 #include "editor/commands/EcsCommands.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
 // Mock GPUResourceManager for testing (CPU-only tests don't need actual GPU resources)

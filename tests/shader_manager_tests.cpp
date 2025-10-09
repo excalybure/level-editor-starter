@@ -4,8 +4,8 @@
 #include <fstream>
 #include "test_dx12_helpers.h"
 
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/renderer/renderer.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/renderer/renderer.h"
 #include "core/console.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;

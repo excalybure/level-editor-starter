@@ -8,7 +8,7 @@
 #include "editor/commands/MacroCommand.h"
 #include "editor/transform_commands.h"
 #include "math/math.h"
-#include "engine/gpu/mesh_gpu.h"
+#include "graphics/gpu/mesh_gpu.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>

@@ -3,11 +3,11 @@
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "engine/renderer/renderer.h"
+#include "graphics/renderer/renderer.h"
 #include "engine/camera/camera.h"
 #include "platform/dx12/dx12_device.h"
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/gpu/mesh_gpu.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/gpu/mesh_gpu.h"
 
 TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visibility][integration]" )
 {

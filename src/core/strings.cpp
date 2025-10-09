@@ -19,7 +19,7 @@ std::string getBaseFilename( const std::string &filePath )
 	// Find the last dot for the extension
 	const size_t lastDot = filePath.find_last_of( '.' );
 
-	// If no extension found, or dot is before the last slash, return everything after the slash
+	// If no extension found, or dot is at/before the directory separator, treat as no extension
 	if ( lastDot == std::string::npos || lastDot <= start )
 	{
 		return filePath.substr( start );

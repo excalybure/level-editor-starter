@@ -4,7 +4,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "platform/dx12/dx12_device.h"
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "math/math.h"
 #include "math/vec.h"
 #include "math/matrix.h"

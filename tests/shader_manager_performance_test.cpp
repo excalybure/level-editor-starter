@@ -7,7 +7,7 @@
 #include <random>
 #include <fstream>
 
-#include "engine/shader_manager/shader_manager.h"
+#include "graphics/shader_manager/shader_manager.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;
 

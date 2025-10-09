@@ -2,9 +2,9 @@
 #include <catch2/catch_template_test_macros.hpp>
 
 #include "engine/assets/assets.h"
-#include "engine/gpu/mesh_gpu.h"
-#include "engine/gpu/material_gpu.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/mesh_gpu.h"
+#include "graphics/gpu/material_gpu.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
 TEST_CASE( "PrimitiveGPU creates vertex buffer from primitive", "[gpu][primitive][unit]" )

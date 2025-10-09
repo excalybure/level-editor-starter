@@ -8,7 +8,7 @@
 #include <vector>
 #include <array>
 #include "engine/camera/camera_controller.h"
-#include "engine/grid/grid.h"
+#include "graphics/grid/grid.h"
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "platform/dx12/dx12_device.h"

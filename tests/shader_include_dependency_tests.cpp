@@ -1,8 +1,8 @@
 ﻿#include "catch2/catch_all.hpp"
 #include <fstream>
 
-#include "engine/shader_manager/shader_manager.h"
-#include "engine/renderer/renderer.h"
+#include "graphics/shader_manager/shader_manager.h"
+#include "graphics/renderer/renderer.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;
 using shader_manager::ShaderInfo;

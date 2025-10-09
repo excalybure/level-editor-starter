@@ -3,8 +3,8 @@
 #include "ecs.h"
 #include "components.h"
 #include "engine/assets/assets.h"
-#include "engine/gpu/mesh_gpu.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/mesh_gpu.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 
 using namespace runtime;
 using namespace ecs;

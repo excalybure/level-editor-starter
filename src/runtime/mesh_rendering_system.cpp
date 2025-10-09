@@ -1,11 +1,11 @@
 #include "runtime/mesh_rendering_system.h"
-#include "engine/renderer/renderer.h"
-#include "engine/gpu/material_gpu.h"
+#include "graphics/renderer/renderer.h"
+#include "graphics/gpu/material_gpu.h"
 #include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "engine/camera/camera.h"
-#include "engine/gpu/mesh_gpu.h"
+#include "graphics/gpu/mesh_gpu.h"
 #include "engine/assets/assets.h"
 
 #include <d3d12.h>

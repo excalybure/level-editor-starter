@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <wrl.h>
-#include "engine/gpu/mesh_gpu.h"
+#include "graphics/gpu/mesh_gpu.h"
 
 namespace engine
 {

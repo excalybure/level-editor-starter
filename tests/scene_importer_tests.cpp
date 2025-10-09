@@ -7,7 +7,7 @@
 #include "runtime/components.h"
 #include "runtime/scene_importer.h"
 #include "engine/assets/assets.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "platform/dx12/dx12_device.h"
 
 using Catch::Approx;

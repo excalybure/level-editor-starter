@@ -6,7 +6,7 @@
 #include <sstream>
 #include "runtime/components.h"
 #include "engine/assets/asset_manager.h"
-#include "engine/gpu/gpu_resource_manager.h"
+#include "graphics/gpu/gpu_resource_manager.h"
 #include "runtime/scene_importer.h"
 
 using json = nlohmann::json;
