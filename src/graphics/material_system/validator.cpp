@@ -1,6 +1,8 @@
 #include "graphics/material_system/validator.h"
 #include <nlohmann/json.hpp>
 #include "core/console.h"
+#include <unordered_set>
+#include <string>
 
 namespace material_system
 {
@@ -118,6 +120,72 @@ bool Validator::validateParameterType( const nlohmann::json &parameter )
 
 	// All validations passed
 	return true;
+}
+
+bool Validator::validateDuplicateIds( const nlohmann::json &document )
+{
+	// Use unordered_set for O(1) lookup
+	std::unordered_set<std::string> seenIds;
+	bool allUnique = true;
+
+	// Helper lambda to check for duplicates in an array of objects with "id" field
+	const auto checkArray = [&]( const nlohmann::json &arr, const std::string &category ) {
+		if ( !arr.is_array() )
+		{
+			return;
+		}
+
+		for ( const auto &item : arr )
+		{
+			if ( !item.contains( "id" ) )
+			{
+				continue; // Skip items without id field
+			}
+
+			const std::string id = item["id"];
+			if ( seenIds.count( id ) > 0 )
+			{
+				console::error( "Duplicate ID detected: '" + id + "' in " + category );
+				allUnique = false;
+			}
+			else
+			{
+				seenIds.insert( id );
+			}
+		}
+	};
+
+	// Check materials array
+	if ( document.contains( "materials" ) )
+	{
+		checkArray( document["materials"], "materials" );
+	}
+
+	// Check renderPasses array
+	if ( document.contains( "renderPasses" ) )
+	{
+		checkArray( document["renderPasses"], "renderPasses" );
+	}
+
+	// Check states object (nested arrays per state type)
+	if ( document.contains( "states" ) && document["states"].is_object() )
+	{
+		for ( const auto &[stateType, stateArray] : document["states"].items() )
+		{
+			checkArray( stateArray, "states." + stateType );
+		}
+	}
+
+	// Check shaders object (nested arrays per shader type)
+	if ( document.contains( "shaders" ) && document["shaders"].is_object() )
+	{
+		for ( const auto &[shaderType, shaderArray] : document["shaders"].items() )
+		{
+			checkArray( shaderArray, "shaders." + shaderType );
+		}
+	}
+
+	return allUnique;
 }
 
 } // namespace material_system

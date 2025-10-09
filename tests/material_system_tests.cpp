@@ -390,3 +390,326 @@ TEST_CASE( "Validator enforces parameter type constraints", "[material-system][v
 		REQUIRE_FALSE( validator.validateParameterType( invalidParam5 ) );
 	}
 }
+
+// Phase 2: JSON Document Merging (T007)
+
+TEST_CASE( "JsonLoader merges documents from includes", "[material-system][validation][T007]" )
+{
+	// Create temporary test files
+	const fs::path tempDir = fs::temp_directory_path() / "material_system_test_T007";
+	fs::create_directories( tempDir );
+
+	const fs::path mainFile = tempDir / "materials.json";
+	const fs::path statesFile = tempDir / "states.json";
+	const fs::path shadersFile = tempDir / "shaders.json";
+
+	SECTION( "Merges state blocks from included file" )
+	{
+		// Create main file with includes reference
+		{
+			std::ofstream out( mainFile );
+			out << R"({
+                "includes": ["states.json"],
+                "materials": [{"id": "mat1"}],
+                "renderPasses": []
+            })";
+		}
+
+		// Create states file with state blocks
+		{
+			std::ofstream out( statesFile );
+			out << R"({
+                "rasterizerStates": {
+                    "solid": {"fillMode": "solid"}
+                },
+                "depthStencilStates": {
+                    "depthTest": {"depthEnable": true}
+                }
+            })";
+		}
+
+		material_system::JsonLoader loader;
+		const bool success = loader.load( mainFile.string() );
+
+		REQUIRE( success );
+
+		const auto &merged = loader.getMergedDocument();
+
+		// Verify materials from main file
+		REQUIRE( merged.contains( "materials" ) );
+		REQUIRE( merged["materials"].size() == 1 );
+
+		// Verify state blocks from included file
+		REQUIRE( merged.contains( "rasterizerStates" ) );
+		REQUIRE( merged["rasterizerStates"].contains( "solid" ) );
+		REQUIRE( merged.contains( "depthStencilStates" ) );
+		REQUIRE( merged["depthStencilStates"].contains( "depthTest" ) );
+
+		fs::remove_all( tempDir );
+	}
+
+	SECTION( "Merges arrays by concatenation" )
+	{
+		// Main file with one material
+		{
+			std::ofstream out( mainFile );
+			out << R"({
+                "includes": ["states.json"],
+                "materials": [{"id": "mat1"}]
+            })";
+		}
+
+		// States file with another material
+		{
+			std::ofstream out( statesFile );
+			out << R"({
+                "materials": [{"id": "mat2"}]
+            })";
+		}
+
+		material_system::JsonLoader loader;
+		REQUIRE( loader.load( mainFile.string() ) );
+
+		const auto &merged = loader.getMergedDocument();
+
+		// Both materials should be present
+		// Note: included files are processed first, so mat2 comes before mat1
+		REQUIRE( merged["materials"].size() == 2 );
+		REQUIRE( merged["materials"][0]["id"] == "mat2" );
+		REQUIRE( merged["materials"][1]["id"] == "mat1" );
+
+		fs::remove_all( tempDir );
+	}
+
+	SECTION( "Merges nested includes (transitive)" )
+	{
+		// Main includes states, states includes shaders
+		{
+			std::ofstream out( mainFile );
+			out << R"({
+                "includes": ["states.json"],
+                "materials": []
+            })";
+		}
+
+		{
+			std::ofstream out( statesFile );
+			out << R"({
+                "includes": ["shaders.json"],
+                "rasterizerStates": {"solid": {}}
+            })";
+		}
+
+		{
+			std::ofstream out( shadersFile );
+			out << R"({
+                "shaders": {"default_vs": {"file": "default.hlsl"}}
+            })";
+		}
+
+		material_system::JsonLoader loader;
+		REQUIRE( loader.load( mainFile.string() ) );
+
+		const auto &merged = loader.getMergedDocument();
+
+		// All sections should be present
+		REQUIRE( merged.contains( "materials" ) );
+		REQUIRE( merged.contains( "rasterizerStates" ) );
+		REQUIRE( merged.contains( "shaders" ) );
+
+		fs::remove_all( tempDir );
+	}
+
+	SECTION( "Avoids duplicate loading of same file" )
+	{
+		// Diamond dependency: main includes A and B, both A and B include common.json
+		const fs::path fileA = tempDir / "a.json";
+		const fs::path fileB = tempDir / "b.json";
+		const fs::path commonFile = tempDir / "common.json";
+
+		{
+			std::ofstream out( mainFile );
+			out << R"({
+                "includes": ["a.json", "b.json"],
+                "materials": []
+            })";
+		}
+
+		{
+			std::ofstream out( fileA );
+			out << R"({
+                "includes": ["common.json"],
+                "statesA": {}
+            })";
+		}
+
+		{
+			std::ofstream out( fileB );
+			out << R"({
+                "includes": ["common.json"],
+                "statesB": {}
+            })";
+		}
+
+		{
+			std::ofstream out( commonFile );
+			out << R"({
+                "materials": [{"id": "common_mat"}]
+            })";
+		}
+
+		material_system::JsonLoader loader;
+		REQUIRE( loader.load( mainFile.string() ) );
+
+		const auto &merged = loader.getMergedDocument();
+
+		// Common material should only appear once (not duplicated)
+		REQUIRE( merged["materials"].size() == 1 );
+		REQUIRE( merged["materials"][0]["id"] == "common_mat" );
+
+		// Both A and B states should be present
+		REQUIRE( merged.contains( "statesA" ) );
+		REQUIRE( merged.contains( "statesB" ) );
+
+		fs::remove_all( tempDir );
+	}
+
+	SECTION( "Handles missing include file gracefully" )
+	{
+		{
+			std::ofstream out( mainFile );
+			out << R"({
+                "includes": ["nonexistent.json"],
+                "materials": []
+            })";
+		}
+
+		material_system::JsonLoader loader;
+		const bool success = loader.load( mainFile.string() );
+
+		REQUIRE_FALSE( success );
+
+		fs::remove_all( tempDir );
+	}
+}
+
+// ======================================================================
+// T008: Duplicate ID Detection
+// ======================================================================
+
+TEST_CASE( "Validator detects duplicate IDs across all scopes", "[T008][material-system][validation]" )
+{
+	material_system::Validator validator;
+
+	SECTION( "Detects duplicate material IDs" )
+	{
+		const json document = json::parse( R"({
+            "materials": [
+                {"id": "mat1"},
+                {"id": "mat1"}
+            ],
+            "renderPasses": []
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE_FALSE( valid );
+	}
+
+	SECTION( "Detects duplicate state block IDs" )
+	{
+		const json document = json::parse( R"({
+            "materials": [],
+            "renderPasses": [],
+            "states": {
+                "rasterizer": [
+                    {"id": "state1"},
+                    {"id": "state1"}
+                ]
+            }
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE_FALSE( valid );
+	}
+
+	SECTION( "Detects cross-category duplicate (material vs state)" )
+	{
+		const json document = json::parse( R"({
+            "materials": [
+                {"id": "duplicate"}
+            ],
+            "renderPasses": [],
+            "states": {
+                "rasterizer": [
+                    {"id": "duplicate"}
+                ]
+            }
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE_FALSE( valid );
+	}
+
+	SECTION( "Detects duplicate shader IDs" )
+	{
+		const json document = json::parse( R"({
+            "materials": [],
+            "renderPasses": [],
+            "shaders": {
+                "vertex": [
+                    {"id": "vs1"},
+                    {"id": "vs1"}
+                ]
+            }
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE_FALSE( valid );
+	}
+
+	SECTION( "Detects duplicate render pass IDs" )
+	{
+		const json document = json::parse( R"({
+            "materials": [],
+            "renderPasses": [
+                {"id": "pass1"},
+                {"id": "pass1"}
+            ]
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE_FALSE( valid );
+	}
+
+	SECTION( "Returns true when all IDs are unique" )
+	{
+		const json document = json::parse( R"({
+            "materials": [
+                {"id": "mat1"},
+                {"id": "mat2"}
+            ],
+            "renderPasses": [
+                {"id": "pass1"}
+            ],
+            "states": {
+                "rasterizer": [
+                    {"id": "state1"}
+                ]
+            },
+            "shaders": {
+                "vertex": [
+                    {"id": "vs1"}
+                ]
+            }
+        })" );
+
+		const bool valid = validator.validateDuplicateIds( document );
+
+		REQUIRE( valid );
+	}
+}

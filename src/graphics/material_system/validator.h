@@ -24,6 +24,12 @@ public:
 	// - For float4: default must be array of exactly 4 numbers
 	// Returns true if valid, false if invalid (errors logged via console::error)
 	bool validateParameterType( const nlohmann::json &parameter );
+
+	// T008: Duplicate ID Detection
+	// Validates that all IDs in the merged document are unique across all scopes:
+	// - materials, renderPasses, states (all categories), shaders (all types)
+	// Returns true if no duplicates found, false if duplicates detected (errors logged via console::error)
+	bool validateDuplicateIds( const nlohmann::json &document );
 };
 
 } // namespace material_system

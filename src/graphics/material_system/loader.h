@@ -20,6 +20,7 @@ public:
 
 	// Get the merged JSON document (valid only after successful load)
 	const nlohmann::json &getDocument() const { return m_mergedDocument; }
+	const nlohmann::json &getMergedDocument() const { return m_mergedDocument; } // Alias for clarity
 
 	// Get list of error messages (populated on load failure)
 	const std::vector<std::string> &getErrors() const { return m_errors; }
