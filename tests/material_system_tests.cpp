@@ -3,6 +3,7 @@
 #include "graphics/material_system/material_system.h"
 #include "graphics/material_system/loader.h"
 #include "graphics/material_system/validator.h"
+#include "graphics/material_system/parser.h"
 #include "core/console.h"
 #include <filesystem>
 #include <fstream>
@@ -712,4 +713,112 @@ TEST_CASE( "Validator detects duplicate IDs across all scopes", "[T008][material
 
 		REQUIRE( valid );
 	}
+}
+
+// ============================================================================
+// T009: Parse material definitions from JSON
+// ============================================================================
+
+TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T009][unit]" )
+{
+	// Arrange - minimal material with required fields
+	const json materialJson = json::parse( R"({
+        "id": "basic_lit",
+        "pass": "forward",
+        "shaders": {
+            "vertex": "standard_vs",
+            "pixel": "standard_ps"
+        }
+    })" );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.id == "basic_lit" );
+	REQUIRE( material.pass == "forward" );
+	REQUIRE( material.enabled == true ); // default value
+	REQUIRE( material.shaders.size() == 2 );
+
+	// Check vertex shader
+	bool foundVertex = false;
+	bool foundPixel = false;
+	for ( const auto &shader : material.shaders )
+	{
+		if ( shader.stage == "vertex" )
+		{
+			REQUIRE( shader.shaderId == "standard_vs" );
+			foundVertex = true;
+		}
+		else if ( shader.stage == "pixel" )
+		{
+			REQUIRE( shader.shaderId == "standard_ps" );
+			foundPixel = true;
+		}
+	}
+	REQUIRE( foundVertex );
+	REQUIRE( foundPixel );
+
+	REQUIRE( material.parameters.empty() );
+	REQUIRE( material.versionHash.empty() );
+}
+
+TEST_CASE( "MaterialParser parses material with all optional fields", "[material-parser][T009][unit]" )
+{
+	// Arrange - material with all optional fields populated
+	const json materialJson = json::parse( R"({
+        "id": "advanced_lit",
+        "pass": "deferred",
+        "shaders": {
+            "vertex": "adv_vs",
+            "pixel": "adv_ps"
+        },
+        "parameters": [
+            {
+                "name": "roughness",
+                "type": "float",
+                "defaultValue": 0.5
+            },
+            {
+                "name": "tint",
+                "type": "float4",
+                "defaultValue": [1.0, 0.8, 0.6, 1.0]
+            }
+        ],
+        "states": {
+            "rasterizer": "cull_back",
+            "depthStencil": "depth_test_write",
+            "blend": "alpha_blend"
+        },
+        "enabled": false,
+        "versionHash": "abc123"
+    })" );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.id == "advanced_lit" );
+	REQUIRE( material.pass == "deferred" );
+	REQUIRE( material.enabled == false );
+	REQUIRE( material.versionHash == "abc123" );
+
+	// Check shaders
+	REQUIRE( material.shaders.size() == 2 );
+
+	// Check parameters
+	REQUIRE( material.parameters.size() == 2 );
+	REQUIRE( material.parameters[0].name == "roughness" );
+	REQUIRE( material.parameters[0].type == graphics::material_system::ParameterType::Float );
+	REQUIRE( material.parameters[0].defaultValue == 0.5 );
+
+	REQUIRE( material.parameters[1].name == "tint" );
+	REQUIRE( material.parameters[1].type == graphics::material_system::ParameterType::Float4 );
+	REQUIRE( material.parameters[1].defaultValue.is_array() );
+	REQUIRE( material.parameters[1].defaultValue.size() == 4 );
+
+	// Check states
+	REQUIRE( material.states.rasterizer == "cull_back" );
+	REQUIRE( material.states.depthStencil == "depth_test_write" );
+	REQUIRE( material.states.blend == "alpha_blend" );
 }

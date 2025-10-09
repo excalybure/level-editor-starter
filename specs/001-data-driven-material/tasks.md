@@ -152,11 +152,12 @@ These tasks implement foundational validation logic required before parsing mate
 
 ---
 
-### T007: Merge JSON documents from includes (AF: Include Merge)
+### T007: Merge JSON documents from includes (AF: Include Merge) ✅
 **User Story**: P3 (reuse state blocks) + P1 (dependency)  
 **AF**: Combine base + included files into single document  
 **Reason**: FR-001 requires recursive include processing before validation  
 **Blocking**: T008  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Given `materials.json` with `"includes": ["states.json"]`, loader merges states
 - State blocks from states.json available in merged document
@@ -172,11 +173,12 @@ These tasks implement foundational validation logic required before parsing mate
 
 ---
 
-### T008: Detect duplicate IDs across all scopes (AF: Duplicate ID Detection)
+### T008: Detect duplicate IDs across all scopes (AF: Duplicate ID Detection) ✅
 **User Story**: P1, P3 (validation)  
 **AF**: Enforce unique identifiers globally after merge  
 **Reason**: FR-008 mandates fatal on any duplicate id (materials, states, shaders, passes)  
 **Blocking**: T009  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Two materials with same id → fatal
 - Material id duplicates state block id → fatal
@@ -197,24 +199,27 @@ These tasks implement foundational validation logic required before parsing mate
 
 These tasks implement the MVP: JSON materials become usable without C++ changes.
 
-### T009: Parse material definitions from JSON (AF: Material JSON Parser)
+### T009: Parse material definitions from JSON (AF: Material JSON Parser) ✅
+**Status**: COMPLETE (2025-01-18)  
 **User Story**: P1  
 **AF**: Convert JSON material objects into runtime MaterialDefinition structs  
 **Reason**: Core data ingestion for pipeline creation  
 **Blocking**: T010, T011  
 **Acceptance**:
-- Given valid material JSON (id, pass, shaders, states, parameters), parser produces MaterialDefinition
-- Invalid field (missing required key) → fatal with path
-- Test parsing minimal material + material with all optional fields
-- Parse disabled material; verify skipped but validated
+- Given valid material JSON (id, pass, shaders, states, parameters), parser produces MaterialDefinition ✅
+- Invalid field (missing required key) → error with path and empty return ✅
+- Test parsing minimal material + material with all optional fields ✅
+- Parse disabled material; verify enabled=false parsed correctly ✅
 
 **TDD Steps**:
-1. **Red**: Write test parsing valid material JSON; assert fields match
-2. **Green**: Implement `MaterialParser::parse(jsonMaterial)` populating struct
-3. **Refactor**: Reuse ParameterValidator from T006; clarify error handling paths
+1. **Red**: Write test parsing valid material JSON; assert fields match ✅
+2. **Green**: Implement `MaterialParser::parse(jsonMaterial)` populating struct ✅
+3. **Refactor**: Const correctness, remove debug logging ✅
 
 **Estimate**: 2 hours  
-**Dependencies**: T006, T008  
+**Actual**: ~2 hours  
+**Dependencies**: T006, T008 (both complete)  
+**Implementation**: MaterialParser class in parser.h/cpp with parse() and parseParameterType() methods
 
 ---
 

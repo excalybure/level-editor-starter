@@ -65,6 +65,7 @@ add_library(graphics STATIC
   src/graphics/material_system/material_system.cpp
   src/graphics/material_system/loader.cpp
   src/graphics/material_system/validator.cpp
+  src/graphics/material_system/parser.cpp
   src/graphics/material_system/builder.cpp
   src/graphics/material_system/cache.cpp
 )
