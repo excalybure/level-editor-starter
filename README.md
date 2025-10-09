@@ -2,7 +2,7 @@
 
 ## Goals
 - Build a **3D world editor** as a continuous self-learning project.
-- Use **modern C++23 features** (modules, concepts, ranges).
+- Use **modern C++23 features** (concepts, ranges, constexpr).
 - Run on **Windows**; build in **VS Code** with MSVC + CMake.
 - Use **unit tests** (Catch2) to validate subsystems.
 - Learn by integrating graphics + engine concepts:
@@ -10,41 +10,46 @@
   - Scene editing with gizmos (Z up, Y forward, X right).
   - Object placement & picking.
   - Terrain system with **virtual texturing** (D3D12 Tiled Resources).
-  - Material system like Unreal (node graph → HLSL codegen).
+  - Data-driven material system with HLSL shader management.
 
 ---
 
 ## Tech Stack
 - **Language/Build:** C++23, MSVC, CMake ≥ 3.29, MSBuild.
-- **Dependencies:** vcpkg (Catch2, ImGui, GLFW, GLM, DirectX headers + DXC, cgltf).
+- **Dependencies:** vcpkg (Catch2, ImGui, DirectX headers, WinPixEventRuntime, cgltf, nlohmann_json).
 - **Graphics:** Direct3D 12 (with tiled resources for VT).
 - **UI:** Dear ImGui (docking + viewports), ImGuizmo (manipulators).
 - **Assets:** glTF 2.0 for mesh import.
-- **Testing:** Catch2 unit tests + GitHub Actions CI (later).
-- **Building:** You will use cmake to build the code base
+- **Testing:** Catch2 unit tests (5,374 assertions across 71+ test cases).
+- **Building:** CMake static libraries (core, graphics, engine, runtime, platform, editor).
 
 ---
 
-## Project Layout (modules)
+## Project Layout
 ```
 /src
-  /engine       # math, renderer, GPU resources
-  /runtime      # ECS, app loop, scene, serialization
+  /math         # Header-only math library (Vec3, Mat4, Quat, bounding volumes, curves)
+  /core         # Foundation utilities (console, time, strings) - zero dependencies
+  /graphics     # Rendering, GPU resources, shader management
+  /engine       # Assets, camera, glTF loader, picking
+  /runtime      # ECS, mesh rendering, scene serialization
   /platform     # Win32 window + D3D12 device
-  /editor       # UI, multi-viewport, gizmos, commands
+  /editor       # UI, multi-viewport, gizmos, commands, panels
   main.cpp
 /tests          # Catch2 unit tests
-/shaders        # HLSL + material codegen output
+/shaders        # HLSL shaders
 ```
 
 ---
 
-## Key Modules
-- **engine.math.ixx** – Vec3, Mat4, dot, cross (RH Z-up).
-- **runtime.ecs.ixx** – minimal ECS with `Component` concept + storage.
-- **runtime.app.ixx** – main loop (`tick()`).
-- **platform.win32.win32_window.ixx** – window creation + pump (global module fragment for `windows.h`).
-- **editor.ui.ixx** – ImGui docking + panels (stubbed).
+## Key Libraries
+- **core** – Foundation utilities (console, time, strings) with zero dependencies.
+- **math** – Header-only math library (Vec3, Mat4, Quat, bounding volumes, curves, RH Z-up).
+- **platform** – Win32 window, DirectX 12 device & texture management.
+- **graphics** – GPU resource manager, shader compiler/manager, renderer, grid rendering.
+- **engine** – Asset management, camera controllers, glTF loader, picking.
+- **runtime** – ECS with Component concept, mesh rendering system, scene serialization.
+- **editor** – ImGui UI, multi-viewport, gizmos, command history, scene hierarchy, entity inspector.
 
 ---
 
@@ -64,10 +69,10 @@
 - Undo/redo command stack.
 
 **Milestone 3 – Material System**
-- Node graph UI (ImGui).
-- IR DAG → HLSL codegen (baseColor, normal, roughness, metallic).
-- DXC compile + caching.
-- Unit tests for graph validation.
+- Data-driven material definitions (JSON).
+- Shader management with compilation & caching.
+- PBR material properties (baseColor, normal, roughness, metallic).
+- Runtime shader reloading & hot-reload support.
 
 **Milestone 4 – Terrain**
 - Quadtree LOD heightmap.
@@ -115,21 +120,23 @@
 ---
 
 ## Testing Strategy
-- **Math:** dot, cross, transforms.
-- **ECS:** create/destroy/get.
-- **Scene:** pick ray vs AABB.
-- **Material graph:** DAG validation, HLSL snippets.
-- **Terrain/VT:** page mapping, residency tests.
+- **Math:** Vec3/Mat4/Quat operations, bounding volumes, curves, 2D/3D geometry.
+- **ECS:** Entity creation/destruction, component storage, systems.
+- **Graphics:** GPU buffers, shader compilation, material management.
+- **Scene:** glTF loading, picking, serialization, asset resolution.
+- **Editor:** Commands (undo/redo), gizmos, viewport input, selection.
+- **Integration:** Multi-viewport rendering, scene import, object creation workflows.
 
 ---
 
 # World Editor
 
-C++23 modular scaffold for a future 3D world editor (Windows / MSVC / CMake). Provides:
+C++23 3D world editor scaffold (Windows / MSVC / CMake). Provides:
 
-- C++23 modules (engine.math, runtime.ecs, runtime.app, platform.win32.win32_window, editor.ui)
-- Catch2 unit test example for math
-- vcpkg manifest (currently only Catch2; extend later with imgui, imguizmo, glfw3, glm, directx-headers, directx-dxc, cgltf)
+- Static library architecture (core, graphics, engine, runtime, platform, editor)
+- Header-only math library with comprehensive 2D/3D geometry
+- Catch2 unit tests (5,374+ assertions, all passing)
+- vcpkg manifest (imgui, directx-headers, winpixevent, cgltf, nlohmann_json)
 
 ## Prerequisites
 
