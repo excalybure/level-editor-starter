@@ -1,5 +1,14 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-08 — Retired ShaderCompiler::CompileFromSource
+**Summary:** Simplified shader compilation by removing the unused string-based entry point, consolidating all paths through `CompileFromFile`, and tightening test coverage around include tracking and define injection using temporary shader files.
+**Atomic functionalities completed:**
+- AF1: Updated renderer unit and integration tests to use temporary on-disk shader files with shared helpers instead of inline source strings.
+- AF2: Reimplemented `ShaderCompiler::CompileFromFile` to handle define injection, include tracking, and error propagation directly without delegating to the removed API.
+- AF3: Deleted the `CompileFromSource` declaration/definition and refreshed documentation plans to reflect the file-only workflow.
+**Tests:** `unit_test_runner.exe "*Shader Compiler*"`; `unit_test_runner.exe "*Renderer shader compile failure path*"`; `unit_test_runner.exe` (fails in `tests/string_util_tests.cpp` due to pre-existing `.gitignore` expectation).
+**Notes:** Introduced `tests/shader_test_utils.h` for reusable temporary shader management; full suite failure predates this change and occurs outside the shader pipeline scope.
+
 ## 2025-10-08 — Moved Default Shaders to External File and Integrated with ShaderManager
 **Summary:** Refactored the renderer's default shaders from inline C++ string constants to an external HLSL file (`shaders/simple.hlsl`) and updated the `Renderer` class to use `ShaderManager` for shader compilation and hot-reloading. This change enables runtime shader editing, automatic recompilation, and better separation of shader code from engine code.
 

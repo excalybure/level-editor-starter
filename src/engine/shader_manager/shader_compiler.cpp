@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 #include <wrl.h>
 #include <fstream>
+#include <iterator>
 
 #include "core/console.h"
 
@@ -67,13 +68,25 @@ public:
 };
 
 // ShaderCompiler implementation
-ShaderBlob ShaderCompiler::CompileFromSource(
-	const std::string &source,
+ShaderBlob ShaderCompiler::CompileFromFile(
+	const std::filesystem::path &filePath,
 	const std::string &entryPoint,
 	const std::string &profile,
-	const std::vector<std::string> &defines,
-	const std::filesystem::path *shaderDirectory )
+	const std::vector<std::string> &defines )
 {
+	if ( !std::filesystem::exists( filePath ) )
+	{
+		console::errorAndThrow( "Shader file not found: {}", filePath.string() );
+	}
+
+	std::ifstream file( filePath );
+	if ( !file.is_open() )
+	{
+		console::errorAndThrow( "Failed to open shader file: {}", filePath.string() );
+	}
+
+	const std::string source( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
+
 	ShaderBlob result;
 	result.entryPoint = entryPoint;
 	result.profile = profile;
@@ -85,24 +98,23 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 	compileFlags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-	// Prepend generated #defines to source if any
 	std::string fullSource;
-	if ( !defines.empty() )
+	const bool hasDefines = !defines.empty();
+	if ( hasDefines )
 	{
 		fullSource = BuildDefineString( defines );
 		fullSource += source;
 	}
-	const char *finalSource = defines.empty() ? source.c_str() : fullSource.c_str();
-	const size_t finalSourceSize = defines.empty() ? source.length() : fullSource.length();
+	const char *finalSource = hasDefines ? fullSource.c_str() : source.c_str();
+	const size_t finalSourceSize = hasDefines ? fullSource.length() : source.length();
 
-	// Create include handler for shader directory
-	const std::filesystem::path includeDir = shaderDirectory ? *shaderDirectory : ( std::filesystem::current_path() / "shaders" );
-	ShaderIncludeHandler includeHandler( includeDir );
+	const std::filesystem::path shaderDirectory = filePath.parent_path();
+	ShaderIncludeHandler includeHandler( shaderDirectory );
 
-	HRESULT hr = D3DCompile(
+	const HRESULT hr = D3DCompile(
 		finalSource,
 		finalSourceSize,
-		nullptr,
+		filePath.string().c_str(),
 		nullptr,
 		&includeHandler,
 		entryPoint.c_str(),
@@ -125,34 +137,9 @@ ShaderBlob ShaderCompiler::CompileFromSource(
 		}
 	}
 
-	// Copy the list of included files from the include handler
 	result.includedFiles = includeHandler.getIncludedFiles();
 
 	return result;
-}
-
-ShaderBlob ShaderCompiler::CompileFromFile(
-	const std::filesystem::path &filePath,
-	const std::string &entryPoint,
-	const std::string &profile,
-	const std::vector<std::string> &defines )
-{
-	if ( !std::filesystem::exists( filePath ) )
-	{
-		console::errorAndThrow( "Shader file not found: {}", filePath.string() );
-	}
-
-	std::ifstream file( filePath );
-	if ( !file.is_open() )
-	{
-		console::errorAndThrow( "Failed to open shader file: {}", filePath.string() );
-	}
-
-	const std::string source( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
-
-	// Extract directory from file path for include resolution
-	const std::filesystem::path shaderDirectory = filePath.parent_path();
-	return CompileFromSource( source, entryPoint, profile, defines, &shaderDirectory );
 }
 
 std::string ShaderCompiler::BuildDefineString( const std::vector<std::string> &defines )

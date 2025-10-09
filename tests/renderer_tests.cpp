@@ -1,8 +1,13 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
+#include <filesystem>
+#include <string>
+
 // Need D3D12 headers for constants
 #include <d3d12.h>
+
+#include "shader_test_utils.h"
 
 #include "engine/renderer/renderer.h"
 #include "engine/shader_manager/shader_manager.h"
@@ -40,14 +45,14 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				const std::string simpleVS = R"(
-                    float4 main(float3 pos : POSITION) : SV_POSITION
-                    {
-                        return float4(pos, 1.0f);
-                    }
-                )";
+				const test::shader::TempShaderFile shaderFile( R"(
+					float4 main(float3 pos : POSITION) : SV_POSITION
+					{
+						return float4(pos, 1.0f);
+					}
+				)" );
 
-				const auto blob = shader_manager::ShaderCompiler::CompileFromSource( simpleVS, "main", "vs_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
 				REQUIRE( blob.isValid() );
 				REQUIRE( blob.entryPoint == "main" );
 				REQUIRE( blob.profile == "vs_5_0" );
@@ -64,14 +69,14 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
 		REQUIRE_NOTHROW( []() {
 			try
 			{
-				const std::string simplePS = R"(
-                    float4 main() : SV_TARGET
-                    {
-                        return float4(1.0f, 0.0f, 0.0f, 1.0f);
-                    }
-                )";
+				const test::shader::TempShaderFile shaderFile( R"(
+					float4 main() : SV_TARGET
+					{
+						return float4(1.0f, 0.0f, 0.0f, 1.0f);
+					}
+				)" );
 
-				const auto blob = shader_manager::ShaderCompiler::CompileFromSource( simplePS, "main", "ps_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "ps_5_0" );
 				REQUIRE( blob.isValid() );
 			}
 			catch ( const std::runtime_error &e )
@@ -156,17 +161,45 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 	{
 		try
 		{
-			const std::string src = R"(
+			const test::shader::TempShaderFile shaderFile( R"(
 				#ifndef MY_FLAG
 				#error MY_FLAG not defined
 				#endif
 				float4 main(float3 pos:POSITION):SV_POSITION { return float4(pos,1); }
-			)";
-			REQUIRE_NOTHROW( shader_manager::ShaderCompiler::CompileFromSource( src, "main", "vs_5_0", { "MY_FLAG" } ) );
+			)" );
+			REQUIRE_NOTHROW( shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0", { "MY_FLAG" } ) );
 		}
 		catch ( const std::runtime_error &e )
 		{
 			WARN( "Skipping defines test: " << e.what() );
+		}
+	}
+	SECTION( "Included files are tracked" )
+	{
+		try
+		{
+			const test::shader::TempShaderFile includeFile( R"(
+				float4 TransformPosition(float3 pos) { return float4(pos, 1.0f); }
+			)",
+				".hlsli" );
+
+			std::string mainShaderContent = "#include \"";
+			mainShaderContent += includeFile.path().filename().string();
+			mainShaderContent += "\"\n";
+			mainShaderContent += R"(
+				float4 main(float3 pos:POSITION):SV_POSITION { return TransformPosition(pos); }
+			)";
+			const test::shader::TempShaderFile shaderFile( mainShaderContent );
+
+			const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
+			REQUIRE( blob.isValid() );
+			REQUIRE_FALSE( blob.includedFiles.empty() );
+			const auto canonicalInclude = std::filesystem::canonical( includeFile.path() );
+			REQUIRE( blob.includedFiles[0] == canonicalInclude );
+		}
+		catch ( const std::runtime_error &e )
+		{
+			WARN( "Skipping include tracking test: " << e.what() );
 		}
 	}
 	SECTION( "Invalid profile throws" )
@@ -174,7 +207,8 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			shader_manager::ShaderCompiler::CompileFromSource( "float4 main():SV_POSITION{return 0;} ", "main", "vs_99_99" );
+			const test::shader::TempShaderFile shaderFile( "float4 main():SV_POSITION{return 0;} " );
+			shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_99_99" );
 		}
 		catch ( const std::runtime_error & )
 		{

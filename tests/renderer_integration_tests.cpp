@@ -5,6 +5,8 @@
 #include "platform/dx12/dx12_device.h"
 #include "engine/renderer/renderer.h"
 #include "engine/shader_manager/shader_compiler.h"
+
+#include "shader_test_utils.h"
 #include "test_dx12_helpers.h"
 
 
@@ -38,14 +40,14 @@ TEST_CASE( "Renderer windowed integration begin/end", "[renderer][integration]" 
 	}
 }
 
-// Negative shader compile scenario using ShaderCompiler::CompileFromSource with intentional error.
+// Negative shader compile scenario using ShaderCompiler::CompileFromFile with intentional error.
 TEST_CASE( "Renderer shader compile failure path", "[renderer][shader][error]" )
 {
-	const std::string badShader = R"(float4 main(float3 pos : POSITION) : SV_POSITION { return float4(pos, 1.0f) )"; // missing semicolon & brace
+	const test::shader::TempShaderFile shaderFile( R"(float4 main(float3 pos : POSITION) : SV_POSITION { return float4(pos, 1.0f) )" ); // missing semicolon & brace
 	bool threw = false;
 	try
 	{
-		auto blob = shader_manager::ShaderCompiler::CompileFromSource( badShader, "main", "vs_5_0" );
+		auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
 		(void)blob;
 	}
 	catch ( const std::runtime_error & )
