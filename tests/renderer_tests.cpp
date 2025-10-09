@@ -5,6 +5,7 @@
 #include <d3d12.h>
 
 #include "engine/renderer/renderer.h"
+#include "engine/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "math/vec.h"
 #include "math/matrix.h"
@@ -260,7 +261,8 @@ TEST_CASE( "ViewProjection accessor", "[renderer]" )
 	dx12::Device device;
 	if ( !requireHeadlessDevice( device, "viewProj" ) )
 		return;
-	renderer::Renderer renderer( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer renderer( device, shaderManager );
 	math::Mat4<> custom = math::Mat4<>::identity();
 	custom.row0.x = 2.0f; // mutate something
 	renderer.setViewProjectionMatrix( custom );
@@ -335,7 +337,8 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 				dx12::Device device;
 				if ( !requireHeadlessDevice( device, "renderer::Renderer creation" ) )
 					return;
-				const renderer::Renderer renderer( device );
+				shader_manager::ShaderManager shaderManager;
+				const renderer::Renderer renderer( device, shaderManager );
 				// Just test that it constructs without throwing
 			}
 			catch ( const std::runtime_error &e )
@@ -346,31 +349,44 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 	}
 }
 
-TEST_CASE( "Default Shaders", "[renderer]" )
+TEST_CASE( "Simple shaders can be loaded from file", "[renderer][shaders]" )
 {
-	SECTION( "Default vertex shader is valid string" )
+	SECTION( "simple.hlsl file exists" )
 	{
-		REQUIRE( renderer::DefaultShaders::kVertexShader != nullptr );
-		REQUIRE( std::string( renderer::DefaultShaders::kVertexShader ).length() > 0 );
-
-		// Check for basic vertex shader components
-		const std::string vs( renderer::DefaultShaders::kVertexShader );
-		REQUIRE( vs.find( "VSInput" ) != std::string::npos );
-		REQUIRE( vs.find( "PSInput" ) != std::string::npos );
-		REQUIRE( vs.find( "POSITION" ) != std::string::npos );
-		REQUIRE( vs.find( "COLOR" ) != std::string::npos );
-		REQUIRE( vs.find( "viewProjectionMatrix" ) != std::string::npos );
+		const std::filesystem::path shaderPath = "shaders/simple.hlsl";
+		REQUIRE( std::filesystem::exists( shaderPath ) );
 	}
 
-	SECTION( "Default pixel shader is valid string" )
+	SECTION( "simple.hlsl can be compiled" )
 	{
-		REQUIRE( renderer::DefaultShaders::kPixelShader != nullptr );
-		REQUIRE( std::string( renderer::DefaultShaders::kPixelShader ).length() > 0 );
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "simple shader compilation" ) )
+			return;
 
-		// Check for basic pixel shader components
-		const std::string ps( renderer::DefaultShaders::kPixelShader );
-		REQUIRE( ps.find( "PSInput" ) != std::string::npos );
-		REQUIRE( ps.find( "SV_TARGET" ) != std::string::npos );
+		shader_manager::ShaderManager shaderManager;
+		const auto vsHandle = shaderManager.registerShader(
+			"shaders/simple.hlsl",
+			"VSMain",
+			"vs_5_0",
+			shader_manager::ShaderType::Vertex );
+
+		const auto psHandle = shaderManager.registerShader(
+			"shaders/simple.hlsl",
+			"PSMain",
+			"ps_5_0",
+			shader_manager::ShaderType::Pixel );
+
+		REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
+		REQUIRE( psHandle != shader_manager::INVALID_SHADER_HANDLE );
+
+		const auto *vsBlob = shaderManager.getShaderBlob( vsHandle );
+		const auto *psBlob = shaderManager.getShaderBlob( psHandle );
+
+		if ( vsBlob && psBlob )
+		{
+			REQUIRE( vsBlob->isValid() );
+			REQUIRE( psBlob->isValid() );
+		}
 	}
 }
 
@@ -380,7 +396,8 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
 
-	renderer::Renderer renderer( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer renderer( device, shaderManager );
 
 	device.beginFrame();
 	renderer.beginFrame();
@@ -429,7 +446,8 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	renderer::Renderer renderer( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
@@ -446,7 +464,8 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
-	renderer::Renderer renderer( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
@@ -464,7 +483,8 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	dx12::Device device;
 	REQUIRE( requireDevice( window, device, "pso cache" ) );
 
-	renderer::Renderer r( device );
+	shader_manager::ShaderManager shaderManager;
+	renderer::Renderer r( device, shaderManager );
 	device.beginFrame();
 	r.beginFrame();
 

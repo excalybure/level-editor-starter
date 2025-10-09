@@ -15,8 +15,8 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -72,8 +72,8 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -97,8 +97,8 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -129,8 +129,8 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -175,8 +175,8 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -216,8 +216,8 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -257,8 +257,8 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	renderer::Renderer renderer( device );
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	renderer::Renderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
 	ecs::Scene scene;
 

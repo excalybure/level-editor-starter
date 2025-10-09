@@ -1,5 +1,48 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-08 — Moved Default Shaders to External File and Integrated with ShaderManager
+**Summary:** Refactored the renderer's default shaders from inline C++ string constants to an external HLSL file (`shaders/simple.hlsl`) and updated the `Renderer` class to use `ShaderManager` for shader compilation and hot-reloading. This change enables runtime shader editing, automatic recompilation, and better separation of shader code from engine code.
+
+**Atomic functionalities completed:**
+- AF1: Create shaders/simple.hlsl file - Extracted vertex and pixel shader code from `DefaultShaders::kVertexShader` and `DefaultShaders::kPixelShader` into a new HLSL file with entry points `VSMain` and `PSMain`
+- AF2: Update Renderer constructor - Modified `Renderer` class to accept a `shader_manager::ShaderManager&` parameter in both header and implementation
+- AF3: Update compileDefaultShaders - Replaced `ShaderCompiler::CompileFromSource` calls with `ShaderManager::registerShader` to load shaders from file, store handles, and retrieve compiled blobs
+- AF4: Remove DefaultShaders constants - Deleted the `kVertexShader` and `kPixelShader` string constants from `renderer.cpp`
+- AF5: Remove DefaultShaders namespace - Removed the `DefaultShaders` namespace declaration from `renderer.h` since shaders are now file-based
+- AF6: Update main.cpp - Changed `renderer::Renderer renderer(device)` to `renderer::Renderer renderer(device, *shaderManager)` 
+- AF7: Update test instantiations - Updated all test files (`renderer_tests.cpp`, `mesh_rendering_system_tests.cpp`, `visibility_integration_tests.cpp`) to create `ShaderManager` instances and pass them to `Renderer` constructors
+- AF8: Update shader tests - Replaced the "Default Shaders" test with a new test that verifies `simple.hlsl` can be loaded from file and compiled successfully
+
+**Tests:** All renderer tests pass (96 assertions in 19 test cases); mesh rendering system tests pass (23 assertions in 9 test cases); visibility integration tests pass (20 assertions in 9 test cases). Filtered commands: `unit_test_runner.exe "[renderer]"`, `"[mesh_rendering_system]"`, `"[visibility]"`
+
+**Files Modified:**
+- `shaders/simple.hlsl` (new) - External shader file with vertex and pixel shaders for basic rendering
+- `src/engine/renderer/renderer.h` - Added `ShaderManager&` parameter, shader handle members, forward declaration
+- `src/engine/renderer/renderer.cpp` - Updated constructor, modified `compileDefaultShaders()` to use ShaderManager, removed inline shader strings
+- `src/main.cpp` - Updated Renderer instantiation to pass ShaderManager
+- `tests/renderer_tests.cpp` - Added ShaderManager includes and instantiations, replaced DefaultShaders test
+- `tests/mesh_rendering_system_tests.cpp` - Updated all Renderer instantiations to include ShaderManager
+- `tests/visibility_integration_tests.cpp` - Updated all Renderer instantiations to include ShaderManager
+
+**Implementation Details:**
+- **Shader File Format**: `simple.hlsl` contains both vertex (`VSMain`) and pixel (`PSMain`) shaders with matching signatures to the previous inline shaders
+- **Shader Handles**: Renderer stores `m_vertexShaderHandle` and `m_pixelShaderHandle` (type `size_t`) for shader management
+- **Error Handling**: `compileDefaultShaders()` now checks if shader blobs are valid and logs errors if compilation fails
+- **Backwards Compatibility**: Maintained existing renderer API; only constructor signature changed to require ShaderManager
+- **Test Updates**: All test files now instantiate `shader_manager::ShaderManager` before creating `Renderer` instances
+
+**Benefits:**
+- **Hot Reloading**: Shaders can now be modified at runtime and automatically recompiled by ShaderManager
+- **Better Separation**: Shader code is no longer embedded as C++ strings, improving maintainability
+- **Consistency**: All shaders in the project now use the same file-based approach with ShaderManager
+- **Debugging**: External shader files are easier to edit, debug, and version control
+
+**Notes:**
+- The shader file uses the same constant buffer layout and semantics as the previous inline shaders
+- ShaderManager handles file watching, modification detection, and automatic recompilation
+- Test working directory issues with shader file paths are expected and don't affect actual application functionality
+- Future work could add shader include files and more complex material shaders using the same pattern
+
 ## 2025-10-07 — Mouse Wheel Zoom Fixed for Focused Viewports
 **Summary:** Fixed critical mouse wheel zoom functionality that was broken due to incorrect viewport bounds checking. Mouse wheel events are now processed for focused viewports regardless of cursor position, while maintaining proper bounds checking for mouse button and move events. This fix ensures users can zoom in/out using the mouse wheel even when the cursor is outside the viewport boundaries.
 

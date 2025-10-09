@@ -12,6 +12,11 @@
 #include "math/color.h"
 #include "platform/dx12/dx12_device.h"
 
+namespace shader_manager
+{
+class ShaderManager;
+}
+
 namespace renderer
 {
 
@@ -175,7 +180,7 @@ private:
 class Renderer
 {
 public:
-	explicit Renderer( dx12::Device &device );
+	explicit Renderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager );
 	~Renderer();
 
 	// No copy/move for now
@@ -261,8 +266,13 @@ private:
 	};
 
 	dx12::Device &m_device;
+	shader_manager::ShaderManager &m_shaderManager;
 	dx12::CommandContext *m_currentContext = nullptr;
 	dx12::SwapChain *m_currentSwapChain = nullptr;
+
+	// Default shader handles
+	size_t m_vertexShaderHandle = 0;
+	size_t m_pixelShaderHandle = 0;
 
 	// Pipeline state
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
@@ -314,12 +324,5 @@ public:
 	// Test instrumentation: get current PSO cache size
 	size_t getPipelineStateCacheSize() const noexcept { return m_psoCache.size(); }
 };
-
-// Default shaders for basic rendering
-namespace DefaultShaders
-{
-extern const char *kVertexShader;
-extern const char *kPixelShader;
-} // namespace DefaultShaders
 
 } // namespace renderer

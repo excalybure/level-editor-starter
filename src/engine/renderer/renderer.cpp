@@ -6,50 +6,10 @@
 #include <fstream>
 
 #include "core/console.h"
+#include "engine/shader_manager/shader_manager.h"
 
 namespace renderer
 {
-
-// Default vertex and pixel shaders
-const char *DefaultShaders::kVertexShader = R"(
-cbuffer ConstantBuffer : register(b0)
-{
-    float4x4 viewProjectionMatrix;
-};
-
-struct VSInput
-{
-    float3 position : POSITION;
-    float4 color : COLOR;
-};
-
-struct PSInput
-{
-    float4 position : SV_POSITION;
-    float4 color : COLOR;
-};
-
-PSInput main(VSInput input)
-{
-    PSInput result;
-    result.position = mul(float4(input.position, 1.0f), viewProjectionMatrix);
-    result.color = input.color;
-    return result;
-}
-)";
-
-const char *DefaultShaders::kPixelShader = R"(
-struct PSInput
-{
-    float4 position : SV_POSITION;
-    float4 color : COLOR;
-};
-
-float4 main(PSInput input) : SV_TARGET
-{
-    return input.color;
-}
-)";
 
 // Custom include handler for shader compilation
 class ShaderIncludeHandler : public ID3DInclude
@@ -408,8 +368,8 @@ void IndexBuffer::update( const std::vector<uint16_t> &indices )
 }
 
 // Renderer implementation
-Renderer::Renderer( dx12::Device &device )
-	: m_device( device )
+Renderer::Renderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager )
+	: m_device( device ), m_shaderManager( shaderManager )
 {
 	createRootSignature();
 	compileDefaultShaders();
@@ -455,10 +415,40 @@ void Renderer::compileDefaultShaders()
 {
 	if ( !m_vsBlob || !m_psBlob )
 	{
-		const auto vs = ShaderCompiler::CompileFromSource( DefaultShaders::kVertexShader, "main", "vs_5_0" );
-		const auto ps = ShaderCompiler::CompileFromSource( DefaultShaders::kPixelShader, "main", "ps_5_0" );
-		m_vsBlob = vs.blob;
-		m_psBlob = ps.blob;
+		// Register shaders with ShaderManager
+		m_vertexShaderHandle = m_shaderManager.registerShader(
+			"shaders/simple.hlsl",
+			"VSMain",
+			"vs_5_0",
+			shader_manager::ShaderType::Vertex );
+
+		m_pixelShaderHandle = m_shaderManager.registerShader(
+			"shaders/simple.hlsl",
+			"PSMain",
+			"ps_5_0",
+			shader_manager::ShaderType::Pixel );
+
+		// Get shader blobs from ShaderManager
+		const renderer::ShaderBlob *vsBlob = m_shaderManager.getShaderBlob( m_vertexShaderHandle );
+		const renderer::ShaderBlob *psBlob = m_shaderManager.getShaderBlob( m_pixelShaderHandle );
+
+		if ( vsBlob && vsBlob->isValid() )
+		{
+			m_vsBlob = vsBlob->blob;
+		}
+		else
+		{
+			console::error( "Renderer: Failed to compile vertex shader from shaders/simple.hlsl" );
+		}
+
+		if ( psBlob && psBlob->isValid() )
+		{
+			m_psBlob = psBlob->blob;
+		}
+		else
+		{
+			console::error( "Renderer: Failed to compile pixel shader from shaders/simple.hlsl" );
+		}
 	}
 }
 

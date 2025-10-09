@@ -115,7 +115,7 @@ int main()
 	engine::GPUResourceManager gpuResourceManager( device );
 
 	// Create renderer for 3D graphics
-	renderer::Renderer renderer( device );
+	renderer::Renderer renderer( device, *shaderManager );
 
 	// Create system manager and add systems
 	systems::SystemManager systemManager;
