@@ -1,5 +1,5 @@
 #include "editor/config/EditorConfig.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>

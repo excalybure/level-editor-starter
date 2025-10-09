@@ -23,7 +23,7 @@
 #include "runtime/systems.h"
 #include "runtime/scene_importer.h"
 #include "runtime/scene_serialization/SceneSerializer.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
 #include "editor/commands/CommandUI.h"

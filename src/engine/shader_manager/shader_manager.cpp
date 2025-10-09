@@ -4,7 +4,7 @@
 #include <windows.h>
 
 #include "engine/renderer/renderer.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace shader_manager
 {

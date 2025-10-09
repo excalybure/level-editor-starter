@@ -6,7 +6,7 @@
 
 #include "engine/shader_manager/shader_manager.h"
 #include "engine/renderer/renderer.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;
 using shader_manager::ShaderType;

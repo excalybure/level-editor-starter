@@ -4,7 +4,11 @@
 #include <wrl.h>
 #include <cassert>
 
-#include "runtime/console.h"
+#include <dxgiformat.h>
+#include <array>
+#include <cstring>
+
+#include "core/console.h"
 #include "platform/pix/pix.h"
 
 namespace dx12

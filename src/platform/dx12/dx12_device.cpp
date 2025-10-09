@@ -7,7 +7,7 @@
 #ifdef _DEBUG
 #include <d3d12sdklayers.h> // For ID3D12InfoQueue
 #endif
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace dx12
 {

@@ -7,7 +7,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "math/bounding_box_3d.h"
-#include "runtime/time.h"
+#include "core/time.h"
 
 namespace engine::gpu
 {
@@ -99,8 +99,8 @@ struct Selected
 	float selectionTime = 0.0f;								 // When selected (for animation/UI effects)
 	math::Vec4f highlightColor = { 1.0f, 0.6f, 0.0f, 1.0f }; // Selection outline color
 
-	Selected() : selectionTime( runtime::time::getCurrentTime() ) {}
-	Selected( bool primary ) : isPrimary( primary ), selectionTime( runtime::time::getCurrentTime() ) {}
+	Selected() : selectionTime( core::time::getCurrentTime() ) {}
+	Selected( bool primary ) : isPrimary( primary ), selectionTime( core::time::getCurrentTime() ) {}
 };
 
 // Component concept - relaxed to allow more practical component types

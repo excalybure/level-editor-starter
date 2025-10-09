@@ -2,7 +2,7 @@
 
 #include "engine/assets/assets.h"
 #include "engine/gpu/material_gpu.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace engine
 {

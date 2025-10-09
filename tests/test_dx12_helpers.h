@@ -6,7 +6,7 @@
 #include <windows.h>
 #endif
 #include "platform/dx12/dx12_device.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "platform/win32/win32_window.h"
 
 #include <utility> // for std::pair

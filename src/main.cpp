@@ -11,7 +11,7 @@
 #include "platform/pix/pix.h"
 #include "platform/win32/win32_window.h"
 #include "runtime/app.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/systems.h"

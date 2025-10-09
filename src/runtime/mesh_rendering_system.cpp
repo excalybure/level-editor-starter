@@ -1,7 +1,7 @@
 #include "runtime/mesh_rendering_system.h"
 #include "engine/renderer/renderer.h"
 #include "engine/gpu/material_gpu.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "engine/camera/camera.h"

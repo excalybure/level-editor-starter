@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string>
-#include "strings/strings.h"
+#include "core/strings.h"
 
 TEST_CASE( "getBaseFilename extracts base filename from path", "[strings][unit]" )
 {

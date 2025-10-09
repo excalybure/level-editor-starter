@@ -8,13 +8,13 @@
 #include <span>
 #include <cstring>
 
-#include "strings/strings.h"
+#include "core/strings.h"
 #include "engine/assets/assets.h"
 #include "math/math.h"
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "math/quat.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace gltf_loader
 {

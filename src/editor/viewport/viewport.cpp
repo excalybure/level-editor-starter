@@ -16,7 +16,7 @@
 #include "platform/dx12/dx12_device.h"
 #include "platform/pix/pix.h"
 #include "engine/grid/grid.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
 #include "editor/viewport_input.h"

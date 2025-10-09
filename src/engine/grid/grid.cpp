@@ -13,7 +13,7 @@
 #include "math/matrix.h"
 #include "math/vec.h"
 #include "engine/renderer/renderer.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 using namespace grid;
 using namespace Microsoft::WRL;

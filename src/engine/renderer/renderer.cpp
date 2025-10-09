@@ -5,7 +5,7 @@
 #include <wrl.h>
 #include <fstream>
 
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace renderer
 {

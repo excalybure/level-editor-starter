@@ -8,7 +8,7 @@
 #include "math/matrix.h"
 #include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 namespace engine::gpu
 {

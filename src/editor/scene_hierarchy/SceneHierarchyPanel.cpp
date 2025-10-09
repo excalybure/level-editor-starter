@@ -1,7 +1,7 @@
 #include "SceneHierarchyPanel.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include "editor/selection.h"
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"

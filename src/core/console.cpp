@@ -1,4 +1,4 @@
-#include "runtime/console.h"
+#include "core/console.h"
 
 #include <iostream>
 #include <string>

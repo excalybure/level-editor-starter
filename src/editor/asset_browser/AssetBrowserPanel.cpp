@@ -2,7 +2,7 @@
 #include "engine/assets/asset_manager.h"
 #include "runtime/ecs.h"
 #include "editor/commands/CommandHistory.h"
-#include "runtime/console.h"
+#include "core/console.h"
 
 #include <imgui.h>
 #include <filesystem>

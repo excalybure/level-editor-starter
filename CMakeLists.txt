@@ -17,6 +17,22 @@ find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 
 # Libraries
 
+# Core library - foundation utilities with zero dependencies
+add_library(core STATIC
+  src/core/console.cpp
+  src/core/time.cpp
+  src/core/strings.cpp
+)
+
+target_include_directories(core PUBLIC 
+  src
+)
+target_compile_features(core PUBLIC cxx_std_23)
+target_compile_definitions(core PUBLIC NOMINMAX)
+if (MSVC)
+  target_compile_options(core PRIVATE /W4 /permissive- /std:c++latest)
+endif()
+
 # ImGuizmo library (local)
 add_library(ImGuizmo STATIC
   externals/ImGuizmo/ImGuizmo.cpp
@@ -39,14 +55,6 @@ if (MSVC)
   target_compile_options(ImGuizmo PRIVATE /W4 /permissive- /std:c++latest)
 endif()
 
-# Math library - contains all math utilities
-add_library(math INTERFACE)
-target_include_directories(math INTERFACE 
-  src
-)
-target_compile_features(math INTERFACE cxx_std_23)
-target_compile_definitions(math INTERFACE NOMINMAX)
-
 # Engine library
 add_library(engine STATIC
   src/engine/assets/asset_manager.cpp
@@ -68,8 +76,7 @@ target_include_directories(engine PUBLIC
   ${CGLTF_INCLUDE_DIRS}
 )
 target_link_libraries(engine PUBLIC
-  math
-  strings
+  core
 )
 target_compile_features(engine PUBLIC cxx_std_23)
 target_compile_definitions(engine PUBLIC NOMINMAX)
@@ -78,28 +85,11 @@ if (MSVC)
 endif()
 
 
-# Strings library - contains string utilities
-add_library(strings STATIC
-  src/strings/strings.cpp
-)
-
-target_include_directories(strings PUBLIC 
-  src
-)
-target_compile_features(strings PUBLIC cxx_std_23)
-target_compile_definitions(strings PUBLIC NOMINMAX)
-if (MSVC)
-  target_compile_options(strings PRIVATE /W4 /permissive- /std:c++latest)
-endif()
-
-
 # Runtime library - contains core runtime systems
 add_library(runtime STATIC
-  src/runtime/console.cpp
   src/runtime/mesh_rendering_system.cpp
   src/runtime/scene_importer.cpp
   src/runtime/scene_serialization/SceneSerializer.cpp
-  src/runtime/time.cpp
 )
 
 target_include_directories(runtime PUBLIC 
@@ -108,7 +98,7 @@ target_include_directories(runtime PUBLIC
 target_compile_features(runtime PUBLIC cxx_std_23)
 target_compile_definitions(runtime PUBLIC NOMINMAX)
 target_link_libraries(runtime PUBLIC
-  math
+  core
   nlohmann_json::nlohmann_json
 )
 if (MSVC)
@@ -130,6 +120,7 @@ target_include_directories(platform PUBLIC
 target_compile_features(platform PUBLIC cxx_std_23)
 target_compile_definitions(platform PUBLIC NOMINMAX PIX_AVAILABLE)
 target_link_libraries(platform PUBLIC 
+  core
   Microsoft::DirectX-Headers
   Microsoft::WinPixEventRuntime
   d3d12
@@ -174,7 +165,7 @@ target_link_libraries(editor PUBLIC
   d3d12
   dxgi
   d3dcompiler
-  math
+  core
   runtime
   platform
   nlohmann_json::nlohmann_json
@@ -300,8 +291,6 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/editor_config_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
-    math
-    strings
     editor
     engine
     platform

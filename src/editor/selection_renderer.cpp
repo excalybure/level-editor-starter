@@ -10,9 +10,9 @@
 #include <cmath>
 #include <wrl.h>
 
-#include "runtime/console.h"
+#include "core/console.h"
 #include "runtime/ecs.h"
-#include "runtime/time.h"
+#include "core/time.h"
 #include "engine/shader_manager/shader_manager.h"
 #include "engine/gpu/mesh_gpu.h"
 #include "runtime/systems.h"
@@ -337,7 +337,7 @@ bool SelectionRenderer::entityHasRenderableMesh( ecs::Entity entity, ecs::Scene 
 
 float SelectionRenderer::getAnimationTime() const
 {
-	return static_cast<float>( runtime::time::getCurrentTime() ) * m_style.animationSpeed;
+	return static_cast<float>( core::time::getCurrentTime() ) * m_style.animationSpeed;
 }
 
 math::Vec4<> SelectionRenderer::animateColor( const math::Vec4<> &baseColor, float time ) const

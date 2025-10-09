@@ -3,7 +3,7 @@
 #include "math/math.h"
 #include "math/vec.h"
 #include "math/matrix.h"
-#include "runtime/console.h"
+#include "core/console.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
