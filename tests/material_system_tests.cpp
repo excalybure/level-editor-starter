@@ -2,6 +2,7 @@
 #include <nlohmann/json.hpp>
 #include "graphics/material_system/material_system.h"
 #include "graphics/material_system/loader.h"
+#include "graphics/material_system/validator.h"
 #include "core/console.h"
 #include <filesystem>
 #include <fstream>
@@ -156,5 +157,102 @@ TEST_CASE( "JsonLoader detects circular includes", "[material-system][validation
 
 		// This will fail initially (RED phase)
 		REQUIRE( success );
+	}
+}
+
+// Phase 2: JSON Schema Validation (T005)
+
+TEST_CASE( "JsonValidator validates required schema sections", "[material-system][validation][T005]" )
+{
+	material_system::Validator validator;
+
+	SECTION( "Valid minimal schema with required sections" )
+	{
+		const json validJson = R"({
+            "materials": [],
+            "renderPasses": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( validJson );
+		REQUIRE( isValid );
+	}
+
+	SECTION( "Missing materials section fails validation" )
+	{
+		const json invalidJson = R"({
+            "renderPasses": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Missing renderPasses section fails validation" )
+	{
+		const json invalidJson = R"({
+            "materials": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "materials must be array, not object" )
+	{
+		const json invalidJson = R"({
+            "materials": {},
+            "renderPasses": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "renderPasses must be array, not object" )
+	{
+		const json invalidJson = R"({
+            "materials": [],
+            "renderPasses": {}
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Optional sections validated when present - defines must be object" )
+	{
+		const json invalidJson = R"({
+            "materials": [],
+            "renderPasses": [],
+            "defines": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Optional sections validated when present - includes must be array" )
+	{
+		const json invalidJson = R"({
+            "materials": [],
+            "renderPasses": [],
+            "includes": {}
+        })"_json;
+
+		const bool isValid = validator.validateSchema( invalidJson );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Valid schema with optional sections" )
+	{
+		const json validJson = R"({
+            "materials": [],
+            "renderPasses": [],
+            "defines": {},
+            "includes": []
+        })"_json;
+
+		const bool isValid = validator.validateSchema( validJson );
+		REQUIRE( isValid );
 	}
 }

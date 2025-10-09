@@ -18,11 +18,12 @@ This document breaks down the data‑driven material system implementation into 
 
 These tasks establish the minimal infrastructure for TDD and data loading.
 
-### T001: Add JSON parsing library to project [P]
+### T001: Add JSON parsing library to project [P] ✅
 **User Story**: N/A (foundation)  
 **AF**: Initialize JSON parsing capability  
 **Reason**: Prerequisite for all JSON validation & loading; fail-fast needed  
 **Blocking**: All subsequent tasks  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - `nlohmann/json` integrated via vcpkg or existing mechanism
 - Test file loads & parses minimal JSON object without exception
@@ -39,11 +40,12 @@ These tasks establish the minimal infrastructure for TDD and data loading.
 
 ---
 
-### T002: Create material_system header scaffolding [P]
+### T002: Create material_system header scaffolding [P] ✅
 **User Story**: N/A (foundation)  
 **AF**: Establish code organization boundaries  
 **Reason**: Defines file structure per plan.md (`src/graphics/material_system/`)  
 **Blocking**: T003+  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Directory `src/graphics/material_system/` exists
 - Stub header files created (loader.h (JsonLoader), validator.h (Validator), builder.h (RootSignatureBuilder/PipelineBuilder), cache.h, material_system.h) with corresponding .cpp files
@@ -61,11 +63,12 @@ These tasks establish the minimal infrastructure for TDD and data loading.
 
 ---
 
-### T003: Implement console logging integration test [P]
+### T003: Implement console logging integration test [P] ✅
 **User Story**: N/A (foundation)  
 **AF**: Verify fail-fast termination works in test harness  
 **Reason**: Constitution requires `console::fatal` for errors; tests must validate this  
 **Blocking**: None (but informs all validation tasks)  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Test can invoke `console::fatal` and detect termination (or exception in test context)
 - Can verify error message content for clarity
@@ -85,11 +88,12 @@ These tasks establish the minimal infrastructure for TDD and data loading.
 
 These tasks implement foundational validation logic required before parsing materials.
 
-### T004: Detect circular includes (AF: Include Cycle Detection)
+### T004: Detect circular includes (AF: Include Cycle Detection) ✅
 **User Story**: P1 (prerequisite for JSON loading)  
 **AF**: Prevent infinite recursion in include resolution  
 **Reason**: FR-011 mandates cycle detection with fatal termination  
 **Blocking**: T007 (JSON merge)  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Given two JSON files A (includes B) and B (includes A), loader detects cycle
 - Fatal error logged with include chain trace
