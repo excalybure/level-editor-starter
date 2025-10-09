@@ -62,6 +62,11 @@ add_library(graphics STATIC
   src/graphics/renderer/renderer.cpp
   src/graphics/shader_manager/shader_compiler.cpp
   src/graphics/shader_manager/shader_manager.cpp
+  src/graphics/material_system/material_system.cpp
+  src/graphics/material_system/loader.cpp
+  src/graphics/material_system/validator.cpp
+  src/graphics/material_system/builder.cpp
+  src/graphics/material_system/cache.cpp
 )
 
 target_include_directories(graphics PUBLIC 
@@ -70,6 +75,7 @@ target_include_directories(graphics PUBLIC
 target_link_libraries(graphics PUBLIC
   core
   platform
+  nlohmann_json::nlohmann_json
 )
 target_compile_features(graphics PUBLIC cxx_std_23)
 target_compile_definitions(graphics PUBLIC NOMINMAX)
@@ -308,6 +314,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/scene_editor_integration_tests.cpp
     tests/object_creation_integration_tests.cpp
     tests/editor_config_tests.cpp
+    tests/material_system_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor
