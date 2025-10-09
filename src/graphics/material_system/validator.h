@@ -16,6 +16,14 @@ public:
 	// - "includes" (array) - optional
 	// Returns true if valid, false if invalid (errors logged via console::error)
 	bool validateSchema( const nlohmann::json &document );
+
+	// T006: Parameter Type Validation
+	// Validates that a parameter declaration has:
+	// - Valid type: one of {float, int, bool, float4}
+	// - Matching default value type
+	// - For float4: default must be array of exactly 4 numbers
+	// Returns true if valid, false if invalid (errors logged via console::error)
+	bool validateParameterType( const nlohmann::json &parameter );
 };
 
 } // namespace material_system

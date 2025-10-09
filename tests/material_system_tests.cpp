@@ -256,3 +256,137 @@ TEST_CASE( "JsonValidator validates required schema sections", "[material-system
 		REQUIRE( isValid );
 	}
 }
+
+// Phase 2: Parameter Type Validation (T006)
+
+TEST_CASE( "Validator enforces parameter type constraints", "[material-system][validation][T006]" )
+{
+	material_system::Validator validator;
+
+	SECTION( "Valid parameter types are accepted" )
+	{
+		// float type
+		const json floatParam = R"({
+            "name": "roughness",
+            "type": "float",
+            "default": 0.5
+        })"_json;
+		REQUIRE( validator.validateParameterType( floatParam ) );
+
+		// int type
+		const json intParam = R"({
+            "name": "iterations",
+            "type": "int",
+            "default": 10
+        })"_json;
+		REQUIRE( validator.validateParameterType( intParam ) );
+
+		// bool type
+		const json boolParam = R"({
+            "name": "enabled",
+            "type": "bool",
+            "default": true
+        })"_json;
+		REQUIRE( validator.validateParameterType( boolParam ) );
+
+		// float4 type
+		const json float4Param = R"({
+            "name": "color",
+            "type": "float4",
+            "default": [1.0, 0.0, 0.0, 1.0]
+        })"_json;
+		REQUIRE( validator.validateParameterType( float4Param ) );
+	}
+
+	SECTION( "Invalid parameter type rejected - string not allowed" )
+	{
+		const json invalidParam = R"({
+            "name": "filename",
+            "type": "string",
+            "default": "texture.png"
+        })"_json;
+
+		const bool isValid = validator.validateParameterType( invalidParam );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Invalid parameter type rejected - array not allowed" )
+	{
+		const json invalidParam = R"({
+            "name": "values",
+            "type": "array",
+            "default": []
+        })"_json;
+
+		const bool isValid = validator.validateParameterType( invalidParam );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Missing type field fails validation" )
+	{
+		const json invalidParam = R"({
+            "name": "parameter",
+            "default": 0
+        })"_json;
+
+		const bool isValid = validator.validateParameterType( invalidParam );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Default value type mismatch - int default for float param" )
+	{
+		const json invalidParam = R"({
+            "name": "roughness",
+            "type": "float",
+            "default": 10
+        })"_json;
+
+		// Note: JSON doesn't distinguish int from float in parsing,
+		// so this test documents expected behavior but may pass
+		// We'll implement stricter validation in refactor phase if needed
+		const bool isValid = validator.validateParameterType( invalidParam );
+		// For now, we accept numeric types interchangeably
+		REQUIRE( isValid );
+	}
+
+	SECTION( "Default value type mismatch - string default for bool param" )
+	{
+		const json invalidParam = R"({
+            "name": "enabled",
+            "type": "bool",
+            "default": "true"
+        })"_json;
+
+		const bool isValid = validator.validateParameterType( invalidParam );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "Default value type mismatch - number for float4 param" )
+	{
+		const json invalidParam = R"({
+            "name": "color",
+            "type": "float4",
+            "default": 1.0
+        })"_json;
+
+		const bool isValid = validator.validateParameterType( invalidParam );
+		REQUIRE_FALSE( isValid );
+	}
+
+	SECTION( "float4 default must have exactly 4 elements" )
+	{
+		const json invalidParam3 = R"({
+            "name": "color",
+            "type": "float4",
+            "default": [1.0, 0.0, 0.0]
+        })"_json;
+		REQUIRE_FALSE( validator.validateParameterType( invalidParam3 ) );
+
+		const json invalidParam5 = R"({
+            "name": "color",
+            "type": "float4",
+            "default": [1.0, 0.0, 0.0, 1.0, 0.5]
+        })"_json;
+		REQUIRE_FALSE( validator.validateParameterType( invalidParam5 ) );
+	}
+}

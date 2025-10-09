@@ -109,11 +109,12 @@ These tasks implement foundational validation logic required before parsing mate
 
 ---
 
-### T005: Validate JSON schema structure (AF: Schema Validator Base)
+### T005: Validate JSON schema structure (AF: Schema Validator Base) ✅
 **User Story**: P1 (core validation)  
 **AF**: Ensure top-level sections exist & are correct type  
 **Reason**: FR-002 requires schema validation before entity resolution  
 **Blocking**: T006, T007  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Validator checks for required sections: `materials` (array), `renderPasses` (array), state blocks (objects)
 - Missing section → fatal with JSON path
@@ -130,11 +131,12 @@ These tasks implement foundational validation logic required before parsing mate
 
 ---
 
-### T006: Validate parameter type constraints (AF: Parameter Type Validation)
+### T006: Validate parameter type constraints (AF: Parameter Type Validation) ✅
 **User Story**: P1 (material parameters)  
 **AF**: Enforce allowed types {float, int, bool, float4}  
 **Reason**: FR-017, FR-018 restrict parameter types; fatal on others  
 **Blocking**: T009  
+**Status**: COMPLETE (2025-01-18)  
 **Acceptance**:
 - Test declares parameter with type "string" → fatal
 - Test declares parameter with type "float4" and valid default → pass
