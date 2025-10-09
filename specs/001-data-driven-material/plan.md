@@ -39,12 +39,6 @@ Gate Review (Pre-Phase 0):
 
 Result: All gates satisfied or planned; proceed to Phase 0.
 
-## Constitution Check
-
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
-[Gates determined based on constitution file]
-
 ## Project Structure
 
 ### Documentation (this feature)

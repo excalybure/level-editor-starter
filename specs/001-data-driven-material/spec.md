@@ -59,11 +59,11 @@ A developer factors common depth / rasterizer / blend state presets and shared s
 ### Functional Requirements
 
 - **FR-001**: System MUST load one or more JSON files beginning with `materials.json` and recursively process any `includes` array entries (relative paths) before resolving references.
-- **FR-002**: System MUST validate JSON schema: sections for `includes`, `depthStencilStates`, `rasterizerStates`, `blendStates`, `renderTargetStates`, `shaderLibraries` (if present), `renderPasses`, and `materials`.
+- **FR-002**: System MUST validate JSON schema: sections for `includes`, `depthStencilStates`, `rasterizerStates`, `blendStates`, `renderTargetStates`, `renderPasses`, and `materials`.
 - **FR-003**: System MUST allow each state block to be referenced by a unique string id within its category.
 - **FR-004**: System MUST construct root signatures automatically from material declarations of shader resources (textures, samplers, constant buffers / parameter blocks) without manual code additions.
 - **FR-005**: System MUST construct graphics pipeline state objects (PSOs) from material + pass + state block references (input layout, shaders, states, render target formats, depth-stencil usage).
--- **FR-006**: System MUST compile or load only the explicitly listed shader entries (per stage) present in JSON; no implicit variant generation from defines.
+-- **FR-006**: System MUST compile or load only the explicitly listed shader entries (per stage) present in JSON;
 -- **FR-007**: System MUST eliminate all direct calls in code to explicit root signature and graphics PSO creation for materials covered by the data system (legacy code removed or routed through data loader).
 -- **FR-008**: System MUST treat duplicate ids (materials, passes, state blocks, shaders, defines) across base + includes as fatal validation errors; initialization fails without partial load.
 -- **FR-009**: System MUST, on any validation / resolution error, log via `console::fatal` and terminate the application (no attempt at partial recovery).
@@ -73,10 +73,11 @@ A developer factors common depth / rasterizer / blend state presets and shared s
 -- **FR-013**: System MUST capture performance metrics (count of pipelines built, time spent) for diagnostics (non-user facing).
 -- **FR-014**: System MUST map JSON configuration onto the existing compile‑time render pass enumeration; ordering derives solely from that enumeration (no dynamic reordering in initial scope).
 -- **FR-015**: System MUST validate compatibility: blend target count matches render target formats; depth state only when depth buffer present; shader outputs match target formats.
--- **FR-016**: System MUST allow marking a material as disabled (boolean flag) so it is skipped during load (still validated; disabled state cannot mask errors in required fields).
+-- **FR-016**: System MUST allow marking a material as disabled (boolean flag) so it is skipped during load (still validated; disabled state cannot mask errors in required fields; basic validation: shader compilation not required).
 -- **FR-017**: System MUST support parameter defaults only for allowed types {float,int,bool,float4}; defaults applied if not overridden in entity/component data.
 -- **FR-018**: System MUST reject (fatal) any declared parameter whose type is outside {float,int,bool,float4}.
 -- **FR-019**: System MUST support hierarchical shader defines: global-level, pass-level, material-level; each level applies to shaders at its level and below unless overridden (overrides are disallowed in initial scope; duplication is fatal).
+-- **FR-020**: System MUST put implementation in src/graphics/material_systems
 ### Key Entities
 
 - **Material Definition**: Declarative object referencing a render pass, shaders (by logical name or file path), state block ids, and parameter list (name, type, default value). Includes enabled flag and version/hash for change detection.
@@ -97,7 +98,7 @@ A developer factors common depth / rasterizer / blend state presets and shared s
 - **SC-006**: Total define expansion + application time adds < 5% overhead to overall pipeline build phase in benchmark project.
 ### Assumptions
 
-- Shader compilation mechanism already exists; system will invoke it using logical shader definitions.
+- Shader compilation mechanism already exists (See ShaderManager.h); system will invoke it using logical shader definitions.
 - Initial scope targets graphics (no compute pipelines unless added later).
 - Hot reload deferred.
 - Strict fatal policy replaces earlier partial‑load concept; no fallback material.

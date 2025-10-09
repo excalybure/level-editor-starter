@@ -46,7 +46,7 @@ These tasks establish the minimal infrastructure for TDD and data loading.
 **Blocking**: T003+  
 **Acceptance**:
 - Directory `src/graphics/material_system/` exists
-- Stub header files created (loader.h, validator.h, builder.h, cache.h, material_system.h) with corresponding .cpp files
+- Stub header files created (loader.h (JsonLoader), validator.h (Validator), builder.h (RootSignatureBuilder/PipelineBuilder), cache.h, material_system.h) with corresponding .cpp files
 - CMakeLists.txt entry compiles empty implementation files
 - Test target links against material_system library
 
@@ -200,6 +200,7 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 - Given valid material JSON (id, pass, shaders, states, parameters), parser produces MaterialDefinition
 - Invalid field (missing required key) → fatal with path
 - Test parsing minimal material + material with all optional fields
+- Parse disabled material; verify skipped but validated
 
 **TDD Steps**:
 1. **Red**: Write test parsing valid material JSON; assert fields match
@@ -240,6 +241,7 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 - Global define "FOO" + material define "FOO" → fatal
 - Pass define "BAR" + material using that pass defines "BAR" → fatal
 - Unique defines at each level propagate correctly to shader compilation
+- Only shader entries explicitly listed in JSON are compiled (no permutation generation)"
 
 **TDD Steps**:
 1. **Red**: Write tests with duplicate defines at different levels; expect fatal
@@ -273,7 +275,7 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 
 ### T013: Generate root signature from material resources (AF: Root Signature Synthesis)
 **User Story**: P1  
-**AF**: Build root signature from shader reflection / explicit parameter declarations  
+**AF**: Build root signature from shader reflection (DXIL) / explicit parameter declarations  
 **Reason**: FR-004 mandates automatic root signature construction from material data  
 **Blocking**: T014  
 **Acceptance**:
@@ -652,7 +654,7 @@ Tasks marked **[P]** can be worked in parallel within same phase (no inter-depen
 
 ## Constitution Compliance Checklist
 
-- ✅ **TDD**: Every implementation task includes Red→Green→Refactor steps
+- ✅ **TDD**: Every implementation task includes Red→Green→Refactor steps. Tag test with [material-system]..."
 - ✅ **Atomic functionality**: Each task is a single AF with focused scope
 - ✅ **Fail-fast**: All validation tasks enforce fatal termination (console::fatal)
 - ✅ **Const correctness**: Planned in refactor steps (validators are pure functions where possible)
