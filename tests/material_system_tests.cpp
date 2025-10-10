@@ -5,6 +5,7 @@
 #include "graphics/material_system/validator.h"
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/shader_compiler.h"
+#include "graphics/material_system/root_signature_builder.h"
 #include "core/console.h"
 #include <filesystem>
 #include <fstream>
@@ -1171,4 +1172,65 @@ TEST_CASE( "MaterialShaderCompiler fails gracefully for missing shader file", "[
 	// Act & Assert - should throw/log error for missing file
 	REQUIRE_THROWS( graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		shaderPath, "VSMain", "vs_5_1", defines ) );
+}
+
+// ============================================================================
+// T013: Root Signature Generation
+// ============================================================================
+
+TEST_CASE( "RootSignatureBuilder generates spec with CBV binding", "[root-signature][T013][unit]" )
+{
+	// Arrange - material with single CBV parameter
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_mat";
+	material.parameters = {
+		{ "ViewProjection", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 0, 0, 0, 0 } ) }
+	};
+
+	// Act - build root signature spec (this will fail until RootSignatureBuilder exists)
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
+
+	// Assert - spec should contain one CBV binding
+	REQUIRE( spec.resourceBindings.size() == 1 );
+	REQUIRE( spec.resourceBindings[0].name == "ViewProjection" );
+	REQUIRE( spec.resourceBindings[0].type == graphics::material_system::ResourceBindingType::CBV );
+	REQUIRE( spec.resourceBindings[0].slot >= 0 );
+}
+
+TEST_CASE( "RootSignatureBuilder generates spec with multiple bindings sorted by name", "[root-signature][T013][unit]" )
+{
+	// Arrange - material with multiple parameters (unsorted)
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_mat";
+	material.parameters = {
+		{ "ZLast", graphics::material_system::ParameterType::Float, 0.0f },
+		{ "AFirst", graphics::material_system::ParameterType::Int, 0 },
+		{ "MMiddle", graphics::material_system::ParameterType::Bool, false }
+	};
+
+	// Act - build root signature spec
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
+
+	// Assert - bindings should be sorted alphabetically
+	REQUIRE( spec.resourceBindings.size() == 3 );
+	REQUIRE( spec.resourceBindings[0].name == "AFirst" );
+	REQUIRE( spec.resourceBindings[0].slot == 0 );
+	REQUIRE( spec.resourceBindings[1].name == "MMiddle" );
+	REQUIRE( spec.resourceBindings[1].slot == 1 );
+	REQUIRE( spec.resourceBindings[2].name == "ZLast" );
+	REQUIRE( spec.resourceBindings[2].slot == 2 );
+}
+
+TEST_CASE( "RootSignatureBuilder handles material with no parameters", "[root-signature][T013][unit]" )
+{
+	// Arrange - material with no parameters
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_mat";
+	material.parameters = {};
+
+	// Act - build root signature spec
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
+
+	// Assert - spec should be empty
+	REQUIRE( spec.resourceBindings.empty() );
 }

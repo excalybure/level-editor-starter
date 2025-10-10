@@ -310,6 +310,7 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 
 **Estimate**: 3 hours  
 **Dependencies**: T012  
+**Status**: ✅ COMPLETE (2025-01-10)
 
 ---
 
