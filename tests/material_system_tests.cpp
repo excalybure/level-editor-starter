@@ -6,7 +6,9 @@
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/shader_compiler.h"
 #include "graphics/material_system/root_signature_builder.h"
+#include "graphics/material_system/pipeline_builder.h"
 #include "core/console.h"
+#include "test_dx12_helpers.h"
 #include <filesystem>
 #include <fstream>
 #include <cstring>
@@ -1233,4 +1235,41 @@ TEST_CASE( "RootSignatureBuilder handles material with no parameters", "[root-si
 
 	// Assert - spec should be empty
 	REQUIRE( spec.resourceBindings.empty() );
+}
+
+// ============================================================================
+// T014: PSO Construction & Caching
+// ============================================================================
+
+TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-builder][T014][unit]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO creation" ) )
+		return;
+
+	// Arrange - minimal MaterialDefinition
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_simple_material";
+	material.pass = "forward";
+	material.shaders = {
+		{ "vertex", "simple_vs" },
+		{ "pixel", "simple_ps" }
+	};
+	material.states.rasterizer = "default_raster";
+	material.states.depthStencil = "default_depth";
+	material.states.blend = "default_blend";
+
+	// Arrange - render pass config
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO (this will fail until buildPSO is implemented)
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+
+	// Assert - PSO handle should be valid (non-null, usable for rendering)
+	REQUIRE( pso != nullptr );
 }

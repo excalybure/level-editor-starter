@@ -70,6 +70,7 @@ add_library(graphics STATIC
   src/graphics/material_system/cache.cpp
   src/graphics/material_system/shader_compiler.cpp
   src/graphics/material_system/root_signature_builder.cpp
+  src/graphics/material_system/pipeline_builder.cpp
 )
 
 target_include_directories(graphics PUBLIC 
