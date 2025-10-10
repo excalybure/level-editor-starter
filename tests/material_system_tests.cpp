@@ -1273,3 +1273,41 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	// Assert - PSO handle should be valid (non-null, usable for rendering)
 	REQUIRE( pso != nullptr );
 }
+
+TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pipeline-builder][T014][cache][unit]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO caching" ) )
+		return;
+
+	// Arrange - minimal MaterialDefinition
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_cached_material";
+	material.pass = "forward";
+	material.shaders = {
+		{ "vertex", "simple_vs" },
+		{ "pixel", "simple_ps" }
+	};
+	material.states.rasterizer = "default_raster";
+	material.states.depthStencil = "default_depth";
+	material.states.blend = "default_blend";
+
+	// Arrange - render pass config
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO twice with identical inputs
+	auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+	auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+
+	// Assert - both should be valid
+	REQUIRE( pso1 != nullptr );
+	REQUIRE( pso2 != nullptr );
+
+	// Assert - second call should return cached instance (same pointer)
+	REQUIRE( pso1.Get() == pso2.Get() );
+}

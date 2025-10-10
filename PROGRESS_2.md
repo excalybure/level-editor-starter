@@ -1,5 +1,46 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-09 — Data-Driven Material System: T014 REFACTOR Complete - PSO Caching
+**Summary:** Completed T014 REFACTOR phase implementing hash-based PSO caching with collision detection. Followed strict TDD RED→GREEN→REFACTOR workflow: wrote failing cache reuse test, implemented PipelineCache class with stable hash computation, integrated cache into PipelineBuilder. PSOs are now automatically cached and reused for identical material+pass configurations, eliminating redundant GPU object creation.
+
+**Atomic functionalities completed:**
+- AF1: RED phase - Created failing test that builds same PSO twice and asserts second call returns cached instance (same ComPtr pointer); test failed as expected with different pointers before caching implementation
+- AF2: GREEN phase - Implemented PipelineCache class (cache.h/cpp) with get(hash) and store(hash, pso, materialId, passName) methods; std::unordered_map storage with CacheEntry struct holding PSO + metadata
+- AF3: GREEN phase - Implemented computePSOHash() using stable hash combination (boost hash_combine pattern) of material id, pass name, shader stage+id pairs, and state block ids; deterministic across calls
+- AF4: GREEN phase - Added hash collision detection in PipelineCache::store(); calls console::fatal with descriptive error if same hash maps to different material/pass (prevents silent cache bugs)
+- AF5: GREEN phase - Integrated static PipelineCache s_cache into PipelineBuilder; buildPSO() checks cache first via get(hash), returns cached PSO if found, stores newly created PSOs via store() after GPU creation
+
+**Tests:** 2 test cases for T014 (4 assertions total): original PSO creation test + new PSO caching test. Commands: `unit_test_runner.exe "[T014]"` or `"*PipelineBuilder caches and reuses*"`. Caching test verifies same PSO pointer returned on second buildPSO() call with identical inputs. Full material system suite: 60 assertions in 8 test cases pass.
+
+**Files Created:**
+- None (cache.h/cpp existed as stubs from T002)
+
+**Files Modified:**
+- src/graphics/material_system/cache.h - Replaced stub with full PipelineCache interface: computePSOHash() function, PipelineCache class with get/store methods, CacheEntry struct (47 lines)
+- src/graphics/material_system/cache.cpp - Implemented stable hash computation (9 hash combines), get() for map lookup, store() with collision detection and fatal error (69 lines)
+- src/graphics/material_system/pipeline_builder.h - Added cache.h include, added static PipelineCache s_cache member, updated buildPSO() comment to mention automatic caching
+- src/graphics/material_system/pipeline_builder.cpp - Added static cache initialization, added hash computation + cache check at buildPSO() start (early return if cached), added cache storage after PSO creation
+- tests/material_system_tests.cpp - Added T014 caching test case that builds same PSO twice with identical MaterialDefinition + RenderPassConfig, asserts both valid and equal pointers
+
+**Implementation Details:**
+- **TDD Cycle**: Strict RED→GREEN→REFACTOR per instructions; RED test failed with different PSO pointers (0x...880 vs 0x...960), GREEN implementation made test pass (4/4 assertions)
+- **Hash Algorithm**: Uses boost-style hash_combine formula `hash ^= hasher(value) + 0x9e3779b9 + (hash << 6) + (hash >> 2)` for stable, order-dependent hashing; combines 7+ values
+- **Hash Components**: Material id (string), pass name (string), shader stage names + ids (map iteration), rasterizer/depthStencil/blend state ids (3 strings); deterministic due to map ordering
+- **Collision Handling**: PipelineCache::store() checks if hash exists; if materialId+passName match existing entry, updates PSO (idempotent); if different, calls console::fatal with both entries' details
+- **Cache Lifetime**: Static PipelineCache persists across all buildPSO() calls within process lifetime; cleared only on process exit
+- **ComPtr Semantics**: Cache stores Microsoft::WRL::ComPtr<ID3D12PipelineState> which manages D3D12 reference counting; Get() returns raw pointer for comparison
+- **Const Correctness**: computePSOHash() and PipelineCache::get() are const; all local read-only variables marked const
+- **Debugging**: Added temporary console::info logging during development to verify cache hits/misses; removed after GREEN phase complete
+
+**Notes:**
+- T014 fully complete (RED + GREEN + REFACTOR phases); ready for T015 (Expose material system API to renderer)
+- Cache is global/static per PipelineBuilder class; consider thread-safety if multi-threaded PSO creation needed in future
+- Current hash combines material id + pass name + shaders + states; does NOT include render target formats from RenderPassConfig (assumes pass name uniquely identifies formats)
+- Collision detection is fail-fast (console::fatal); alternative could be to generate new hash with salt, but fatal is safer per constitution ("detect/fatal on hash collisions")
+- Cache size unbounded; consider LRU eviction if memory becomes concern (unlikely with typical material counts <1000)
+- Hash quality depends on std::hash<std::string> quality; C++ standard guarantees determinism within same process but not across processes/compilers
+- PSO reuse measurable via second buildPSO() call taking ~0ms (no shader compile, no D3D12 API call); first call still compiles shaders (~10-50ms typical)
+
 ## 2025-10-09 — Data-Driven Material System: T014 PSO Construction & Caching
 **Summary:** Completed T014 (Build & cache PSO) implementing PipelineBuilder for DirectX 12 Pipeline State Object creation from MaterialDefinition. Integrated shader compilation (T012) and render pass configuration to produce valid PSOs for GPU rendering. Used TDD RED→GREEN cycle per instructions.
 

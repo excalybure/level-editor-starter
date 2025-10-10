@@ -8,6 +8,9 @@
 namespace graphics::material_system
 {
 
+// Static cache instance
+PipelineCache PipelineBuilder::s_cache;
+
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	dx12::Device *device,
 	const MaterialDefinition &material,
@@ -17,6 +20,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	{
 		console::error( "PipelineBuilder::buildPSO: invalid device" );
 		return nullptr;
+	}
+
+	// Check cache first
+	const PSOHash hash = computePSOHash( material, passConfig );
+	auto cachedPSO = s_cache.get( hash );
+	if ( cachedPSO )
+	{
+		return cachedPSO;
 	}
 
 	// Compile shaders using MaterialShaderCompiler (T012)
@@ -164,6 +175,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		console::error( "Failed to create pipeline state for material '{}', HRESULT={:#x}", material.id, static_cast<unsigned int>( hr ) );
 		return nullptr;
 	}
+
+	// Store in cache for future reuse
+	s_cache.store( hash, pso, material.id, passConfig.name );
 
 	return pso;
 }

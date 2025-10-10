@@ -314,24 +314,26 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 
 ---
 
-### T014: Build & cache pipeline state objects (AF: PSO Construction & Caching)
+### T014: Build & cache pipeline state objects (AF: PSO Construction & Caching) ✅
+**Status**: COMPLETE (2025-10-09)  
 **User Story**: P1  
 **AF**: Create DirectX 12 PSO from material + pass + states  
 **Reason**: FR-005, FR-007 require automatic PSO creation replacing hard-coded calls  
 **Blocking**: T015  
 **Acceptance**:
-- Given MaterialDefinition + RenderPassConfig + state block references, system builds PSO
-- PSO cached by hash (material id + pass + states + shaders)
-- Hash collision (different inputs → same hash) → fatal
-- Test PSO handle is valid & reused on second request
+- Given MaterialDefinition + RenderPassConfig + state block references, system builds PSO ✅
+- PSO cached by hash (material id + pass + states + shaders) ✅
+- Hash collision (different inputs → same hash) → fatal ✅
+- Test PSO handle is valid & reused on second request ✅
 
 **TDD Steps**:
-1. **Red**: Write test requesting PSO for material+pass; assert handle valid
-2. **Green**: Implement `PipelineBuilder::buildPSO(materialDef, passConfig, stateBlocks, rootSig)`
-3. **Refactor**: Add cache layer (`PipelineCache::get(hash) -> PSO?`); ensure threadsafe if needed
+1. **Red**: Write test requesting PSO for material+pass; assert handle valid ✅
+2. **Green**: Implement `PipelineBuilder::buildPSO(materialDef, passConfig, stateBlocks, rootSig)` ✅
+3. **Refactor**: Add cache layer (`PipelineCache::get(hash) -> PSO?`); ensure threadsafe if needed ✅
 
 **Estimate**: 3 hours  
-**Dependencies**: T013  
+**Actual**: ~3 hours (RED+GREEN 2025-10-09, REFACTOR 2025-10-09)  
+**Dependencies**: T013 ✅  
 
 ---
 

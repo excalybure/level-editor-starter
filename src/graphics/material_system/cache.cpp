@@ -1,8 +1,76 @@
 #include "graphics/material_system/cache.h"
+#include "graphics/material_system/parser.h"
+#include "graphics/material_system/pipeline_builder.h"
+#include "core/console.h"
+#include <functional>
 
-namespace material_system
+namespace graphics::material_system
 {
 
-// Implementation will follow in subsequent tasks
+// Compute stable hash for PSO cache key
+// Combines material id, pass name, shader ids, and state ids
+PSOHash computePSOHash( const MaterialDefinition &material, const RenderPassConfig &passConfig )
+{
+	std::hash<std::string> hasher;
 
-} // namespace material_system
+	// Start with material id
+	size_t hash = hasher( material.id );
+
+	// Combine with pass name
+	hash ^= hasher( passConfig.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	// Combine shader ids (sorted for stability)
+	for ( const auto &[stage, shaderId] : material.shaders )
+	{
+		hash ^= hasher( stage ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		hash ^= hasher( shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	}
+
+	// Combine state block ids
+	hash ^= hasher( material.states.rasterizer ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	hash ^= hasher( material.states.depthStencil ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	hash ^= hasher( material.states.blend ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+
+	return hash;
+}
+
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineCache::get( PSOHash hash ) const
+{
+	const auto it = m_cache.find( hash );
+	if ( it == m_cache.end() )
+		return nullptr;
+
+	return it->second.pso;
+}
+
+void PipelineCache::store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineState> pso, const std::string &materialId, const std::string &passName )
+{
+	// Check for hash collision (same hash, different material/pass)
+	const auto it = m_cache.find( hash );
+	if ( it != m_cache.end() )
+	{
+		// Same material + pass = expected cache hit, just update
+		if ( it->second.materialId == materialId && it->second.passName == passName )
+		{
+			it->second.pso = pso;
+			return;
+		}
+
+		// Different material/pass with same hash = collision
+		console::fatal( "PSO cache hash collision detected: material '{}' pass '{}' collides with '{}' pass '{}'",
+			materialId,
+			passName,
+			it->second.materialId,
+			it->second.passName );
+		return;
+	}
+
+	// New entry
+	CacheEntry entry;
+	entry.pso = pso;
+	entry.materialId = materialId;
+	entry.passName = passName;
+	m_cache[hash] = entry;
+}
+
+} // namespace graphics::material_system
