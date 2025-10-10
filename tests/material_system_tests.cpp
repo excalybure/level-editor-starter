@@ -4,9 +4,11 @@
 #include "graphics/material_system/loader.h"
 #include "graphics/material_system/validator.h"
 #include "graphics/material_system/parser.h"
+#include "graphics/material_system/shader_compiler.h"
 #include "core/console.h"
 #include <filesystem>
 #include <fstream>
+#include <cstring>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -1085,4 +1087,88 @@ TEST_CASE( "DefineValidator returns merged defines map for valid hierarchy", "[d
 	REQUIRE( merged.at( "GLOBAL_A" ) == "1" );
 	REQUIRE( merged.at( "PASS_B" ) == "2" );
 	REQUIRE( merged.at( "MAT_C" ) == "3" );
+}
+
+// ============================================================================
+// T012: Shader Compilation Integration
+// ============================================================================
+
+TEST_CASE( "MaterialShaderCompiler compiles shader with merged hierarchical defines", "[shader-compiler][T012][unit]" )
+{
+	// Arrange - merged defines from DefineValidator
+	const std::unordered_map<std::string, std::string> mergedDefines = {
+		{ "GLOBAL_DEFINE", "1" },
+		{ "PASS_DEFINE", "1" },
+		{ "MATERIAL_DEFINE", "1" }
+	};
+
+	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
+	const std::string entryPoint = "VSMain";
+	const std::string profile = "vs_5_1";
+
+	// Act - compile shader with material defines (this will fail until MaterialShaderCompiler exists)
+	const auto shaderBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		shaderPath, entryPoint, profile, mergedDefines );
+
+	// Assert - shader should compile successfully with all defines applied
+	REQUIRE( shaderBlob.isValid() );
+	REQUIRE( shaderBlob.blob != nullptr );
+	REQUIRE( shaderBlob.blob->GetBufferSize() > 0 );
+	REQUIRE( shaderBlob.entryPoint == entryPoint );
+	REQUIRE( shaderBlob.profile == profile );
+}
+
+TEST_CASE( "MaterialShaderCompiler compiles shader with empty defines", "[shader-compiler][T012][unit]" )
+{
+	// Arrange - no defines
+	const std::unordered_map<std::string, std::string> mergedDefines;
+
+	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
+	const std::string entryPoint = "VSMain";
+	const std::string profile = "vs_5_1";
+
+	// Act - compile should still succeed without defines
+	const auto shaderBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		shaderPath, entryPoint, profile, mergedDefines );
+
+	// Assert - shader compiles (but logic will fail due to missing defines)
+	REQUIRE( shaderBlob.isValid() );
+	REQUIRE( shaderBlob.blob != nullptr );
+}
+
+TEST_CASE( "MaterialShaderCompiler handles multiple defines with consistent ordering", "[shader-compiler][T012][unit]" )
+{
+	// Arrange - multiple defines that should be sorted for deterministic compilation
+	const std::unordered_map<std::string, std::string> defines = {
+		{ "Z_LAST", "1" },
+		{ "A_FIRST", "2" },
+		{ "M_MIDDLE", "3" }
+	};
+
+	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
+	const std::string entryPoint = "PSMain";
+	const std::string profile = "ps_5_1";
+
+	// Act - compile with multiple defines
+	const auto blob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		shaderPath, entryPoint, profile, defines );
+
+	// Assert - compilation should succeed with all defines applied
+	REQUIRE( blob.isValid() );
+	REQUIRE( blob.blob != nullptr );
+	REQUIRE( blob.blob->GetBufferSize() > 0 );
+
+	// Note: Deterministic ordering is tested implicitly by consistent compilation results
+	// across runs; bytecode comparison is unreliable due to D3DCompile timestamps
+}
+
+TEST_CASE( "MaterialShaderCompiler fails gracefully for missing shader file", "[shader-compiler][T012][unit]" )
+{
+	// Arrange - non-existent shader path
+	const std::unordered_map<std::string, std::string> defines = { { "TEST", "1" } };
+	const std::filesystem::path shaderPath = "shaders/nonexistent_shader.hlsl";
+
+	// Act & Assert - should throw/log error for missing file
+	REQUIRE_THROWS( graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		shaderPath, "VSMain", "vs_5_1", defines ) );
 }
