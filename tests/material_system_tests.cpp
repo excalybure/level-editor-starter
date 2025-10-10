@@ -1311,3 +1311,152 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	// Assert - second call should return cached instance (same pointer)
 	REQUIRE( pso1.Get() == pso2.Get() );
 }
+
+// ============================================================================
+// T015: Expose Material System API to Renderer
+// ============================================================================
+
+TEST_CASE( "MaterialSystem provides handle-based API for renderer queries", "[material-system][T015][api][unit]" )
+{
+	// Arrange - create temporary materials JSON
+	const fs::path tempDir = fs::temp_directory_path() / "material_system_test_T015";
+	fs::create_directories( tempDir );
+	const fs::path materialsJson = tempDir / "materials.json";
+
+	{
+		std::ofstream out( materialsJson );
+		out << R"({
+			"materials": [
+				{
+					"id": "test_material",
+					"pass": "forward",
+					"shaders": {
+						"vertex": "simple_vs",
+						"pixel": "simple_ps"
+					}
+				}
+			],
+			"renderPasses": [
+				{
+					"id": "forward",
+					"name": "forward"
+				}
+			]
+		})";
+	}
+
+	// Act - initialize material system with JSON
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( materialsJson.string() );
+
+	// Assert - initialization should succeed
+	REQUIRE( initialized );
+
+	// Act - get material handle by ID
+	const auto handle = materialSystem.getMaterialHandle( "test_material" );
+
+	// Assert - handle should be valid
+	REQUIRE( handle.isValid() );
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}
+
+TEST_CASE( "MaterialSystem returns invalid handle for undefined material", "[material-system][T015][api][unit]" )
+{
+	// Arrange - minimal materials JSON
+	const fs::path tempDir = fs::temp_directory_path() / "material_system_test_T015_invalid";
+	fs::create_directories( tempDir );
+	const fs::path materialsJson = tempDir / "materials.json";
+
+	{
+		std::ofstream out( materialsJson );
+		out << R"({
+			"materials": [],
+			"renderPasses": []
+		})";
+	}
+
+	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( materialsJson.string() );
+
+	// Act - query non-existent material
+	const auto handle = materialSystem.getMaterialHandle( "nonexistent_material" );
+
+	// Assert - handle should be invalid
+	REQUIRE_FALSE( handle.isValid() );
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}
+
+// ============================================================================
+// T016: Integration Test - Complete flow from JSON to material query
+// ============================================================================
+
+TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end-to-end flow", "[material-system][T016][integration]" )
+{
+	// Arrange - Create minimal materials.json with one complete material
+	const fs::path tempDir = fs::temp_directory_path() / "material_system_test_T016_integration";
+	fs::create_directories( tempDir );
+	const fs::path materialsJson = tempDir / "materials.json";
+
+	{
+		std::ofstream out( materialsJson );
+		out << R"({
+			"materials": [
+				{
+					"id": "IntegrationTestMaterial",
+					"pass": "forward",
+					"shaders": {
+						"vertex": "simple_vs",
+						"pixel": "simple_ps"
+					},
+					"states": {
+						"rasterizer": "solid_back",
+						"depthStencil": "depth_test_write",
+						"blend": "opaque"
+					}
+				}
+			],
+			"renderPasses": [
+				{
+					"id": "forward",
+					"name": "Forward Rendering Pass"
+				}
+			]
+		})";
+	}
+
+	// Act - Initialize MaterialSystem from JSON file (simulates app startup)
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( materialsJson.string() );
+
+	// Assert - Material system should initialize successfully
+	REQUIRE( initialized );
+
+	// Act - Query material handle by ID (simulates renderer querying materials)
+	const auto handle = materialSystem.getMaterialHandle( "IntegrationTestMaterial" );
+
+	// Assert - Handle should be valid
+	REQUIRE( handle.isValid() );
+
+	// Act - Get material definition using handle (renderer would use this to access material data)
+	const auto *material = materialSystem.getMaterial( handle );
+
+	// Assert - Material should be available
+	REQUIRE( material != nullptr );
+	REQUIRE( material->id == "IntegrationTestMaterial" );
+
+	// Assert - Material should have shader configuration
+	REQUIRE_FALSE( material->shaders.empty() );
+
+	// Assert - Material should have pass set
+	REQUIRE( material->pass == "forward" );
+
+	// Note: PSO building is not tested here as it requires D3D12 device initialization
+	// PSO functionality is validated in PipelineBuilder tests (T013, T014)
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}
