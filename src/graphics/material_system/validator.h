@@ -3,6 +3,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 // Forward declarations
 namespace graphics::material_system
@@ -58,6 +59,27 @@ public:
 		const MaterialDefinition &material,
 		const std::vector<std::string> &knownPasses,
 		const nlohmann::json &document );
+};
+
+// T011: Define Hierarchy Validation
+class DefineValidator
+{
+public:
+	// Validates that define names are unique across global/pass/material scopes
+	// Hierarchical propagation without overrides - any duplicate is fatal
+	// Returns true if all defines unique, false if duplicates detected (errors logged via console::error)
+	bool checkHierarchy(
+		const std::unordered_map<std::string, std::string> &globalDefines,
+		const std::unordered_map<std::string, std::string> &passDefines,
+		const std::unordered_map<std::string, std::string> &materialDefines,
+		const std::string &materialId );
+
+	// Returns merged defines map if hierarchy is valid
+	// Combines global + pass + material defines into single map
+	std::unordered_map<std::string, std::string> getMergedDefines(
+		const std::unordered_map<std::string, std::string> &globalDefines,
+		const std::unordered_map<std::string, std::string> &passDefines,
+		const std::unordered_map<std::string, std::string> &materialDefines ) const;
 };
 
 } // namespace graphics::material_system

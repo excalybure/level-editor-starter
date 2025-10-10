@@ -977,3 +977,112 @@ TEST_CASE( "ReferenceValidator accepts valid references", "[reference-validator]
 
 	REQUIRE( valid );
 }
+
+// ============================================================================
+// T011: Enforce hierarchical define uniqueness
+// ============================================================================
+
+TEST_CASE( "DefineValidator detects duplicate between global and material defines", "[define-validator][T011][unit]" )
+{
+	// Arrange - global and material both define "FOO"
+	const std::unordered_map<std::string, std::string> globalDefines = {
+		{ "FOO", "1" }
+	};
+	const std::unordered_map<std::string, std::string> passDefines = {};
+	const std::unordered_map<std::string, std::string> materialDefines = {
+		{ "FOO", "2" } // Duplicate!
+	};
+
+	graphics::material_system::DefineValidator validator;
+
+	// Act & Assert - should return false for duplicate
+	const bool valid = validator.checkHierarchy( globalDefines, passDefines, materialDefines, "test_material" );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "DefineValidator detects duplicate between pass and material defines", "[define-validator][T011][unit]" )
+{
+	// Arrange - pass and material both define "BAR"
+	const std::unordered_map<std::string, std::string> globalDefines = {};
+	const std::unordered_map<std::string, std::string> passDefines = {
+		{ "BAR", "alpha" }
+	};
+	const std::unordered_map<std::string, std::string> materialDefines = {
+		{ "BAR", "beta" } // Duplicate!
+	};
+
+	graphics::material_system::DefineValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.checkHierarchy( globalDefines, passDefines, materialDefines, "test_material" );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "DefineValidator detects duplicate between global and pass defines", "[define-validator][T011][unit]" )
+{
+	// Arrange - global and pass both define "VERSION"
+	const std::unordered_map<std::string, std::string> globalDefines = {
+		{ "VERSION", "100" }
+	};
+	const std::unordered_map<std::string, std::string> passDefines = {
+		{ "VERSION", "200" } // Duplicate!
+	};
+	const std::unordered_map<std::string, std::string> materialDefines = {};
+
+	graphics::material_system::DefineValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.checkHierarchy( globalDefines, passDefines, materialDefines, "test_material" );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "DefineValidator accepts unique defines across all levels", "[define-validator][T011][unit]" )
+{
+	// Arrange - all unique defines
+	const std::unordered_map<std::string, std::string> globalDefines = {
+		{ "GLOBAL_FLAG", "1" },
+		{ "VERSION", "100" }
+	};
+	const std::unordered_map<std::string, std::string> passDefines = {
+		{ "PASS_TYPE", "forward" }
+	};
+	const std::unordered_map<std::string, std::string> materialDefines = {
+		{ "MATERIAL_ID", "42" },
+		{ "USE_NORMALS", "1" }
+	};
+
+	graphics::material_system::DefineValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.checkHierarchy( globalDefines, passDefines, materialDefines, "test_material" );
+
+	REQUIRE( valid );
+}
+
+TEST_CASE( "DefineValidator returns merged defines map for valid hierarchy", "[define-validator][T011][unit]" )
+{
+	// Arrange
+	const std::unordered_map<std::string, std::string> globalDefines = {
+		{ "GLOBAL_A", "1" }
+	};
+	const std::unordered_map<std::string, std::string> passDefines = {
+		{ "PASS_B", "2" }
+	};
+	const std::unordered_map<std::string, std::string> materialDefines = {
+		{ "MAT_C", "3" }
+	};
+
+	graphics::material_system::DefineValidator validator;
+
+	// Act
+	const auto merged = validator.getMergedDefines( globalDefines, passDefines, materialDefines );
+
+	// Assert - all defines should be present
+	REQUIRE( merged.size() == 3 );
+	REQUIRE( merged.at( "GLOBAL_A" ) == "1" );
+	REQUIRE( merged.at( "PASS_B" ) == "2" );
+	REQUIRE( merged.at( "MAT_C" ) == "3" );
+}

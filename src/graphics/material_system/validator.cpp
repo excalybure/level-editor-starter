@@ -283,4 +283,75 @@ bool ReferenceValidator::validateReferences(
 	return allValid;
 }
 
+// T011: Define Hierarchy Validation
+bool DefineValidator::checkHierarchy(
+	const std::unordered_map<std::string, std::string> &globalDefines,
+	const std::unordered_map<std::string, std::string> &passDefines,
+	const std::unordered_map<std::string, std::string> &materialDefines,
+	const std::string &materialId )
+{
+	std::unordered_set<std::string> seenDefines;
+	bool allUnique = true;
+
+	// Check global defines first
+	for ( const auto &[name, value] : globalDefines )
+	{
+		seenDefines.insert( name );
+	}
+
+	// Check pass defines against global
+	for ( const auto &[name, value] : passDefines )
+	{
+		if ( seenDefines.find( name ) != seenDefines.end() )
+		{
+			console::error( "Material '{}': duplicate define '{}' between global and pass scopes", materialId, name );
+			allUnique = false;
+		}
+		else
+		{
+			seenDefines.insert( name );
+		}
+	}
+
+	// Check material defines against global and pass
+	for ( const auto &[name, value] : materialDefines )
+	{
+		if ( seenDefines.find( name ) != seenDefines.end() )
+		{
+			console::error( "Material '{}': duplicate define '{}' in material scope (already defined in global or pass)",
+				materialId,
+				name );
+			allUnique = false;
+		}
+	}
+
+	return allUnique;
+}
+
+std::unordered_map<std::string, std::string> DefineValidator::getMergedDefines(
+	const std::unordered_map<std::string, std::string> &globalDefines,
+	const std::unordered_map<std::string, std::string> &passDefines,
+	const std::unordered_map<std::string, std::string> &materialDefines ) const
+{
+	std::unordered_map<std::string, std::string> merged;
+
+	// Merge in order: global -> pass -> material
+	for ( const auto &[name, value] : globalDefines )
+	{
+		merged[name] = value;
+	}
+
+	for ( const auto &[name, value] : passDefines )
+	{
+		merged[name] = value;
+	}
+
+	for ( const auto &[name, value] : materialDefines )
+	{
+		merged[name] = value;
+	}
+
+	return merged;
+}
+
 } // namespace graphics::material_system
