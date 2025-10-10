@@ -822,3 +822,158 @@ TEST_CASE( "MaterialParser parses material with all optional fields", "[material
 	REQUIRE( material.states.depthStencil == "depth_test_write" );
 	REQUIRE( material.states.blend == "alpha_blend" );
 }
+
+// ============================================================================
+// T010: Validate material references
+// ============================================================================
+
+TEST_CASE( "ReferenceValidator detects undefined pass reference", "[reference-validator][T010][unit]" )
+{
+	// Arrange - material referencing non-existent pass
+	const json materialJson = json::parse( R"({
+        "id": "invalid_pass_mat",
+        "pass": "nonexistent_pass",
+        "shaders": {
+            "vertex": "vs1",
+            "pixel": "ps1"
+        }
+    })" );
+
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	// Known passes (enum values)
+	const std::vector<std::string> knownPasses = { "forward", "deferred", "shadow" };
+
+	// Known states and shaders (empty for this test)
+	const json document = json::parse( R"({
+        "materials": [],
+        "renderPasses": [],
+        "shaders": {
+            "vertex": [{"id": "vs1"}],
+            "pixel": [{"id": "ps1"}]
+        }
+    })" );
+
+	graphics::material_system::ReferenceValidator validator;
+
+	// Act & Assert - should return false for undefined pass
+	const bool valid = validator.validateReferences( material, knownPasses, document );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "ReferenceValidator detects undefined state reference", "[reference-validator][T010][unit]" )
+{
+	// Arrange - material referencing non-existent rasterizer state
+	const json materialJson = json::parse( R"({
+        "id": "invalid_state_mat",
+        "pass": "forward",
+        "shaders": {
+            "vertex": "vs1",
+            "pixel": "ps1"
+        },
+        "states": {
+            "rasterizer": "missing_state"
+        }
+    })" );
+
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	const std::vector<std::string> knownPasses = { "forward", "deferred" };
+
+	// Document with states but not the one referenced
+	const json document = json::parse( R"({
+        "materials": [],
+        "renderPasses": [],
+        "shaders": {
+            "vertex": [{"id": "vs1"}],
+            "pixel": [{"id": "ps1"}]
+        },
+        "states": {
+            "rasterizer": [{"id": "other_state"}]
+        }
+    })" );
+
+	graphics::material_system::ReferenceValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.validateReferences( material, knownPasses, document );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "ReferenceValidator detects undefined shader reference", "[reference-validator][T010][unit]" )
+{
+	// Arrange - material referencing non-existent shader
+	const json materialJson = json::parse( R"({
+        "id": "invalid_shader_mat",
+        "pass": "forward",
+        "shaders": {
+            "vertex": "missing_vs",
+            "pixel": "ps1"
+        }
+    })" );
+
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	const std::vector<std::string> knownPasses = { "forward" };
+
+	// Document with shaders but not the one referenced
+	const json document = json::parse( R"({
+        "materials": [],
+        "renderPasses": [],
+        "shaders": {
+            "vertex": [{"id": "vs1"}],
+            "pixel": [{"id": "ps1"}]
+        }
+    })" );
+
+	graphics::material_system::ReferenceValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.validateReferences( material, knownPasses, document );
+
+	REQUIRE_FALSE( valid );
+}
+
+TEST_CASE( "ReferenceValidator accepts valid references", "[reference-validator][T010][unit]" )
+{
+	// Arrange - material with all valid references
+	const json materialJson = json::parse( R"({
+        "id": "valid_mat",
+        "pass": "forward",
+        "shaders": {
+            "vertex": "std_vs",
+            "pixel": "std_ps"
+        },
+        "states": {
+            "rasterizer": "cull_back",
+            "depthStencil": "depth_write"
+        }
+    })" );
+
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	const std::vector<std::string> knownPasses = { "forward", "deferred" };
+
+	// Document with all referenced entities
+	const json document = json::parse( R"({
+        "materials": [],
+        "renderPasses": [],
+        "shaders": {
+            "vertex": [{"id": "std_vs"}],
+            "pixel": [{"id": "std_ps"}]
+        },
+        "states": {
+            "rasterizer": [{"id": "cull_back"}],
+            "depthStencil": [{"id": "depth_write"}]
+        }
+    })" );
+
+	graphics::material_system::ReferenceValidator validator;
+
+	// Act & Assert
+	const bool valid = validator.validateReferences( material, knownPasses, document );
+
+	REQUIRE( valid );
+}

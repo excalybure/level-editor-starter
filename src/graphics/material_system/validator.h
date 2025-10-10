@@ -1,6 +1,14 @@
 #pragma once
 
 #include <nlohmann/json_fwd.hpp>
+#include <string>
+#include <vector>
+
+// Forward declarations
+namespace graphics::material_system
+{
+struct MaterialDefinition;
+}
 
 namespace material_system
 {
@@ -33,3 +41,23 @@ public:
 };
 
 } // namespace material_system
+
+namespace graphics::material_system
+{
+
+// T010: Reference Validation
+class ReferenceValidator
+{
+public:
+	// Validates that a material's references (pass, states, shaders) exist in the document
+	// - pass: must be in knownPasses list
+	// - states: referenced state IDs must exist in document.states.<category>
+	// - shaders: referenced shader IDs must exist in document.shaders.<stage>
+	// Returns true if all references valid, false if any undefined (errors logged via console::error)
+	bool validateReferences(
+		const MaterialDefinition &material,
+		const std::vector<std::string> &knownPasses,
+		const nlohmann::json &document );
+};
+
+} // namespace graphics::material_system

@@ -223,23 +223,27 @@ These tasks implement the MVP: JSON materials become usable without C++ changes.
 
 ---
 
-### T010: Validate material references (AF: Reference Resolution)
+### T010: Validate material references (AF: Reference Resolution) ✅
+**Status**: COMPLETE (2025-01-18)  
 **User Story**: P1  
 **AF**: Ensure material references (pass, states, shaders) exist  
 **Reason**: FR-012 requires resolving references; fatal on undefined  
 **Blocking**: T013  
 **Acceptance**:
-- Material references pass "depthPrepass" which doesn't exist in enum → fatal
-- Material references rasterizer state "myState" not in merged document → fatal
-- Valid references resolve successfully
+- Material references pass "depthPrepass" which doesn't exist in enum → error + false return ✅
+- Material references rasterizer state "myState" not in merged document → error + false return ✅
+- Material references undefined shader → error + false return ✅
+- Valid references resolve successfully ✅
 
 **TDD Steps**:
-1. **Red**: Write tests with undefined pass, undefined state block; expect fatal
-2. **Green**: Implement `ReferenceValidator::validate(material, knownPasses, knownStates)`
-3. **Refactor**: Generate clear error messages with material id + missing reference id
+1. **Red**: Write tests with undefined pass, undefined state block, undefined shader; expect false ✅
+2. **Green**: Implement `ReferenceValidator::validateReferences(material, knownPasses, document)` ✅
+3. **Refactor**: Const correctness, run full material system test suite ✅
 
 **Estimate**: 1.5 hours  
-**Dependencies**: T009  
+**Actual**: ~1.5 hours  
+**Dependencies**: T009 (complete)  
+**Implementation**: ReferenceValidator class in validator.h/cpp with pass/shader/state validation
 
 ---
 

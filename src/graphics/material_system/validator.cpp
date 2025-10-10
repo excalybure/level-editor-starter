@@ -1,8 +1,10 @@
 #include "graphics/material_system/validator.h"
+#include "graphics/material_system/parser.h"
 #include <nlohmann/json.hpp>
 #include "core/console.h"
 #include <unordered_set>
 #include <string>
+#include <algorithm>
 
 namespace material_system
 {
@@ -189,3 +191,96 @@ bool Validator::validateDuplicateIds( const nlohmann::json &document )
 }
 
 } // namespace material_system
+
+// T010: Reference Validation Implementation
+namespace graphics::material_system
+{
+
+bool ReferenceValidator::validateReferences(
+	const MaterialDefinition &material,
+	const std::vector<std::string> &knownPasses,
+	const nlohmann::json &document )
+{
+	bool allValid = true;
+
+	// Validate pass reference
+	const auto passIt = std::find( knownPasses.begin(), knownPasses.end(), material.pass );
+	if ( passIt == knownPasses.end() )
+	{
+		console::error( "Material '{}': references undefined pass '{}'", material.id, material.pass );
+		allValid = false;
+	}
+
+	// Validate shader references
+	for ( const auto &shaderRef : material.shaders )
+	{
+		bool shaderFound = false;
+
+		if ( document.contains( "shaders" ) && document["shaders"].is_object() )
+		{
+			const auto &shadersObj = document["shaders"];
+			if ( shadersObj.contains( shaderRef.stage ) && shadersObj[shaderRef.stage].is_array() )
+			{
+				for ( const auto &shaderEntry : shadersObj[shaderRef.stage] )
+				{
+					if ( shaderEntry.contains( "id" ) && shaderEntry["id"] == shaderRef.shaderId )
+					{
+						shaderFound = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( !shaderFound )
+		{
+			console::error( "Material '{}': references undefined shader '{}' (stage: {})",
+				material.id,
+				shaderRef.shaderId,
+				shaderRef.stage );
+			allValid = false;
+		}
+	}
+
+	// Validate state references
+	const auto validateStateRef = [&]( const std::string &stateId, const std::string &stateType ) {
+		if ( stateId.empty() )
+			return; // Optional state
+
+		bool stateFound = false;
+
+		if ( document.contains( "states" ) && document["states"].is_object() )
+		{
+			const auto &statesObj = document["states"];
+			if ( statesObj.contains( stateType ) && statesObj[stateType].is_array() )
+			{
+				for ( const auto &stateEntry : statesObj[stateType] )
+				{
+					if ( stateEntry.contains( "id" ) && stateEntry["id"] == stateId )
+					{
+						stateFound = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( !stateFound )
+		{
+			console::error( "Material '{}': references undefined {} state '{}'",
+				material.id,
+				stateType,
+				stateId );
+			allValid = false;
+		}
+	};
+
+	validateStateRef( material.states.rasterizer, "rasterizer" );
+	validateStateRef( material.states.depthStencil, "depthStencil" );
+	validateStateRef( material.states.blend, "blend" );
+	validateStateRef( material.states.renderTarget, "renderTarget" );
+
+	return allValid;
+}
+
+} // namespace graphics::material_system
