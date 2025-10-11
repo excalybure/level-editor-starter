@@ -2840,8 +2840,8 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 			"pass": "forward",
 			"vertexFormat": "PositionNormalUV",
 			"shaders": {
-				"vertex": { "file": "shaders/grid.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" },
-				"pixel": { "file": "shaders/grid.hlsl", "entryPoint": "PSMain", "profile": "ps_5_0" }
+				"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_0" },
+				"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_0" }
 			}
 		}],
 		"renderPasses": []
@@ -2871,6 +2871,88 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 	REQUIRE( vertexFormat->id == "PositionNormalUV" );
 	REQUIRE( vertexFormat->stride == 32 );
 	REQUIRE( vertexFormat->elements.size() == 3 );
+
+	fs::remove_all( testDir );
+}
+
+// T211: Use Vertex Format in PSO Creation Tests
+// ============================================================================
+
+TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builder][T211][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder vertex format usage" ) )
+		return;
+
+	// Arrange - MaterialSystem with PositionNormalUV vertex format and material
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T211";
+	fs::create_directories( testDir );
+	const auto jsonPath = testDir / "materials.json";
+
+	{
+		std::ofstream out( jsonPath );
+		out << R"({
+			"states": {
+				"vertexFormats": {
+					"PositionNormalUV": {
+						"id": "PositionNormalUV",
+						"stride": 32,
+						"elements": [
+							{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+							{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 },
+							{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 }
+						]
+					}
+				}
+			},
+			"materials": [
+				{
+					"id": "lit_material",
+					"pass": "forward",
+					"vertexFormat": "PositionNormalUV",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/grid.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_5_0"
+						},
+						"pixel": {
+							"file": "shaders/grid.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_5_0"
+						}
+					}
+				}
+			],
+			"renderPasses": []
+		})";
+	}
+
+	graphics::material_system::MaterialSystem materialSystem;
+	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+
+	const auto materialHandle = materialSystem.getMaterialHandle( "lit_material" );
+	REQUIRE( materialHandle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( materialHandle );
+	REQUIRE( material != nullptr );
+
+	// Arrange - render pass config
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO with MaterialSystem (should use PositionNormalUV vertex format)
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem );
+
+	// Assert - PSO created successfully using vertex format
+	REQUIRE( pso != nullptr );
+
+	// TODO: Validate PSO descriptor has 3 input elements (POSITION, NORMAL, TEXCOORD)
+	// For now, successful PSO creation confirms vertex format was applied without crashing
 
 	fs::remove_all( testDir );
 }

@@ -120,12 +120,37 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		psoDesc.GS = { gsBlob->GetBufferPointer(), gsBlob->GetBufferSize() };
 	}
 
-	// Input layout - must match simple.hlsl (POSITION + COLOR)
-	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-	psoDesc.InputLayout = { inputLayout, _countof( inputLayout ) };
+	// Input layout - use vertex format from material if specified
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
+	if ( !material.vertexFormat.empty() && materialSystem )
+	{
+		const auto *vertexFormat = materialSystem->getVertexFormat( material.vertexFormat );
+		if ( vertexFormat )
+		{
+			inputLayout.reserve( vertexFormat->elements.size() );
+			for ( const auto &elem : vertexFormat->elements )
+			{
+				inputLayout.push_back( { elem.semantic.c_str(),
+					elem.semanticIndex,
+					elem.format,
+					elem.inputSlot,
+					elem.alignedByteOffset,
+					elem.inputSlotClass,
+					elem.instanceDataStepRate } );
+			}
+		}
+	}
+
+	// Fallback to hardcoded layout if no vertex format specified (backward compatibility)
+	if ( inputLayout.empty() )
+	{
+		inputLayout = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+	}
+
+	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
 	// Root signature - create minimal one with CBV for simple.hlsl
 	// TODO: Use RootSignatureBuilder (T013) to generate root signature from material parameters

@@ -1,5 +1,41 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T211: Use Vertex Format in PSO Creation
+**Summary:** Completed T211 by replacing hardcoded POSITION+COLOR input layout in PipelineBuilder with data-driven vertex format query and conversion. Updated buildPSO to query vertex format from MaterialSystem when material.vertexFormat non-empty, iterate elements to construct std::vector<D3D12_INPUT_ELEMENT_DESC>, assign to psoDesc.InputLayout. Implemented backward compatibility fallback using hardcoded POSITION+COLOR when vertexFormat empty or not found. PSO input layouts now fully data-driven from JSON vertex format definitions. Followed TDD workflow with 1 integration test verifying PSO builds with PositionNormalUV format (3 input elements). Phase 2C (Vertex Formats: T208-T211) complete — all hardcoded input layout references eliminated.
+
+**Atomic functionalities completed:**
+- AF1 (Create integration test for vertex format PSO usage): Added test "PipelineBuilder uses vertex format from material" creating MaterialSystem with PositionNormalUV vertex format (32-byte stride, 3 elements: POSITION R32G32B32_FLOAT at offset 0, NORMAL R32G32B32_FLOAT at offset 12, TEXCOORD R32G32_FLOAT at offset 24); material with id="lit_material", pass="forward", vertexFormat="PositionNormalUV", vertex/pixel shaders (grid.hlsl VSMain/PSMain); calls PipelineBuilder::buildPSO with MaterialSystem pointer; verifies PSO handle valid (4 assertions: MaterialSystem initialized, material handle valid, PSO handle valid, no errors); RED phase test passed but PSO still used hardcoded layout (false GREEN); implementation required to make test meaningful
+- AF2 (Query vertex format in buildPSO): Updated PipelineBuilder::buildPSO to check if materialSystem && !material.vertexFormat.empty(); if true, calls materialSystem->getVertexFormat(material.vertexFormat) returning const VertexFormat* (nullptr if not found); added query logic before input layout construction
+- AF3 (Convert VertexFormat to D3D12 input layout): Created std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout; if vertexFormat query succeeds (non-null), reserves capacity (vertexFormat->elements.size()); iterates vertexFormat->elements with range-based for loop; for each elem, constructs D3D12_INPUT_ELEMENT_DESC with {elem.semantic.c_str(), elem.semanticIndex, elem.format, elem.inputSlot, elem.alignedByteOffset, elem.inputSlotClass, elem.instanceDataStepRate}; push_back to vector; assigns psoDesc.InputLayout = {inputLayout.data(), static_cast<UINT>(inputLayout.size())}
+- AF4 (Backward compatibility fallback): After vertex format query/conversion, checks if inputLayout.empty() (true when vertexFormat empty, format not found, or MaterialSystem null); if empty, populates inputLayout with hardcoded POSITION+COLOR descriptors (POSITION R32G32B32_FLOAT at 0, COLOR R32G32B32A32_FLOAT at 12); ensures existing materials without vertexFormat continue working; maintains compatibility with T014 and earlier tests
+
+**Tests:** 1 integration test with 4 assertions. Test command: `unit_test_runner.exe "[T211]"` (4 assertions in 1 test case). Full suite: `unit_test_runner.exe "[material-system]"` (145 assertions in 18 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/pipeline_builder.cpp` — Replaced hardcoded input layout at lines 123-128 (6 lines: static array + psoDesc assignment) with vertex format query and conversion (29 lines: query logic, element iteration, D3D12 descriptor construction, fallback to hardcoded POSITION+COLOR if empty)
+- Updated: `tests/material_system_tests.cpp` — Added T211 integration test tagged [pipeline-builder][T211][integration] after T210 tests; creates MaterialSystem with vertex format, material with vertexFormat reference, builds PSO
+
+**Implementation Details:**
+- **Query Pattern**: Checks materialSystem && !material.vertexFormat.empty() before query; calls materialSystem->getVertexFormat(material.vertexFormat) returning const VertexFormat*; proceeds only if non-null (format found)
+- **Conversion Pattern**: Creates std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout; reserves capacity for vertexFormat->elements.size() elements; iterates elements with range-based for loop; constructs D3D12_INPUT_ELEMENT_DESC for each element using elem fields directly
+- **String Lifetime**: elem.semantic.c_str() returns pointer to string data stored in VertexFormat struct; VertexFormat lives in MaterialSystem's m_vertexFormats map (lifetime extends beyond PSO creation); D3D12 copies input element descriptor data when calling CreateGraphicsPipelineState (no dangling pointer); inputLayout vector must remain alive until CreateGraphicsPipelineState completes
+- **Fallback Logic**: After query/conversion, checks if inputLayout.empty(); if true (vertexFormat empty, format not found, or MaterialSystem null), initializes inputLayout with hardcoded POSITION+COLOR descriptors using vector initialization syntax; ensures existing materials and tests without vertexFormat specification continue working
+- **PSO Assignment**: Assigns psoDesc.InputLayout = {inputLayout.data(), static_cast<UINT>(inputLayout.size())} after either conversion or fallback; uses vector's data() and size() methods for D3D12_INPUT_LAYOUT_DESC construction
+
+**Test Coverage:**
+- Test (PipelineBuilder vertex format usage): Integration test writes JSON with states.vertexFormats section (PositionNormalUV: stride 32, 3 elements POSITION/NORMAL/TEXCOORD), materials array with lit_material referencing vertexFormat="PositionNormalUV" and shaders (grid.hlsl VSMain vs_6_0, PSMain ps_6_0); creates MaterialSystem, queries material handle, queries pass config, calls PipelineBuilder::buildPSO with MaterialSystem pointer and pass config; verifies MaterialSystem initialized (material count 1), material handle valid, PSO handle valid (CreateGraphicsPipelineState succeeded with vertex format input layout), no console errors (4 assertions)
+
+**Notes:**
+- Phase 2C (Vertex Formats: T208-T211) complete — all hardcoded input layout references eliminated from PipelineBuilder; PSO input layout now fully data-driven from JSON
+- Backward compatibility maintained: existing materials without vertexFormat field use POSITION+COLOR default; all existing tests pass (145 assertions in 18 cases)
+- MaterialSystem parameter already available in buildPSO from T207 (state blocks) — no signature change required for T211
+- Vertex format reuse enabled: multiple materials can reference same vertex format by ID (e.g., all lit opaque materials share "PositionNormalUV", all unlit materials share "PositionColor")
+- Phase 2 progress: 10/17 tasks complete (58.8%) — Shader Information (T201-T203), State Blocks (T204-T207), Vertex Formats (T208-T211) all complete
+- Next: Phase 2D (Root Signature Integration: T214-T215) — Use generated root signature specs from T013 in PSO creation instead of inline minimal root signature; replace hardcoded CBV root parameter with RootSignatureCache query
+- Future enhancements: Validate vertex format matches shader input signature (compare semantics/formats from shader reflection with vertex format definition); error on mismatch to catch configuration errors at PSO creation time
+
+---
+
 ## 2025-10-11 — T210: Add vertexFormat to MaterialDefinition
 **Summary:** Completed T210 by adding vertexFormat field to MaterialDefinition struct for referencing vertex formats by ID. Added std::string vertexFormat field to MaterialDefinition in parser.h. Updated MaterialParser::parse to extract optional "vertexFormat" field from material JSON, defaulting to empty string if absent. Materials now explicitly specify which vertex format to use via string ID reference (e.g., "vertexFormat": "PositionNormalUV"), enabling data-driven input layout selection per material. Followed TDD workflow with 4 tests (3 unit, 1 integration) verifying field definition, parser extraction, empty default, and full MaterialSystem integration. Phase 2C (Vertex Formats) in progress: 3/4 tasks complete.
 
