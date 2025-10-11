@@ -31,34 +31,92 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	}
 
 	// Compile shaders using MaterialShaderCompiler (T012)
-	// For now, using simple.hlsl as placeholder for all materials
-	const std::filesystem::path shaderPath = "shaders/simple.hlsl";
-	const std::unordered_map<std::string, std::string> emptyDefines;
+	// T203: Use shader info from material.shaders instead of hardcoded simple.hlsl
 
-	const auto vsBlob = MaterialShaderCompiler::CompileWithDefines(
-		shaderPath, "VSMain", "vs_5_0", emptyDefines );
+	// Storage for compiled shader blobs (must persist until PSO creation)
+	Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> dsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> hsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
 
-	if ( !vsBlob.isValid() || !vsBlob.blob )
+	// Compile each shader from material definition
+	for ( const auto &shaderRef : material.shaders )
 	{
-		console::error( "Failed to compile vertex shader for material '{}'", material.id );
-		return nullptr;
+		// Convert shader defines vector to map (T203-AF4)
+		// Shader defines are simple flags (no values), so use empty string as value
+		std::unordered_map<std::string, std::string> shaderDefines;
+		for ( const auto &define : shaderRef.defines )
+		{
+			shaderDefines[define] = ""; // Flag-style define (e.g., #define IS_PREPASS)
+		}
+
+		const auto compiledBlob = MaterialShaderCompiler::CompileWithDefines(
+			shaderRef.file, shaderRef.entryPoint, shaderRef.profile, shaderDefines );
+
+		if ( !compiledBlob.isValid() || !compiledBlob.blob )
+		{
+			console::error( "Failed to compile {} shader from '{}' for material '{}'",
+				shaderStageToString( shaderRef.stage ),
+				shaderRef.file,
+				material.id );
+			return nullptr;
+		}
+
+		// Store compiled blob based on shader stage
+		switch ( shaderRef.stage )
+		{
+		case ShaderStage::Vertex:
+			vsBlob = compiledBlob.blob;
+			break;
+		case ShaderStage::Pixel:
+			psBlob = compiledBlob.blob;
+			break;
+		case ShaderStage::Domain:
+			dsBlob = compiledBlob.blob;
+			break;
+		case ShaderStage::Hull:
+			hsBlob = compiledBlob.blob;
+			break;
+		case ShaderStage::Geometry:
+			gsBlob = compiledBlob.blob;
+			break;
+		case ShaderStage::Compute:
+			console::error( "Compute shaders not supported in graphics pipeline for material '{}'", material.id );
+			return nullptr;
+		}
 	}
 
-	const auto psBlob = MaterialShaderCompiler::CompileWithDefines(
-		shaderPath, "PSMain", "ps_5_0", emptyDefines );
-
-	if ( !psBlob.isValid() || !psBlob.blob )
+	// Validate required shader stages for graphics PSO (T203-AF5)
+	if ( !vsBlob )
 	{
-		console::error( "Failed to compile pixel shader for material '{}'", material.id );
-		return nullptr;
+		console::fatal( "Material '{}' missing required Vertex shader for graphics pipeline", material.id );
 	}
 
 	// Build pipeline state descriptor
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-	// Shaders - using compiled bytecode
-	psoDesc.VS = { vsBlob.blob->GetBufferPointer(), vsBlob.blob->GetBufferSize() };
-	psoDesc.PS = { psBlob.blob->GetBufferPointer(), psBlob.blob->GetBufferSize() };
+	// Shaders - populate from compiled bytecode (only if present)
+	if ( vsBlob )
+	{
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+	}
+	if ( psBlob )
+	{
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+	}
+	if ( dsBlob )
+	{
+		psoDesc.DS = { dsBlob->GetBufferPointer(), dsBlob->GetBufferSize() };
+	}
+	if ( hsBlob )
+	{
+		psoDesc.HS = { hsBlob->GetBufferPointer(), hsBlob->GetBufferSize() };
+	}
+	if ( gsBlob )
+	{
+		psoDesc.GS = { gsBlob->GetBufferPointer(), gsBlob->GetBufferSize() };
+	}
 
 	// Input layout - must match simple.hlsl (POSITION + COLOR)
 	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {

@@ -1289,14 +1289,14 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_6_0";
+	vsRef.profile = "vs_5_0";
 	material.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_6_0";
+	psRef.profile = "ps_5_0";
 	material.shaders.push_back( psRef );
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
@@ -1332,14 +1332,14 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_6_0";
+	vsRef.profile = "vs_5_0";
 	material.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_6_0";
+	psRef.profile = "ps_5_0";
 	material.shaders.push_back( psRef );
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
@@ -1362,6 +1362,56 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 
 	// Assert - second call should return cached instance (same pointer)
 	REQUIRE( pso1.Get() == pso2.Get() );
+}
+
+// ============================================================================
+// T203: Update PipelineBuilder to Use Shader Info
+// ============================================================================
+
+TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipeline-builder][T203][unit]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder shader info usage" ) )
+		return;
+
+	// Arrange - MaterialDefinition using grid.hlsl instead of simple.hlsl
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_grid_material";
+	material.pass = "forward";
+
+	// Vertex shader from grid.hlsl
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.file = "shaders/grid.hlsl";
+	vsRef.entryPoint = "VSMain";
+	vsRef.profile = "vs_5_0";
+	material.shaders.push_back( vsRef );
+
+	// Pixel shader from grid.hlsl
+	graphics::material_system::ShaderReference psRef;
+	psRef.stage = graphics::material_system::ShaderStage::Pixel;
+	psRef.file = "shaders/grid.hlsl";
+	psRef.entryPoint = "PSMain";
+	psRef.profile = "ps_5_0";
+	material.shaders.push_back( psRef );
+
+	material.states.rasterizer = "default_raster";
+	material.states.depthStencil = "default_depth";
+	material.states.blend = "default_blend";
+
+	// Arrange - render pass config
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO (should use grid.hlsl shaders, not hardcoded simple.hlsl)
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+
+	// Assert - PSO should be created successfully using material shader info
+	REQUIRE( pso != nullptr );
 }
 
 // ============================================================================
@@ -1599,7 +1649,7 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 		"shaders": {
 			"vs": {
 				"file": "shaders/simple.hlsl",
-				"profile": "vs_6_0"
+				"profile": "vs_5_0"
 			}
 		}
 	})" );
@@ -1613,7 +1663,7 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 
 	// Required fields should be present
 	REQUIRE( vsShader.file == "shaders/simple.hlsl" );
-	REQUIRE( vsShader.profile == "vs_6_0" );
+	REQUIRE( vsShader.profile == "vs_5_0" );
 
 	// Optional field entryPoint should default to "main"
 	REQUIRE( vsShader.entryPoint == "main" );
@@ -1647,12 +1697,12 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 			"vs": {
 				"file": "shaders/simple.hlsl",
 				"entry": "VSMain",
-				"profile": "vs_6_0"
+				"profile": "vs_5_0"
 			},
 			"ps": {
 				"file": "shaders/simple.hlsl",
 				"entry": "PSMain",
-				"profile": "ps_6_0"
+				"profile": "ps_5_0"
 			}
 		}
 	})" );
@@ -1679,10 +1729,10 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 	REQUIRE( vsShader != nullptr );
 	REQUIRE( vsShader->file == "shaders/simple.hlsl" );
 	REQUIRE( vsShader->entryPoint == "VSMain" );
-	REQUIRE( vsShader->profile == "vs_6_0" );
+	REQUIRE( vsShader->profile == "vs_5_0" );
 
 	REQUIRE( psShader != nullptr );
 	REQUIRE( psShader->file == "shaders/simple.hlsl" );
 	REQUIRE( psShader->entryPoint == "PSMain" );
-	REQUIRE( psShader->profile == "ps_6_0" );
+	REQUIRE( psShader->profile == "ps_5_0" );
 }
