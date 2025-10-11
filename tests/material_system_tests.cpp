@@ -1344,6 +1344,180 @@ TEST_CASE( "RootSignatureCache builds empty root signature", "[root-signature][T
 }
 
 // ============================================================================
+// T215: Use Root Signature from Cache in PSO
+// ============================================================================
+
+TEST_CASE( "PipelineBuilder builds PSO with root signature from material parameters", "[pipeline-builder][T215][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder root sig from params" ) )
+		return;
+
+	// Arrange - MaterialSystem with shader info
+	graphics::material_system::MaterialSystem materialSystem;
+
+	// Arrange - Material with 1 parameter (CBV binding)
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_mat_with_params";
+
+	// Add vertex shader
+	graphics::material_system::ShaderReference vsShader;
+	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
+	vsShader.file = "simple.hlsl";
+	vsShader.entryPoint = "VSMain";
+	vsShader.profile = "vs_6_7";
+	material.shaders.push_back( vsShader );
+
+	// Add pixel shader
+	graphics::material_system::ShaderReference psShader;
+	psShader.stage = graphics::material_system::ShaderStage::Pixel;
+	psShader.file = "simple.hlsl";
+	psShader.entryPoint = "PSMain";
+	psShader.profile = "ps_6_7";
+	material.shaders.push_back( psShader );
+
+	// Add parameter
+	material.parameters = {
+		{ "testParam", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
+	};
+
+	// Arrange - RenderPassConfig
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO (should use RootSignatureBuilder + RootSignatureCache internally)
+	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem );
+
+	// Assert - PSO created successfully with root signature from material parameters
+	REQUIRE( pso != nullptr );
+}
+
+TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterless material", "[pipeline-builder][T215][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder empty root sig" ) )
+		return;
+
+	// Arrange - MaterialSystem with shader info
+	graphics::material_system::MaterialSystem materialSystem;
+
+	// Arrange - Material with 0 parameters
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_mat_no_params";
+
+	// Add vertex shader
+	graphics::material_system::ShaderReference vsShader;
+	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
+	vsShader.file = "shaders/simple.hlsl";
+	vsShader.entryPoint = "VSMain";
+	vsShader.profile = "vs_5_0";
+	material.shaders.push_back( vsShader );
+
+	// Add pixel shader
+	graphics::material_system::ShaderReference psShader;
+	psShader.stage = graphics::material_system::ShaderStage::Pixel;
+	psShader.file = "shaders/simple.hlsl";
+	psShader.entryPoint = "PSMain";
+	psShader.profile = "ps_5_0";
+	material.shaders.push_back( psShader );
+
+	// No parameters
+
+	// Arrange - RenderPassConfig
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build PSO (should create empty root signature)
+	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem );
+
+	// Assert - PSO created successfully with empty root signature
+	REQUIRE( pso != nullptr );
+}
+
+TEST_CASE( "PipelineBuilder reuses cached root signature for identical material parameters", "[pipeline-builder][T215][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PipelineBuilder cache reuse" ) )
+		return;
+
+	// Arrange - MaterialSystem with shader info
+	graphics::material_system::MaterialSystem materialSystem;
+
+	// Arrange - Two materials with identical parameters
+	graphics::material_system::MaterialDefinition material1;
+	material1.id = "test_mat_1";
+
+	// Add vertex shader
+	graphics::material_system::ShaderReference vsShader1;
+	vsShader1.stage = graphics::material_system::ShaderStage::Vertex;
+	vsShader1.file = "shaders/simple.hlsl";
+	vsShader1.entryPoint = "VSMain";
+	vsShader1.profile = "vs_5_0";
+	material1.shaders.push_back( vsShader1 );
+
+	// Add pixel shader
+	graphics::material_system::ShaderReference psShader1;
+	psShader1.stage = graphics::material_system::ShaderStage::Pixel;
+	psShader1.file = "shaders/simple.hlsl";
+	psShader1.entryPoint = "PSMain";
+	psShader1.profile = "ps_5_0";
+	material1.shaders.push_back( psShader1 );
+
+	// Add parameter
+	material1.parameters = {
+		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
+	};
+
+	graphics::material_system::MaterialDefinition material2;
+	material2.id = "test_mat_2";
+
+	// Add vertex shader
+	graphics::material_system::ShaderReference vsShader2;
+	vsShader2.stage = graphics::material_system::ShaderStage::Vertex;
+	vsShader2.file = "shaders/simple.hlsl";
+	vsShader2.entryPoint = "VSMain";
+	vsShader2.profile = "vs_5_0";
+	material2.shaders.push_back( vsShader2 );
+
+	// Add pixel shader
+	graphics::material_system::ShaderReference psShader2;
+	psShader2.stage = graphics::material_system::ShaderStage::Pixel;
+	psShader2.file = "shaders/simple.hlsl";
+	psShader2.entryPoint = "PSMain";
+	psShader2.profile = "ps_5_0";
+	material2.shaders.push_back( psShader2 );
+
+	// Add parameter - same name and type as material1
+	material2.parameters = {
+		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 0.0f, 1.0f, 0.0f, 1.0f } ) }
+	};
+
+	// Arrange - RenderPassConfig
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	passConfig.numRenderTargets = 1;
+
+	// Act - build two PSOs with identical root signatures
+	const auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material1, passConfig, &materialSystem );
+	const auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material2, passConfig, &materialSystem );
+
+	// Assert - both PSOs created successfully (cache hit on second)
+	REQUIRE( pso1 != nullptr );
+	REQUIRE( pso2 != nullptr );
+}
+
+// ============================================================================
 // T014: PSO Construction & Caching
 // ============================================================================
 

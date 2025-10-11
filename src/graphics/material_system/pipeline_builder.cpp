@@ -2,6 +2,8 @@
 #include "material_system.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/material_system/shader_compiler.h"
+#include "graphics/material_system/root_signature_builder.h"
+#include "graphics/material_system/root_signature_cache.h"
 #include "core/console.h"
 #include <d3d12.h>
 #include <filesystem>
@@ -9,8 +11,9 @@
 namespace graphics::material_system
 {
 
-// Static cache instance
+// Static cache instances
 PipelineCache PipelineBuilder::s_cache;
+static RootSignatureCache s_rootSignatureCache;
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	dx12::Device *device,
@@ -152,36 +155,12 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 
 	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
-	// Root signature - create minimal one with CBV for simple.hlsl
-	// TODO: Use RootSignatureBuilder (T013) to generate root signature from material parameters
-	D3D12_ROOT_PARAMETER rootParam = {};
-	rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam.Descriptor.ShaderRegister = 0;
-	rootParam.Descriptor.RegisterSpace = 0;
-	rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-	rootSignatureDesc.NumParameters = 1;
-	rootSignatureDesc.pParameters = &rootParam;
-	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> rootSignatureBlob;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-	HRESULT hr = D3D12SerializeRootSignature( &rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rootSignatureBlob, &errorBlob );
-	if ( FAILED( hr ) )
+	// Root signature - use RootSignatureBuilder + RootSignatureCache (T215)
+	const auto rootSigSpec = RootSignatureBuilder::Build( material );
+	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	if ( !rootSignature )
 	{
-		if ( errorBlob )
-		{
-			console::error( "Root signature serialization failed: {}", static_cast<char *>( errorBlob->GetBufferPointer() ) );
-		}
-		return nullptr;
-	}
-
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-	hr = device->get()->CreateRootSignature( 0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS( &rootSignature ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "Root signature creation failed" );
+		console::fatal( "Failed to create root signature for material: {}", material.id );
 		return nullptr;
 	}
 
