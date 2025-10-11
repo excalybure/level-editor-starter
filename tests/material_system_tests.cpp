@@ -7,6 +7,7 @@
 #include "graphics/material_system/shader_compiler.h"
 #include "graphics/material_system/root_signature_builder.h"
 #include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/state_blocks.h"
 #include "core/console.h"
 #include "test_dx12_helpers.h"
 #include <filesystem>
@@ -1736,3 +1737,156 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 	REQUIRE( psShader->entryPoint == "PSMain" );
 	REQUIRE( psShader->profile == "ps_5_0" );
 }
+
+// ============================================================================
+// T204: Define State Block Structs
+// ============================================================================
+
+TEST_CASE( "RasterizerStateBlock has correct D3D12 defaults", "[state-blocks][T204][unit]" )
+{
+	// Arrange & Act - default construct
+	const graphics::material_system::RasterizerStateBlock rasterizer;
+
+	// Assert - verify D3D12 default values
+	REQUIRE( rasterizer.fillMode == D3D12_FILL_MODE_SOLID );
+	REQUIRE( rasterizer.cullMode == D3D12_CULL_MODE_BACK );
+	REQUIRE( rasterizer.frontCounterClockwise == FALSE );
+	REQUIRE( rasterizer.depthBias == D3D12_DEFAULT_DEPTH_BIAS );
+	REQUIRE( rasterizer.depthBiasClamp == D3D12_DEFAULT_DEPTH_BIAS_CLAMP );
+	REQUIRE( rasterizer.slopeScaledDepthBias == D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS );
+	REQUIRE( rasterizer.depthClipEnable == TRUE );
+	REQUIRE( rasterizer.multisampleEnable == FALSE );
+	REQUIRE( rasterizer.antialiasedLineEnable == FALSE );
+	REQUIRE( rasterizer.forcedSampleCount == 0 );
+	REQUIRE( rasterizer.conservativeRaster == D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF );
+	REQUIRE( rasterizer.id.empty() );
+	REQUIRE( rasterizer.base.empty() );
+}
+
+TEST_CASE( "DepthStencilStateBlock has correct D3D12 defaults", "[state-blocks][T204][unit]" )
+{
+	// Arrange & Act - default construct
+	const graphics::material_system::DepthStencilStateBlock depthStencil;
+
+	// Assert - verify D3D12 default values
+	REQUIRE( depthStencil.depthEnable == TRUE );
+	REQUIRE( depthStencil.depthWriteMask == D3D12_DEPTH_WRITE_MASK_ALL );
+	REQUIRE( depthStencil.depthFunc == D3D12_COMPARISON_FUNC_LESS );
+	REQUIRE( depthStencil.stencilEnable == FALSE );
+	REQUIRE( depthStencil.stencilReadMask == D3D12_DEFAULT_STENCIL_READ_MASK );
+	REQUIRE( depthStencil.stencilWriteMask == D3D12_DEFAULT_STENCIL_WRITE_MASK );
+	
+	// Verify stencil op defaults
+	REQUIRE( depthStencil.frontFace.stencilFailOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.frontFace.stencilDepthFailOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.frontFace.stencilPassOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.frontFace.stencilFunc == D3D12_COMPARISON_FUNC_ALWAYS );
+	
+	REQUIRE( depthStencil.backFace.stencilFailOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.backFace.stencilDepthFailOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.backFace.stencilPassOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.backFace.stencilFunc == D3D12_COMPARISON_FUNC_ALWAYS );
+	
+	REQUIRE( depthStencil.id.empty() );
+	REQUIRE( depthStencil.base.empty() );
+}
+
+TEST_CASE( "BlendRenderTargetState has correct D3D12 defaults", "[state-blocks][T204][unit]" )
+{
+	// Arrange & Act - default construct
+	const graphics::material_system::BlendRenderTargetState blendRT;
+
+	// Assert - verify D3D12 default values
+	REQUIRE( blendRT.blendEnable == FALSE );
+	REQUIRE( blendRT.logicOpEnable == FALSE );
+	REQUIRE( blendRT.srcBlend == D3D12_BLEND_ONE );
+	REQUIRE( blendRT.destBlend == D3D12_BLEND_ZERO );
+	REQUIRE( blendRT.blendOp == D3D12_BLEND_OP_ADD );
+	REQUIRE( blendRT.srcBlendAlpha == D3D12_BLEND_ONE );
+	REQUIRE( blendRT.destBlendAlpha == D3D12_BLEND_ZERO );
+	REQUIRE( blendRT.blendOpAlpha == D3D12_BLEND_OP_ADD );
+	REQUIRE( blendRT.logicOp == D3D12_LOGIC_OP_NOOP );
+	REQUIRE( blendRT.renderTargetWriteMask == D3D12_COLOR_WRITE_ENABLE_ALL );
+}
+
+TEST_CASE( "BlendStateBlock has correct D3D12 defaults", "[state-blocks][T204][unit]" )
+{
+	// Arrange & Act - default construct
+	const graphics::material_system::BlendStateBlock blend;
+
+	// Assert - verify D3D12 default values
+	REQUIRE( blend.alphaToCoverageEnable == FALSE );
+	REQUIRE( blend.independentBlendEnable == FALSE );
+	REQUIRE( blend.renderTargets.size() == 8 );
+	
+	// Verify all 8 render targets have default blend state
+	for ( const auto &rt : blend.renderTargets )
+	{
+		REQUIRE( rt.blendEnable == FALSE );
+		REQUIRE( rt.srcBlend == D3D12_BLEND_ONE );
+		REQUIRE( rt.destBlend == D3D12_BLEND_ZERO );
+	}
+	
+	REQUIRE( blend.id.empty() );
+	REQUIRE( blend.base.empty() );
+}
+
+TEST_CASE( "RenderTargetStateBlock has correct defaults", "[state-blocks][T204][unit]" )
+{
+	// Arrange & Act - default construct
+	const graphics::material_system::RenderTargetStateBlock rtState;
+
+	// Assert - verify default values
+	REQUIRE( rtState.rtvFormats.empty() );
+	REQUIRE( rtState.dsvFormat == DXGI_FORMAT_UNKNOWN );
+	REQUIRE( rtState.sampleCount == 1 );
+	REQUIRE( rtState.sampleQuality == 0 );
+	REQUIRE( rtState.id.empty() );
+}
+
+TEST_CASE( "BlendRenderTargetState converts to D3D12 descriptor correctly", "[state-blocks][T204][unit]" )
+{
+	// Arrange - create blend RT with custom values
+	graphics::material_system::BlendRenderTargetState blendRT;
+	blendRT.blendEnable = TRUE;
+	blendRT.srcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendRT.destBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendRT.blendOp = D3D12_BLEND_OP_ADD;
+	blendRT.srcBlendAlpha = D3D12_BLEND_ONE;
+	blendRT.destBlendAlpha = D3D12_BLEND_ZERO;
+	blendRT.blendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendRT.renderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	// Act - convert to D3D12 descriptor
+	const auto d3d12Desc = blendRT.toD3D12();
+
+	// Assert - verify conversion
+	REQUIRE( d3d12Desc.BlendEnable == TRUE );
+	REQUIRE( d3d12Desc.SrcBlend == D3D12_BLEND_SRC_ALPHA );
+	REQUIRE( d3d12Desc.DestBlend == D3D12_BLEND_INV_SRC_ALPHA );
+	REQUIRE( d3d12Desc.BlendOp == D3D12_BLEND_OP_ADD );
+	REQUIRE( d3d12Desc.SrcBlendAlpha == D3D12_BLEND_ONE );
+	REQUIRE( d3d12Desc.DestBlendAlpha == D3D12_BLEND_ZERO );
+	REQUIRE( d3d12Desc.BlendOpAlpha == D3D12_BLEND_OP_ADD );
+	REQUIRE( d3d12Desc.RenderTargetWriteMask == D3D12_COLOR_WRITE_ENABLE_ALL );
+}
+
+TEST_CASE( "DepthStencilOpDesc converts to D3D12 descriptor correctly", "[state-blocks][T204][unit]" )
+{
+	// Arrange - create stencil op with custom values
+	graphics::material_system::DepthStencilOpDesc stencilOp;
+	stencilOp.stencilFailOp = D3D12_STENCIL_OP_REPLACE;
+	stencilOp.stencilDepthFailOp = D3D12_STENCIL_OP_INCR;
+	stencilOp.stencilPassOp = D3D12_STENCIL_OP_DECR;
+	stencilOp.stencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+
+	// Act - convert to D3D12 descriptor
+	const auto d3d12Desc = stencilOp.toD3D12();
+
+	// Assert - verify conversion
+	REQUIRE( d3d12Desc.StencilFailOp == D3D12_STENCIL_OP_REPLACE );
+	REQUIRE( d3d12Desc.StencilDepthFailOp == D3D12_STENCIL_OP_INCR );
+	REQUIRE( d3d12Desc.StencilPassOp == D3D12_STENCIL_OP_DECR );
+	REQUIRE( d3d12Desc.StencilFunc == D3D12_COMPARISON_FUNC_EQUAL );
+}
+

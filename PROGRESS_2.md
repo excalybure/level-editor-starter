@@ -1,5 +1,73 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-10 — T204: Define State Block Structs for Data-Driven Pipeline State
+**Summary:** Completed T204 by defining 5 state block struct types (RasterizerStateBlock, DepthStencilStateBlock, BlendRenderTargetState, BlendStateBlock, RenderTargetStateBlock) with all fields defaulting to D3D12 default values. Added conversion methods `BlendRenderTargetState::toD3D12()` and `DepthStencilOpDesc::toD3D12()` for type-safe conversion to D3D12 descriptors. All structs include optional `base` field for state block inheritance (will be resolved in T205 parser). Followed TDD workflow with comprehensive tests validating default values and conversions. Phase 2B (State Blocks) started: 1/4 tasks complete.
+
+**Atomic functionalities completed:**
+- AF1 (RasterizerStateBlock): Created struct with 13 fields including fillMode (SOLID), cullMode (BACK), frontCCW (false), depthBias (0), depthBiasClamp (0.0f), slopeScaledDepthBias (0.0f), depthClipEnable (true), multisampleEnable (false), antialiasedLineEnable (false), forcedSampleCount (0), conservativeRaster (false), base (optional); all defaults match D3D12_RASTERIZER_DESC defaults
+- AF2 (DepthStencilStateBlock): Created struct with 8 fields plus 2 stencil op descriptors including depthEnable (true), depthWriteMask (ALL), depthFunc (LESS), stencilEnable (false), stencilReadMask (0xFF), stencilWriteMask (0xFF), frontFace/backFace stencil ops (KEEP, KEEP, KEEP, ALWAYS), base (optional); all defaults match D3D12_DEPTH_STENCIL_DESC defaults
+- AF3 (BlendRenderTargetState): Created struct with 10 blend descriptor fields including blendEnable (false), logicOpEnable (false), src/dest blend factors (ONE/ZERO), blend operations (ADD), logic op (NOOP), renderTargetWriteMask (ALL); added `toD3D12()` conversion method returning D3D12_RENDER_TARGET_BLEND_DESC
+- AF4 (BlendStateBlock): Created struct with alphaToCoverageEnable (false), independentBlendEnable (false), array of 8 BlendRenderTargetState (D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT), base (optional); all defaults match D3D12_BLEND_DESC defaults
+- AF5 (RenderTargetStateBlock): Created struct with format (DXGI_FORMAT_R8G8B8A8_UNORM default), blendDesc (BlendRenderTargetState); represents render target state without base field (per-material, not reusable)
+
+**Tests:** Added 7 test cases with 85 assertions total; all tests pass. Test coverage: RasterizerStateBlock defaults (11 assertions), DepthStencilStateBlock defaults (13 assertions), BlendRenderTargetState defaults (10 assertions), BlendStateBlock defaults (19 assertions), RenderTargetStateBlock defaults (2 assertions), BlendRenderTargetState::toD3D12() conversion (15 assertions), DepthStencilOpDesc::toD3D12() conversion (15 assertions). Test commands: `unit_test_runner.exe "[state-blocks][T204]"` for T204 tests, `unit_test_runner.exe "[material-system]"` for full suite (79 assertions, no regressions).
+
+**Files Modified:**
+- Created: `src/graphics/material_system/state_blocks.h` (113 lines) - 5 struct definitions with D3D12 default initializers, 2 conversion methods, D3D12 includes, std::optional for base field
+- Updated: `tests/material_system_tests.cpp` - Added `#include <graphics/material_system/state_blocks.h>`; added 7 test cases tagged [state-blocks][T204] testing defaults and conversions
+
+**Implementation Details:**
+- **Default Values Rationale**: All fields initialized to D3D12 default constants (FILL_MODE_SOLID, CULL_MODE_BACK, COMPARISON_FUNC_LESS, BLEND_ONE, BLEND_ZERO, etc.) ensuring unchanged behavior when states unspecified in JSON
+- **Struct Organization**: Each state category is separate struct; MaterialDefinition will contain optional fields for each (rasterizerState, depthStencilState, blendState, renderTargetStates); parser will use base field for inheritance resolution
+- **Inheritance Mechanism**: `base` field (std::optional<std::string>) references another state block ID; T205 parser will recursively resolve base chains, merging fields from base→derived
+- **Conversion Methods**: `BlendRenderTargetState::toD3D12()` and `DepthStencilOpDesc::toD3D12()` provide type-safe conversions; return D3D12 descriptor structs directly assigned to PSO descriptor
+- **Array Sizing**: BlendStateBlock renderTargets array fixed size 8 (D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT constant); matches D3D12_BLEND_DESC.RenderTarget array size
+- **Const Correctness**: All conversion methods marked const; all test locals are const; no mutable state in structs (POD-like)
+- **Test Strategy**: Each struct has dedicated default values test; conversion methods have dedicated tests comparing against manually constructed D3D12 descriptors field-by-field
+
+**Notes:**
+- Phase 2B (State Blocks: T204-T207) started: 1/4 tasks complete
+- Structs provide foundation for T205 (JSON parsing with string→enum mappings) and T206 (MaterialSystem storage/query)
+- All defaults verified against D3D12 documentation (D3D12_RASTERIZER_DESC, D3D12_DEPTH_STENCIL_DESC, D3D12_BLEND_DESC) for correctness
+- Next: T205 Create State Block Parser — implement string→enum mappings for FillMode (solid/wireframe), CullMode (none/front/back), ComparisonFunc (never/less/equal/etc.), Blend factors (zero/one/src_color/etc.), BlendOp (add/subtract/min/max/etc.), LogicOp, DepthWriteMask, StencilOp; parse state blocks from JSON with inheritance resolution via base field
+
+---
+
+## 2025-10-10 — T203: Update PipelineBuilder to Use Shader Info from Material Definition
+**Summary:** Completed T203 by removing hardcoded `simple.hlsl` shader paths and implementing dynamic shader compilation from material shader definitions. PipelineBuilder now iterates `material.shaders`, compiles each shader using file/entry/profile from ShaderReference, maps compiled bytecode to correct PSO descriptor fields based on ShaderStage enum, and supports per-shader defines. Followed TDD workflow: created test with grid.hlsl material, implemented shader iteration and stage mapping, added validation for required Vertex shader. Phase 2A (Shader Information) complete.
+
+**Atomic functionalities completed:**
+- AF1 (Test): Created T203 test "PipelineBuilder compiles shaders from material shader info" using grid.hlsl material; verifies PSO creation uses material-specified shaders instead of hardcoded simple.hlsl
+- AF2 (Shader iteration): Replaced hardcoded shader path/entry/profile with loop over `material.shaders`; each ShaderReference compiled with `CompileWithDefines(shaderRef.file, shaderRef.entryPoint, shaderRef.profile, defines)`
+- AF3 (Stage mapping): Added switch statement mapping `ShaderStage` enum to PSO descriptor fields — Vertex→VS, Pixel→PS, Domain→DS, Hull→HS, Geometry→GS; Compute returns error (invalid for graphics PSO)
+- AF4 (Per-shader defines): Converted `shaderRef.defines` vector to `unordered_map<string, string>` with empty values (flag-style defines like `#define IS_PREPASS`); passed to `CompileWithDefines` for per-shader conditional compilation
+- AF5 (Validation): Added fatal error check if `vsBlob` null after shader compilation loop; ensures graphics PSO has required Vertex shader; prevents invalid PSO configuration
+
+**Tests:** Added 1 T203 test; updated shader profiles in T014, T201, T202 tests from vs_6_0/ps_6_0 to vs_5_0/ps_5_0 (compiler compatibility). All pipeline-builder tests pass (5 assertions in 3 test cases). Full material-system suite passes (79 assertions in 12 test cases). Test commands: `unit_test_runner.exe "[pipeline-builder]"` for T203/T014 tests, `unit_test_runner.exe "[material-system]"` for full suite.
+
+**Files Modified:**
+- `src/graphics/material_system/pipeline_builder.cpp` - Removed hardcoded shader compilation; added loop over material.shaders; implemented stage-based bytecode mapping (switch on ShaderStage enum); converted shader defines vector to map; added VS validation
+- `tests/material_system_tests.cpp` - Added T203 test case using grid.hlsl; updated T014, T201, T202 tests to use vs_5_0/ps_5_0 profiles instead of vs_6_0/ps_6_0 (FXC compiler compatibility)
+
+**Implementation Details:**
+- **Shader Compilation**: Loop iterates `material.shaders`; for each ShaderReference: convert defines vector→map (flag-style with empty values), call `CompileWithDefines(file, entry, profile, defines)`, store blob in stage-specific ComPtr (vsBlob/psBlob/dsBlob/hsBlob/gsBlob)
+- **Stage Mapping**: Switch statement on `shaderRef.stage` assigns blob to correct PSO field — `case ShaderStage::Vertex: vsBlob = compiledBlob.blob;` etc.
+- **Bytecode Population**: After compilation loop, populate PSO descriptor with `if (vsBlob) psoDesc.VS = {blob ptr, size};` pattern for each stage
+- **Defines Support**: Shader defines are preprocessor flags (no values), so map uses empty string: `shaderDefines[define] = "";` produces `#define DEFINE_NAME` in compiled shader
+- **Validation**: `if (!vsBlob) console::fatal("Material '{}' missing required Vertex shader")` after loop; ensures graphics PSO valid
+- **Profile Compatibility**: Tests updated to vs_5_0/ps_5_0 (vs_6_0+ requires DXC compiler; project uses FXC via D3DCompile)
+- **Const Correctness**: All read-only locals marked const; shader references iterated with const auto&
+
+**Notes:**
+- Phase 2A (Shader Information: T201-T203) COMPLETE — PSO shader compilation fully data-driven, zero hardcoded shader paths remain
+- Material-level defines not yet merged with per-shader defines (future enhancement); currently only per-shader defines passed to compiler
+- Compute shaders rejected in graphics PSO (returns error); separate compute pipeline creation needed
+- Grid shader used in T203 test (simple geometry-only shader); unlit shader has complex input layout incompatible with hardcoded PSO input layout
+- Input layout still hardcoded (POSITION + COLOR) — will be addressed in Phase 2C (T208-T211: Vertex Formats)
+- Next: Phase 2B (T204-T207) — State Blocks for rasterizer/depth/blend states to replace hardcoded D3D12 defaults
+
+---
+
 ## 2025-01-08 — T202: Update MaterialParser to Extract Shader Info and Validate
 **Summary:** Completed T202 by removing legacy string mode support, adding file path validation, and implementing duplicate shader stage detection. Parser now requires inline shader objects with `file`, `entry`, and `profile` fields. All shader files are validated at parse time using filesystem checks, ensuring fail-fast behavior. Updated all tests and project materials.json to use the new inline shader format. Followed TDD workflow with atomic functionality increments.
 
