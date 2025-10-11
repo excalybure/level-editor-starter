@@ -39,8 +39,12 @@ struct Parameter
 // Shader entry reference (within a material)
 struct ShaderReference
 {
-	ShaderStage stage;	  // Vertex, Pixel, Compute, etc.
-	std::string shaderId; // References a ShaderEntry.id
+	ShaderStage stage;          // Vertex, Pixel, Compute, etc.
+	std::string shaderId;       // References a ShaderEntry.id (legacy mode)
+	std::string file;           // Path to .hlsl file
+	std::string entryPoint;     // Function name (default "main")
+	std::string profile;        // "vs_6_7", "ps_6_7", etc.
+	std::vector<std::string> defines; // Per-shader defines
 };
 
 // State block references

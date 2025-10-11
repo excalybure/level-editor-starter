@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "core/console.h"
 #include <stdexcept>
+#include <regex>
 
 namespace graphics::material_system
 {
@@ -57,7 +58,72 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	{
 		ShaderReference shaderRef;
 		shaderRef.stage = parseShaderStage( it.key() );
-		shaderRef.shaderId = it.value().get<std::string>();
+		
+		// Check if value is a string (legacy mode) or object (new mode)
+		if ( it.value().is_string() )
+		{
+			// Legacy mode: shader ID reference
+			shaderRef.shaderId = it.value().get<std::string>();
+		}
+		else if ( it.value().is_object() )
+		{
+			// New mode: inline shader object
+			const auto &shaderObj = it.value();
+			
+			// Required: file
+			if ( !shaderObj.contains( "file" ) || !shaderObj["file"].is_string() )
+			{
+				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field", 
+					it.key(), material.id );
+			}
+			shaderRef.file = shaderObj["file"].get<std::string>();
+			
+			// Required: profile
+			if ( !shaderObj.contains( "profile" ) || !shaderObj["profile"].is_string() )
+			{
+				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field", 
+					it.key(), material.id );
+			}
+			shaderRef.profile = shaderObj["profile"].get<std::string>();
+			
+			// Validate profile format (vs_X_Y, ps_X_Y, etc.)
+			const std::string &profile = shaderRef.profile;
+			const std::regex profileRegex( R"((vs|ps|ds|hs|gs|cs)_\d+_\d+)" );
+			if ( !std::regex_match( profile, profileRegex ) )
+			{
+				console::fatal( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y", 
+					profile, it.key(), material.id );
+			}
+			
+			// Optional: entry (default "main")
+			if ( shaderObj.contains( "entry" ) && shaderObj["entry"].is_string() )
+			{
+				shaderRef.entryPoint = shaderObj["entry"].get<std::string>();
+			}
+			else
+			{
+				shaderRef.entryPoint = "main";
+			}
+			
+			// Optional: defines
+			if ( shaderObj.contains( "defines" ) && shaderObj["defines"].is_array() )
+			{
+				for ( const auto &defineJson : shaderObj["defines"] )
+				{
+					if ( defineJson.is_string() )
+					{
+						shaderRef.defines.push_back( defineJson.get<std::string>() );
+					}
+				}
+			}
+		}
+		else
+		{
+			console::error( "MaterialParser: Shader '{}' in material '{}' must be string or object", 
+				it.key(), material.id );
+			continue;
+		}
+		
 		material.shaders.push_back( shaderRef );
 	}
 

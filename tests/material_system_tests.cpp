@@ -1252,10 +1252,16 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_simple_material";
 	material.pass = "forward";
-	material.shaders = {
-		{ "vertex", "simple_vs" },
-		{ "pixel", "simple_ps" }
-	};
+	// Using legacy shader ID mode for this test
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.shaderId = "simple_vs";
+	material.shaders.push_back(vsRef);
+	
+	graphics::material_system::ShaderReference psRef;
+	psRef.stage = graphics::material_system::ShaderStage::Pixel;
+	psRef.shaderId = "simple_ps";
+	material.shaders.push_back(psRef);
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
 	material.states.blend = "default_blend";
@@ -1285,10 +1291,16 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_cached_material";
 	material.pass = "forward";
-	material.shaders = {
-		{ "vertex", "simple_vs" },
-		{ "pixel", "simple_ps" }
-	};
+	// Using legacy shader ID mode for this test
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.shaderId = "simple_vs";
+	material.shaders.push_back(vsRef);
+	
+	graphics::material_system::ShaderReference psRef;
+	psRef.stage = graphics::material_system::ShaderStage::Pixel;
+	psRef.shaderId = "simple_ps";
+	material.shaders.push_back(psRef);
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
 	material.states.blend = "default_blend";
@@ -1460,3 +1472,103 @@ TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end
 	// Cleanup
 	fs::remove_all( tempDir );
 }
+
+// ============================================================================
+// T201: Extend ShaderReference Struct
+// ============================================================================
+
+TEST_CASE( "MaterialParser parses shader with all fields present", "[material-parser][T201][unit]" )
+{
+	// Arrange - material with inline shader objects containing all fields
+	const json materialJson = json::parse( R"({
+		"id": "shader_test",
+		"pass": "forward",
+		"shaders": {
+			"vs": {
+				"file": "shaders/mesh.hlsl",
+				"entry": "VSMain",
+				"profile": "vs_6_7",
+				"defines": ["IS_PREPASS", "USE_NORMALS"]
+			},
+			"ps": {
+				"file": "shaders/lit.hlsl",
+				"entry": "PSMain",
+				"profile": "ps_6_7",
+				"defines": ["ENABLE_LIGHTING"]
+			}
+		}
+	})" );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.id == "shader_test" );
+	REQUIRE( material.shaders.size() == 2 );
+
+	// Find vertex shader
+	const auto *vsShader = (const graphics::material_system::ShaderReference*)nullptr;
+	const auto *psShader = (const graphics::material_system::ShaderReference*)nullptr;
+	
+	for ( const auto &shader : material.shaders )
+	{
+		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
+			vsShader = &shader;
+		else if ( shader.stage == graphics::material_system::ShaderStage::Pixel )
+			psShader = &shader;
+	}
+
+	REQUIRE( vsShader != nullptr );
+	REQUIRE( vsShader->file == "shaders/mesh.hlsl" );
+	REQUIRE( vsShader->entryPoint == "VSMain" );
+	REQUIRE( vsShader->profile == "vs_6_7" );
+	REQUIRE( vsShader->defines.size() == 2 );
+	REQUIRE( vsShader->defines[0] == "IS_PREPASS" );
+	REQUIRE( vsShader->defines[1] == "USE_NORMALS" );
+
+	REQUIRE( psShader != nullptr );
+	REQUIRE( psShader->file == "shaders/lit.hlsl" );
+	REQUIRE( psShader->entryPoint == "PSMain" );
+	REQUIRE( psShader->profile == "ps_6_7" );
+	REQUIRE( psShader->defines.size() == 1 );
+	REQUIRE( psShader->defines[0] == "ENABLE_LIGHTING" );
+}
+
+TEST_CASE( "MaterialParser parses shader with missing optional fields and applies defaults", "[material-parser][T201][unit]" )
+{
+	// Arrange - shader with only required fields (file and profile)
+	const json materialJson = json::parse( R"({
+		"id": "minimal_shader_test",
+		"pass": "forward",
+		"shaders": {
+			"vs": {
+				"file": "shaders/minimal.hlsl",
+				"profile": "vs_6_0"
+			}
+		}
+	})" );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.shaders.size() == 1 );
+	const auto &vsShader = material.shaders[0];
+	
+	// Required fields should be present
+	REQUIRE( vsShader.file == "shaders/minimal.hlsl" );
+	REQUIRE( vsShader.profile == "vs_6_0" );
+	
+	// Optional field entryPoint should default to "main"
+	REQUIRE( vsShader.entryPoint == "main" );
+	
+	// Optional defines should be empty
+	REQUIRE( vsShader.defines.empty() );
+}
+
+// Note: Fatal error cases for T201 cannot be unit tested as console::fatal terminates process
+// The following scenarios are validated by console::fatal in parser.cpp:
+// 1. Missing 'file' field in shader object → console::fatal with message
+// 2. Missing 'profile' field in shader object → console::fatal with message  
+// 3. Invalid profile format (not matching (vs|ps|ds|hs|gs|cs)_X_Y) → console::fatal with message
+// These are validated through manual testing and code review
