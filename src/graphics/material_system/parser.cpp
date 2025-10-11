@@ -48,6 +48,12 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	}
 	material.pass = jsonMaterial["pass"].get<std::string>();
 
+	// Parse vertexFormat (optional)
+	if ( jsonMaterial.contains( "vertexFormat" ) && jsonMaterial["vertexFormat"].is_string() )
+	{
+		material.vertexFormat = jsonMaterial["vertexFormat"].get<std::string>();
+	}
+
 	// Parse shaders (required)
 	if ( !jsonMaterial.contains( "shaders" ) || !jsonMaterial["shaders"].is_object() )
 	{

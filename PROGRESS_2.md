@@ -1,5 +1,44 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T210: Add vertexFormat to MaterialDefinition
+**Summary:** Completed T210 by adding vertexFormat field to MaterialDefinition struct for referencing vertex formats by ID. Added std::string vertexFormat field to MaterialDefinition in parser.h. Updated MaterialParser::parse to extract optional "vertexFormat" field from material JSON, defaulting to empty string if absent. Materials now explicitly specify which vertex format to use via string ID reference (e.g., "vertexFormat": "PositionNormalUV"), enabling data-driven input layout selection per material. Followed TDD workflow with 4 tests (3 unit, 1 integration) verifying field definition, parser extraction, empty default, and full MaterialSystem integration. Phase 2C (Vertex Formats) in progress: 3/4 tasks complete.
+
+**Atomic functionalities completed:**
+- AF1 (Add vertexFormat field to MaterialDefinition): Added std::string vertexFormat field to MaterialDefinition struct in parser.h after pass field (1 line); wrote unit test constructing MaterialDefinition with vertexFormat="PositionNormalUV", verifying field stores value correctly (1 assertion); RED phase confirmed field doesn't exist (compilation error), GREEN phase added field, test passes
+- AF2 (Update MaterialParser to extract vertexFormat): Added optional vertexFormat parsing in MaterialParser::parse after pass extraction (6 lines: check jsonMaterial.contains("vertexFormat") && is_string, extract with get<std::string>()); wrote 2 unit tests: one with vertexFormat in JSON verifying extraction (material.vertexFormat=="PositionNormalUV", 2 assertions), one without vertexFormat verifying empty string default (material.vertexFormat.empty(), 2 assertions); RED phase confirmed parser doesn't extract field (empty string returned), GREEN phase added extraction logic, both tests pass
+- AF3 (Add integration test for material with vertexFormat): Created MaterialSystem integration test writing JSON with vertexFormats section defining "PositionNormalUV" (32-byte stride, 3 elements) and materials array with material referencing "vertexFormat": "PositionNormalUV"; initializes MaterialSystem, queries material by handle, verifies material.vertexFormat=="PositionNormalUV", queries vertex format from MaterialSystem using material's vertexFormat ID, validates format details (id, stride, element count); 9 assertions covering material query, vertexFormat field value, format lookup, format structure validation
+
+**Tests:** 4 test cases with 14 assertions total (3 unit tests for field/parser with 5 assertions, 1 integration test for MaterialSystem with 9 assertions). Test commands: `unit_test_runner.exe "[T210]"` for T210 tests (14 assertions in 4 test cases, 0.014s for integration test), `unit_test_runner.exe "[material-system]"` for full suite (145 assertions in 18 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/parser.h` — Added std::string vertexFormat field to MaterialDefinition struct (1 line after pass field, before shaders vector)
+- Updated: `src/graphics/material_system/parser.cpp` — Added vertexFormat parsing in MaterialParser::parse (6 lines after pass extraction: check for optional "vertexFormat" field with contains() && is_string(), extract as string if present, leave empty if absent)
+- Updated: `tests/material_system_tests.cpp` — Added 4 T210 test cases tagged [vertex-format][T210][unit/integration] after T209 tests (1 field test, 2 parser tests, 1 integration test)
+
+**Implementation Details:**
+- **MaterialDefinition Field**: Added std::string vertexFormat after pass field (same location as other material-level identifiers); stores vertex format ID reference (e.g., "PositionNormalUV", "PositionColor"); empty string indicates no explicit format (T211 will handle default/fallback)
+- **Parser Integration**: vertexFormat parsed in MaterialParser::parse after pass field extraction, before shaders section; follows same optional pattern as state references (check contains + is_string, extract, no error if absent); defaults to empty string if field missing from JSON
+- **JSON Structure**: vertexFormat field at material level (same as id/pass/shaders); references VertexFormat.id from "states.vertexFormats" section; example: `{ "id": "lit_material", "pass": "forward", "vertexFormat": "PositionNormalUV", "shaders": {...} }`
+- **Reference Pattern**: Follows same ID reference pattern as state blocks (material.states.rasterizer, material.states.depthStencil, etc.); materials don't inline vertex format definitions, they reference by ID; enables vertex format reuse across materials (multiple materials can share "PositionNormalUV")
+- **MaterialSystem Workflow**: (1) MaterialSystem parses vertex formats from "states.vertexFormats" section (T209), stores in m_vertexFormats map; (2) MaterialParser extracts material's "vertexFormat" field as string ID (T210); (3) Material stored in MaterialSystem with vertexFormat field populated; (4) Application queries material, reads vertexFormat ID, queries format from MaterialSystem with getVertexFormat(); (5) PipelineBuilder will use format to construct D3D12 input layout (T211)
+
+**Test Coverage:**
+- Test 1 (MaterialDefinition field): Unit test constructs MaterialDefinition, sets vertexFormat="PositionNormalUV", verifies field holds value (1 assertion); confirms field exists and is writable
+- Test 2 (Parser extraction with field): Unit test with material JSON containing "vertexFormat": "PositionNormalUV"; parses material, verifies material.id=="test_material" and material.vertexFormat=="PositionNormalUV" (2 assertions); confirms parser extracts field from JSON
+- Test 3 (Parser extraction without field): Unit test with material JSON missing vertexFormat field; parses material, verifies material.id=="test_material" and material.vertexFormat.empty() (2 assertions); confirms parser defaults to empty string when field absent
+- Test 4 (MaterialSystem integration): Integration test writes JSON with vertexFormats section (PositionNormalUV format with 3 elements) and materials array (lit_material referencing PositionNormalUV); initializes MaterialSystem, queries material by handle, verifies handle valid, material pointer non-null, material.id=="lit_material", material.vertexFormat=="PositionNormalUV"; queries vertex format using material.vertexFormat ID, verifies format pointer non-null, format.id=="PositionNormalUV", format.stride==32, format.elements.size()==3 (9 assertions total); confirms end-to-end workflow from JSON to material query to format lookup
+
+**Notes:**
+- Phase 2C (Vertex Formats: T208-T211) in progress — 3/4 tasks complete (T208 structs, T209 parsing, T210 material reference)
+- Materials now explicitly specify vertex format via ID reference (no more implicit POSITION+COLOR assumption)
+- Empty vertexFormat string allowed (T211 will decide default behavior: error, fallback format, or skip input layout)
+- Follows same reference-by-ID pattern as state blocks (consistency across material system)
+- Enables per-material vertex format selection: unlit materials use PositionColor (28 bytes), lit materials use PositionNormalUV (32 bytes), terrain materials use PositionNormalUVTangent (44 bytes)
+- Vertex format reuse: single format definition shared by multiple materials (e.g., all PBR materials reference "PBRVertexFormat")
+- Next: T211 Use Vertex Format in PSO — Update PipelineBuilder::buildPSO to query vertex format from MaterialSystem using material.vertexFormat, convert VertexFormat to std::vector<D3D12_INPUT_ELEMENT_DESC> (iterate elements, construct descriptors with semantic.c_str()), assign to psoDesc.InputLayout, replace hardcoded POSITION+COLOR layout; handle empty vertexFormat (console::fatal or default format); add tests for PSO creation with PositionNormalUV format (3 input elements), verify input layout matches format
+
+---
+
 ## 2025-10-11 — T209: Parse Vertex Formats from JSON
 **Summary:** Completed T209 by implementing JSON vertex format parsing for MaterialSystem. Extended StateBlockParser::parseFormat to support vertex-specific DXGI formats (R32G32B32_FLOAT, R32G32_FLOAT, R32_FLOAT for POSITION/NORMAL/TEXCOORD). Created parseVertexFormat method extracting id, stride, and elements array from JSON with semantic/format/offset per element. Integrated vertex format storage into MaterialSystem with m_vertexFormats map and getVertexFormat query method following same pattern as state blocks. MaterialSystem::initialize now parses optional "states.vertexFormats" section with duplicate ID detection. Followed TDD workflow with 3 tests (2 unit, 1 integration) verifying format parsing and MaterialSystem query. Phase 2C (Vertex Formats) in progress: 2/4 tasks complete.
 

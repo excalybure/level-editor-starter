@@ -61,6 +61,7 @@ struct MaterialDefinition
 {
 	std::string id;
 	std::string pass;
+	std::string vertexFormat; // References VertexFormat.id from MaterialSystem
 	std::vector<ShaderReference> shaders;
 	std::vector<Parameter> parameters;
 	StateReferences states;

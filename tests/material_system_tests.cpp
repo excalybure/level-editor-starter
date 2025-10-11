@@ -2759,3 +2759,120 @@ TEST_CASE( "MaterialSystem loads and queries vertex formats", "[material-system]
 
 	fs::remove_all( testDir );
 }
+
+// T210: Material vertexFormat Reference Tests
+// ============================================================================
+
+TEST_CASE( "MaterialDefinition has vertexFormat field", "[vertex-format][T210][unit]" )
+{
+	// Arrange & Act - construct MaterialDefinition with vertexFormat
+	graphics::material_system::MaterialDefinition material;
+	material.id = "test_material";
+	material.vertexFormat = "PositionNormalUV";
+
+	// Assert
+	REQUIRE( material.vertexFormat == "PositionNormalUV" );
+}
+
+TEST_CASE( "MaterialParser extracts vertexFormat from JSON", "[vertex-format][T210][unit]" )
+{
+	// Arrange - JSON with vertexFormat field
+	const std::string jsonStr = R"({
+		"id": "test_material",
+		"pass": "forward",
+		"vertexFormat": "PositionNormalUV",
+		"shaders": [
+			{ "stage": "Vertex", "file": "test.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" }
+		]
+	})";
+	const json j = json::parse( jsonStr );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( j );
+
+	// Assert
+	REQUIRE( material.id == "test_material" );
+	REQUIRE( material.vertexFormat == "PositionNormalUV" );
+}
+
+TEST_CASE( "MaterialParser defaults vertexFormat to empty string if absent", "[vertex-format][T210][unit]" )
+{
+	// Arrange - JSON without vertexFormat field
+	const std::string jsonStr = R"({
+		"id": "test_material",
+		"pass": "forward",
+		"shaders": [
+			{ "stage": "Vertex", "file": "test.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" }
+		]
+	})";
+	const json j = json::parse( jsonStr );
+
+	// Act
+	const auto material = graphics::material_system::MaterialParser::parse( j );
+
+	// Assert
+	REQUIRE( material.id == "test_material" );
+	REQUIRE( material.vertexFormat.empty() );
+}
+
+TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[material-system][T210][integration]" )
+{
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T210";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"vertexFormats": {
+				"PositionNormalUV": {
+					"id": "PositionNormalUV",
+					"stride": 32,
+					"elements": [
+						{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+						{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 },
+						{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 }
+					]
+				}
+			}
+		},
+		"materials": [{
+			"id": "lit_material",
+			"pass": "forward",
+			"vertexFormat": "PositionNormalUV",
+			"shaders": {
+				"vertex": { "file": "shaders/grid.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" },
+				"pixel": { "file": "shaders/grid.hlsl", "entryPoint": "PSMain", "profile": "ps_5_0" }
+			}
+		}],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool success = materialSystem.initialize( jsonPath.string() );
+
+	REQUIRE( success );
+
+	// Query material and verify vertexFormat reference
+	const auto handle = materialSystem.getMaterialHandle( "lit_material" );
+	REQUIRE( handle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( handle );
+	REQUIRE( material != nullptr );
+	REQUIRE( material->id == "lit_material" );
+	REQUIRE( material->vertexFormat == "PositionNormalUV" );
+
+	// Verify vertex format can be queried from MaterialSystem
+	const auto *vertexFormat = materialSystem.getVertexFormat( material->vertexFormat );
+	REQUIRE( vertexFormat != nullptr );
+	REQUIRE( vertexFormat->id == "PositionNormalUV" );
+	REQUIRE( vertexFormat->stride == 32 );
+	REQUIRE( vertexFormat->elements.size() == 3 );
+
+	fs::remove_all( testDir );
+}
+
+// ============================================================================
