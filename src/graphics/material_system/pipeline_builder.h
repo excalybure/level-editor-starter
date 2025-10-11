@@ -15,6 +15,9 @@ class Device;
 namespace graphics::material_system
 {
 
+// Forward declarations
+class MaterialSystem;
+
 // Render pass configuration for PSO creation
 struct RenderPassConfig
 {
@@ -31,10 +34,12 @@ public:
 	// Build PSO from material definition and render pass configuration
 	// Returns ID3D12PipelineState on success, nullptr on failure
 	// Automatically caches PSOs and reuses them for identical requests
+	// MaterialSystem pointer is optional - if provided, state blocks will be queried; if nullptr, uses D3D12 defaults
 	static Microsoft::WRL::ComPtr<ID3D12PipelineState> buildPSO(
 		dx12::Device *device,
 		const MaterialDefinition &material,
-		const RenderPassConfig &passConfig );
+		const RenderPassConfig &passConfig,
+		const MaterialSystem *materialSystem = nullptr );
 
 private:
 	static PipelineCache s_cache;

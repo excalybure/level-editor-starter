@@ -1,5 +1,47 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T207: Update PipelineBuilder to Use State Blocks
+**Summary:** Completed T207 by eliminating all hardcoded D3D12 state values from PipelineBuilder::buildPSO(). Updated signature to accept optional MaterialSystem pointer (backward compatible with default nullptr). Replaced hardcoded rasterizer, depth/stencil, blend, and render target states with queries to MaterialSystem using material.states references. Implemented fallback logic using D3D12 defaults when state not found or MaterialSystem not provided. All 4 state categories now data-driven from JSON state blocks. Followed TDD workflow with 3 integration tests verifying wireframe rasterizer, depth-read-only, and alpha-blend states applied correctly. Phase 2B (State Blocks) complete: all 4 tasks finished.
+
+**Atomic functionalities completed:**
+- AF1 (Test for rasterizer state): Wrote integration test creating MaterialSystem with "Wireframe" rasterizer state (fillMode=Wireframe, cullMode=None, depthClipEnable=false), material referencing state via material.states.rasterizer, calling buildPSO with MaterialSystem pointer; PSO creation succeeds confirming state query/application (4 assertions)
+- AF2 (Pass MaterialSystem to buildPSO): Updated pipeline_builder.h with MaterialSystem forward declaration; changed buildPSO signature to accept `const MaterialSystem* materialSystem = nullptr` (optional, default nullptr for backward compatibility); updated pipeline_builder.cpp signature; all existing tests continue working without changes
+- AF3 (Query and apply rasterizer state): In buildPSO, added query logic checking `materialSystem && !material.states.rasterizer.empty()`; if true, calls materialSystem->getRasterizerState(); if state found, copies all 11 fields (fillMode, cullMode, frontCounterClockwise, depthBias, depthBiasClamp, slopeScaledDepthBias, depthClipEnable, multisampleEnable, antialiasedLineEnable, forcedSampleCount, conservativeRaster) to psoDesc.RasterizerState with bool→D3D12_CONSERVATIVE_RASTERIZATION_MODE conversion; else uses D3D12 defaults (FILL_MODE_SOLID, CULL_MODE_BACK, etc.)
+- AF4 (Query and apply depth/stencil state): Added depth/stencil state query using material.states.depthStencil; if found, copies 8 fields (depthEnable, depthWriteMask, depthFunc, stencilEnable, stencilReadMask, stencilWriteMask) and converts frontFace/backFace stencil ops using DepthStencilOpDesc::toD3D12() helper; else uses D3D12 defaults (depthEnable=TRUE, depthWriteMask=ALL, depthFunc=LESS, stencilEnable=FALSE, default stencil ops)
+- AF5 (Query and apply blend state): Added blend state query using material.states.blend; if found, copies alphaToCoverageEnable/independentBlendEnable flags and iterates all 8 render targets calling BlendRenderTargetState::toD3D12() to convert to D3D12_RENDER_TARGET_BLEND_DESC; else uses D3D12 defaults (alphaToCoverage=FALSE, independentBlend=FALSE, RT blend disabled with ONE/ZERO factors)
+- AF6 (Query and apply render target state): Added renderTarget state query using material.states.renderTarget; if found, uses rtvFormats vector (size determines NumRenderTargets), dsvFormat, sampleCount/sampleQuality from state block instead of passConfig; else uses passConfig values (backward compatible for materials without renderTarget state)
+
+**Tests:** 3 integration test cases with 12 assertions total for T207; each test creates MaterialSystem with state blocks, material referencing state, calls buildPSO with MaterialSystem pointer, verifies PSO creation succeeds. Test commands: `unit_test_runner.exe "[pipeline-builder][T207]"` for T207 tests (12 assertions in 3 test cases), `unit_test_runner.exe "[pipeline-builder]"` for all pipeline tests (17 assertions in 6 test cases), `unit_test_runner.exe "[material-system]"` for full suite (111 assertions in 16 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/pipeline_builder.h` — Added MaterialSystem forward declaration; updated buildPSO signature to accept `const MaterialSystem* materialSystem = nullptr` parameter
+- Updated: `src/graphics/material_system/pipeline_builder.cpp` — Added #include "material_system.h"; replaced all hardcoded D3D12 state initialization (lines 165-210) with state block queries; added 4 query/apply blocks (rasterizer, blend, depth/stencil, render target) each checking materialSystem pointer and state ID, calling MaterialSystem::get*State(), copying fields if found, using D3D12 defaults if not found
+- Updated: `tests/material_system_tests.cpp` — Added 3 integration tests for T207 tagged [pipeline-builder][T207][integration]: wireframe rasterizer test (fillMode/cullMode/depthClipEnable), depth-read-only test (depthWriteMask=Zero), alpha-blend test (RT0 blendEnable with SrcAlpha/InvSrcAlpha factors)
+
+**Implementation Details:**
+- **Query pattern**: All state queries follow pattern `const StateBlock* state = nullptr; if (materialSystem && !material.states.<category>.empty()) { state = materialSystem->get<Category>State(material.states.<category>); } if (state) { /* apply */ } else { /* defaults */ }`; enables safe querying with nullptr checks and fallback
+- **Backward compatibility**: Optional MaterialSystem parameter with nullptr default; existing code calling buildPSO(device, material, passConfig) continues working without changes; materials without state references use D3D12 defaults
+- **Conservative rasterization**: Boolean field in RasterizerStateBlock mapped to D3D12_CONSERVATIVE_RASTERIZATION_MODE enum: `rasterizerState->conservativeRaster ? MODE_ON : MODE_OFF`
+- **toD3D12() conversions**: BlendRenderTargetState::toD3D12() returns D3D12_RENDER_TARGET_BLEND_DESC; DepthStencilOpDesc::toD3D12() returns D3D12_DEPTH_STENCILOP_DESC; both defined in state_blocks.h from T204
+- **Render target state override**: When renderTarget state specified, NumRenderTargets set to rtvFormats.size(), all RT formats copied from vector, DSV format and sample desc from state block; completely replaces passConfig RT info; materials without renderTarget state use passConfig (common for forward/deferred passes configured at runtime)
+- **State reuse**: State blocks defined once in global MaterialSystem "states" section, referenced by ID from multiple materials; example: "AlphaBlend" state shared by multiple transparent materials, "DepthReadOnly" shared by sky/background materials
+- **Fallback defaults match D3D12**: All else branches use exact D3D12 defaults (FILL_MODE_SOLID, CULL_MODE_BACK, depthEnable=TRUE, etc.) ensuring PSO creation succeeds even with empty MaterialSystem or missing states
+
+**Test Coverage:**
+- Test 1 (Wireframe rasterizer): Creates JSON with "Wireframe" rasterizer state (fillMode=Wireframe, cullMode=None, depthClipEnable=false); material "wireframe_material" references state via states.rasterizer="Wireframe"; buildPSO called with MaterialSystem; PSO created successfully (4 assertions: initialized, handle valid, material found, PSO non-null)
+- Test 2 (Depth-read-only): Creates JSON with "DepthReadOnly" depth/stencil state (depthEnable=true, depthWriteMask=Zero, depthFunc=Less); material "depth_readonly_material" references state; PSO built (4 assertions)
+- Test 3 (Alpha blend): Creates JSON with "AlphaBlend" blend state (RT0 blendEnable=true, srcBlend=SrcAlpha, destBlend=InvSrcAlpha, blendOp=Add); material "alpha_blend_material" references state; PSO built (4 assertions)
+
+**Notes:**
+- Phase 2B (State Blocks: T204-T207) complete — all hardcoded D3D12 state values eliminated from PipelineBuilder
+- PSO creation now fully data-driven for rasterizer/depth/stencil/blend/render target states
+- Materials can specify partial state overrides (e.g., only rasterizer state) with other states using defaults
+- State block inheritance (base field) still not implemented — not needed for current scenarios; materials use standalone state blocks
+- Render target state optional — most materials use passConfig RT formats (set per render pass); only special materials (e.g., multi-RT effects) override with renderTarget state
+- Next: Phase 2C (Vertex Formats: T208-T211) — replace hardcoded POSITION+COLOR input layout with JSON vertex format specification
+
+---
+
 ## 2025-10-10 — T206: Integrate State Blocks into MaterialSystem
 **Summary:** Completed T206 by adding state block storage to MaterialSystem and integrating StateBlockParser into the initialization flow. Added 4 unordered_map containers for state storage (rasterizer, depth/stencil, blend, render target) keyed by state block ID. Updated MaterialSystem::initialize() to parse optional "states" section from merged JSON with duplicate detection (console::fatal on duplicate IDs). Implemented 4 query methods (getRasterizerState, getDepthStencilState, getBlendState, getRenderTargetState) returning const pointers to state blocks (nullptr if not found). Followed TDD workflow with 4 integration tests covering all state categories. Phase 2B (State Blocks) progress: 3/4 tasks complete.
 

@@ -1,4 +1,5 @@
 #include "pipeline_builder.h"
+#include "material_system.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/material_system/shader_compiler.h"
 #include "core/console.h"
@@ -14,7 +15,8 @@ PipelineCache PipelineBuilder::s_cache;
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	dx12::Device *device,
 	const MaterialDefinition &material,
-	const RenderPassConfig &passConfig )
+	const RenderPassConfig &passConfig,
+	const MaterialSystem *materialSystem )
 {
 	if ( !device || !device->get() )
 	{
@@ -160,52 +162,120 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 
 	psoDesc.pRootSignature = rootSignature.Get();
 
-	// Rasterizer state - using defaults
-	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
-	psoDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-	psoDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-	psoDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-	psoDesc.RasterizerState.DepthClipEnable = TRUE;
-	psoDesc.RasterizerState.MultisampleEnable = FALSE;
-	psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
-	psoDesc.RasterizerState.ForcedSampleCount = 0;
-	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-	// Blend state - using defaults
-	psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
-	psoDesc.BlendState.IndependentBlendEnable = FALSE;
-	for ( UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i )
+	// Rasterizer state - query from MaterialSystem or use D3D12 defaults
+	const RasterizerStateBlock *rasterizerState = nullptr;
+	if ( materialSystem && !material.states.rasterizer.empty() )
 	{
-		psoDesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
-		psoDesc.BlendState.RenderTarget[i].LogicOpEnable = FALSE;
-		psoDesc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND_ONE;
-		psoDesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND_ZERO;
-		psoDesc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
-		psoDesc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ONE;
-		psoDesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
-		psoDesc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		psoDesc.BlendState.RenderTarget[i].LogicOp = D3D12_LOGIC_OP_NOOP;
-		psoDesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		rasterizerState = materialSystem->getRasterizerState( material.states.rasterizer );
 	}
 
-	// Depth/stencil state - using defaults
-	psoDesc.DepthStencilState.DepthEnable = TRUE;
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
-	psoDesc.DepthStencilState.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-	psoDesc.DepthStencilState.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+	if ( rasterizerState )
+	{
+		// Apply state block from MaterialSystem
+		psoDesc.RasterizerState.FillMode = rasterizerState->fillMode;
+		psoDesc.RasterizerState.CullMode = rasterizerState->cullMode;
+		psoDesc.RasterizerState.FrontCounterClockwise = rasterizerState->frontCounterClockwise;
+		psoDesc.RasterizerState.DepthBias = rasterizerState->depthBias;
+		psoDesc.RasterizerState.DepthBiasClamp = rasterizerState->depthBiasClamp;
+		psoDesc.RasterizerState.SlopeScaledDepthBias = rasterizerState->slopeScaledDepthBias;
+		psoDesc.RasterizerState.DepthClipEnable = rasterizerState->depthClipEnable;
+		psoDesc.RasterizerState.MultisampleEnable = rasterizerState->multisampleEnable;
+		psoDesc.RasterizerState.AntialiasedLineEnable = rasterizerState->antialiasedLineEnable;
+		psoDesc.RasterizerState.ForcedSampleCount = rasterizerState->forcedSampleCount;
+		psoDesc.RasterizerState.ConservativeRaster = rasterizerState->conservativeRaster ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	}
+	else
+	{
+		// Use D3D12 defaults (backward compatible)
+		psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+		psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
+		psoDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+		psoDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+		psoDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+		psoDesc.RasterizerState.DepthClipEnable = TRUE;
+		psoDesc.RasterizerState.MultisampleEnable = FALSE;
+		psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
+		psoDesc.RasterizerState.ForcedSampleCount = 0;
+		psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	}
 
-	const D3D12_DEPTH_STENCILOP_DESC defaultStencilOp = {
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_COMPARISON_FUNC_ALWAYS
-	};
-	psoDesc.DepthStencilState.FrontFace = defaultStencilOp;
-	psoDesc.DepthStencilState.BackFace = defaultStencilOp;
+	// Blend state - query from MaterialSystem or use D3D12 defaults
+	const BlendStateBlock *blendState = nullptr;
+	if ( materialSystem && !material.states.blend.empty() )
+	{
+		blendState = materialSystem->getBlendState( material.states.blend );
+	}
+
+	if ( blendState )
+	{
+		// Apply state block from MaterialSystem
+		psoDesc.BlendState.AlphaToCoverageEnable = blendState->alphaToCoverageEnable;
+		psoDesc.BlendState.IndependentBlendEnable = blendState->independentBlendEnable;
+		for ( UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i )
+		{
+			const auto &rtBlend = blendState->renderTargets[i];
+			psoDesc.BlendState.RenderTarget[i] = rtBlend.toD3D12();
+		}
+	}
+	else
+	{
+		// Use D3D12 defaults (backward compatible)
+		psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
+		psoDesc.BlendState.IndependentBlendEnable = FALSE;
+		for ( UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i )
+		{
+			psoDesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
+			psoDesc.BlendState.RenderTarget[i].LogicOpEnable = FALSE;
+			psoDesc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND_ONE;
+			psoDesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND_ZERO;
+			psoDesc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
+			psoDesc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ONE;
+			psoDesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
+			psoDesc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+			psoDesc.BlendState.RenderTarget[i].LogicOp = D3D12_LOGIC_OP_NOOP;
+			psoDesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		}
+	}
+
+	// Depth/stencil state - query from MaterialSystem or use D3D12 defaults
+	const DepthStencilStateBlock *depthStencilState = nullptr;
+	if ( materialSystem && !material.states.depthStencil.empty() )
+	{
+		depthStencilState = materialSystem->getDepthStencilState( material.states.depthStencil );
+	}
+
+	if ( depthStencilState )
+	{
+		// Apply state block from MaterialSystem
+		psoDesc.DepthStencilState.DepthEnable = depthStencilState->depthEnable;
+		psoDesc.DepthStencilState.DepthWriteMask = depthStencilState->depthWriteMask;
+		psoDesc.DepthStencilState.DepthFunc = depthStencilState->depthFunc;
+		psoDesc.DepthStencilState.StencilEnable = depthStencilState->stencilEnable;
+		psoDesc.DepthStencilState.StencilReadMask = depthStencilState->stencilReadMask;
+		psoDesc.DepthStencilState.StencilWriteMask = depthStencilState->stencilWriteMask;
+		psoDesc.DepthStencilState.FrontFace = depthStencilState->frontFace.toD3D12();
+		psoDesc.DepthStencilState.BackFace = depthStencilState->backFace.toD3D12();
+	}
+	else
+	{
+		// Use D3D12 defaults (backward compatible)
+		psoDesc.DepthStencilState.DepthEnable = TRUE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		psoDesc.DepthStencilState.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+		psoDesc.DepthStencilState.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+
+		const D3D12_DEPTH_STENCILOP_DESC defaultStencilOp = {
+			D3D12_STENCIL_OP_KEEP,
+			D3D12_STENCIL_OP_KEEP,
+			D3D12_STENCIL_OP_KEEP,
+			D3D12_COMPARISON_FUNC_ALWAYS
+		};
+		psoDesc.DepthStencilState.FrontFace = defaultStencilOp;
+		psoDesc.DepthStencilState.BackFace = defaultStencilOp;
+	}
 
 	// Sample mask
 	psoDesc.SampleMask = UINT_MAX;
@@ -213,17 +283,37 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Primitive topology
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-	// Render target formats from passConfig
-	psoDesc.NumRenderTargets = passConfig.numRenderTargets;
-	for ( UINT i = 0; i < passConfig.numRenderTargets && i < 8; ++i )
+	// Render target formats - query from MaterialSystem or use passConfig
+	const RenderTargetStateBlock *renderTargetState = nullptr;
+	if ( materialSystem && !material.states.renderTarget.empty() )
 	{
-		psoDesc.RTVFormats[i] = passConfig.rtvFormats[i];
+		renderTargetState = materialSystem->getRenderTargetState( material.states.renderTarget );
 	}
-	psoDesc.DSVFormat = passConfig.dsvFormat;
 
-	// Sample description
-	psoDesc.SampleDesc.Count = 1;
-	psoDesc.SampleDesc.Quality = 0;
+	if ( renderTargetState )
+	{
+		// Apply render target state from MaterialSystem
+		psoDesc.NumRenderTargets = static_cast<UINT>( renderTargetState->rtvFormats.size() );
+		for ( UINT i = 0; i < renderTargetState->rtvFormats.size() && i < 8; ++i )
+		{
+			psoDesc.RTVFormats[i] = renderTargetState->rtvFormats[i];
+		}
+		psoDesc.DSVFormat = renderTargetState->dsvFormat;
+		psoDesc.SampleDesc.Count = renderTargetState->sampleCount;
+		psoDesc.SampleDesc.Quality = renderTargetState->sampleQuality;
+	}
+	else
+	{
+		// Use passConfig (backward compatible)
+		psoDesc.NumRenderTargets = passConfig.numRenderTargets;
+		for ( UINT i = 0; i < passConfig.numRenderTargets && i < 8; ++i )
+		{
+			psoDesc.RTVFormats[i] = passConfig.rtvFormats[i];
+		}
+		psoDesc.DSVFormat = passConfig.dsvFormat;
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.SampleDesc.Quality = 0;
+	}
 
 	// Create PSO
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;

@@ -31,13 +31,13 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 			{
 				auto state = StateBlockParser::parseRasterizer( stateJson );
 				state.id = id; // Ensure id matches key
-				
+
 				// Check for duplicate IDs
 				if ( m_rasterizerStates.find( id ) != m_rasterizerStates.end() )
 				{
 					console::fatal( "Duplicate rasterizer state ID: '{}'", id );
 				}
-				
+
 				m_rasterizerStates[id] = state;
 			}
 		}
@@ -49,12 +49,12 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 			{
 				auto state = StateBlockParser::parseDepthStencil( stateJson );
 				state.id = id;
-				
+
 				if ( m_depthStencilStates.find( id ) != m_depthStencilStates.end() )
 				{
 					console::fatal( "Duplicate depth stencil state ID: '{}'", id );
 				}
-				
+
 				m_depthStencilStates[id] = state;
 			}
 		}
@@ -66,12 +66,12 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 			{
 				auto state = StateBlockParser::parseBlend( stateJson );
 				state.id = id;
-				
+
 				if ( m_blendStates.find( id ) != m_blendStates.end() )
 				{
 					console::fatal( "Duplicate blend state ID: '{}'", id );
 				}
-				
+
 				m_blendStates[id] = state;
 			}
 		}
@@ -83,12 +83,12 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 			{
 				auto state = StateBlockParser::parseRenderTarget( stateJson );
 				state.id = id;
-				
+
 				if ( m_renderTargetStates.find( id ) != m_renderTargetStates.end() )
 				{
 					console::fatal( "Duplicate render target state ID: '{}'", id );
 				}
-				
+
 				m_renderTargetStates[id] = state;
 			}
 		}
