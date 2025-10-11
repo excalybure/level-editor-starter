@@ -58,7 +58,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	{
 		ShaderReference shaderRef;
 		shaderRef.stage = parseShaderStage( it.key() );
-		
+
 		// Check if value is a string (legacy mode) or object (new mode)
 		if ( it.value().is_string() )
 		{
@@ -69,32 +69,36 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		{
 			// New mode: inline shader object
 			const auto &shaderObj = it.value();
-			
+
 			// Required: file
 			if ( !shaderObj.contains( "file" ) || !shaderObj["file"].is_string() )
 			{
-				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field", 
-					it.key(), material.id );
+				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field",
+					it.key(),
+					material.id );
 			}
 			shaderRef.file = shaderObj["file"].get<std::string>();
-			
+
 			// Required: profile
 			if ( !shaderObj.contains( "profile" ) || !shaderObj["profile"].is_string() )
 			{
-				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field", 
-					it.key(), material.id );
+				console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field",
+					it.key(),
+					material.id );
 			}
 			shaderRef.profile = shaderObj["profile"].get<std::string>();
-			
+
 			// Validate profile format (vs_X_Y, ps_X_Y, etc.)
 			const std::string &profile = shaderRef.profile;
 			const std::regex profileRegex( R"((vs|ps|ds|hs|gs|cs)_\d+_\d+)" );
 			if ( !std::regex_match( profile, profileRegex ) )
 			{
-				console::fatal( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y", 
-					profile, it.key(), material.id );
+				console::fatal( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y",
+					profile,
+					it.key(),
+					material.id );
 			}
-			
+
 			// Optional: entry (default "main")
 			if ( shaderObj.contains( "entry" ) && shaderObj["entry"].is_string() )
 			{
@@ -104,7 +108,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 			{
 				shaderRef.entryPoint = "main";
 			}
-			
+
 			// Optional: defines
 			if ( shaderObj.contains( "defines" ) && shaderObj["defines"].is_array() )
 			{
@@ -119,11 +123,12 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		}
 		else
 		{
-			console::error( "MaterialParser: Shader '{}' in material '{}' must be string or object", 
-				it.key(), material.id );
+			console::error( "MaterialParser: Shader '{}' in material '{}' must be string or object",
+				it.key(),
+				material.id );
 			continue;
 		}
-		
+
 		material.shaders.push_back( shaderRef );
 	}
 

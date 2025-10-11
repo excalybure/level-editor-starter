@@ -1256,12 +1256,12 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	graphics::material_system::ShaderReference vsRef;
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.shaderId = "simple_vs";
-	material.shaders.push_back(vsRef);
-	
+	material.shaders.push_back( vsRef );
+
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.shaderId = "simple_ps";
-	material.shaders.push_back(psRef);
+	material.shaders.push_back( psRef );
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
 	material.states.blend = "default_blend";
@@ -1295,12 +1295,12 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	graphics::material_system::ShaderReference vsRef;
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.shaderId = "simple_vs";
-	material.shaders.push_back(vsRef);
-	
+	material.shaders.push_back( vsRef );
+
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.shaderId = "simple_ps";
-	material.shaders.push_back(psRef);
+	material.shaders.push_back( psRef );
 	material.states.rasterizer = "default_raster";
 	material.states.depthStencil = "default_depth";
 	material.states.blend = "default_blend";
@@ -1507,9 +1507,9 @@ TEST_CASE( "MaterialParser parses shader with all fields present", "[material-pa
 	REQUIRE( material.shaders.size() == 2 );
 
 	// Find vertex shader
-	const auto *vsShader = (const graphics::material_system::ShaderReference*)nullptr;
-	const auto *psShader = (const graphics::material_system::ShaderReference*)nullptr;
-	
+	const auto *vsShader = (const graphics::material_system::ShaderReference *)nullptr;
+	const auto *psShader = (const graphics::material_system::ShaderReference *)nullptr;
+
 	for ( const auto &shader : material.shaders )
 	{
 		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
@@ -1554,14 +1554,14 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 	// Assert
 	REQUIRE( material.shaders.size() == 1 );
 	const auto &vsShader = material.shaders[0];
-	
+
 	// Required fields should be present
 	REQUIRE( vsShader.file == "shaders/minimal.hlsl" );
 	REQUIRE( vsShader.profile == "vs_6_0" );
-	
+
 	// Optional field entryPoint should default to "main"
 	REQUIRE( vsShader.entryPoint == "main" );
-	
+
 	// Optional defines should be empty
 	REQUIRE( vsShader.defines.empty() );
 }
@@ -1569,6 +1569,6 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 // Note: Fatal error cases for T201 cannot be unit tested as console::fatal terminates process
 // The following scenarios are validated by console::fatal in parser.cpp:
 // 1. Missing 'file' field in shader object → console::fatal with message
-// 2. Missing 'profile' field in shader object → console::fatal with message  
+// 2. Missing 'profile' field in shader object → console::fatal with message
 // 3. Invalid profile format (not matching (vs|ps|ds|hs|gs|cs)_X_Y) → console::fatal with message
 // These are validated through manual testing and code review
