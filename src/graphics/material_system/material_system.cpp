@@ -111,6 +111,24 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 		}
 	}
 
+	// Parse render passes array (optional)
+	if ( mergedDoc.contains( "renderPasses" ) && mergedDoc["renderPasses"].is_array() )
+	{
+		const auto &renderPassesArray = mergedDoc["renderPasses"];
+		for ( const auto &renderPassJson : renderPassesArray )
+		{
+			const auto renderPass = MaterialParser::parseRenderPass( renderPassJson );
+
+			// Check for duplicate names
+			if ( m_renderPasses.find( renderPass.name ) != m_renderPasses.end() )
+			{
+				console::fatal( "Duplicate render pass name: '{}'", renderPass.name );
+			}
+
+			m_renderPasses[renderPass.name] = renderPass;
+		}
+	}
+
 	// Parse materials array
 	if ( !mergedDoc.contains( "materials" ) || !mergedDoc["materials"].is_array() )
 	{
@@ -202,6 +220,16 @@ const VertexFormat *MaterialSystem::getVertexFormat( const std::string &id ) con
 {
 	const auto it = m_vertexFormats.find( id );
 	if ( it == m_vertexFormats.end() )
+	{
+		return nullptr;
+	}
+	return &it->second;
+}
+
+const RenderPassDefinition *MaterialSystem::getRenderPass( const std::string &name ) const
+{
+	const auto it = m_renderPasses.find( name );
+	if ( it == m_renderPasses.end() )
 	{
 		return nullptr;
 	}

@@ -1518,6 +1518,105 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 }
 
 // ============================================================================
+// T216: Parse Render Passes
+// ============================================================================
+
+TEST_CASE( "MaterialParser parses single render pass", "[material-system][T216][unit]" )
+{
+	// Arrange - JSON with single render pass
+	const std::string jsonStr = R"({
+		"name": "lit_opaque",
+		"queue": "Opaque",
+		"attachments": {
+			"inputs": [],
+			"outputs": [{ "name": "color", "resource": "MainColor" }]
+		},
+		"states": {
+			"depthStencil": "Default",
+			"rasterizer": "Default",
+			"blend": "Opaque",
+			"renderTarget": "MainColor"
+		}
+	})";
+	const auto json = nlohmann::json::parse( jsonStr );
+
+	// Act - parse render pass
+	const auto renderPass = graphics::material_system::MaterialParser::parseRenderPass( json );
+
+	// Assert - verify fields
+	REQUIRE( renderPass.name == "lit_opaque" );
+	REQUIRE( renderPass.queue == "Opaque" );
+	REQUIRE( renderPass.states.depthStencil == "Default" );
+	REQUIRE( renderPass.states.rasterizer == "Default" );
+	REQUIRE( renderPass.states.blend == "Opaque" );
+	REQUIRE( renderPass.states.renderTarget == "MainColor" );
+}
+
+TEST_CASE( "MaterialSystem stores and retrieves render passes", "[material-system][T216][integration]" )
+{
+	// Arrange - JSON with render passes array
+	const std::string jsonStr = R"({
+		"materials": [],
+		"states": {},
+		"renderPasses": [
+			{
+				"name": "depth_prepass",
+				"queue": "DepthPrepass",
+				"states": {
+					"depthStencil": "DepthPrepass",
+					"rasterizer": "Default",
+					"blend": "Opaque",
+					"renderTarget": "DepthMap"
+				}
+			},
+			{
+				"name": "lit_opaque",
+				"queue": "Opaque",
+				"states": {
+					"depthStencil": "Default",
+					"rasterizer": "Default",
+					"blend": "Opaque",
+					"renderTarget": "MainColor"
+				}
+			}
+		]
+	})";
+
+	// Arrange - create temp JSON file
+	const auto tempDir = fs::temp_directory_path() / "material_system_test_T216";
+	fs::create_directories( tempDir );
+	const auto jsonPath = tempDir / "materials.json";
+	std::ofstream( jsonPath ) << jsonStr;
+
+	// Act - load material system
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+
+	// Assert - initialization succeeded
+	REQUIRE( initSuccess );
+
+	// Assert - render passes stored correctly
+	const auto *depthPass = materialSystem.getRenderPass( "depth_prepass" );
+	REQUIRE( depthPass != nullptr );
+	REQUIRE( depthPass->name == "depth_prepass" );
+	REQUIRE( depthPass->queue == "DepthPrepass" );
+	REQUIRE( depthPass->states.renderTarget == "DepthMap" );
+
+	const auto *litPass = materialSystem.getRenderPass( "lit_opaque" );
+	REQUIRE( litPass != nullptr );
+	REQUIRE( litPass->name == "lit_opaque" );
+	REQUIRE( litPass->queue == "Opaque" );
+	REQUIRE( litPass->states.renderTarget == "MainColor" );
+
+	// Assert - nonexistent pass returns nullptr
+	const auto *missingPass = materialSystem.getRenderPass( "nonexistent" );
+	REQUIRE( missingPass == nullptr );
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}
+
+// ============================================================================
 // T014: PSO Construction & Caching
 // ============================================================================
 

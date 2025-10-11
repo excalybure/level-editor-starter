@@ -47,6 +47,10 @@ public:
 	const RenderTargetStateBlock *getRenderTargetState( const std::string &id ) const;
 	const VertexFormat *getVertexFormat( const std::string &id ) const;
 
+	// Query render pass by name
+	// Returns nullptr if render pass not found
+	const RenderPassDefinition *getRenderPass( const std::string &name ) const;
+
 private:
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
 	std::vector<MaterialDefinition> m_materials;
@@ -57,6 +61,9 @@ private:
 	std::unordered_map<std::string, BlendStateBlock> m_blendStates;
 	std::unordered_map<std::string, RenderTargetStateBlock> m_renderTargetStates;
 	std::unordered_map<std::string, VertexFormat> m_vertexFormats;
+
+	// Render pass storage
+	std::unordered_map<std::string, RenderPassDefinition> m_renderPasses;
 };
 
 } // namespace graphics::material_system

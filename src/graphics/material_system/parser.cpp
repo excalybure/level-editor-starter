@@ -281,4 +281,44 @@ ShaderStage parseShaderStage( const std::string &stageStr )
 	return ShaderStage::Vertex; // Won't reach here due to fatal
 }
 
+RenderPassDefinition MaterialParser::parseRenderPass( const nlohmann::json &jsonRenderPass )
+{
+	RenderPassDefinition renderPass;
+
+	// Parse required fields
+	if ( !jsonRenderPass.contains( "name" ) || !jsonRenderPass["name"].is_string() )
+	{
+		console::error( "MaterialParser: Missing or invalid 'name' field in render pass" );
+		return renderPass;
+	}
+	renderPass.name = jsonRenderPass["name"].get<std::string>();
+
+	if ( !jsonRenderPass.contains( "queue" ) || !jsonRenderPass["queue"].is_string() )
+	{
+		console::error( "MaterialParser: Missing or invalid 'queue' field in render pass '{}'", renderPass.name );
+		return renderPass;
+	}
+	renderPass.queue = jsonRenderPass["queue"].get<std::string>();
+
+	// Parse states (optional)
+	if ( jsonRenderPass.contains( "states" ) && jsonRenderPass["states"].is_object() )
+	{
+		const auto &states = jsonRenderPass["states"];
+
+		if ( states.contains( "rasterizer" ) && states["rasterizer"].is_string() )
+			renderPass.states.rasterizer = states["rasterizer"].get<std::string>();
+
+		if ( states.contains( "depthStencil" ) && states["depthStencil"].is_string() )
+			renderPass.states.depthStencil = states["depthStencil"].get<std::string>();
+
+		if ( states.contains( "blend" ) && states["blend"].is_string() )
+			renderPass.states.blend = states["blend"].get<std::string>();
+
+		if ( states.contains( "renderTarget" ) && states["renderTarget"].is_string() )
+			renderPass.states.renderTarget = states["renderTarget"].get<std::string>();
+	}
+
+	return renderPass;
+}
+
 } // namespace graphics::material_system

@@ -321,7 +321,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 
 	// Create PSO
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
-	hr = device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pso ) );
+	HRESULT hr = device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pso ) );
 	if ( FAILED( hr ) )
 	{
 		console::error( "Failed to create pipeline state for material '{}', HRESULT={:#x}", material.id, static_cast<unsigned int>( hr ) );

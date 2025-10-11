@@ -57,6 +57,14 @@ struct StateReferences
 	std::string renderTarget;
 };
 
+// Render pass definition structure
+struct RenderPassDefinition
+{
+	std::string name;
+	std::string queue;
+	StateReferences states; // Reuse StateReferences for render pass states
+};
+
 // Material definition structure
 struct MaterialDefinition
 {
@@ -84,6 +92,9 @@ public:
 	// Parse a single material definition from JSON
 	// Returns MaterialDefinition if successful, throws or logs fatal error otherwise
 	static MaterialDefinition parse( const nlohmann::json &jsonMaterial );
+
+	// Parse a single render pass definition from JSON
+	static RenderPassDefinition parseRenderPass( const nlohmann::json &jsonRenderPass );
 
 private:
 	static ParameterType parseParameterType( const std::string &typeStr );
