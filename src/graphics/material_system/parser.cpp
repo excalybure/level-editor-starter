@@ -54,6 +54,25 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		material.vertexFormat = jsonMaterial["vertexFormat"].get<std::string>();
 	}
 
+	// Parse primitiveTopology (optional, defaults to TRIANGLE)
+	if ( jsonMaterial.contains( "primitiveTopology" ) && jsonMaterial["primitiveTopology"].is_string() )
+	{
+		const std::string topologyStr = jsonMaterial["primitiveTopology"].get<std::string>();
+		if ( topologyStr == "Triangle" )
+			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		else if ( topologyStr == "Line" )
+			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		else if ( topologyStr == "Point" )
+			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+		else if ( topologyStr == "Patch" )
+			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+		else
+		{
+			console::error( "MaterialParser: Unknown primitiveTopology '{}', defaulting to Triangle", topologyStr );
+			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+	}
+
 	// Parse shaders (required)
 	if ( !jsonMaterial.contains( "shaders" ) || !jsonMaterial["shaders"].is_object() )
 	{

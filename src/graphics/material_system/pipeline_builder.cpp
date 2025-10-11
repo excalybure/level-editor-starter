@@ -305,8 +305,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Sample mask
 	psoDesc.SampleMask = UINT_MAX;
 
-	// Primitive topology
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	// Primitive topology - use material's specified topology
+	psoDesc.PrimitiveTopologyType = material.primitiveTopology;
 
 	// Render target formats - query from MaterialSystem or use passConfig
 	const RenderTargetStateBlock *renderTargetState = nullptr;

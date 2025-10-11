@@ -1,5 +1,42 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T212: Add Primitive Topology to MaterialDefinition
+**Summary:** Completed T212 by adding primitiveTopology field to MaterialDefinition, enabling data-driven primitive topology specification in PSO creation. Added D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology field to MaterialDefinition with default D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE. Updated MaterialParser::parse to extract optional "primitiveTopology" field from JSON with inline string→enum mapping (Triangle/Line/Point/Patch). Replaced hardcoded D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE in PipelineBuilder with material.primitiveTopology. Followed TDD workflow with 4 tests (3 unit, 1 integration) verifying field, parser, and MaterialSystem integration. Phase 2 progress: 11/17 tasks complete (64.7%).
+
+**Atomic functionalities completed:**
+- AF1-AF2 (Field definition): Added D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology field to MaterialDefinition struct in parser.h with default D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; added `#include <d3d12.h>` to parser.h for D3D12 enum visibility; wrote unit test constructing MaterialDefinition, setting primitiveTopology=TRIANGLE, verifying field value (1 assertion); RED phase confirmed field doesn't exist (compilation error), GREEN phase added field and include, test passes
+- AF3-AF4 (Parser implementation): Added primitiveTopology parsing in MaterialParser::parse after vertexFormat extraction; inline string→enum mapping checking for "Triangle"→TRIANGLE, "Line"→LINE, "Point"→POINT, "Patch"→PATCH with console::error for invalid values defaulting to TRIANGLE; wrote 2 unit tests: one with JSON "primitiveTopology": "Line" verifying parser extracts D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE (2 assertions), one without primitiveTopology field verifying default TRIANGLE (2 assertions); RED phase tests failed (topology not extracted, defaults to TRIANGLE for both), GREEN phase added parsing logic, both tests pass
+- AF5-AF6 (PipelineBuilder integration): Created integration test writing JSON with material specifying "primitiveTopology": "Line"; initializes MaterialSystem, queries material handle, retrieves material, verifies primitiveTopology==D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE (4 assertions); replaced hardcoded `psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE` in pipeline_builder.cpp line 309 with `psoDesc.PrimitiveTopologyType = material.primitiveTopology`; all tests pass confirming material topology used in PSO
+
+**Tests:** 4 test cases with 9 assertions total (3 unit tests for field/parser with 5 assertions, 1 integration test for MaterialSystem with 4 assertions). Test commands: `unit_test_runner.exe "[T212]"` for T212 tests (9 assertions in 4 test cases), `unit_test_runner.exe "[material-system]"` for full suite (149 assertions in 19 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/parser.h` — Added `#include <d3d12.h>` for D3D12 enum types; added D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology field to MaterialDefinition with default initialization = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE (before enabled field)
+- Updated: `src/graphics/material_system/parser.cpp` — Added primitiveTopology parsing after vertexFormat parsing (24 lines: check for optional "primitiveTopology" field, extract string, inline if/else-if mapping Triangle/Line/Point/Patch to D3D12 enums, console::error for invalid strings with TRIANGLE fallback)
+- Updated: `src/graphics/material_system/pipeline_builder.cpp` — Replaced hardcoded D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE with material.primitiveTopology at line 309 (1 line change)
+- Updated: `tests/material_system_tests.cpp` — Added 4 T212 test cases tagged [T212][unit/integration] after T211 tests (1 field test, 2 parser tests, 1 integration test)
+
+**Implementation Details:**
+- **MaterialDefinition Field**: Added D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology with default TRIANGLE; requires d3d12.h include in parser.h header
+- **Parser Logic**: Inline string→enum mapping in MaterialParser::parse (no separate helper function); checks for optional "primitiveTopology" JSON field, extracts string, compares to "Triangle"/"Line"/"Point"/"Patch", assigns corresponding D3D12 enum; logs error and defaults to TRIANGLE for invalid values
+- **PipelineBuilder**: Direct assignment `psoDesc.PrimitiveTopologyType = material.primitiveTopology`; no fallback logic needed since MaterialDefinition always has valid default
+- **Backward Compatibility**: Materials without primitiveTopology field default to TRIANGLE (D3D12 common case); existing materials continue working without changes
+- **Supported Topologies**: Triangle (default, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE), Line (D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE), Point (D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT), Patch (D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH for tessellation)
+
+**Test Coverage:**
+- Test 1 (MaterialDefinition field): Unit test constructs MaterialDefinition, sets primitiveTopology=TRIANGLE, verifies field value (1 assertion); confirms field exists and defaults correctly
+- Test 2 (Parser with topology): Unit test with material JSON containing "primitiveTopology": "Line"; parses material, verifies id and primitiveTopology==D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE (2 assertions); confirms parser extracts and converts string to enum
+- Test 3 (Parser without topology): Unit test with material JSON missing primitiveTopology field; parses material, verifies id and primitiveTopology==D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE (2 assertions); confirms parser defaults to TRIANGLE when field absent
+- Test 4 (MaterialSystem integration): Integration test writes JSON with material specifying "primitiveTopology": "Line"; creates MaterialSystem, initializes from JSON, queries material handle for "line_material", retrieves material definition, verifies initSuccess, handle.isValid(), material non-null, material->primitiveTopology==D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE (4 assertions); confirms end-to-end workflow from JSON to MaterialSystem to PipelineBuilder
+
+**Notes:**
+- Phase 2 progress: 11/17 tasks complete (64.7%) — Shader Information (T201-T203), State Blocks (T204-T207), Vertex Formats (T208-T211), Primitive Topology (T212)
+- Eliminates one more hardcoded PSO field (PrimitiveTopologyType); PSO creation increasingly data-driven from JSON
+- Simple inline parsing (no separate parsePrimitiveTopology helper) sufficient for 4 enum values
+- Next: Phase 2D (Root Signature Integration: T214-T215) or T213 (Sample Desc from RT State) to complete Phase 2E finalization
+
+---
+
 ## 2025-10-11 — T211: Use Vertex Format in PSO Creation
 **Summary:** Completed T211 by replacing hardcoded POSITION+COLOR input layout in PipelineBuilder with data-driven vertex format query and conversion. Updated buildPSO to query vertex format from MaterialSystem when material.vertexFormat non-empty, iterate elements to construct std::vector<D3D12_INPUT_ELEMENT_DESC>, assign to psoDesc.InputLayout. Implemented backward compatibility fallback using hardcoded POSITION+COLOR when vertexFormat empty or not found. PSO input layouts now fully data-driven from JSON vertex format definitions. Followed TDD workflow with 1 integration test verifying PSO builds with PositionNormalUV format (3 input elements). Phase 2C (Vertex Formats: T208-T211) complete — all hardcoded input layout references eliminated.
 

@@ -2958,3 +2958,93 @@ TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builde
 }
 
 // ============================================================================
+// T212: Primitive Topology Tests
+// ============================================================================
+
+TEST_CASE( "MaterialDefinition has primitiveTopology field with TRIANGLE default", "[material-parser][T212][unit]" )
+{
+	using namespace graphics::material_system;
+
+	MaterialDefinition material;
+	material.id = "test_material";
+	material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
+}
+
+TEST_CASE( "MaterialParser extracts primitiveTopology from JSON", "[material-parser][T212][unit]" )
+{
+	using namespace graphics::material_system;
+	using json = nlohmann::json;
+
+	// Arrange - material JSON with primitiveTopology: Line
+	const json materialJson = {
+		{ "id", "line_material" },
+		{ "pass", "forward" },
+		{ "primitiveTopology", "Line" },
+		{ "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } }
+	};
+
+	// Act
+	const auto material = MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.id == "line_material" );
+	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
+}
+
+TEST_CASE( "MaterialParser defaults primitiveTopology to TRIANGLE when absent", "[material-parser][T212][unit]" )
+{
+	using namespace graphics::material_system;
+	using json = nlohmann::json;
+
+	// Arrange - material JSON without primitiveTopology field
+	const json materialJson = {
+		{ "id", "default_material" },
+		{ "pass", "forward" },
+		{ "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } }
+	};
+
+	// Act
+	const auto material = MaterialParser::parse( materialJson );
+
+	// Assert
+	REQUIRE( material.id == "default_material" );
+	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
+}
+
+TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-system][T212][integration]" )
+{
+	using namespace graphics::material_system;
+	namespace fs = std::filesystem;
+	using json = nlohmann::json;
+
+	// Arrange - create test directory with material JSON specifying Line topology
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T212";
+	fs::create_directories( testDir );
+
+	const json materialsJson = {
+		{ "materials", json::array( { { { "id", "line_material" }, { "pass", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/grid.hlsl" }, { "entry", "VSMain" }, { "profile", "vs_6_0" } } }, { "pixel", { { "file", "shaders/grid.hlsl" }, { "entry", "PSMain" }, { "profile", "ps_6_0" } } } } } } } ) }
+	};
+
+	const auto materialsPath = testDir / "materials.json";
+	std::ofstream( materialsPath ) << materialsJson.dump();
+
+	// Act - Create MaterialSystem
+	MaterialSystem materialSystem;
+	const bool initSuccess = materialSystem.initialize( materialsPath.string().c_str() );
+
+	// Assert
+	REQUIRE( initSuccess );
+
+	const auto materialHandle = materialSystem.getMaterialHandle( "line_material" );
+	REQUIRE( materialHandle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( materialHandle );
+	REQUIRE( material != nullptr );
+	REQUIRE( material->primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
+
+	fs::remove_all( testDir );
+}
+
+// ============================================================================

@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
+#include <d3d12.h>
 
 namespace graphics::material_system
 {
@@ -65,6 +66,7 @@ struct MaterialDefinition
 	std::vector<ShaderReference> shaders;
 	std::vector<Parameter> parameters;
 	StateReferences states;
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	bool enabled = true;
 	std::string versionHash;
 };
