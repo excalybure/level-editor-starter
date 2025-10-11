@@ -4,8 +4,16 @@
 			"id": "standard_opaque",
 			"pass": "forward",
 			"shaders": {
-				"vertex": "mesh_vs",
-				"pixel": "lit_ps"
+				"vertex": {
+					"file": "shaders/simple.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/simple.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
 			},
 			"states": {
 				"rasterizer": "solid_back",
@@ -35,8 +43,16 @@
 			"id": "unlit_opaque",
 			"pass": "forward",
 			"shaders": {
-				"vertex": "mesh_vs",
-				"pixel": "unlit_ps"
+				"vertex": {
+					"file": "shaders/unlit.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/unlit.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
 			},
 			"states": {
 				"rasterizer": "solid_back",
@@ -56,8 +72,16 @@
 			"id": "grid_material",
 			"pass": "forward",
 			"shaders": {
-				"vertex": "grid_vs",
-				"pixel": "grid_ps"
+				"vertex": {
+					"file": "shaders/grid.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/grid.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
 			},
 			"states": {
 				"rasterizer": "solid_none",
@@ -87,8 +111,16 @@
 			"id": "wireframe",
 			"pass": "forward",
 			"shaders": {
-				"vertex": "mesh_vs",
-				"pixel": "unlit_ps"
+				"vertex": {
+					"file": "shaders/unlit.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/unlit.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
 			},
 			"states": {
 				"rasterizer": "wireframe_none",
@@ -108,8 +140,16 @@
 			"id": "debug_normals",
 			"pass": "forward",
 			"shaders": {
-				"vertex": "mesh_vs",
-				"pixel": "debug_normals_ps"
+				"vertex": {
+					"file": "shaders/simple.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/simple.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
 			},
 			"states": {
 				"rasterizer": "solid_back",
