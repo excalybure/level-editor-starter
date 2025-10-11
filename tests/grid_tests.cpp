@@ -8,6 +8,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/material_system/material_system.h"
 
 TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 {
@@ -453,6 +454,35 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE( result3 );
 		REQUIRE_NOTHROW( device.endFrame() );
 		REQUIRE_NOTHROW( device.present() );
+
+		renderer.shutdown();
+	}
+}
+
+TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][material-system][integration]" )
+{
+	SECTION( "GridRenderer initializes with MaterialSystem and caches grid_material handle" )
+	{
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "GridRenderer material system integration" ) )
+			return;
+
+		// Arrange - Initialize MaterialSystem with materials.json
+		graphics::material_system::MaterialSystem materialSystem;
+		const bool materialSystemInitialized = materialSystem.initialize( "materials.json" );
+		REQUIRE( materialSystemInitialized );
+
+		// Act - Initialize GridRenderer with MaterialSystem pointer
+		grid::GridRenderer renderer;
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		const bool rendererInitialized = renderer.initialize( &device, shaderManager, &materialSystem );
+
+		// Assert - GridRenderer should initialize successfully
+		REQUIRE( rendererInitialized );
+
+		// Assert - GridRenderer should have cached a valid material handle for grid_material
+		const auto handle = renderer.getMaterialHandle();
+		REQUIRE( handle.isValid() );
 
 		renderer.shutdown();
 	}

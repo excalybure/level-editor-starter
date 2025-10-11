@@ -76,7 +76,7 @@ GridRenderer::~GridRenderer()
 	}
 }
 
-bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem )
 {
 	if ( !device || !shaderManager )
 	{
@@ -85,6 +85,17 @@ bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_mana
 
 	m_device = device;
 	m_shaderManager = shaderManager;
+	m_materialSystem = materialSystem;
+
+	// Query material handle from material system if available
+	if ( m_materialSystem )
+	{
+		m_materialHandle = m_materialSystem->getMaterialHandle( "grid_material" );
+		if ( !m_materialHandle.isValid() )
+		{
+			console::warning( "GridRenderer: 'grid_material' not found in material system, using fallback shaders" );
+		}
+	}
 
 	// Register shaders with the shader manager
 	if ( !registerShaders() )

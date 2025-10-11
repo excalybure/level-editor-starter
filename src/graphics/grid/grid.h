@@ -10,6 +10,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/material_system/material_system.h"
 
 namespace dx12
 {
@@ -72,9 +73,12 @@ public:
 	GridRenderer( const GridRenderer & ) = delete;
 	GridRenderer &operator=( const GridRenderer & ) = delete;
 
-	// Initialize the grid renderer with D3D12 device and shader manager
-	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	// Initialize the grid renderer with D3D12 device, shader manager, and material system
+	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem = nullptr );
 	void shutdown();
+
+	// Get the cached material handle for grid_material
+	graphics::material_system::MaterialHandle getMaterialHandle() const { return m_materialHandle; }
 
 	// Render the grid for a specific viewport
 	bool render( const camera::Camera &camera,
@@ -106,6 +110,10 @@ private:
 	shader_manager::ShaderHandle m_vertexShaderHandle;
 	shader_manager::ShaderHandle m_pixelShaderHandle;
 	shader_manager::CallbackHandle m_callbackHandle;
+
+	// Material system integration
+	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
+	graphics::material_system::MaterialHandle m_materialHandle;
 
 	// Constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
