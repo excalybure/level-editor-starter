@@ -6,6 +6,7 @@
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/shader_compiler.h"
 #include "graphics/material_system/root_signature_builder.h"
+#include "graphics/material_system/root_signature_cache.h"
 #include "graphics/material_system/pipeline_builder.h"
 #include "graphics/material_system/state_blocks.h"
 #include "graphics/material_system/state_parser.h"
@@ -1269,6 +1270,77 @@ TEST_CASE( "RootSignatureBuilder handles material with no parameters", "[root-si
 
 	// Assert - spec should be empty
 	REQUIRE( spec.resourceBindings.empty() );
+}
+
+// ============================================================================
+// T214: Root Signature Cache
+// ============================================================================
+
+TEST_CASE( "RootSignatureCache builds root signature from spec (cache miss)", "[root-signature][T214][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "RootSignatureCache build from spec" ) )
+		return;
+
+	// Arrange - RootSignatureSpec with one CBV binding
+	graphics::material_system::RootSignatureSpec spec;
+	graphics::material_system::ResourceBinding binding;
+	binding.name = "ViewProjection";
+	binding.type = graphics::material_system::ResourceBindingType::CBV;
+	binding.slot = 0;
+	spec.resourceBindings.push_back( binding );
+
+	// Act - create cache and get root signature (cache miss)
+	graphics::material_system::RootSignatureCache cache;
+	const auto rootSignature = cache.getOrCreate( &device, spec );
+
+	// Assert - root signature created successfully
+	REQUIRE( rootSignature != nullptr );
+}
+
+TEST_CASE( "RootSignatureCache returns cached root signature (cache hit)", "[root-signature][T214][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "RootSignatureCache cache hit" ) )
+		return;
+
+	// Arrange - RootSignatureSpec with one CBV binding
+	graphics::material_system::RootSignatureSpec spec;
+	graphics::material_system::ResourceBinding binding;
+	binding.name = "WorldMatrix";
+	binding.type = graphics::material_system::ResourceBindingType::CBV;
+	binding.slot = 0;
+	spec.resourceBindings.push_back( binding );
+
+	// Act - get root signature twice with same spec
+	graphics::material_system::RootSignatureCache cache;
+	const auto rootSignature1 = cache.getOrCreate( &device, spec );
+	const auto rootSignature2 = cache.getOrCreate( &device, spec );
+
+	// Assert - same root signature returned (cache hit)
+	REQUIRE( rootSignature1 != nullptr );
+	REQUIRE( rootSignature2 != nullptr );
+	REQUIRE( rootSignature1.Get() == rootSignature2.Get() );
+}
+
+TEST_CASE( "RootSignatureCache builds empty root signature", "[root-signature][T214][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "RootSignatureCache empty spec" ) )
+		return;
+
+	// Arrange - empty RootSignatureSpec (no bindings)
+	graphics::material_system::RootSignatureSpec spec;
+
+	// Act - create root signature from empty spec
+	graphics::material_system::RootSignatureCache cache;
+	const auto rootSignature = cache.getOrCreate( &device, spec );
+
+	// Assert - empty root signature created successfully
+	REQUIRE( rootSignature != nullptr );
 }
 
 // ============================================================================

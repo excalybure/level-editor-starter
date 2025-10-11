@@ -1,5 +1,46 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T214: Build Root Signature from Spec
+**Summary:** Completed T214 by creating RootSignatureCache class to build and cache D3D12 root signatures from RootSignatureSpec. Implemented getOrCreate() method that hashes RootSignatureSpec, checks cache map, returns existing root signature on hit, or builds new D3D12 root signature on miss. Cache uses unordered_map with uint64_t hash (combines binding count + each binding's name/type/slot). buildRootSignature() converts RootSignatureSpec to D3D12_ROOT_SIGNATURE_DESC by mapping ResourceBinding to D3D12_ROOT_PARAMETER, serializes with D3D12SerializeRootSignature, creates with CreateRootSignature. Supports CBV/SRV/UAV bindings and empty specs (materials with no parameters). Created 3 integration tests: cache miss, cache hit, empty spec. All tests pass. Phase 2 progress: 13/17 tasks complete (76.5%).
+
+**Atomic functionalities completed:**
+- AF1 (RootSignatureCache class): Created root_signature_cache.h with class declaration (getOrCreate, hashSpec, buildRootSignature methods, m_cache unordered_map member); created root_signature_cache.cpp with implementations (160 lines); added to CMakeLists.txt graphics library sources
+- AF2-AF3 (Cache miss implementation): Wrote integration test "RootSignatureCache builds root signature from spec (cache miss)" creating RootSignatureSpec with 1 CBV binding (ViewProjection, slot 0), calling getOrCreate, verifying non-null root signature returned (2 assertions); implemented getOrCreate checking cache with hashSpec(), calling buildRootSignature on miss, storing result in m_cache; implemented buildRootSignature converting ResourceBinding vector to D3D12_ROOT_PARAMETER array (switch on ResourceBindingType for CBV/SRV/UAV→D3D12_ROOT_PARAMETER_TYPE), creating D3D12_ROOT_SIGNATURE_DESC, serializing with D3D12SerializeRootSignature, creating with ID3D12Device::CreateRootSignature; test passes (GREEN)
+- AF4 (Cache hit test): Created integration test "RootSignatureCache returns cached root signature (cache hit)" calling getOrCreate twice with identical spec (WorldMatrix CBV binding), verifying same ComPtr<ID3D12RootSignature> returned via pointer equality (rootSignature1.Get() == rootSignature2.Get()) (3 assertions); test passes confirming cache working
+- AF5 (Empty spec test): Created integration test "RootSignatureCache builds empty root signature" with RootSignatureSpec containing 0 bindings, verifying empty but valid root signature created (materials with no parameters) (1 assertion); test passes confirming D3D12 accepts empty root signature (NumParameters=0, pParameters=nullptr)
+
+**Tests:** 3 test cases with 5 assertions total (all integration tests requiring headless DX12 device). Test commands: `unit_test_runner.exe "[T214]"` for T214 tests (5 assertions in 3 test cases), `unit_test_runner.exe "[material-system]"` for full suite (149 assertions in 19 test cases, no regressions).
+
+**Files Modified:**
+- Created: `src/graphics/material_system/root_signature_cache.h` — RootSignatureCache class declaration with getOrCreate(dx12::Device*, RootSignatureSpec&), hashSpec(RootSignatureSpec&) const, buildRootSignature(dx12::Device*, RootSignatureSpec&) methods; m_cache member (unordered_map<uint64_t, ComPtr<ID3D12RootSignature>>)
+- Created: `src/graphics/material_system/root_signature_cache.cpp` — 160 lines implementing getOrCreate (cache lookup with hash, build on miss, store result), hashSpec (boost-style hash combine: hash ^= h(value) + 0x9e3779b9 + (hash << 6) + (hash >> 2) for binding count + each binding's name/type/slot), buildRootSignature (convert spec→D3D12 desc, serialize, create root sig)
+- Updated: `CMakeLists.txt` — Added src/graphics/material_system/root_signature_cache.cpp to graphics library sources (after root_signature_builder.cpp)
+- Updated: `tests/material_system_tests.cpp` — Added #include "graphics/material_system/root_signature_cache.h"; added 3 T214 integration test cases tagged [root-signature][T214][integration] after T013 tests (cache miss, cache hit, empty spec)
+
+**Implementation Details:**
+- **Cache key hashing**: hashSpec() uses std::hash<string> for binding names, std::hash<int> for type/slot; combines with XOR + shift operations (boost hash_combine pattern); hash includes binding count + all binding properties
+- **Cache storage**: unordered_map<uint64_t, ComPtr<ID3D12RootSignature>> mapping spec hash to D3D12 root signature; cache persists across multiple getOrCreate calls
+- **D3D12 conversion**: buildRootSignature() creates D3D12_ROOT_PARAMETER array from ResourceBinding vector; switch on ResourceBindingType: CBV→D3D12_ROOT_PARAMETER_TYPE_CBV, SRV→TYPE_SRV, UAV→TYPE_UAV, Sampler→error (descriptor tables not yet supported); each parameter has ShaderVisibility=ALL, Descriptor.ShaderRegister=binding.slot, RegisterSpace=0
+- **Root signature desc**: D3D12_ROOT_SIGNATURE_DESC with NumParameters=binding count, pParameters=array pointer (nullptr if empty), NumStaticSamplers=0, Flags=ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+- **Serialization**: D3D12SerializeRootSignature with D3D_ROOT_SIGNATURE_VERSION_1; logs error if serialization fails (HRESULT + error blob message)
+- **Creation**: ID3D12Device::CreateRootSignature with serialized blob; logs error if creation fails (HRESULT)
+- **Empty spec handling**: When resourceBindings.size()==0, creates valid D3D12 root signature with NumParameters=0, pParameters=nullptr (materials with no parameters); D3D12 accepts this pattern
+- **Error handling**: Checks device validity at getOrCreate entry; returns nullptr on any error (serialization, creation); logs descriptive errors with HRESULT codes
+
+**Test Coverage:**
+- Test 1 (Cache miss): Integration test creates RootSignatureSpec with 1 CBV binding (ViewProjection, slot 0); calls cache.getOrCreate; verifies rootSignature != nullptr (2 assertions: device valid, root sig created); confirms cache builds D3D12 root signature on first call
+- Test 2 (Cache hit): Integration test creates spec with 1 CBV binding (WorldMatrix); calls getOrCreate twice with same spec; verifies rootSignature1 != nullptr, rootSignature2 != nullptr, rootSignature1.Get() == rootSignature2.Get() (3 assertions); confirms cache returns same pointer (no redundant D3D12 creation)
+- Test 3 (Empty spec): Integration test with RootSignatureSpec containing 0 bindings; calls getOrCreate; verifies rootSignature != nullptr (1 assertion); confirms empty root signature valid for materials without parameters
+
+**Notes:**
+- Phase 2 progress: 13/17 tasks complete (76.5%) — Shader Information (T201-T203), State Blocks (T204-T207), Vertex Formats (T208-T211), Primitive Topology (T212), Sample Desc (T213), Root Signature Cache (T214)
+- Completes 1/2 tasks in Phase 2D (Root Signature Integration)
+- Cache eliminates redundant D3D12 root signature creation: materials with identical parameter layouts (same bindings) share one root signature ComPtr
+- Foundation for T215: PipelineBuilder::buildPSO() will use RootSignatureCache to get root signatures from RootSignatureBuilder::Build() specs (T013), replacing hardcoded minimal root signature (pipeline_builder.cpp lines 156-190)
+- Next: T215 will integrate cache into PipelineBuilder, connecting RootSignatureBuilder (T013) → RootSignatureCache (T214) → PSO creation workflow
+
+---
+
 ## 2025-10-11 — T213: Sample Desc from RT State
 **Summary:** Completed T213 by adding explicit test coverage to verify that sample desc (sampleCount, sampleQuality) is correctly extracted from RenderTargetStateBlock and used in PSO creation. The functionality was already implemented in T207-AF6 (pipeline_builder.cpp lines 326-327), which uses renderTargetState->sampleCount/sampleQuality when RT state is specified. T213 adds integration test to document and validate this feature. Created test with RenderTargetStateBlock specifying sampleCount=4, sampleQuality=1; material references RT state; test verifies MaterialSystem loads state correctly with sample desc values. No code changes required — existing T207 implementation correct. Phase 2 progress: 12/17 tasks complete (70.6%).
 
