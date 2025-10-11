@@ -2,6 +2,7 @@
 #include "graphics/material_system/loader.h"
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/state_parser.h"
+#include "graphics/material_system/pipeline_builder.h"
 #include "core/console.h"
 
 namespace graphics::material_system
@@ -234,6 +235,39 @@ const RenderPassDefinition *MaterialSystem::getRenderPass( const std::string &na
 		return nullptr;
 	}
 	return &it->second;
+}
+
+RenderPassConfig MaterialSystem::getRenderPassConfig( const std::string &passName ) const
+{
+	// Query render pass by name
+	const auto *passDef = getRenderPass( passName );
+	if ( !passDef )
+	{
+		console::fatal( "MaterialSystem::getRenderPassConfig: Undefined render pass: {}", passName );
+		return {};
+	}
+
+	// Query render target state block
+	const auto *rtState = getRenderTargetState( passDef->states.renderTarget );
+	if ( !rtState )
+	{
+		console::fatal( "MaterialSystem::getRenderPassConfig: Undefined render target state '{}' referenced by render pass '{}'",
+			passDef->states.renderTarget,
+			passName );
+		return {};
+	}
+
+	// Populate RenderPassConfig from render target state block
+	RenderPassConfig config;
+	config.name = passDef->name;
+	config.numRenderTargets = static_cast<UINT>( rtState->rtvFormats.size() );
+	for ( size_t i = 0; i < rtState->rtvFormats.size() && i < 8; ++i )
+	{
+		config.rtvFormats[i] = rtState->rtvFormats[i];
+	}
+	config.dsvFormat = rtState->dsvFormat;
+
+	return config;
 }
 
 } // namespace graphics::material_system

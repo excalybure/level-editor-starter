@@ -1617,6 +1617,79 @@ TEST_CASE( "MaterialSystem stores and retrieves render passes", "[material-syste
 }
 
 // ============================================================================
+// T217: Generate RenderPassConfig from Definition
+// ============================================================================
+
+TEST_CASE( "MaterialSystem generates RenderPassConfig from render pass", "[material-system][T217][integration]" )
+{
+	// Arrange - JSON with render passes and render target states
+	const std::string jsonStr = R"({
+		"materials": [],
+		"states": {
+			"renderTargetStates": {
+				"MainColor": {
+					"rtvFormats": ["R8G8B8A8_UNORM"],
+					"dsvFormat": "D32_FLOAT",
+					"samples": 1
+				},
+				"DepthMap": {
+					"rtvFormats": [],
+					"dsvFormat": "D24_UNORM_S8_UINT",
+					"samples": 1
+				}
+			}
+		},
+		"renderPasses": [
+			{
+				"name": "lit_opaque",
+				"queue": "Opaque",
+				"states": {
+					"renderTarget": "MainColor"
+				}
+			},
+			{
+				"name": "depth_prepass",
+				"queue": "DepthPrepass",
+				"states": {
+					"renderTarget": "DepthMap"
+				}
+			}
+		]
+	})";
+
+	// Arrange - create temp JSON file
+	const auto tempDir = fs::temp_directory_path() / "material_system_test_T217";
+	fs::create_directories( tempDir );
+	const auto jsonPath = tempDir / "materials.json";
+	std::ofstream( jsonPath ) << jsonStr;
+
+	// Act - load material system
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+	REQUIRE( initSuccess );
+
+	// Act - generate RenderPassConfig for lit_opaque
+	const auto litConfig = materialSystem.getRenderPassConfig( "lit_opaque" );
+
+	// Assert - lit_opaque config matches MainColor render target state
+	REQUIRE( litConfig.name == "lit_opaque" );
+	REQUIRE( litConfig.numRenderTargets == 1 );
+	REQUIRE( litConfig.rtvFormats[0] == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( litConfig.dsvFormat == DXGI_FORMAT_D32_FLOAT );
+
+	// Act - generate RenderPassConfig for depth_prepass
+	const auto depthConfig = materialSystem.getRenderPassConfig( "depth_prepass" );
+
+	// Assert - depth_prepass config matches DepthMap render target state
+	REQUIRE( depthConfig.name == "depth_prepass" );
+	REQUIRE( depthConfig.numRenderTargets == 0 );
+	REQUIRE( depthConfig.dsvFormat == DXGI_FORMAT_D24_UNORM_S8_UINT );
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}
+
+// ============================================================================
 // T014: PSO Construction & Caching
 // ============================================================================
 

@@ -12,6 +12,7 @@ namespace graphics::material_system
 
 // Forward declarations
 class JsonLoader;
+struct RenderPassConfig;
 
 // Opaque handle for material access
 struct MaterialHandle
@@ -50,6 +51,12 @@ public:
 	// Query render pass by name
 	// Returns nullptr if render pass not found
 	const RenderPassDefinition *getRenderPass( const std::string &name ) const;
+
+	// Generate RenderPassConfig from render pass definition
+	// Queries render pass by name, then queries referenced render target state block
+	// Populates RenderPassConfig with rtvFormats, dsvFormat, numRenderTargets from state block
+	// Logs console::fatal if render pass or render target state not found
+	RenderPassConfig getRenderPassConfig( const std::string &passName ) const;
 
 private:
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
