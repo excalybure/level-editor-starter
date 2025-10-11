@@ -1,5 +1,42 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-11 — T208: Define VertexFormat Structs for Data-Driven Input Layout
+**Summary:** Completed T208 by defining VertexElement and VertexFormat structs in state_blocks.h. VertexElement represents single input element with semantic, format, offset, and D3D12 input classification fields matching D3D12_INPUT_ELEMENT_DESC structure. VertexFormat acts as container for vertex layout specification with id, elements vector, and stride. All default values match D3D12 common usage (semanticIndex=0, inputSlot=0, inputSlotClass=PER_VERTEX_DATA, instanceDataStepRate=0). Followed TDD workflow with 2 unit tests verifying struct definitions and default values. Phase 2C (Vertex Formats) started: 1/4 tasks complete.
+
+**Atomic functionalities completed:**
+- AF1 (Test for VertexElement defaults): Wrote unit test default-constructing VertexElement, setting semantic="POSITION", format=R32G32B32_FLOAT, alignedByteOffset=0; verified default values semanticIndex==0, inputSlot==0, inputSlotClass==PER_VERTEX_DATA, instanceDataStepRate==0 (4 assertions confirming D3D12 defaults)
+- AF2 (Define VertexElement struct): Added VertexElement struct to state_blocks.h with 8 fields: semantic (std::string for JSON parsing), semanticIndex (UINT=0, first instance), format (DXGI_FORMAT, vertex component format), inputSlot (UINT=0, buffer binding slot), alignedByteOffset (UINT, byte offset in vertex), inputSlotClass (D3D12_INPUT_CLASSIFICATION=PER_VERTEX_DATA, per-vertex not per-instance), instanceDataStepRate (UINT=0, unused for per-vertex data); mirrors D3D12_INPUT_ELEMENT_DESC for 1:1 conversion
+- AF3 (Test for VertexFormat structure): Wrote unit test constructing VertexFormat with id="PositionColor", stride=28 (12-byte POSITION + 16-byte COLOR), 2 VertexElement entries (POSITION at offset 0, COLOR at offset 12); verified id, stride, elements.size()==2, and all element fields (semantic, format, alignedByteOffset) match expected values (9 assertions total)
+- AF4 (Define VertexFormat struct): Added VertexFormat struct to state_blocks.h with 3 fields: id (std::string for JSON reference), elements (std::vector<VertexElement> for input layout), stride (UINT, vertex size in bytes for buffer binding); provides storage for complete vertex layout specification; materials will reference by id (T210), parser will populate from JSON (T209), PipelineBuilder will convert to D3D12 descriptors (T211)
+
+**Tests:** 2 unit test cases with 13 assertions total; both tests construct structs manually (no parser yet), verify field values and defaults. Test commands: `unit_test_runner.exe "[vertex-format][T208]"` for T208 tests (13 assertions in 2 test cases), `unit_test_runner.exe "[material-system]"` for full suite (111 assertions in 16 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/state_blocks.h` — Added VertexElement struct (8 fields with D3D12 defaults) and VertexFormat struct (3 fields) after RenderTargetStateBlock, before closing namespace; 26 new lines total
+- Updated: `tests/material_system_tests.cpp` — Added 2 test cases for T208 tagged [vertex-format][T208][unit] between T204 and T205 test sections; tests verify struct definitions and default values
+
+**Implementation Details:**
+- **VertexElement mirrors D3D12_INPUT_ELEMENT_DESC**: All 7 D3D12 descriptor fields present in VertexElement (semantic stored as string instead of const char* for storage/lifetime management); conversion to D3D12 descriptor straightforward: `D3D12_INPUT_ELEMENT_DESC{ elem.semantic.c_str(), elem.semanticIndex, elem.format, elem.inputSlot, elem.alignedByteOffset, elem.inputSlotClass, elem.instanceDataStepRate }`
+- **Default values rationale**: semanticIndex=0 (most semantics have single instance), inputSlot=0 (single vertex buffer binding), inputSlotClass=PER_VERTEX_DATA (standard vertex data not instanced), instanceDataStepRate=0 (only used when inputSlotClass==PER_INSTANCE_DATA); defaults cover 95% use cases, JSON can override for advanced scenarios (multi-stream, instancing)
+- **Semantic as string**: Enables JSON parsing of semantic names (\"POSITION\", \"NORMAL\", \"TEXCOORD\", \"COLOR\", \"TANGENT\", \"BINORMAL\", etc.); string-to-cstring conversion happens during PSO creation (T211), not stored in D3D12_INPUT_ELEMENT_DESC array
+- **Stride calculation**: JSON specifies stride explicitly (sum of element sizes + padding for alignment); parser validates stride matches element offsets/sizes (T209); stride used when binding vertex buffers (SetVertexBuffers)
+- **No base/inheritance**: Unlike state blocks, vertex formats have no inheritance (base field); each format standalone; reduces complexity as vertex formats typically unique per mesh type
+- **No toD3D12() method**: Unlike BlendRenderTargetState/DepthStencilOpDesc, VertexElement doesn't have toD3D12(); T211 will construct D3D12_INPUT_ELEMENT_DESC array manually because semantic string lifetime must be managed (elements vector owns strings, D3D12 descriptor uses const char* pointers)
+
+**Test Coverage:**
+- Test 1 (VertexElement defaults): Constructs VertexElement with POSITION/R32G32B32_FLOAT/offset=0; verifies semanticIndex==0, inputSlot==0, inputSlotClass==PER_VERTEX_DATA, instanceDataStepRate==0 (4 assertions); confirms default values match D3D12 common usage
+- Test 2 (VertexFormat structure): Builds VertexFormat \"PositionColor\" with stride=28, 2 elements (POSITION R32G32B32_FLOAT at 0, COLOR R32G32B32A32_FLOAT at 12); verifies id, stride, element count, and all element field values (semantic, format, alignedByteOffset); 9 assertions total
+
+**Notes:**
+- Phase 2C (Vertex Formats: T208-T211) started — 1/4 tasks complete
+- Structs provide foundation for JSON-driven input layout; no parser/integration yet (T209, T210, T211)
+- VertexElement fields match D3D12_INPUT_ELEMENT_DESC exactly for straightforward conversion
+- Default values handle common cases (single vertex buffer, per-vertex data, first semantic instance)
+- VertexFormat reusable via id reference (e.g., \"PositionNormalUV\" shared by all lit opaque materials)
+- Next: T209 Parse Vertex Formats — create VertexFormatParser with DXGI_FORMAT string→enum mapping, parse \"vertexFormats\" JSON section (array of formats with elements), integrate into MaterialSystem with storage map and query method
+
+---
+
 ## 2025-10-11 — T207: Update PipelineBuilder to Use State Blocks
 **Summary:** Completed T207 by eliminating all hardcoded D3D12 state values from PipelineBuilder::buildPSO(). Updated signature to accept optional MaterialSystem pointer (backward compatible with default nullptr). Replaced hardcoded rasterizer, depth/stencil, blend, and render target states with queries to MaterialSystem using material.states references. Implemented fallback logic using D3D12 defaults when state not found or MaterialSystem not provided. All 4 state categories now data-driven from JSON state blocks. Followed TDD workflow with 3 integration tests verifying wireframe rasterizer, depth-read-only, and alpha-blend states applied correctly. Phase 2B (State Blocks) complete: all 4 tasks finished.
 

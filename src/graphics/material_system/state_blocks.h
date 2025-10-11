@@ -112,4 +112,24 @@ struct RenderTargetStateBlock
 	UINT sampleQuality = 0;
 };
 
+// Vertex element (input layout element)
+struct VertexElement
+{
+	std::string semantic; // "POSITION", "NORMAL", "TEXCOORD", etc.
+	UINT semanticIndex = 0;
+	DXGI_FORMAT format;
+	UINT inputSlot = 0;
+	UINT alignedByteOffset;
+	D3D12_INPUT_CLASSIFICATION inputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	UINT instanceDataStepRate = 0;
+};
+
+// Vertex format (input layout specification)
+struct VertexFormat
+{
+	std::string id;
+	std::vector<VertexElement> elements;
+	UINT stride;
+};
+
 } // namespace graphics::material_system

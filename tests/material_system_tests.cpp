@@ -2131,6 +2131,57 @@ TEST_CASE( "DepthStencilOpDesc converts to D3D12 descriptor correctly", "[state-
 }
 
 // ============================================================================
+// T208: Vertex Format Structs Tests
+// ============================================================================
+
+TEST_CASE( "VertexElement has correct D3D12 defaults", "[vertex-format][T208][unit]" )
+{
+	// Arrange & Act - default construct VertexElement
+	graphics::material_system::VertexElement element;
+	element.semantic = "POSITION";
+	element.format = DXGI_FORMAT_R32G32B32_FLOAT;
+	element.alignedByteOffset = 0;
+
+	// Assert - verify D3D12 default values
+	REQUIRE( element.semanticIndex == 0 );
+	REQUIRE( element.inputSlot == 0 );
+	REQUIRE( element.inputSlotClass == D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA );
+	REQUIRE( element.instanceDataStepRate == 0 );
+}
+
+TEST_CASE( "VertexFormat contains id, elements, and stride", "[vertex-format][T208][unit]" )
+{
+	// Arrange & Act - construct VertexFormat with POSITION+COLOR layout
+	graphics::material_system::VertexFormat format;
+	format.id = "PositionColor";
+	format.stride = 28; // 12 bytes (POSITION) + 16 bytes (COLOR)
+
+	graphics::material_system::VertexElement posElement;
+	posElement.semantic = "POSITION";
+	posElement.format = DXGI_FORMAT_R32G32B32_FLOAT;
+	posElement.alignedByteOffset = 0;
+
+	graphics::material_system::VertexElement colorElement;
+	colorElement.semantic = "COLOR";
+	colorElement.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	colorElement.alignedByteOffset = 12;
+
+	format.elements.push_back( posElement );
+	format.elements.push_back( colorElement );
+
+	// Assert - verify structure
+	REQUIRE( format.id == "PositionColor" );
+	REQUIRE( format.stride == 28 );
+	REQUIRE( format.elements.size() == 2 );
+	REQUIRE( format.elements[0].semantic == "POSITION" );
+	REQUIRE( format.elements[0].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( format.elements[0].alignedByteOffset == 0 );
+	REQUIRE( format.elements[1].semantic == "COLOR" );
+	REQUIRE( format.elements[1].format == DXGI_FORMAT_R32G32B32A32_FLOAT );
+	REQUIRE( format.elements[1].alignedByteOffset == 12 );
+}
+
+// ============================================================================
 // T205: State Block Parser Tests
 // ============================================================================
 
