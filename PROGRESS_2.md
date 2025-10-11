@@ -1,5 +1,47 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-10 — T206: Integrate State Blocks into MaterialSystem
+**Summary:** Completed T206 by adding state block storage to MaterialSystem and integrating StateBlockParser into the initialization flow. Added 4 unordered_map containers for state storage (rasterizer, depth/stencil, blend, render target) keyed by state block ID. Updated MaterialSystem::initialize() to parse optional "states" section from merged JSON with duplicate detection (console::fatal on duplicate IDs). Implemented 4 query methods (getRasterizerState, getDepthStencilState, getBlendState, getRenderTargetState) returning const pointers to state blocks (nullptr if not found). Followed TDD workflow with 4 integration tests covering all state categories. Phase 2B (State Blocks) progress: 3/4 tasks complete.
+
+**Atomic functionalities completed:**
+- AF1 (Add state storage): Added 4 private member maps to MaterialSystem class: `std::unordered_map<std::string, RasterizerStateBlock> m_rasterizerStates`, `m_depthStencilStates`, `m_blendStates`, `m_renderTargetStates`; each map stores state blocks keyed by ID for fast lookup
+- AF2 (Parse rasterizer states): In MaterialSystem::initialize(), added parsing loop for "states.rasterizerStates" JSON array; for each element, calls StateBlockParser::parseRasterizer(), checks for duplicate ID with map.count(), calls console::fatal if duplicate, stores in m_rasterizerStates map
+- AF3 (Parse depth/stencil states): Added parsing loop for "states.depthStencilStates" array; uses StateBlockParser::parseDepthStencil() with same duplicate detection pattern
+- AF4 (Parse blend states): Added parsing loop for "states.blendStates" array with StateBlockParser::parseBlend()
+- AF5 (Parse render target states): Added parsing loop for "states.renderTargetStates" array with StateBlockParser::parseRenderTarget()
+- AF6 (Query methods): Implemented 4 public const methods: `getRasterizerState(string id)`, `getDepthStencilState(string id)`, `getBlendState(string id)`, `getRenderTargetState(string id)`; each uses map.find() returning `const StateBlock*` if found, `nullptr` if not found
+
+**Tests:** 4 integration test cases with 32 assertions total; each test creates temp directory, writes JSON with states section, initializes MaterialSystem, queries multiple state blocks by ID, verifies correct data returned, verifies nullptr for non-existent IDs. Test commands: `unit_test_runner.exe "[material-system][T206]"` for T206 tests (32 assertions in 4 test cases), `unit_test_runner.exe "[material-system]"` for full suite (111 assertions in 16 test cases, no regressions).
+
+**Files Modified:**
+- Updated: `src/graphics/material_system/material_system.h` — Added `#include <graphics/material_system/state_blocks.h>`, 4 public query method declarations, 4 private storage maps (unordered_map<string, StateBlock>)
+- Updated: `src/graphics/material_system/material_system.cpp` — Added `#include <graphics/material_system/state_parser.h>`, state parsing implementation in initialize() method (after material parsing), 4 query method implementations (map.find() returning const pointer)
+- Updated: `tests/material_system_tests.cpp` — Added 4 test cases tagged [material-system][T206][integration]: rasterizer state loading/query, depth/stencil state loading/query, blend state loading/query, render target state loading/query
+
+**Implementation Details:**
+- **State parsing pattern**: Check if "states" key exists in merged JSON; for each category (rasterizerStates, depthStencilStates, blendStates, renderTargetStates), check if key exists and is array; iterate array elements, parse with StateBlockParser, check for duplicate ID with `if (map.count(id))`, call console::fatal with descriptive message if duplicate found, insert into map with `map[id] = stateBlock`
+- **Query pattern**: Public const methods accept string ID; use `auto iter = map.find(id)`; return `&iter->second` if found, `nullptr` otherwise; enables callers to check for state existence and fall back to defaults
+- **No fatal errors on missing states**: Unlike duplicate detection, querying non-existent state returns nullptr (not fatal); allows optional state usage where materials can omit state block references and PipelineBuilder uses hardcoded defaults
+- **Optional states section**: If merged JSON lacks "states" key, no parsing occurs; MaterialSystem still initializes successfully with empty state maps (backward compatible with materials that don't use state blocks)
+- **Duplicate detection rationale**: Duplicates indicate authoring error (conflicting definitions with same ID); fatal error catches at load time rather than silent overwrite or undefined behavior at render time
+- **Inheritance not yet resolved**: base field extracted by StateBlockParser but not dereferenced in T206; state blocks must be self-contained for now; inheritance resolution deferred pending T207 requirements (may not be needed if materials only use standalone state blocks)
+
+**Test Coverage:**
+- Test 1 (Rasterizer): Loads 2 rasterizer states (wireframe_rast with fillMode=Wireframe/cullMode=None, default_rast with fillMode=Solid/cullMode=Back); queries both states verifying correct fillMode/cullMode values; queries non-existent ID verifying nullptr returned (8 assertions)
+- Test 2 (DepthStencil): Loads 2 depth/stencil states (depth_only with depthEnable=true/stencilEnable=false, depth_stencil_enabled with both enabled); queries verifying correct enable flags; queries non-existent ID (8 assertions)
+- Test 3 (Blend): Loads 2 blend states (opaque_blend with RT0 blendEnable=false, alpha_blend with RT0 blendEnable=true/srcBlend=SrcAlpha/destBlend=InvSrcAlpha); queries verifying RT0 configuration; queries non-existent ID (8 assertions)
+- Test 4 (RenderTarget): Loads 2 RT states (single_rt with 1 format R8G8B8A8_UNORM, multi_rt with 2 formats R16G16B16A16_FLOAT+R8G8B8A8_UNORM); queries verifying format counts and DXGI_FORMAT values; queries non-existent ID (8 assertions)
+
+**Notes:**
+- Phase 2B (State Blocks: T204-T207) progress: 3/4 tasks complete
+- MaterialSystem now acts as global state block repository; materials will reference state blocks by ID (T207 will add materialDef fields: rasterizerStateRef, depthStencilStateRef, blendStateRef)
+- Query methods return const pointers preventing external modification of cached state blocks
+- State blocks stored separately from materials (not embedded in MaterialDefinition); enables reuse across multiple materials
+- Duplicate detection ensures state block definitions are unambiguous
+- Next: T207 Update PipelineBuilder to Use State Blocks — modify buildPSO() to accept MaterialSystem pointer, add optional state block ID fields to MaterialDefinition, query state blocks from MaterialSystem in PipelineBuilder, replace hardcoded D3D12 default states with queried state blocks (with fallback to defaults if state ID not specified or not found), update tests to verify PSO uses state blocks from materials
+
+---
+
 ## 2025-10-10 — T205: Create State Block Parser for JSON State Definitions
 **Summary:** Completed T205 by implementing StateBlockParser class with comprehensive string→enum mappings and JSON parsing for all state block types (RasterizerStateBlock, DepthStencilStateBlock, BlendStateBlock, RenderTargetStateBlock). Implemented 10 enum parsers (FillMode, CullMode, ComparisonFunc, BlendFactor, BlendOp, LogicOp, StencilOp, DepthWriteMask, ColorWriteMask, DXGI_FORMAT) with static unordered_map lookups and console::fatal for invalid strings. Added full state block parsers that extract all fields from JSON with optional field support using T204 struct defaults. Followed TDD workflow with 13 test cases covering enum mappings and complete state block parsing. Phase 2B (State Blocks) progress: 2/4 tasks complete.
 

@@ -2141,3 +2141,193 @@ TEST_CASE( "StateBlockParser parses RenderTargetStateBlock from JSON", "[state-p
 	REQUIRE( renderTarget.sampleCount == 4 );
 	REQUIRE( renderTarget.sampleQuality == 1 );
 }
+
+// ============================================================================
+// T206: State Block Integration Tests
+// ============================================================================
+
+TEST_CASE( "MaterialSystem loads and queries rasterizer states", "[material-system][T206][integration]" )
+{
+	// Create temporary test directory
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T206_rasterizer";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"rasterizerStates": {
+				"Default": {
+					"fillMode": "Solid",
+					"cullMode": "Back"
+				},
+				"Wireframe": {
+					"fillMode": "Wireframe",
+					"cullMode": "None"
+				}
+			}
+		},
+		"materials": [],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool success = materialSystem.initialize( jsonPath.string() );
+
+	REQUIRE( success );
+
+	// Query Default rasterizer state
+	const auto* defaultState = materialSystem.getRasterizerState( "Default" );
+	REQUIRE( defaultState != nullptr );
+	REQUIRE( defaultState->id == "Default" );
+	REQUIRE( defaultState->fillMode == D3D12_FILL_MODE_SOLID );
+	REQUIRE( defaultState->cullMode == D3D12_CULL_MODE_BACK );
+
+	// Query Wireframe rasterizer state
+	const auto* wireframeState = materialSystem.getRasterizerState( "Wireframe" );
+	REQUIRE( wireframeState != nullptr );
+	REQUIRE( wireframeState->id == "Wireframe" );
+	REQUIRE( wireframeState->fillMode == D3D12_FILL_MODE_WIREFRAME );
+	REQUIRE( wireframeState->cullMode == D3D12_CULL_MODE_NONE );
+
+	// Query non-existent state
+	const auto* nonExistent = materialSystem.getRasterizerState( "NonExistent" );
+	REQUIRE( nonExistent == nullptr );
+
+	fs::remove_all( testDir );
+}
+
+TEST_CASE( "MaterialSystem loads and queries depth stencil states", "[material-system][T206][integration]" )
+{
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T206_depth";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"depthStencilStates": {
+				"Default": {
+					"depthEnable": true,
+					"depthWriteMask": "All",
+					"depthFunc": "Less"
+				},
+				"DepthReadOnly": {
+					"depthEnable": true,
+					"depthWriteMask": "Zero",
+					"depthFunc": "LessEqual"
+				}
+			}
+		},
+		"materials": [],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+
+	const auto* defaultState = materialSystem.getDepthStencilState( "Default" );
+	REQUIRE( defaultState != nullptr );
+	REQUIRE( defaultState->depthEnable == TRUE );
+	REQUIRE( defaultState->depthWriteMask == D3D12_DEPTH_WRITE_MASK_ALL );
+	REQUIRE( defaultState->depthFunc == D3D12_COMPARISON_FUNC_LESS );
+
+	const auto* readOnlyState = materialSystem.getDepthStencilState( "DepthReadOnly" );
+	REQUIRE( readOnlyState != nullptr );
+	REQUIRE( readOnlyState->depthEnable == TRUE );
+	REQUIRE( readOnlyState->depthWriteMask == D3D12_DEPTH_WRITE_MASK_ZERO );
+	REQUIRE( readOnlyState->depthFunc == D3D12_COMPARISON_FUNC_LESS_EQUAL );
+
+	fs::remove_all( testDir );
+}
+
+TEST_CASE( "MaterialSystem loads and queries blend states", "[material-system][T206][integration]" )
+{
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T206_blend";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"blendStates": {
+				"Opaque": {
+					"alphaToCoverageEnable": false,
+					"renderTargets": [{
+						"blendEnable": false
+					}]
+				},
+				"AlphaBlend": {
+					"alphaToCoverageEnable": false,
+					"renderTargets": [{
+						"blendEnable": true,
+						"srcBlend": "SrcAlpha",
+						"destBlend": "InvSrcAlpha"
+					}]
+				}
+			}
+		},
+		"materials": [],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+
+	const auto* opaqueState = materialSystem.getBlendState( "Opaque" );
+	REQUIRE( opaqueState != nullptr );
+	REQUIRE( opaqueState->alphaToCoverageEnable == FALSE );
+	REQUIRE( opaqueState->renderTargets[0].blendEnable == FALSE );
+
+	const auto* alphaBlendState = materialSystem.getBlendState( "AlphaBlend" );
+	REQUIRE( alphaBlendState != nullptr );
+	REQUIRE( alphaBlendState->renderTargets[0].blendEnable == TRUE );
+	REQUIRE( alphaBlendState->renderTargets[0].srcBlend == D3D12_BLEND_SRC_ALPHA );
+	REQUIRE( alphaBlendState->renderTargets[0].destBlend == D3D12_BLEND_INV_SRC_ALPHA );
+
+	fs::remove_all( testDir );
+}
+
+TEST_CASE( "MaterialSystem loads and queries render target states", "[material-system][T206][integration]" )
+{
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T206_rt";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"renderTargetStates": {
+				"MainColor": {
+					"rtvFormats": ["R8G8B8A8_UNORM"],
+					"dsvFormat": "D32_FLOAT"
+				}
+			}
+		},
+		"materials": [],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+
+	const auto* mainColorState = materialSystem.getRenderTargetState( "MainColor" );
+	REQUIRE( mainColorState != nullptr );
+	REQUIRE( mainColorState->rtvFormats.size() == 1 );
+	REQUIRE( mainColorState->rtvFormats[0] == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( mainColorState->dsvFormat == DXGI_FORMAT_D32_FLOAT );
+
+	fs::remove_all( testDir );
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parser.h"
+#include "state_blocks.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -38,9 +39,22 @@ public:
 	// Returns nullptr if handle invalid
 	const MaterialDefinition *getMaterial( MaterialHandle handle ) const;
 
+	// Query state blocks by ID
+	// Returns nullptr if state not found
+	const RasterizerStateBlock *getRasterizerState( const std::string &id ) const;
+	const DepthStencilStateBlock *getDepthStencilState( const std::string &id ) const;
+	const BlendStateBlock *getBlendState( const std::string &id ) const;
+	const RenderTargetStateBlock *getRenderTargetState( const std::string &id ) const;
+
 private:
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
 	std::vector<MaterialDefinition> m_materials;
+
+	// State block storage
+	std::unordered_map<std::string, RasterizerStateBlock> m_rasterizerStates;
+	std::unordered_map<std::string, DepthStencilStateBlock> m_depthStencilStates;
+	std::unordered_map<std::string, BlendStateBlock> m_blendStates;
+	std::unordered_map<std::string, RenderTargetStateBlock> m_renderTargetStates;
 };
 
 } // namespace graphics::material_system
