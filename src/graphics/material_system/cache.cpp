@@ -20,10 +20,10 @@ PSOHash computePSOHash( const MaterialDefinition &material, const RenderPassConf
 	hash ^= hasher( passConfig.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 
 	// Combine shader ids (sorted for stability)
-	for ( const auto &[stage, shaderId] : material.shaders )
+	for ( const auto &shaderRef : material.shaders )
 	{
-		hash ^= hasher( stage ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= hasher( shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		hash ^= hasher( shaderStageToString( shaderRef.stage ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		hash ^= hasher( shaderRef.shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 	}
 
 	// Combine state block ids

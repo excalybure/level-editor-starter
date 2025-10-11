@@ -17,6 +17,17 @@ enum class ParameterType
 	Float4
 };
 
+// Shader stage enumeration
+enum class ShaderStage
+{
+	Vertex,
+	Pixel,
+	Domain,
+	Hull,
+	Geometry,
+	Compute
+};
+
 // Parameter definition
 struct Parameter
 {
@@ -28,7 +39,7 @@ struct Parameter
 // Shader entry reference (within a material)
 struct ShaderReference
 {
-	std::string stage;	  // "vertex", "pixel", "compute"
+	ShaderStage stage;	  // Vertex, Pixel, Compute, etc.
 	std::string shaderId; // References a ShaderEntry.id
 };
 
@@ -52,6 +63,12 @@ struct MaterialDefinition
 	bool enabled = true;
 	std::string versionHash;
 };
+
+// Helper function to convert ShaderStage to string (for hashing and lookups)
+std::string shaderStageToString( ShaderStage stage );
+
+// Helper function to parse string into ShaderStage enum
+ShaderStage parseShaderStage( const std::string &stageStr );
 
 // Material parser class
 class MaterialParser

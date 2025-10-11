@@ -219,9 +219,10 @@ bool ReferenceValidator::validateReferences(
 		if ( document.contains( "shaders" ) && document["shaders"].is_object() )
 		{
 			const auto &shadersObj = document["shaders"];
-			if ( shadersObj.contains( shaderRef.stage ) && shadersObj[shaderRef.stage].is_array() )
+			const std::string stageStr = graphics::material_system::shaderStageToString( shaderRef.stage );
+			if ( shadersObj.contains( stageStr ) && shadersObj[stageStr].is_array() )
 			{
-				for ( const auto &shaderEntry : shadersObj[shaderRef.stage] )
+				for ( const auto &shaderEntry : shadersObj[stageStr] )
 				{
 					if ( shaderEntry.contains( "id" ) && shaderEntry["id"] == shaderRef.shaderId )
 					{
@@ -237,7 +238,7 @@ bool ReferenceValidator::validateReferences(
 			console::error( "Material '{}': references undefined shader '{}' (stage: {})",
 				material.id,
 				shaderRef.shaderId,
-				shaderRef.stage );
+				graphics::material_system::shaderStageToString( shaderRef.stage ) );
 			allValid = false;
 		}
 	}

@@ -750,12 +750,12 @@ TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T0
 	bool foundPixel = false;
 	for ( const auto &shader : material.shaders )
 	{
-		if ( shader.stage == "vertex" )
+		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
 		{
 			REQUIRE( shader.shaderId == "standard_vs" );
 			foundVertex = true;
 		}
-		else if ( shader.stage == "pixel" )
+		else if ( shader.stage == graphics::material_system::ShaderStage::Pixel )
 		{
 			REQUIRE( shader.shaderId == "standard_ps" );
 			foundPixel = true;

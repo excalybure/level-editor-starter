@@ -515,9 +515,9 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 		bool hasPixelShader = false;
 		for ( const auto &shaderRef : material->shaders )
 		{
-			if ( shaderRef.stage == "vertex" )
+			if ( shaderRef.stage == graphics::material_system::ShaderStage::Vertex )
 				hasVertexShader = true;
-			if ( shaderRef.stage == "pixel" )
+			if ( shaderRef.stage == graphics::material_system::ShaderStage::Pixel )
 				hasPixelShader = true;
 		}
 		REQUIRE( hasVertexShader );

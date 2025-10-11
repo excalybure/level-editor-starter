@@ -5,6 +5,27 @@
 namespace graphics::material_system
 {
 
+std::string shaderStageToString( ShaderStage stage )
+{
+	switch ( stage )
+	{
+	case ShaderStage::Vertex:
+		return "vertex";
+	case ShaderStage::Pixel:
+		return "pixel";
+	case ShaderStage::Domain:
+		return "domain";
+	case ShaderStage::Hull:
+		return "hull";
+	case ShaderStage::Geometry:
+		return "geometry";
+	case ShaderStage::Compute:
+		return "compute";
+	default:
+		return "unknown";
+	}
+}
+
 MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 {
 	MaterialDefinition material;
@@ -35,7 +56,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	for ( auto it = shadersObj.begin(); it != shadersObj.end(); ++it )
 	{
 		ShaderReference shaderRef;
-		shaderRef.stage = it.key();
+		shaderRef.stage = parseShaderStage( it.key() );
 		shaderRef.shaderId = it.value().get<std::string>();
 		material.shaders.push_back( shaderRef );
 	}
@@ -123,6 +144,25 @@ ParameterType MaterialParser::parseParameterType( const std::string &typeStr )
 
 	console::error( "MaterialParser: Unknown parameter type '{}'", typeStr );
 	return ParameterType::Float; // Default fallback
+}
+
+ShaderStage parseShaderStage( const std::string &stageStr )
+{
+	if ( stageStr == "vertex" || stageStr == "vs" )
+		return ShaderStage::Vertex;
+	if ( stageStr == "pixel" || stageStr == "ps" )
+		return ShaderStage::Pixel;
+	if ( stageStr == "domain" || stageStr == "ds" )
+		return ShaderStage::Domain;
+	if ( stageStr == "hull" || stageStr == "hs" )
+		return ShaderStage::Hull;
+	if ( stageStr == "geometry" || stageStr == "gs" )
+		return ShaderStage::Geometry;
+	if ( stageStr == "compute" || stageStr == "cs" )
+		return ShaderStage::Compute;
+
+	console::fatal( "MaterialParser: Unknown shader stage '{}'", stageStr );
+	return ShaderStage::Vertex; // Won't reach here due to fatal
 }
 
 } // namespace graphics::material_system
