@@ -2181,6 +2181,67 @@ TEST_CASE( "VertexFormat contains id, elements, and stride", "[vertex-format][T2
 	REQUIRE( format.elements[1].alignedByteOffset == 12 );
 }
 
+// T209: Vertex Format Parsing Tests
+// ============================================================================
+
+TEST_CASE( "parseFormat supports vertex-specific formats", "[vertex-format][T209][unit]" )
+{
+	using namespace graphics::material_system;
+
+	// Test common vertex formats
+	REQUIRE( StateBlockParser::parseFormat( "R32G32B32_FLOAT" ) == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( StateBlockParser::parseFormat( "R32G32_FLOAT" ) == DXGI_FORMAT_R32G32_FLOAT );
+	REQUIRE( StateBlockParser::parseFormat( "R32_FLOAT" ) == DXGI_FORMAT_R32_FLOAT );
+
+	// Test formats already present (RT/depth)
+	REQUIRE( StateBlockParser::parseFormat( "R32G32B32A32_FLOAT" ) == DXGI_FORMAT_R32G32B32A32_FLOAT );
+	REQUIRE( StateBlockParser::parseFormat( "R8G8B8A8_UNORM" ) == DXGI_FORMAT_R8G8B8A8_UNORM );
+}
+
+TEST_CASE( "parseVertexFormat parses complete vertex format from JSON", "[vertex-format][T209][unit]" )
+{
+	using namespace graphics::material_system;
+
+	// Arrange - JSON for PositionNormalUV format
+	const std::string jsonStr = R"({
+		"id": "PositionNormalUV",
+		"stride": 32,
+		"elements": [
+			{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+			{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 },
+			{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 }
+		]
+	})";
+	const json j = json::parse( jsonStr );
+
+	// Act
+	const VertexFormat format = StateBlockParser::parseVertexFormat( j );
+
+	// Assert
+	REQUIRE( format.id == "PositionNormalUV" );
+	REQUIRE( format.stride == 32 );
+	REQUIRE( format.elements.size() == 3 );
+
+	// POSITION element
+	REQUIRE( format.elements[0].semantic == "POSITION" );
+	REQUIRE( format.elements[0].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( format.elements[0].alignedByteOffset == 0 );
+	REQUIRE( format.elements[0].semanticIndex == 0 );
+	REQUIRE( format.elements[0].inputSlot == 0 );
+	REQUIRE( format.elements[0].inputSlotClass == D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA );
+	REQUIRE( format.elements[0].instanceDataStepRate == 0 );
+
+	// NORMAL element
+	REQUIRE( format.elements[1].semantic == "NORMAL" );
+	REQUIRE( format.elements[1].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( format.elements[1].alignedByteOffset == 12 );
+
+	// TEXCOORD element
+	REQUIRE( format.elements[2].semantic == "TEXCOORD" );
+	REQUIRE( format.elements[2].format == DXGI_FORMAT_R32G32_FLOAT );
+	REQUIRE( format.elements[2].alignedByteOffset == 24 );
+}
+
 // ============================================================================
 // T205: State Block Parser Tests
 // ============================================================================
@@ -2618,6 +2679,83 @@ TEST_CASE( "MaterialSystem loads and queries render target states", "[material-s
 	REQUIRE( mainColorState->rtvFormats.size() == 1 );
 	REQUIRE( mainColorState->rtvFormats[0] == DXGI_FORMAT_R8G8B8A8_UNORM );
 	REQUIRE( mainColorState->dsvFormat == DXGI_FORMAT_D32_FLOAT );
+
+	fs::remove_all( testDir );
+}
+
+TEST_CASE( "MaterialSystem loads and queries vertex formats", "[material-system][T209][integration]" )
+{
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T209_vertex";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"vertexFormats": {
+				"PositionColor": {
+					"id": "PositionColor",
+					"stride": 28,
+					"elements": [
+						{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+						{ "semantic": "COLOR", "format": "R32G32B32A32_FLOAT", "offset": 12 }
+					]
+				},
+				"PositionNormalUV": {
+					"id": "PositionNormalUV",
+					"stride": 32,
+					"elements": [
+						{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+						{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 },
+						{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 }
+					]
+				}
+			}
+		},
+		"materials": [],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool success = materialSystem.initialize( jsonPath.string() );
+
+	REQUIRE( success );
+
+	// Query PositionColor format
+	const auto *posColorFormat = materialSystem.getVertexFormat( "PositionColor" );
+	REQUIRE( posColorFormat != nullptr );
+	REQUIRE( posColorFormat->id == "PositionColor" );
+	REQUIRE( posColorFormat->stride == 28 );
+	REQUIRE( posColorFormat->elements.size() == 2 );
+	REQUIRE( posColorFormat->elements[0].semantic == "POSITION" );
+	REQUIRE( posColorFormat->elements[0].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( posColorFormat->elements[0].alignedByteOffset == 0 );
+	REQUIRE( posColorFormat->elements[1].semantic == "COLOR" );
+	REQUIRE( posColorFormat->elements[1].format == DXGI_FORMAT_R32G32B32A32_FLOAT );
+	REQUIRE( posColorFormat->elements[1].alignedByteOffset == 12 );
+
+	// Query PositionNormalUV format
+	const auto *posNormalUVFormat = materialSystem.getVertexFormat( "PositionNormalUV" );
+	REQUIRE( posNormalUVFormat != nullptr );
+	REQUIRE( posNormalUVFormat->id == "PositionNormalUV" );
+	REQUIRE( posNormalUVFormat->stride == 32 );
+	REQUIRE( posNormalUVFormat->elements.size() == 3 );
+	REQUIRE( posNormalUVFormat->elements[0].semantic == "POSITION" );
+	REQUIRE( posNormalUVFormat->elements[0].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( posNormalUVFormat->elements[0].alignedByteOffset == 0 );
+	REQUIRE( posNormalUVFormat->elements[1].semantic == "NORMAL" );
+	REQUIRE( posNormalUVFormat->elements[1].format == DXGI_FORMAT_R32G32B32_FLOAT );
+	REQUIRE( posNormalUVFormat->elements[1].alignedByteOffset == 12 );
+	REQUIRE( posNormalUVFormat->elements[2].semantic == "TEXCOORD" );
+	REQUIRE( posNormalUVFormat->elements[2].format == DXGI_FORMAT_R32G32_FLOAT );
+	REQUIRE( posNormalUVFormat->elements[2].alignedByteOffset == 24 );
+
+	// Query non-existent format
+	const auto *nonExistent = materialSystem.getVertexFormat( "NonExistent" );
+	REQUIRE( nonExistent == nullptr );
 
 	fs::remove_all( testDir );
 }

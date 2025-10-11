@@ -208,7 +208,7 @@ UINT8 StateBlockParser::parseColorWriteMask( const std::string &str )
 
 DXGI_FORMAT StateBlockParser::parseFormat( const std::string &str )
 {
-	// Common render target and depth formats
+	// Common render target, depth, and vertex formats
 	static const std::unordered_map<std::string, DXGI_FORMAT> mapping = {
 		// Common RT formats
 		{ "R8G8B8A8_UNORM", DXGI_FORMAT_R8G8B8A8_UNORM },
@@ -222,6 +222,11 @@ DXGI_FORMAT StateBlockParser::parseFormat( const std::string &str )
 		{ "D32_FLOAT", DXGI_FORMAT_D32_FLOAT },
 		{ "D24_UNORM_S8_UINT", DXGI_FORMAT_D24_UNORM_S8_UINT },
 		{ "D16_UNORM", DXGI_FORMAT_D16_UNORM },
+
+		// Vertex formats (POSITION, NORMAL, TEXCOORD, etc.)
+		{ "R32G32B32_FLOAT", DXGI_FORMAT_R32G32B32_FLOAT },
+		{ "R32G32_FLOAT", DXGI_FORMAT_R32G32_FLOAT },
+		{ "R32_FLOAT", DXGI_FORMAT_R32_FLOAT },
 
 		// Special
 		{ "UNKNOWN", DXGI_FORMAT_UNKNOWN }
@@ -568,6 +573,57 @@ RenderTargetStateBlock StateBlockParser::parseRenderTarget( const nlohmann::json
 	}
 
 	return state;
+}
+
+VertexFormat StateBlockParser::parseVertexFormat( const nlohmann::json &j )
+{
+	VertexFormat format;
+
+	// Extract id (required)
+	if ( j.contains( "id" ) && j["id"].is_string() )
+	{
+		format.id = j["id"].get<std::string>();
+	}
+
+	// Extract stride (required)
+	if ( j.contains( "stride" ) && j["stride"].is_number_unsigned() )
+	{
+		format.stride = j["stride"].get<UINT>();
+	}
+
+	// Extract elements array (required)
+	if ( j.contains( "elements" ) && j["elements"].is_array() )
+	{
+		const auto &elementsArray = j["elements"];
+		for ( const auto &elemJson : elementsArray )
+		{
+			VertexElement element;
+
+			// semantic (required)
+			if ( elemJson.contains( "semantic" ) && elemJson["semantic"].is_string() )
+			{
+				element.semantic = elemJson["semantic"].get<std::string>();
+			}
+
+			// format (required)
+			if ( elemJson.contains( "format" ) && elemJson["format"].is_string() )
+			{
+				element.format = parseFormat( elemJson["format"].get<std::string>() );
+			}
+
+			// offset (required) - stored in alignedByteOffset
+			if ( elemJson.contains( "offset" ) && elemJson["offset"].is_number_unsigned() )
+			{
+				element.alignedByteOffset = elemJson["offset"].get<UINT>();
+			}
+
+			// Optional fields - semanticIndex, inputSlot, inputSlotClass, instanceDataStepRate use struct defaults
+
+			format.elements.push_back( element );
+		}
+	}
+
+	return format;
 }
 
 } // namespace graphics::material_system

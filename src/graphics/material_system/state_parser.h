@@ -15,6 +15,7 @@ public:
 	static DepthStencilStateBlock parseDepthStencil( const nlohmann::json &j );
 	static BlendStateBlock parseBlend( const nlohmann::json &j );
 	static RenderTargetStateBlock parseRenderTarget( const nlohmann::json &j );
+	static VertexFormat parseVertexFormat( const nlohmann::json &j );
 
 	// Parse enum strings to D3D12 enums
 	static D3D12_FILL_MODE parseFillMode( const std::string &str );

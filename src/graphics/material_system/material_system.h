@@ -45,6 +45,7 @@ public:
 	const DepthStencilStateBlock *getDepthStencilState( const std::string &id ) const;
 	const BlendStateBlock *getBlendState( const std::string &id ) const;
 	const RenderTargetStateBlock *getRenderTargetState( const std::string &id ) const;
+	const VertexFormat *getVertexFormat( const std::string &id ) const;
 
 private:
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
@@ -55,6 +56,7 @@ private:
 	std::unordered_map<std::string, DepthStencilStateBlock> m_depthStencilStates;
 	std::unordered_map<std::string, BlendStateBlock> m_blendStates;
 	std::unordered_map<std::string, RenderTargetStateBlock> m_renderTargetStates;
+	std::unordered_map<std::string, VertexFormat> m_vertexFormats;
 };
 
 } // namespace graphics::material_system

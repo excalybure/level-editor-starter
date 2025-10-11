@@ -92,6 +92,23 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 				m_renderTargetStates[id] = state;
 			}
 		}
+
+		// Parse vertex formats
+		if ( statesSection.contains( "vertexFormats" ) && statesSection["vertexFormats"].is_object() )
+		{
+			for ( const auto &[id, formatJson] : statesSection["vertexFormats"].items() )
+			{
+				auto format = StateBlockParser::parseVertexFormat( formatJson );
+				format.id = id;
+
+				if ( m_vertexFormats.find( id ) != m_vertexFormats.end() )
+				{
+					console::fatal( "Duplicate vertex format ID: '{}'", id );
+				}
+
+				m_vertexFormats[id] = format;
+			}
+		}
 	}
 
 	// Parse materials array
@@ -175,6 +192,16 @@ const RenderTargetStateBlock *MaterialSystem::getRenderTargetState( const std::s
 {
 	const auto it = m_renderTargetStates.find( id );
 	if ( it == m_renderTargetStates.end() )
+	{
+		return nullptr;
+	}
+	return &it->second;
+}
+
+const VertexFormat *MaterialSystem::getVertexFormat( const std::string &id ) const
+{
+	const auto it = m_vertexFormats.find( id );
+	if ( it == m_vertexFormats.end() )
 	{
 		return nullptr;
 	}
