@@ -1,14 +1,15 @@
 #pragma once
 
+#include "parser.h"
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <cstdint>
 
 namespace graphics::material_system
 {
 
 // Forward declarations
-struct MaterialDefinition;
 class JsonLoader;
 
 // Opaque handle for material access

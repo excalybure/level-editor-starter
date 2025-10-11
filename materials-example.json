@@ -1,0 +1,220 @@
+{
+  "states": {
+    "depthStencilStates": {
+      "Default": {
+        "depthEnable": true,
+        "depthWriteMask": "All",
+        "depthFunc": "LessEqual",
+        "stencilEnable": false
+      },
+      "DepthPrepass": {
+        "base": "Default",
+        "depthWriteMask": "All",
+        "depthFunc": "Less"
+      },
+      "DepthReadOnly": {
+        "base": "Default",
+        "depthWriteMask": "Zero"
+      },
+      "DepthNone": {
+        "depthEnable": false,
+        "stencilEnable": false
+      }
+    },
+    "rasterizerStates": {
+      "Default": {
+        "fillMode": "Solid",
+        "cullMode": "Back",
+        "frontCounterClockwise": false
+      },
+      "DoubleSided": {
+        "base": "Default",
+        "cullMode": "None"
+      },
+      "Wireframe": {
+        "base": "Default",
+        "fillMode": "Wireframe",
+        "cullMode": "None"
+      }
+    },
+    "blendStates": {
+      "Opaque": {
+        "alphaToCoverage": false,
+        "independentBlend": false,
+        "renderTargets": [
+          {
+            "enable": false,
+            "srcBlend": "One",
+            "destBlend": "Zero",
+            "blendOp": "Add",
+            "srcBlendAlpha": "One",
+            "destBlendAlpha": "Zero",
+            "blendOpAlpha": "Add",
+            "writeMask": "All"
+          }
+        ]
+      },
+      "AlphaBlend": {
+        "base": "Opaque",
+        "renderTargets": [
+          {
+            "enable": true,
+            "srcBlend": "SrcAlpha",
+            "destBlend": "InvSrcAlpha"
+          }
+        ]
+      }
+    },
+    "renderTargetStates": {
+      "MainColor": {
+        "rtvFormats": ["R8G8B8A8_UNORM"],
+        "dsvFormat": "D32_FLOAT",
+        "samples": 1
+      },
+      "DepthMap": {
+        "rtvFormats": [],
+        "dsvFormat": "D32_FLOAT_S8X24",
+        "samples": 1
+      },
+      "ShadowMap": {
+        "rtvFormats": [],
+        "dsvFormat": "D32_FLOAT",
+        "samples": 1
+      }
+    }
+  },
+  "renderPasses": [
+    {
+      "name": "depth_prepass",
+      "queue": "DepthPrepass",
+      "attachments": {
+        "inputs": [],
+        "outputs": [{ "name": "depth", "resource": "DepthBuffer" }]
+      },
+      "states": {
+        "depthStencil": "DepthPrepass",
+        "rasterizer": "Default",
+        "blend": "Opaque",
+        "renderTarget": "DepthMap"
+      }
+    },
+    {
+      "name": "lit_opaque",
+      "queue": "Opaque",
+      "attachments": {
+        "inputs": [{ "resource": "ShadowAtlas" }],
+        "outputs": [{ "name": "color", "resource": "MainColor" }]
+      },
+      "states": {
+        "depthStencil": "Default",
+        "rasterizer": "Default",
+        "blend": "Opaque",
+        "renderTarget": "MainColor"
+      }
+    },
+    {
+      "name": "unlit_opaque",
+      "queue": "Opaque",
+      "attachments": {
+        "inputs": [],
+        "outputs": [{ "name": "color", "resource": "MainColor" }]
+      },
+      "states": {
+        "depthStencil": "DepthReadOnly",
+        "rasterizer": "Default",
+        "blend": "Opaque",
+        "renderTarget": "MainColor"
+      }
+    },
+    {
+      "name": "wireframe_visualization",
+      "queue": "Debug",
+      "attachments": {
+        "inputs": [],
+        "outputs": [{ "name": "color", "resource": "MainColor" }]
+      },
+      "states": {
+        "depthStencil": "DepthReadOnly",
+        "rasterizer": "Wireframe",
+        "blend": "AlphaBlend",
+        "renderTarget": "MainColor"
+      }
+    },
+    {
+      "name": "grid",
+      "queue": "Debug",
+      "attachments": {
+        "inputs": [{ "resource": "DepthBuffer" }],
+        "outputs": [{ "name": "color", "resource": "MainColor" }]
+      },
+      "states": {
+        "depthStencil": "DepthNone",
+        "rasterizer": "Default",
+        "blend": "Opaque",
+        "renderTarget": "MainColor"
+      }
+    }
+  ],
+  "materials": [ {
+    "name": "opaque_standard",
+    "domain": "Opaque",
+    "cbuffers": {
+      "Scene": { "slot": 0, "visibility": ["VS", "PS"] },
+      "Object": { "slot": 1, "visibility": ["VS"] },
+      "Material": { "slot": 2, "visibility": ["PS"] }
+    },
+    "defines": ["DEFAULT_OPAQUE"],
+    "passes": [
+      {
+        "name": "Depth",
+        "renderPass": "depth_prepass",
+        "shaders": {
+          "vs": { "file": "shaders/mesh.hlsl", "entry": "VSMain", "profile": "vs_6_7", "defines": ["IS_PREPASS"] }
+        }
+      },
+      {
+        "name": "Lit",
+        "renderPass": "lit_opaque",
+	      "defines": ["IS_MESH"],
+        "shaders": {
+          "vs": { "file": "shaders/mesh.hlsl", "entry": "VSMain", "profile": "vs_6_7" },
+          "ps": { "file": "shaders/lit.hlsl", "entry": "PSMain", "profile": "ps_6_7" }
+        }
+      },
+      {
+        "name": "Unlit",
+        "renderPass": "unlit_opaque",
+        "base": "Lit",
+        "shaders": {
+          "ps": { "file": "shaders/unlit.hlsl", "entry": "PSMain", "profile": "ps_6_7" }
+        }
+      },
+      {
+        "name": "Wireframe",
+        "renderPass": "wireframe_visualization",
+        "base": "Lit",
+        "states": {
+          "rasterizer": "Wireframe",
+          "blend": "AlphaBlend"
+        }
+      }
+    ]
+  },
+  {
+    "name": "grid",
+    "domain": "Grid",
+    "cbuffers": {
+      "GridConstants": { "slot": 0, "visibility": ["VS", "PS"] }
+    },
+    "passes": [
+      {
+        "name": "Grid",
+        "renderPass": "grid",
+        "shaders": {
+          "vs": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_6_7" },
+          "ps": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_6_7" }
+        }
+      } ]
+    }
+  ]
+}

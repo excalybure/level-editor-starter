@@ -3,6 +3,7 @@
 #include "editor/config/EditorConfig.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/material_system/material_system.h"
 #include "engine/integration/asset_gltf_integration.h"
 #include "engine/picking.h"
 #include "graphics/renderer/renderer.h"
@@ -100,6 +101,18 @@ int main()
 
 	// Create shader manager for automatic shader reloading
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+
+	// Initialize material system for data-driven materials
+	graphics::material_system::MaterialSystem materialSystem;
+	if ( !materialSystem.initialize( "materials.json" ) )
+	{
+		console::error( "Failed to initialize material system from materials.json" );
+		console::info( "Application will continue without data-driven materials" );
+	}
+	else
+	{
+		console::info( "Material system initialized successfully" );
+	}
 
 	// Create ECS Scene for runtime entities
 	ecs::Scene scene;
