@@ -1,5 +1,137 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-08 — T202: Update MaterialParser to Extract Shader Info and Validate
+**Summary:** Completed T202 by removing legacy string mode support, adding file path validation, and implementing duplicate shader stage detection. Parser now requires inline shader objects with `file`, `entry`, and `profile` fields. All shader files are validated at parse time using filesystem checks, ensuring fail-fast behavior. Updated all tests and project materials.json to use the new inline shader format. Followed TDD workflow with atomic functionality increments.
+
+**Atomic functionalities completed:**
+- AF1 (File validation): Added filesystem check `std::filesystem::exists(shaderRef.file)` to verify shader files exist before PSO building; calls `console::fatal()` with descriptive message if file missing
+- AF2 (Legacy mode removal): Removed support for string shader references (`"vertex": "shader_id"`); parser now rejects string mode with fatal error explaining new format requirement: `"Legacy string shader references no longer supported. Shader 'X' in material 'Y' must be an object with 'file', 'profile', etc."`
+- AF3 (Duplicate detection): Added `std::unordered_set<ShaderStage>` to track seen stages within a material; calls `console::fatal()` if duplicate stage detected (e.g., two "vertex" shaders in one material)
+- AF4 (Test updates): Updated 6 test cases (T009, T010, T014, T015, T016, T201) to use inline shader objects instead of legacy string format
+- AF5 (Project file conversion): Converted `materials.json` project file with 5 materials (standard_opaque, unlit_opaque, grid_material, wireframe, debug_normals) from legacy string format to inline shader format with proper file paths, entry points, and profiles
+
+**Tests:** All material-parser tests pass (56 assertions in 5 test cases). Full material-system suite passes (79 assertions in 12 test cases). Test commands: `unit_test_runner.exe "[material-parser]"` for parser tests, `unit_test_runner.exe "[material-system]"` for full suite.
+
+**Files Modified:**
+- `src/graphics/material_system/parser.cpp` - Added file validation with filesystem check; removed string mode support with informative fatal error; added duplicate stage detection with unordered_set; includes <filesystem>, <unordered_set>
+- `tests/material_system_tests.cpp` - Updated T009, T010, T014, T015, T016, T201 tests to use inline shader objects
+- `materials.json` - Converted all 5 materials from legacy string format (`"vertex": "mesh_vs"`) to inline objects (`"vertex": {"file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_6_0"}`)
+
+**Implementation Details:**
+- **File Validation**: Shader file paths checked relative to working directory; fatal error terminates immediately if file missing, preventing deferred runtime errors during PSO creation
+- **Legacy Mode Removal**: Parser is now strict - no backward compatibility for string shader refs; migration path clear: use inline objects with file, entry, profile fields
+- **Duplicate Detection**: Prevents ambiguous configurations where material defines multiple shaders for same stage; ensures one shader per stage (vertex, pixel, domain, hull, geometry, compute)
+- **Profile Validation**: Inherited from T201 - regex validates `(vs|ps|ds|hs|gs|cs)_\d+_\d+` format
+- **Default Values**: Inherited from T201 - `entry` defaults to "main", `defines` defaults to empty vector when fields omitted
+- **Const Correctness**: All local read-only variables marked const; filesystem API used const-correctly
+
+**Validation Behavior:**
+- Missing file: `console::fatal("Shader file 'X' does not exist")` - Immediate termination
+- Legacy string: `console::fatal("Legacy string shader references no longer supported. Shader 'pixel' in material 'standard_opaque' must be an object...")` - Guides migration
+- Duplicate stage: `console::fatal("Duplicate shader stage 'vertex' in material 'mat_id'")` - Prevents ambiguous configs
+- Invalid profile: `console::fatal("Invalid shader profile 'X'. Must match (vs|ps|ds|hs|gs|cs)_N_M")` - Enforces DirectX format
+
+**Notes:**
+- All project materials now use inline shader format - zero legacy string references remain in codebase
+- Parser fail-fast strategy: validation errors terminate at load time, not render time
+- Materials.json maps shader references to actual shader files: simple.hlsl, unlit.hlsl, grid.hlsl
+- Completes 2/3 tasks in Phase 2A (Shader Information) of Phase 2 Implementation Plan
+- Next: T203 - Update PipelineBuilder to use shader info (file, entry, profile) from parsed MaterialDefinition instead of hard-coded values
+
+---
+
+## 2025-10-10 — T201: Extend ShaderReference Struct with Inline Shader Definition Support
+**Summary:** Extended ShaderReference struct to support inline shader definitions with file paths, entry points, profiles, and per-shader defines. Implemented parser support for both legacy string shader references (shaderId) and new object mode with shader details. Followed strict TDD RED→GREEN workflow with backward compatibility maintained.
+
+**Atomic functionalities completed:**
+- AF1 (RED): Wrote failing test parsing material with inline shader objects containing file, entry, profile, and defines fields; test failed as expected (ShaderReference missing new fields)
+- AF2 (GREEN): Extended ShaderReference struct adding file, entryPoint, profile, and defines fields; maintained shaderId for legacy compatibility
+- AF3 (GREEN): Updated MaterialParser to handle both string (legacy) and object (new) shader values; implemented profile validation with regex matching (vs|ps|ds|hs|gs|cs)_X_Y format
+- AF4 (GREEN): Added default value for entryPoint ("main") when not specified; implemented optional defines array parsing
+- AF5 (TEST): Wrote test verifying default values applied when optional fields missing; verified entryPoint defaults to "main" and defines defaults to empty array
+- AF6 (REFACTOR): Fixed existing tests using legacy initializer syntax; updated to proper struct construction maintaining backward compatibility
+
+**Tests:** 2 new T201 tests (20 assertions total); all 12 material-system tests pass (79 assertions). Test commands: `unit_test_runner.exe "[material-parser][T201]"` for T201 tests, `unit_test_runner.exe "[material-system]"` for full suite.
+
+**Files Modified:**
+- `src/graphics/material_system/parser.h` - Extended ShaderReference struct with file, entryPoint, profile, defines fields
+- `src/graphics/material_system/parser.cpp` - Updated shader parsing to support string (legacy) and object (new) modes; added profile validation with regex; implemented default values; added <regex> include
+- `tests/material_system_tests.cpp` - Added 2 T201 tests; fixed legacy tests to use proper struct construction; added documentation comment for fatal error cases
+
+**Implementation Details:**
+- **Backward Compatibility**: Parser supports both `"vs": "shader_id"` (legacy) and `"vs": {"file": "...", ...}` (new) formats
+- **Profile Validation**: Regex pattern `(vs|ps|ds|hs|gs|cs)_\d+_\d+` validates profile strings; console::fatal on invalid format
+- **Default Values**: entryPoint defaults to "main" when omitted; defines defaults to empty vector
+- **Error Handling**: console::fatal for missing required fields (file, profile) and invalid profile format
+- **Const Correctness**: All const-qualified appropriately throughout
+
+**Notes:**
+- Fatal error cases (missing file, missing profile, invalid profile format) documented in test comments; cannot be unit tested as console::fatal terminates process
+- Legacy string mode continues to work for existing materials; enables gradual migration path
+- Completes T201 from Phase 2A (Shader Information) of Phase 2 Implementation Plan
+- Next: T202 - Update MaterialParser to extract shader info and validate file paths
+
+---
+
+## 2025-10-10 — GridRenderer Uses MaterialDefinition for Shader Information
+**Summary:** Extended GridRenderer MaterialSystem integration to retrieve and use MaterialDefinition data. GridRenderer now queries material handle, retrieves MaterialDefinition, and logs shader information. Followed TDD RED→GREEN workflow: wrote test verifying MaterialDefinition accessibility, implemented material retrieval logic with informative logging.
+
+**Atomic functionalities completed:**
+- AF1 (RED): Created test verifying GridRenderer can retrieve MaterialDefinition from cached handle; test checks material ID, shader count, and validates vertex/pixel shader stages exist in material definition; test passed immediately (material retrieval already working)
+- AF2 (GREEN): Updated registerShaders() to retrieve MaterialDefinition when MaterialSystem available; added informative logging showing material ID and shader count during initialization
+- AF3 (GREEN): Verified shader information from MaterialDefinition is accessible (2 shaders: grid_vs vertex, grid_ps pixel); current implementation logs material info but continues using hardcoded shader paths (shader entry system not yet implemented)
+
+**Tests:** Extended MaterialSystem integration test with new section (7 additional assertions for material retrieval and shader validation); all 11 grid test cases pass (329 assertions total). Test command: `unit_test_runner.exe "[grid]"`.
+
+**Files Modified:**
+- `tests/grid_tests.cpp` - Added test section verifying GridRenderer retrieves MaterialDefinition, validates shader references for vertex and pixel stages
+- `src/graphics/grid/grid.cpp` - Updated registerShaders() to query MaterialDefinition when MaterialSystem available, added console::info logging material usage
+
+**Implementation Details:**
+- **Material Retrieval**: GridRenderer calls getMaterial(m_materialHandle) to access MaterialDefinition during shader registration
+- **Logging Enhancement**: Console output now shows "GridRenderer: Using material 'grid_material' with 2 shader(s)" when MaterialSystem integrated
+- **Backward Compatibility**: Hardcoded shader paths still used (shaders/grid.hlsl, VSMain/PSMain); material shader IDs logged but not yet used for registration
+- **Future Work**: Shader entry system needed to map material shader IDs (grid_vs, grid_ps) to actual file paths and entry points
+- **Const Correctness**: MaterialDefinition pointer properly const-qualified; material query safe
+
+**Notes:**
+- This demonstrates the material query pattern: cache handle → retrieve definition → access material data
+- Shader IDs from MaterialDefinition are available but not yet actionable (requires shader entry/registry system)
+- Integration establishes foundation for future data-driven shader path resolution
+- All existing tests pass without modification; new test validates MaterialDefinition structure
+
+---
+
+## 2025-10-10 — GridRenderer MaterialSystem Integration Complete
+**Summary:** Integrated MaterialSystem with GridRenderer so that GridRenderer can query and cache its material handle from the material system. Followed strict TDD RED→GREEN workflow: wrote failing test verifying GridRenderer can retrieve and cache grid_material handle, implemented MaterialSystem integration with backward-compatible optional parameter, verified all existing grid tests pass.
+
+**Atomic functionalities completed:**
+- AF1 (RED): Created failing test initializing MaterialSystem with materials.json, passing materialSystem pointer to GridRenderer, asserting valid handle cached; test failed with compilation errors as expected (GridRenderer missing MaterialSystem integration)
+- AF2 (GREEN): Added MaterialSystem pointer and MaterialHandle members to GridRenderer class; updated initialize() signature to accept optional MaterialSystem pointer parameter (default nullptr for backward compatibility); implemented material handle query logic calling getMaterialHandle("grid_material")
+- AF3 (GREEN): Implemented getMaterialHandle() accessor returning cached material handle; added warning log when grid_material not found in material system
+- AF4 (REFACTOR): Verified backward compatibility - all existing grid tests pass without changes; existing code continues working with nullptr MaterialSystem parameter
+
+**Tests:** 1 new test for MaterialSystem integration (3 assertions); all 11 grid test cases pass (322 assertions total). Test command: `unit_test_runner.exe "[grid][material-system][integration]"`. Full grid suite: `unit_test_runner.exe "[grid]"`.
+
+**Files Modified:**
+- `src/graphics/grid/grid.h` - Added MaterialSystem forward declaration include, updated initialize() signature with optional MaterialSystem pointer parameter, added getMaterialHandle() accessor, added m_materialSystem and m_materialHandle member variables
+- `src/graphics/grid/grid.cpp` - Updated initialize() implementation to store MaterialSystem pointer and query grid_material handle with warning on failure
+- `tests/grid_tests.cpp` - Added MaterialSystem integration test case, added MaterialSystem include
+
+**Implementation Details:**
+- **Backward Compatibility**: MaterialSystem parameter is optional (default nullptr); existing code continues to work without changes
+- **Handle Caching**: MaterialHandle cached during initialization for O(1) access; no runtime queries needed per frame
+- **Error Handling**: Warning logged if grid_material not found; GridRenderer continues functioning with fallback shaders
+- **Const Correctness**: getMaterialHandle() marked const; member variables properly initialized
+- **Integration Pattern**: Follows same pattern established by MaterialSystem public API (query handle by ID, cache handle, use for material lookups)
+
+**Notes:**
+- This establishes the integration pattern for other renderers to follow (query material handle during initialization, cache for use)
+- Future work: Update GridRenderer to use material shader names from MaterialDefinition instead of hardcoded paths (requires additional AF for shader name retrieval and registration)
+- ViewportManager MaterialSystem integration deferred - not required for this atomic functionality; optional parameter allows incremental adoption
+
+---
+
 ## 2025-10-10 — Data-Driven Material System: T016 Complete - Integration Test validates P1 MVP
 **Summary:** Completed T016 integration test validating complete end-to-end flow from JSON to material queries. Test demonstrates zero C++ code changes requirement: MaterialSystem loads materials from JSON, provides handle-based API, allows renderer to query material definitions without modifying draw submission logic. Phase 3 (P1) milestone achieved - MVP functionality complete.
 
