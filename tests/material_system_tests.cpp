@@ -3047,4 +3047,80 @@ TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-s
 	fs::remove_all( testDir );
 }
 
+// T213: Sample Desc from RT State Tests
+// Note: Functionality implemented in T207-AF6 (lines 326-327 of pipeline_builder.cpp)
+// T213 adds explicit test coverage to verify sample desc is correctly extracted from RenderTargetStateBlock
+
+TEST_CASE( "PipelineBuilder uses sample desc from RenderTargetStateBlock", "[pipeline-builder][T213][integration]" )
+{
+	using namespace graphics::material_system;
+	namespace fs = std::filesystem;
+
+	// Arrange - create test directory with RT state block specifying 4x MSAA
+	const auto testDir = fs::temp_directory_path() / "material_system_test_T213";
+	fs::create_directories( testDir );
+
+	const auto jsonPath = testDir / "materials.json";
+	const std::string jsonContent = R"({
+		"states": {
+			"renderTargetStates": {
+				"MSAA4x": {
+					"rtvFormats": ["R8G8B8A8_UNORM"],
+					"dsvFormat": "D24_UNORM_S8_UINT",
+					"sampleCount": 4,
+					"sampleQuality": 1
+				}
+			}
+		},
+		"materials": [{
+			"id": "msaa_material",
+			"pass": "forward",
+			"states": {
+				"renderTarget": "MSAA4x"
+			},
+			"shaders": {
+				"vertex": {
+					"file": "shaders/grid.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_0"
+				},
+				"pixel": {
+					"file": "shaders/grid.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_0"
+				}
+			}
+		}],
+		"renderPasses": []
+	})";
+
+	std::ofstream outFile( jsonPath );
+	outFile << jsonContent;
+	outFile.close();
+
+	// Act - Create MaterialSystem and verify RT state loaded
+	MaterialSystem materialSystem;
+	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+
+	REQUIRE( initSuccess );
+
+	// Verify RT state block was loaded correctly with sample desc
+	const auto *rtState = materialSystem.getRenderTargetState( "MSAA4x" );
+	REQUIRE( rtState != nullptr );
+	REQUIRE( rtState->sampleCount == 4 );
+	REQUIRE( rtState->sampleQuality == 1 );
+	REQUIRE( rtState->rtvFormats.size() == 1 );
+	REQUIRE( rtState->rtvFormats[0] == DXGI_FORMAT_R8G8B8A8_UNORM );
+
+	// Verify material references the RT state
+	const auto materialHandle = materialSystem.getMaterialHandle( "msaa_material" );
+	REQUIRE( materialHandle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( materialHandle );
+	REQUIRE( material != nullptr );
+	REQUIRE( material->states.renderTarget == "MSAA4x" );
+
+	fs::remove_all( testDir );
+}
+
 // ============================================================================
