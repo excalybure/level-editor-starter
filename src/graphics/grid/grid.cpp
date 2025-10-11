@@ -13,6 +13,7 @@
 #include "math/matrix.h"
 #include "math/vec.h"
 #include "graphics/renderer/renderer.h"
+#include "graphics/material_system/pipeline_builder.h"
 #include "core/console.h"
 
 using namespace grid;
@@ -69,55 +70,60 @@ GridRenderer::GridRenderer()
 
 GridRenderer::~GridRenderer()
 {
-	// Unregister the callback if we have one
-	if ( m_shaderManager && m_callbackHandle != shader_manager::INVALID_CALLBACK_HANDLE )
-	{
-		m_shaderManager->unregisterReloadCallback( m_callbackHandle );
-	}
+	// Cleanup handled in shutdown()
 }
 
-bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem )
+bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem )
 {
-	if ( !device || !shaderManager )
+	if ( !device )
 	{
 		return false;
 	}
 
 	m_device = device;
-	m_shaderManager = shaderManager;
 	m_materialSystem = materialSystem;
 
-	// Query material handle from material system if available
-	if ( m_materialSystem )
+	// Query material handle from material system
+	if ( !m_materialSystem )
 	{
-		m_materialHandle = m_materialSystem->getMaterialHandle( "grid_material" );
-		if ( !m_materialHandle.isValid() )
-		{
-			console::warning( "GridRenderer: 'grid_material' not found in material system, using fallback shaders" );
-		}
-	}
-
-	// Register shaders with the shader manager
-	if ( !registerShaders() )
-	{
+		console::error( "GridRenderer: MaterialSystem is required for data-driven rendering" );
 		return false;
 	}
 
-	// Create root signature
-	if ( !createRootSignature() )
+	m_materialHandle = m_materialSystem->getMaterialHandle( "grid_material" );
+	if ( !m_materialHandle.isValid() )
 	{
+		console::error( "GridRenderer: 'grid_material' not found in material system" );
 		return false;
 	}
 
-	// Try to create pipeline state (may fail if shaders aren't ready yet)
-	// The dirty flag will ensure it gets created later when shaders are available
-	if ( !createPipelineState() )
+	const auto *material = m_materialSystem->getMaterial( m_materialHandle );
+	if ( !material )
+	{
+		console::error( "GridRenderer: Failed to get grid material definition" );
+		return false;
+	}
+
+	// Get root signature for material (uses shared cache)
+	m_rootSignature = graphics::material_system::PipelineBuilder::getRootSignature( m_device, *material );
+	if ( !m_rootSignature )
+	{
+		console::error( "GridRenderer: Failed to create root signature from material" );
+		return false;
+	}
+
+	// Create pipeline state from material
+	const auto passConfig = m_materialSystem->getRenderPassConfig( material->pass );
+	m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
+		m_device, *material, passConfig, m_materialSystem );
+	if ( !m_pipelineState )
 	{
 		console::warning( "Initial pipeline state creation failed, will retry when shaders are ready" );
 		m_pipelineStateDirty = true;
 	}
 	else
 	{
+		console::info( "GridRenderer: Pipeline state created successfully" );
 		m_pipelineStateDirty = false;
 	}
 
@@ -132,13 +138,6 @@ bool GridRenderer::initialize( dx12::Device *device, std::shared_ptr<shader_mana
 
 void GridRenderer::shutdown()
 {
-	// Unregister the callback if we have one
-	if ( m_shaderManager && m_callbackHandle != shader_manager::INVALID_CALLBACK_HANDLE )
-	{
-		m_shaderManager->unregisterReloadCallback( m_callbackHandle );
-		m_callbackHandle = shader_manager::INVALID_CALLBACK_HANDLE;
-	}
-
 	if ( m_constantBufferData )
 	{
 		m_constantBuffer->Unmap( 0, nullptr );
@@ -149,7 +148,7 @@ void GridRenderer::shutdown()
 	m_pipelineState.Reset();
 	m_rootSignature.Reset();
 	m_device = nullptr;
-	m_shaderManager.reset(); // Properly release the shared_ptr
+	m_materialSystem = nullptr;
 }
 
 bool GridRenderer::render( const camera::Camera &camera,
@@ -167,11 +166,24 @@ bool GridRenderer::render( const camera::Camera &camera,
 	if ( m_pipelineStateDirty )
 	{
 		console::info( "Grid pipeline state is dirty, recreating..." );
-		if ( !createPipelineState() )
+
+		const auto *material = m_materialSystem->getMaterial( m_materialHandle );
+		if ( !material )
+		{
+			console::error( "Failed to get grid material for PSO recreation" );
+			return false;
+		}
+
+		const auto passConfig = m_materialSystem->getRenderPassConfig( material->pass );
+		m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
+			m_device, *material, passConfig, m_materialSystem );
+
+		if ( !m_pipelineState )
 		{
 			console::error( "Failed to recreate grid pipeline state" );
 			return false;
 		}
+
 		m_pipelineStateDirty = false;
 	}
 
@@ -276,189 +288,6 @@ int GridRenderer::calculateMajorInterval( const float spacing )
 	else
 	{
 		return 10; // Every 10 lines for coarse grids
-	}
-}
-
-bool GridRenderer::registerShaders()
-{
-	// Determine shader file path and entry points
-	// If MaterialSystem is available and grid_material exists, shader IDs are available
-	// but we still use hardcoded paths for now (shader entry system not yet implemented)
-	const char *vertexShaderPath = "shaders/grid.hlsl";
-	const char *vertexEntryPoint = "VSMain";
-	const char *pixelShaderPath = "shaders/grid.hlsl";
-	const char *pixelEntryPoint = "PSMain";
-
-	// Log if material system provided shader IDs (for future shader entry integration)
-	if ( m_materialSystem && m_materialHandle.isValid() )
-	{
-		const auto *material = m_materialSystem->getMaterial( m_materialHandle );
-		if ( material )
-		{
-			console::info( "GridRenderer: Using material '{}' with {} shader(s)",
-				material->id,
-				material->shaders.size() );
-		}
-	}
-
-	// Register vertex shader
-	m_vertexShaderHandle = m_shaderManager->registerShader(
-		vertexShaderPath,
-		vertexEntryPoint,
-		"vs_5_0",
-		shader_manager::ShaderType::Vertex );
-
-	if ( m_vertexShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
-	{
-		console::error( "Failed to register vertex shader for grid" );
-		return false;
-	}
-
-	// Register pixel shader
-	m_pixelShaderHandle = m_shaderManager->registerShader(
-		pixelShaderPath,
-		pixelEntryPoint,
-		"ps_5_0",
-		shader_manager::ShaderType::Pixel );
-
-	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
-	{
-		console::error( "Failed to register pixel shader for grid" );
-		return false;
-	}
-
-	// Set up reload callback for shader hot reloading
-	m_callbackHandle = m_shaderManager->registerReloadCallback(
-		[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader ) {
-			this->onShaderReloaded( handle, newShader );
-		} );
-
-	return true;
-}
-
-void GridRenderer::onShaderReloaded( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob & /*newShader*/ )
-{
-	// Check if the reloaded shader is one of ours
-	if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
-	{
-		m_pipelineStateDirty = true;
-	}
-}
-
-bool GridRenderer::createRootSignature()
-{
-	// Create root signature with one constant buffer parameter
-	D3D12_ROOT_PARAMETER rootParameter = {};
-	rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	rootParameter.Descriptor.ShaderRegister = 0;
-	rootParameter.Descriptor.RegisterSpace = 0;
-
-	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-	rootSignatureDesc.NumParameters = 1;
-	rootSignatureDesc.pParameters = &rootParameter;
-	rootSignatureDesc.NumStaticSamplers = 0;
-	rootSignatureDesc.pStaticSamplers = nullptr;
-	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	ComPtr<ID3DBlob> signature;
-	ComPtr<ID3DBlob> error;
-	HRESULT hr = D3D12SerializeRootSignature( &rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error );
-
-	if ( FAILED( hr ) )
-	{
-		if ( error )
-		{
-			console::error( static_cast<const char *>( error->GetBufferPointer() ) );
-		}
-		return false;
-	}
-
-	hr = m_device->get()->CreateRootSignature(
-		0,
-		signature->GetBufferPointer(),
-		signature->GetBufferSize(),
-		IID_PPV_ARGS( &m_rootSignature ) );
-
-	return SUCCEEDED( hr );
-}
-
-bool GridRenderer::createPipelineState()
-{
-	// Get current shader blobs from shader manager
-	const shader_manager::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
-	const shader_manager::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
-
-	if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
-	{
-		console::warning( "Grid shaders not ready for pipeline state creation" );
-		return false;
-	}
-
-	// Create pipeline state for grid rendering
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = { vertexShader->blob->GetBufferPointer(), vertexShader->blob->GetBufferSize() };
-	psoDesc.PS = { pixelShader->blob->GetBufferPointer(), pixelShader->blob->GetBufferSize() };
-
-	// Blend state for alpha blending
-	psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
-	psoDesc.BlendState.IndependentBlendEnable = FALSE;
-	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
-	psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-	// Rasterizer state
-	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // No culling for fullscreen quad
-	psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
-	psoDesc.RasterizerState.DepthBias = 0;
-	psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
-	psoDesc.RasterizerState.SlopeScaledDepthBias = 0.0f;
-	psoDesc.RasterizerState.DepthClipEnable = TRUE;
-	psoDesc.RasterizerState.MultisampleEnable = FALSE;
-	psoDesc.RasterizerState.AntialiasedLineEnable = FALSE;
-	psoDesc.RasterizerState.ForcedSampleCount = 0;
-	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-	// Depth stencil state (disable depth testing for viewport rendering)
-	psoDesc.DepthStencilState.DepthEnable = FALSE; // Disable depth testing
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
-
-	// Input layout (none needed for fullscreen triangle)
-	psoDesc.InputLayout = { nullptr, 0 };
-
-	// Primitive topology
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-	// Render target format
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer
-
-	// Sample desc
-	psoDesc.SampleDesc.Count = 1;
-	psoDesc.SampleDesc.Quality = 0;
-
-	psoDesc.SampleMask = UINT_MAX; // 0xffffffff - enable all samples
-
-	HRESULT hr = m_device->get()->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_pipelineState ) );
-
-	if ( SUCCEEDED( hr ) )
-	{
-		return true;
-	}
-	else
-	{
-		console::error( "Failed to create grid pipeline state" );
-		return false;
 	}
 }
 

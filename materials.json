@@ -1,4 +1,83 @@
 {
+	"states": {
+		"depthStencilStates": {
+			"depth_test_write": {
+				"depthEnable": true,
+				"depthWriteMask": "All",
+				"depthFunc": "LessEqual",
+				"stencilEnable": false
+			},
+			"depth_read_only": {
+				"depthEnable": false,
+				"depthWriteMask": "Zero",
+				"depthFunc": "Always",
+				"stencilEnable": false
+			}
+		},
+		"rasterizerStates": {
+			"solid_back": {
+				"fillMode": "Solid",
+				"cullMode": "Back",
+				"frontCounterClockwise": false
+			},
+			"solid_none": {
+				"fillMode": "Solid",
+				"cullMode": "None",
+				"frontCounterClockwise": false
+			},
+			"wireframe_none": {
+				"fillMode": "Wireframe",
+				"cullMode": "None",
+				"frontCounterClockwise": false
+			}
+		},
+		"blendStates": {
+			"opaque": {
+				"alphaToCoverage": false,
+				"independentBlend": false,
+				"renderTargets": [
+					{
+						"enable": false,
+						"srcBlend": "One",
+						"destBlend": "Zero",
+						"blendOp": "Add",
+						"srcBlendAlpha": "One",
+						"destBlendAlpha": "Zero",
+						"blendOpAlpha": "Add",
+						"writeMask": "All"
+					}
+				]
+			},
+			"alpha_blend": {
+				"alphaToCoverage": false,
+				"independentBlend": false,
+				"renderTargets": [
+					{
+						"enable": true,
+						"srcBlend": "SrcAlpha",
+						"destBlend": "InvSrcAlpha",
+						"blendOp": "Add",
+						"srcBlendAlpha": "One",
+						"destBlendAlpha": "InvSrcAlpha",
+						"blendOpAlpha": "Add",
+						"writeMask": "All"
+					}
+				]
+			}
+		},
+		"renderTargetStates": {
+			"MainColor": {
+				"rtvFormats": ["R8G8B8A8_UNORM"],
+				"dsvFormat": "D32_FLOAT",
+				"samples": 1
+			},
+			"GridOnly": {
+				"rtvFormats": ["R8G8B8A8_UNORM"],
+				"dsvFormat": "UNKNOWN",
+				"samples": 1
+			}
+		}
+	},
 	"materials": [
 		{
 			"id": "standard_opaque",
@@ -70,7 +149,7 @@
 		},
 		{
 			"id": "grid_material",
-			"pass": "forward",
+			"pass": "grid",
 			"shaders": {
 				"vertex": {
 					"file": "shaders/grid.hlsl",
@@ -161,24 +240,64 @@
 	],
 	"renderPasses": [
 		{
-			"id": "forward",
-			"name": "Forward Rendering Pass"
+			"name": "grid",
+			"queue": "Background",
+			"states": {
+				"renderTarget": "GridOnly",
+				"depthStencil": "depth_read_only",
+				"rasterizer": "solid_none",
+				"blend": "alpha_blend"
+			}
 		},
 		{
-			"id": "depth_prepass",
-			"name": "Depth Prepass"
+			"name": "forward",
+			"queue": "Opaque",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "depth_test_write",
+				"rasterizer": "solid_back",
+				"blend": "opaque"
+			}
 		},
 		{
-			"id": "shadow_map",
-			"name": "Shadow Map Generation"
+			"name": "depth_prepass",
+			"queue": "DepthPrepass",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "depth_test_write",
+				"rasterizer": "solid_back",
+				"blend": "opaque"
+			}
 		},
 		{
-			"id": "post_process",
-			"name": "Post Processing"
+			"name": "shadow_map",
+			"queue": "Shadow",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "depth_test_write",
+				"rasterizer": "solid_back",
+				"blend": "opaque"
+			}
 		},
 		{
-			"id": "debug",
-			"name": "Debug Visualization"
+			"name": "post_process",
+			"queue": "PostProcess",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "depth_read_only",
+				"rasterizer": "solid_none",
+				"blend": "opaque"
+			}
+		},
+		{
+			"name": "debug",
+			"queue": "Debug",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "depth_read_only",
+				"rasterizer": "wireframe_none",
+				"blend": "alpha_blend"
+			}
 		}
 	]
 }

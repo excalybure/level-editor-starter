@@ -15,6 +15,20 @@ namespace graphics::material_system
 PipelineCache PipelineBuilder::s_cache;
 static RootSignatureCache s_rootSignatureCache;
 
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineBuilder::getRootSignature(
+	dx12::Device *device,
+	const MaterialDefinition &material )
+{
+	if ( !device || !device->get() )
+	{
+		console::error( "PipelineBuilder::getRootSignature: invalid device" );
+		return nullptr;
+	}
+
+	const auto rootSigSpec = RootSignatureBuilder::Build( material );
+	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+}
+
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	dx12::Device *device,
 	const MaterialDefinition &material,
@@ -332,6 +346,11 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	s_cache.store( hash, pso, material.id, passConfig.name );
 
 	return pso;
+}
+
+void PipelineBuilder::clearCache()
+{
+	s_cache.clear();
 }
 
 } // namespace graphics::material_system

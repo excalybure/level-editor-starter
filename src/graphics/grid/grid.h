@@ -9,7 +9,6 @@
 #include <wrl.h>
 #include "math/vec.h"
 #include "math/matrix.h"
-#include "graphics/shader_manager/shader_manager.h"
 #include "graphics/material_system/material_system.h"
 
 namespace dx12
@@ -73,8 +72,8 @@ public:
 	GridRenderer( const GridRenderer & ) = delete;
 	GridRenderer &operator=( const GridRenderer & ) = delete;
 
-	// Initialize the grid renderer with D3D12 device, shader manager, and material system
-	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem = nullptr );
+	// Initialize the grid renderer with D3D12 device and material system
+	bool initialize( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem );
 	void shutdown();
 
 	// Get the cached material handle for grid_material
@@ -105,12 +104,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
-	// Shader management
-	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
-	shader_manager::ShaderHandle m_vertexShaderHandle;
-	shader_manager::ShaderHandle m_pixelShaderHandle;
-	shader_manager::CallbackHandle m_callbackHandle;
-
 	// Material system integration
 	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
 	graphics::material_system::MaterialHandle m_materialHandle;
@@ -126,10 +119,6 @@ private:
 	bool m_pipelineStateDirty = true; // Flag to track when pipeline state needs recreation
 
 	// Helper functions
-	bool registerShaders();
-	void onShaderReloaded( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader );
-	bool createRootSignature();
-	bool createPipelineState();
 	bool createConstantBuffer();
 
 	void updateConstantBuffer( const camera::Camera &camera,

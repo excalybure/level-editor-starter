@@ -41,6 +41,15 @@ public:
 		const RenderPassConfig &passConfig,
 		const MaterialSystem *materialSystem = nullptr );
 
+	// Get or create root signature for a material
+	// Uses shared cache for efficient reuse across materials
+	static Microsoft::WRL::ComPtr<ID3D12RootSignature> getRootSignature(
+		dx12::Device *device,
+		const MaterialDefinition &material );
+
+	// Clear the PSO cache (useful for hot-reloading)
+	static void clearCache();
+
 private:
 	static PipelineCache s_cache;
 };
