@@ -119,10 +119,11 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 			return;
 
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		graphics::material_system::MaterialSystem materialSystem;
+		materialSystem.initialize( "materials.json" );
 
-		// Initialize should succeed with valid device and shader manager
-		REQUIRE( renderer.initialize( &device, shaderManager ) );
+		// Initialize should succeed with valid device and material system
+		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Should be able to shutdown cleanly
 		REQUIRE_NOTHROW( renderer.shutdown() );
@@ -204,8 +205,9 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 			return;
 
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		REQUIRE( renderer.initialize( &device, shaderManager ) );
+		graphics::material_system::MaterialSystem materialSystem;
+		materialSystem.initialize( "materials.json" );
+		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Create camera at different distances
 		camera::PerspectiveCamera closeCamera;
@@ -376,8 +378,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE( requireDevice( window, device, "grid::Grid rendering integration" ) );
 
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		REQUIRE( renderer.initialize( &device, shaderManager ) );
+		graphics::material_system::MaterialSystem materialSystem;
+		materialSystem.initialize( "materials.json" );
+		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Create camera
 		camera::PerspectiveCamera camera;
@@ -415,8 +418,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE( requireDevice( window, device, "grid::Grid rendering with different settings" ) );
 
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		REQUIRE( renderer.initialize( &device, shaderManager ) );
+		graphics::material_system::MaterialSystem materialSystem;
+		materialSystem.initialize( "materials.json" );
+		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		camera::PerspectiveCamera camera;
 		math::Mat4<> viewMatrix = camera.getViewMatrix();
@@ -474,8 +478,7 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		// Act - Initialize GridRenderer with MaterialSystem pointer
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		const bool rendererInitialized = renderer.initialize( &device, shaderManager, &materialSystem );
+		const bool rendererInitialized = renderer.initialize( &device, &materialSystem );
 
 		// Assert - GridRenderer should initialize successfully
 		REQUIRE( rendererInitialized );
@@ -500,8 +503,7 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		// Act - Initialize GridRenderer with MaterialSystem
 		grid::GridRenderer renderer;
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		const bool rendererInitialized = renderer.initialize( &device, shaderManager, &materialSystem );
+		const bool rendererInitialized = renderer.initialize( &device, &materialSystem );
 		REQUIRE( rendererInitialized );
 
 		// Assert - GridRenderer should retrieve MaterialDefinition and use shader names

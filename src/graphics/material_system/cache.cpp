@@ -73,4 +73,9 @@ void PipelineCache::store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineSt
 	m_cache[hash] = entry;
 }
 
+void PipelineCache::clear()
+{
+	m_cache.clear();
+}
+
 } // namespace graphics::material_system

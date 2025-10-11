@@ -806,13 +806,14 @@ void Viewport::setupOrthographicView()
 // ViewportManager Implementation
 //=============================================================================
 
-bool ViewportManager::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool ViewportManager::initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem )
 {
 	if ( !device || !shaderManager )
 		return false;
 
 	m_device = device;
 	m_shaderManager = shaderManager;
+	m_materialSystem = materialSystem;
 	return true;
 }
 
@@ -879,7 +880,7 @@ Viewport *ViewportManager::createViewport( ViewportType type )
 	}
 
 	// Initialize grid renderer for this viewport
-	if ( !ptr->initializeGrid( m_device, m_shaderManager ) )
+	if ( !ptr->initializeGrid( m_device, m_materialSystem ) )
 	{
 		console::warning( "Failed to initialize grid for viewport, grid rendering will not be available" );
 	}
@@ -1259,14 +1260,14 @@ ViewportInputEvent ViewportUtils::createKeyEvent( int keyCode, bool pressed, boo
 }
 
 // Grid integration methods for Viewport
-bool Viewport::initializeGrid( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool Viewport::initializeGrid( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem )
 {
 	if ( !m_gridRenderer )
 	{
 		m_gridRenderer = std::make_unique<grid::GridRenderer>();
 	}
 
-	if ( !m_gridRenderer->initialize( device, shaderManager ) )
+	if ( !m_gridRenderer->initialize( device, materialSystem ) )
 	{
 		console::error( "Failed to initialize grid renderer for viewport" );
 		m_gridRenderer.reset();

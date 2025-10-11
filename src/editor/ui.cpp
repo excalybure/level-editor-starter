@@ -187,7 +187,7 @@ struct UI::Impl
 	void showToast( const std::string &message, bool isError = false );
 
 	// Initialize viewports with D3D12 device
-	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	bool initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem );
 	void shutdownViewports();
 
 	// Get viewport by type
@@ -204,7 +204,7 @@ UI::~UI()
 	shutdown();
 }
 
-bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem )
 {
 	HWND hwnd = static_cast<HWND>( window_handle );
 
@@ -218,7 +218,7 @@ bool UI::initialize( void *window_handle, dx12::Device *device, std::shared_ptr<
 	m_impl->device = device;
 
 	// Initialize viewports with D3D12 device and shader manager first
-	if ( !m_impl->initializeViewports( shaderManager ) )
+	if ( !m_impl->initializeViewports( shaderManager, materialSystem ) )
 	{
 		return false;
 	}
@@ -1572,13 +1572,13 @@ void UI::Impl::renderToolbar()
 
 
 // UI::Impl viewport management methods
-bool UI::Impl::initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager )
+bool UI::Impl::initializeViewports( std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem )
 {
 	if ( !device )
 		return false;
 
 	// Initialize viewport manager with D3D12 device and shader manager
-	if ( !viewportManager.initialize( device, shaderManager ) )
+	if ( !viewportManager.initialize( device, shaderManager, materialSystem ) )
 		return false;
 
 	// Create all four viewports

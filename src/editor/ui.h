@@ -14,6 +14,10 @@ namespace engine
 {
 class GPUResourceManager;
 }
+namespace graphics::material_system
+{
+class MaterialSystem;
+}
 namespace platform
 {
 class Win32Window;
@@ -75,7 +79,7 @@ public:
 	UI &operator=( const UI & ) = delete;
 
 	// Initialize ImGui with D3D12 device and shader manager
-	bool initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	bool initialize( void *window_handle, dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem = nullptr );
 
 	// Cleanup ImGui resources
 	void shutdown();

@@ -33,6 +33,9 @@ public:
 	// Fatal error if hash collision detected (same hash, different PSO)
 	void store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineState> pso, const std::string &materialId, const std::string &passName );
 
+	// Clear all cached PSOs
+	void clear();
+
 private:
 	struct CacheEntry
 	{

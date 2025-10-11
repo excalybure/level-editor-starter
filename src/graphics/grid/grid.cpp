@@ -123,7 +123,6 @@ bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::
 	}
 	else
 	{
-		console::info( "GridRenderer: Pipeline state created successfully" );
 		m_pipelineStateDirty = false;
 	}
 
@@ -338,6 +337,8 @@ void GridRenderer::updateConstantBuffer( const camera::Camera &camera,
 	float viewportWidth,
 	float viewportHeight )
 {
+	(void)viewportWidth;
+	(void)viewportHeight;
 	if ( !m_constantBufferData )
 	{
 		return;
@@ -470,6 +471,10 @@ GridBounds calculateGridBounds( const camera::Camera &camera,
 	const float viewportWidth,
 	const float viewportHeight )
 {
+	(void)viewMatrix;
+	(void)projMatrix;
+	(void)viewportWidth;
+	(void)viewportHeight;
 	GridBounds bounds;
 
 	// Simple implementation - can be made more sophisticated

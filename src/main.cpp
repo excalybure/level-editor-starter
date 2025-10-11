@@ -153,7 +153,8 @@ int main()
 	if ( !ui.initialize(
 			 static_cast<void *>( window.getHandle() ),
 			 &device,
-			 shaderManager ) )
+			 shaderManager,
+			 &materialSystem ) )
 	{
 		std::cerr << "Failed to initialize UI system\n";
 		return 1;

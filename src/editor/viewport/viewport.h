@@ -31,6 +31,14 @@ namespace systems
 {
 class SystemManager;
 }
+namespace shader_manager
+{
+class ShaderManager;
+}
+namespace graphics::material_system
+{
+class MaterialSystem;
+}
 namespace picking
 {
 class PickingSystem;
@@ -190,7 +198,7 @@ public:
 	bool areGizmosVisible() const noexcept { return m_showGizmos; }
 
 	// Grid settings management
-	bool initializeGrid( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	bool initializeGrid( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem );
 	void setGridSettings( const grid::GridSettings &settings );
 	const grid::GridSettings &getGridSettings() const;
 
@@ -273,7 +281,7 @@ public:
 	ViewportManager &operator=( const ViewportManager & ) = delete;
 
 	// Initialize with D3D12 device for render target creation
-	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager );
+	bool initialize( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::material_system::MaterialSystem *materialSystem = nullptr );
 	void shutdown();
 
 	// Set scene and system manager for 3D content rendering
@@ -324,6 +332,9 @@ private:
 
 	// Shader manager for hot reloading
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
+
+	// Material system for data-driven materials
+	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
 
 	// Scene and system manager for 3D content rendering
 	ecs::Scene *m_scene = nullptr;
