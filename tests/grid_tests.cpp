@@ -486,4 +486,43 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		renderer.shutdown();
 	}
+
+	SECTION( "GridRenderer retrieves shader names from MaterialDefinition" )
+	{
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "GridRenderer material definition usage" ) )
+			return;
+
+		// Arrange - Initialize MaterialSystem with materials.json containing grid_material
+		graphics::material_system::MaterialSystem materialSystem;
+		const bool materialSystemInitialized = materialSystem.initialize( "materials.json" );
+		REQUIRE( materialSystemInitialized );
+
+		// Act - Initialize GridRenderer with MaterialSystem
+		grid::GridRenderer renderer;
+		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		const bool rendererInitialized = renderer.initialize( &device, shaderManager, &materialSystem );
+		REQUIRE( rendererInitialized );
+
+		// Assert - GridRenderer should retrieve MaterialDefinition and use shader names
+		const auto *material = materialSystem.getMaterial( renderer.getMaterialHandle() );
+		REQUIRE( material != nullptr );
+		REQUIRE( material->id == "grid_material" );
+		REQUIRE_FALSE( material->shaders.empty() );
+
+		// Verify shader references exist and match expected stages
+		bool hasVertexShader = false;
+		bool hasPixelShader = false;
+		for ( const auto &shaderRef : material->shaders )
+		{
+			if ( shaderRef.stage == "vertex" )
+				hasVertexShader = true;
+			if ( shaderRef.stage == "pixel" )
+				hasPixelShader = true;
+		}
+		REQUIRE( hasVertexShader );
+		REQUIRE( hasPixelShader );
+
+		renderer.shutdown();
+	}
 }

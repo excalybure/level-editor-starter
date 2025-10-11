@@ -281,10 +281,30 @@ int GridRenderer::calculateMajorInterval( const float spacing )
 
 bool GridRenderer::registerShaders()
 {
+	// Determine shader file path and entry points
+	// If MaterialSystem is available and grid_material exists, shader IDs are available
+	// but we still use hardcoded paths for now (shader entry system not yet implemented)
+	const char *vertexShaderPath = "shaders/grid.hlsl";
+	const char *vertexEntryPoint = "VSMain";
+	const char *pixelShaderPath = "shaders/grid.hlsl";
+	const char *pixelEntryPoint = "PSMain";
+
+	// Log if material system provided shader IDs (for future shader entry integration)
+	if ( m_materialSystem && m_materialHandle.isValid() )
+	{
+		const auto *material = m_materialSystem->getMaterial( m_materialHandle );
+		if ( material )
+		{
+			console::info( "GridRenderer: Using material '{}' with {} shader(s)",
+				material->id,
+				material->shaders.size() );
+		}
+	}
+
 	// Register vertex shader
 	m_vertexShaderHandle = m_shaderManager->registerShader(
-		"shaders/grid.hlsl",
-		"VSMain",
+		vertexShaderPath,
+		vertexEntryPoint,
 		"vs_5_0",
 		shader_manager::ShaderType::Vertex );
 
@@ -296,8 +316,8 @@ bool GridRenderer::registerShaders()
 
 	// Register pixel shader
 	m_pixelShaderHandle = m_shaderManager->registerShader(
-		"shaders/grid.hlsl",
-		"PSMain",
+		pixelShaderPath,
+		pixelEntryPoint,
 		"ps_5_0",
 		shader_manager::ShaderType::Pixel );
 
@@ -312,12 +332,6 @@ bool GridRenderer::registerShaders()
 		[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader ) {
 			this->onShaderReloaded( handle, newShader );
 		} );
-
-	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
-	{
-		console::error( "Failed to register pixel shader for grid" );
-		return false;
-	}
 
 	return true;
 }
