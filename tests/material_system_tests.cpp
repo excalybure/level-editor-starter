@@ -8,6 +8,7 @@
 #include "graphics/material_system/root_signature_builder.h"
 #include "graphics/material_system/pipeline_builder.h"
 #include "graphics/material_system/state_blocks.h"
+#include "graphics/material_system/state_parser.h"
 #include "core/console.h"
 #include "test_dx12_helpers.h"
 #include <filesystem>
@@ -1775,18 +1776,18 @@ TEST_CASE( "DepthStencilStateBlock has correct D3D12 defaults", "[state-blocks][
 	REQUIRE( depthStencil.stencilEnable == FALSE );
 	REQUIRE( depthStencil.stencilReadMask == D3D12_DEFAULT_STENCIL_READ_MASK );
 	REQUIRE( depthStencil.stencilWriteMask == D3D12_DEFAULT_STENCIL_WRITE_MASK );
-	
+
 	// Verify stencil op defaults
 	REQUIRE( depthStencil.frontFace.stencilFailOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.frontFace.stencilDepthFailOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.frontFace.stencilPassOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.frontFace.stencilFunc == D3D12_COMPARISON_FUNC_ALWAYS );
-	
+
 	REQUIRE( depthStencil.backFace.stencilFailOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.backFace.stencilDepthFailOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.backFace.stencilPassOp == D3D12_STENCIL_OP_KEEP );
 	REQUIRE( depthStencil.backFace.stencilFunc == D3D12_COMPARISON_FUNC_ALWAYS );
-	
+
 	REQUIRE( depthStencil.id.empty() );
 	REQUIRE( depthStencil.base.empty() );
 }
@@ -1818,7 +1819,7 @@ TEST_CASE( "BlendStateBlock has correct D3D12 defaults", "[state-blocks][T204][u
 	REQUIRE( blend.alphaToCoverageEnable == FALSE );
 	REQUIRE( blend.independentBlendEnable == FALSE );
 	REQUIRE( blend.renderTargets.size() == 8 );
-	
+
 	// Verify all 8 render targets have default blend state
 	for ( const auto &rt : blend.renderTargets )
 	{
@@ -1826,7 +1827,7 @@ TEST_CASE( "BlendStateBlock has correct D3D12 defaults", "[state-blocks][T204][u
 		REQUIRE( rt.srcBlend == D3D12_BLEND_ONE );
 		REQUIRE( rt.destBlend == D3D12_BLEND_ZERO );
 	}
-	
+
 	REQUIRE( blend.id.empty() );
 	REQUIRE( blend.base.empty() );
 }
@@ -1890,3 +1891,253 @@ TEST_CASE( "DepthStencilOpDesc converts to D3D12 descriptor correctly", "[state-
 	REQUIRE( d3d12Desc.StencilFunc == D3D12_COMPARISON_FUNC_EQUAL );
 }
 
+// ============================================================================
+// T205: State Block Parser Tests
+// ============================================================================
+
+TEST_CASE( "StateBlockParser parses FillMode strings correctly", "[state-parser][T205][unit]" )
+{
+	SECTION( "Parse 'Solid' to D3D12_FILL_MODE_SOLID" )
+	{
+		const auto fillMode = graphics::material_system::StateBlockParser::parseFillMode( "Solid" );
+		REQUIRE( fillMode == D3D12_FILL_MODE_SOLID );
+	}
+
+	SECTION( "Parse 'Wireframe' to D3D12_FILL_MODE_WIREFRAME" )
+	{
+		const auto fillMode = graphics::material_system::StateBlockParser::parseFillMode( "Wireframe" );
+		REQUIRE( fillMode == D3D12_FILL_MODE_WIREFRAME );
+	}
+
+	// Note: Invalid strings result in console::fatal which terminates process
+	// Cannot unit test fatal errors without process isolation
+}
+
+TEST_CASE( "StateBlockParser parses CullMode strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseCullMode( "None" ) == D3D12_CULL_MODE_NONE );
+	REQUIRE( graphics::material_system::StateBlockParser::parseCullMode( "Front" ) == D3D12_CULL_MODE_FRONT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseCullMode( "Back" ) == D3D12_CULL_MODE_BACK );
+}
+
+TEST_CASE( "StateBlockParser parses ComparisonFunc strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "Never" ) == D3D12_COMPARISON_FUNC_NEVER );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "Less" ) == D3D12_COMPARISON_FUNC_LESS );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "Equal" ) == D3D12_COMPARISON_FUNC_EQUAL );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "LessEqual" ) == D3D12_COMPARISON_FUNC_LESS_EQUAL );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "Greater" ) == D3D12_COMPARISON_FUNC_GREATER );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "NotEqual" ) == D3D12_COMPARISON_FUNC_NOT_EQUAL );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "GreaterEqual" ) == D3D12_COMPARISON_FUNC_GREATER_EQUAL );
+	REQUIRE( graphics::material_system::StateBlockParser::parseComparisonFunc( "Always" ) == D3D12_COMPARISON_FUNC_ALWAYS );
+}
+
+TEST_CASE( "StateBlockParser parses Blend factor strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "Zero" ) == D3D12_BLEND_ZERO );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "One" ) == D3D12_BLEND_ONE );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "SrcColor" ) == D3D12_BLEND_SRC_COLOR );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "InvSrcColor" ) == D3D12_BLEND_INV_SRC_COLOR );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "SrcAlpha" ) == D3D12_BLEND_SRC_ALPHA );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "InvSrcAlpha" ) == D3D12_BLEND_INV_SRC_ALPHA );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "DestAlpha" ) == D3D12_BLEND_DEST_ALPHA );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "InvDestAlpha" ) == D3D12_BLEND_INV_DEST_ALPHA );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "DestColor" ) == D3D12_BLEND_DEST_COLOR );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendFactor( "InvDestColor" ) == D3D12_BLEND_INV_DEST_COLOR );
+}
+
+TEST_CASE( "StateBlockParser parses BlendOp strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendOp( "Add" ) == D3D12_BLEND_OP_ADD );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendOp( "Subtract" ) == D3D12_BLEND_OP_SUBTRACT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendOp( "RevSubtract" ) == D3D12_BLEND_OP_REV_SUBTRACT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendOp( "Min" ) == D3D12_BLEND_OP_MIN );
+	REQUIRE( graphics::material_system::StateBlockParser::parseBlendOp( "Max" ) == D3D12_BLEND_OP_MAX );
+}
+
+TEST_CASE( "StateBlockParser parses StencilOp strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Keep" ) == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Zero" ) == D3D12_STENCIL_OP_ZERO );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Replace" ) == D3D12_STENCIL_OP_REPLACE );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "IncrSat" ) == D3D12_STENCIL_OP_INCR_SAT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "DecrSat" ) == D3D12_STENCIL_OP_DECR_SAT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Invert" ) == D3D12_STENCIL_OP_INVERT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Incr" ) == D3D12_STENCIL_OP_INCR );
+	REQUIRE( graphics::material_system::StateBlockParser::parseStencilOp( "Decr" ) == D3D12_STENCIL_OP_DECR );
+}
+
+TEST_CASE( "StateBlockParser parses DepthWriteMask strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseDepthWriteMask( "Zero" ) == D3D12_DEPTH_WRITE_MASK_ZERO );
+	REQUIRE( graphics::material_system::StateBlockParser::parseDepthWriteMask( "All" ) == D3D12_DEPTH_WRITE_MASK_ALL );
+}
+
+TEST_CASE( "StateBlockParser parses ColorWriteMask strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseColorWriteMask( "Red" ) == D3D12_COLOR_WRITE_ENABLE_RED );
+	REQUIRE( graphics::material_system::StateBlockParser::parseColorWriteMask( "Green" ) == D3D12_COLOR_WRITE_ENABLE_GREEN );
+	REQUIRE( graphics::material_system::StateBlockParser::parseColorWriteMask( "Blue" ) == D3D12_COLOR_WRITE_ENABLE_BLUE );
+	REQUIRE( graphics::material_system::StateBlockParser::parseColorWriteMask( "Alpha" ) == D3D12_COLOR_WRITE_ENABLE_ALPHA );
+	REQUIRE( graphics::material_system::StateBlockParser::parseColorWriteMask( "All" ) == D3D12_COLOR_WRITE_ENABLE_ALL );
+}
+
+TEST_CASE( "StateBlockParser parses DXGI_FORMAT strings correctly", "[state-parser][T205][unit]" )
+{
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "R8G8B8A8_UNORM" ) == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "R8G8B8A8_UNORM_SRGB" ) == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB );
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "R16G16B16A16_FLOAT" ) == DXGI_FORMAT_R16G16B16A16_FLOAT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "D32_FLOAT" ) == DXGI_FORMAT_D32_FLOAT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "D24_UNORM_S8_UINT" ) == DXGI_FORMAT_D24_UNORM_S8_UINT );
+	REQUIRE( graphics::material_system::StateBlockParser::parseFormat( "UNKNOWN" ) == DXGI_FORMAT_UNKNOWN );
+}
+
+TEST_CASE( "StateBlockParser parses RasterizerStateBlock from JSON", "[state-parser][T205][unit]" )
+{
+	const std::string jsonStr = R"({
+		"id": "Wireframe",
+		"fillMode": "Wireframe",
+		"cullMode": "None",
+		"frontCounterClockwise": true,
+		"depthBias": 100,
+		"depthBiasClamp": 0.5,
+		"slopeScaledDepthBias": 1.5,
+		"depthClipEnable": false,
+		"multisampleEnable": true,
+		"antialiasedLineEnable": true,
+		"forcedSampleCount": 4,
+		"conservativeRaster": true
+	})";
+	const json j = json::parse( jsonStr );
+
+	const auto rasterizer = graphics::material_system::StateBlockParser::parseRasterizer( j );
+
+	REQUIRE( rasterizer.id == "Wireframe" );
+	REQUIRE( rasterizer.fillMode == D3D12_FILL_MODE_WIREFRAME );
+	REQUIRE( rasterizer.cullMode == D3D12_CULL_MODE_NONE );
+	REQUIRE( rasterizer.frontCounterClockwise == TRUE );
+	REQUIRE( rasterizer.depthBias == 100 );
+	REQUIRE( rasterizer.depthBiasClamp == 0.5f );
+	REQUIRE( rasterizer.slopeScaledDepthBias == 1.5f );
+	REQUIRE( rasterizer.depthClipEnable == FALSE );
+	REQUIRE( rasterizer.multisampleEnable == TRUE );
+	REQUIRE( rasterizer.antialiasedLineEnable == TRUE );
+	REQUIRE( rasterizer.forcedSampleCount == 4 );
+	REQUIRE( rasterizer.conservativeRaster == D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON );
+}
+
+TEST_CASE( "StateBlockParser parses DepthStencilStateBlock from JSON", "[state-parser][T205][unit]" )
+{
+	const std::string jsonStr = R"({
+		"id": "DepthReadOnly",
+		"depthEnable": true,
+		"depthWriteMask": "Zero",
+		"depthFunc": "LessEqual",
+		"stencilEnable": true,
+		"stencilReadMask": 255,
+		"stencilWriteMask": 128,
+		"frontFace": {
+			"stencilFailOp": "Replace",
+			"stencilDepthFailOp": "Incr",
+			"stencilPassOp": "Decr",
+			"stencilFunc": "Equal"
+		},
+		"backFace": {
+			"stencilFailOp": "Keep",
+			"stencilDepthFailOp": "Zero",
+			"stencilPassOp": "Invert",
+			"stencilFunc": "Always"
+		}
+	})";
+	const json j = json::parse( jsonStr );
+
+	const auto depthStencil = graphics::material_system::StateBlockParser::parseDepthStencil( j );
+
+	REQUIRE( depthStencil.id == "DepthReadOnly" );
+	REQUIRE( depthStencil.depthEnable == TRUE );
+	REQUIRE( depthStencil.depthWriteMask == D3D12_DEPTH_WRITE_MASK_ZERO );
+	REQUIRE( depthStencil.depthFunc == D3D12_COMPARISON_FUNC_LESS_EQUAL );
+	REQUIRE( depthStencil.stencilEnable == TRUE );
+	REQUIRE( depthStencil.stencilReadMask == 255 );
+	REQUIRE( depthStencil.stencilWriteMask == 128 );
+
+	// Front face stencil ops
+	REQUIRE( depthStencil.frontFace.stencilFailOp == D3D12_STENCIL_OP_REPLACE );
+	REQUIRE( depthStencil.frontFace.stencilDepthFailOp == D3D12_STENCIL_OP_INCR );
+	REQUIRE( depthStencil.frontFace.stencilPassOp == D3D12_STENCIL_OP_DECR );
+	REQUIRE( depthStencil.frontFace.stencilFunc == D3D12_COMPARISON_FUNC_EQUAL );
+
+	// Back face stencil ops
+	REQUIRE( depthStencil.backFace.stencilFailOp == D3D12_STENCIL_OP_KEEP );
+	REQUIRE( depthStencil.backFace.stencilDepthFailOp == D3D12_STENCIL_OP_ZERO );
+	REQUIRE( depthStencil.backFace.stencilPassOp == D3D12_STENCIL_OP_INVERT );
+	REQUIRE( depthStencil.backFace.stencilFunc == D3D12_COMPARISON_FUNC_ALWAYS );
+}
+
+TEST_CASE( "StateBlockParser parses BlendStateBlock from JSON", "[state-parser][T205][unit]" )
+{
+	const std::string jsonStr = R"({
+		"id": "AlphaBlend",
+		"alphaToCoverageEnable": true,
+		"independentBlendEnable": false,
+		"renderTargets": [
+			{
+				"blendEnable": true,
+				"srcBlend": "SrcAlpha",
+				"destBlend": "InvSrcAlpha",
+				"blendOp": "Add",
+				"srcBlendAlpha": "One",
+				"destBlendAlpha": "Zero",
+				"blendOpAlpha": "Add",
+				"renderTargetWriteMask": "All"
+			},
+			{
+				"blendEnable": false,
+				"renderTargetWriteMask": "Red"
+			}
+		]
+	})";
+	const json j = json::parse( jsonStr );
+
+	const auto blend = graphics::material_system::StateBlockParser::parseBlend( j );
+
+	REQUIRE( blend.id == "AlphaBlend" );
+	REQUIRE( blend.alphaToCoverageEnable == TRUE );
+	REQUIRE( blend.independentBlendEnable == FALSE );
+
+	// First render target
+	REQUIRE( blend.renderTargets[0].blendEnable == TRUE );
+	REQUIRE( blend.renderTargets[0].srcBlend == D3D12_BLEND_SRC_ALPHA );
+	REQUIRE( blend.renderTargets[0].destBlend == D3D12_BLEND_INV_SRC_ALPHA );
+	REQUIRE( blend.renderTargets[0].blendOp == D3D12_BLEND_OP_ADD );
+	REQUIRE( blend.renderTargets[0].srcBlendAlpha == D3D12_BLEND_ONE );
+	REQUIRE( blend.renderTargets[0].destBlendAlpha == D3D12_BLEND_ZERO );
+	REQUIRE( blend.renderTargets[0].blendOpAlpha == D3D12_BLEND_OP_ADD );
+	REQUIRE( blend.renderTargets[0].renderTargetWriteMask == D3D12_COLOR_WRITE_ENABLE_ALL );
+
+	// Second render target
+	REQUIRE( blend.renderTargets[1].blendEnable == FALSE );
+	REQUIRE( blend.renderTargets[1].renderTargetWriteMask == D3D12_COLOR_WRITE_ENABLE_RED );
+}
+
+TEST_CASE( "StateBlockParser parses RenderTargetStateBlock from JSON", "[state-parser][T205][unit]" )
+{
+	const std::string jsonStr = R"({
+		"id": "MainColor",
+		"rtvFormats": ["R8G8B8A8_UNORM", "R16G16B16A16_FLOAT"],
+		"dsvFormat": "D32_FLOAT",
+		"sampleCount": 4,
+		"sampleQuality": 1
+	})";
+	const json j = json::parse( jsonStr );
+
+	const auto renderTarget = graphics::material_system::StateBlockParser::parseRenderTarget( j );
+
+	REQUIRE( renderTarget.id == "MainColor" );
+	REQUIRE( renderTarget.rtvFormats.size() == 2 );
+	REQUIRE( renderTarget.rtvFormats[0] == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( renderTarget.rtvFormats[1] == DXGI_FORMAT_R16G16B16A16_FLOAT );
+	REQUIRE( renderTarget.dsvFormat == DXGI_FORMAT_D32_FLOAT );
+	REQUIRE( renderTarget.sampleCount == 4 );
+	REQUIRE( renderTarget.sampleQuality == 1 );
+}

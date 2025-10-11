@@ -1,5 +1,44 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-10 — T205: Create State Block Parser for JSON State Definitions
+**Summary:** Completed T205 by implementing StateBlockParser class with comprehensive string→enum mappings and JSON parsing for all state block types (RasterizerStateBlock, DepthStencilStateBlock, BlendStateBlock, RenderTargetStateBlock). Implemented 10 enum parsers (FillMode, CullMode, ComparisonFunc, BlendFactor, BlendOp, LogicOp, StencilOp, DepthWriteMask, ColorWriteMask, DXGI_FORMAT) with static unordered_map lookups and console::fatal for invalid strings. Added full state block parsers that extract all fields from JSON with optional field support using T204 struct defaults. Followed TDD workflow with 13 test cases covering enum mappings and complete state block parsing. Phase 2B (State Blocks) progress: 2/4 tasks complete.
+
+**Atomic functionalities completed:**
+- AF1-AF5 (Enum parsers): Implemented parseFillMode (Solid→D3D12_FILL_MODE_SOLID, Wireframe→WIREFRAME), parseCullMode (None/Front/Back→D3D12_CULL_MODE), parseComparisonFunc (8 functions: Never/Less/Equal/LessEqual/Greater/NotEqual/GreaterEqual/Always), parseBlendFactor (17 factors: Zero/One/SrcColor/InvSrcColor/SrcAlpha/InvSrcAlpha/DestAlpha/InvDestAlpha/DestColor/InvDestColor/SrcAlphaSat/BlendFactor/InvBlendFactor/Src1Color/InvSrc1Color/Src1Alpha/InvSrc1Alpha), parseBlendOp (5 ops: Add/Subtract/RevSubtract/Min/Max) plus parseStencilOp (8 ops), parseDepthWriteMask (Zero/All), parseColorWriteMask (Red/Green/Blue/Alpha/All), parseLogicOp (16 ops), parseFormat (10 common formats)
+- AF6 (RasterizerStateBlock parser): Implemented parseRasterizer() extracting 13 fields from JSON: id, base, fillMode (via parseFillMode), cullMode (via parseCullMode), frontCounterClockwise (bool→BOOL), depthBias (INT), depthBiasClamp (FLOAT), slopeScaledDepthBias (FLOAT), depthClipEnable (bool→BOOL), multisampleEnable (bool→BOOL), antialiasedLineEnable (bool→BOOL), forcedSampleCount (UINT), conservativeRaster (bool→D3D12_CONSERVATIVE_RASTERIZATION_MODE); all fields optional except id
+- AF7 (DepthStencilStateBlock parser): Implemented parseDepthStencil() extracting 10 fields: id, base, depthEnable (bool→BOOL), depthWriteMask (via parseDepthWriteMask), depthFunc (via parseComparisonFunc), stencilEnable (bool→BOOL), stencilReadMask (UINT8), stencilWriteMask (UINT8), frontFace nested object (stencilFailOp/stencilDepthFailOp/stencilPassOp via parseStencilOp, stencilFunc via parseComparisonFunc), backFace nested object (same structure as frontFace)
+- AF8 (BlendStateBlock parser): Implemented parseBlend() extracting alphaToCoverageEnable (bool→BOOL), independentBlendEnable (bool→BOOL), renderTargets array (up to 8) with per-target parsing: blendEnable, logicOpEnable, srcBlend/destBlend/srcBlendAlpha/destBlendAlpha (via parseBlendFactor), blendOp/blendOpAlpha (via parseBlendOp), logicOp (via parseLogicOp), renderTargetWriteMask (via parseColorWriteMask); array iteration with std::min(jsonSize, 8) to respect D3D12 limit
+- AF9 (RenderTargetStateBlock parser): Implemented parseRenderTarget() extracting id, rtvFormats array (vector of DXGI_FORMAT via parseFormat), dsvFormat (via parseFormat), sampleCount (UINT), sampleQuality (UINT); supports multiple RT formats in array
+
+**Tests:** 13 test cases with 96 assertions total; enum parsers tested individually (49 assertions across 9 test cases); full state block parsers tested with comprehensive JSON objects (47 assertions across 4 test cases). Test commands: `unit_test_runner.exe "[state-parser][T205]"` for T205 tests (96 assertions in 13 test cases), `unit_test_runner.exe "[material-system]"` for full suite (79 assertions in 12 test cases, no regressions).
+
+**Files Modified:**
+- Created: `src/graphics/material_system/state_parser.h` (30 lines) - StateBlockParser class with parse methods for state blocks and enum converters
+- Created: `src/graphics/material_system/state_parser.cpp` (530 lines) - All parser implementations with static unordered_map for string→enum; console::fatal for invalid values
+- Updated: `tests/material_system_tests.cpp` - Added 13 test cases tagged [state-parser][T205][unit]; tests cover enum parsing (FillMode, CullMode, ComparisonFunc, BlendFactor, BlendOp, StencilOp, DepthWriteMask, ColorWriteMask, DXGI_FORMAT) and full state block parsing (RasterizerStateBlock, DepthStencilStateBlock, BlendStateBlock, RenderTargetStateBlock)
+- Updated: `CMakeLists.txt` - Added src/graphics/material_system/state_parser.cpp to graphics library sources
+
+**Implementation Details:**
+- **String→enum mapping**: Each enum parser uses static const unordered_map<string, D3D12_ENUM> for O(1) lookup; console::fatal with descriptive message (including valid values) for invalid strings
+- **JSON parsing pattern**: All field extraction uses `if (j.contains("field") && j["field"].is_<type>())` pattern allowing optional fields; struct defaults from T204 used when JSON omits fields
+- **Boolean conversion**: JSON booleans converted to Win32 BOOL via ternary: `value.get<bool>() ? TRUE : FALSE`
+- **Array parsing**: BlendStateBlock renderTargets array uses `std::min(rtArray.size(), state.renderTargets.size())` to safely iterate without exceeding D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT (8)
+- **Nested object parsing**: DepthStencilStateBlock frontFace/backFace stencil ops parsed from nested JSON objects with per-field contains checks
+- **Format coverage**: parseFormat() supports common RT formats (R8G8B8A8_UNORM, R8G8B8A8_UNORM_SRGB, R16G16B16A16_FLOAT, R32G32B32A32_FLOAT, R10G10B10A2_UNORM, R11G11B10_FLOAT), depth formats (D32_FLOAT, D24_UNORM_S8_UINT, D16_UNORM), and UNKNOWN
+- **Conservative rasterization**: JSON boolean mapped to D3D12_CONSERVATIVE_RASTERIZATION_MODE: true→ON, false→OFF
+- **Base field**: Extracted from JSON but not processed (inheritance resolution deferred to T206); all parse functions extract id and base strings
+
+**Notes:**
+- Phase 2B (State Blocks: T204-T207) progress: 2/4 tasks complete
+- No inheritance resolution implemented yet — base field extracted but not dereferenced (T206 will implement recursive base resolution with circular dependency detection)
+- All enum parsers produce descriptive fatal errors listing valid values when invalid string encountered
+- parseFillMode/parseCullMode/etc. are public static methods; can be used standalone for enum conversion or within full state block parsing
+- Parsers handle missing optional fields gracefully — if JSON omits field, T204 struct default value retained
+- Test strategy: Enum parsers tested individually with valid inputs (fatal errors not testable without process isolation); full state block parsers tested with comprehensive JSON containing all fields; edge cases (empty arrays, missing fields) implicitly covered via optional field design
+- Next: T206 Integrate State Blocks into MaterialSystem — add storage maps (unordered_map<string, StateBlock>), implement inheritance resolution (load parent, copy fields, override with child), parse states section from merged JSON, add query methods (getRasterizerState/getDepthStencilState/getBlendState/getRenderTargetState)
+
+---
+
 ## 2025-10-10 — T204: Define State Block Structs for Data-Driven Pipeline State
 **Summary:** Completed T204 by defining 5 state block struct types (RasterizerStateBlock, DepthStencilStateBlock, BlendRenderTargetState, BlendStateBlock, RenderTargetStateBlock) with all fields defaulting to D3D12 default values. Added conversion methods `BlendRenderTargetState::toD3D12()` and `DepthStencilOpDesc::toD3D12()` for type-safe conversion to D3D12 descriptors. All structs include optional `base` field for state block inheritance (will be resolved in T205 parser). Followed TDD workflow with comprehensive tests validating default values and conversions. Phase 2B (State Blocks) started: 1/4 tasks complete.
 
