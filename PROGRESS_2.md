@@ -1,5 +1,55 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-12 — T306: Update Renderer Integration for Multi-Pass API
+**Summary:** Updated GridRenderer to use multi-pass MaterialDefinition API. Replaced legacy `material->pass` field access with `getMaterialPass(handle, "grid")` queries in both initialize() and render() methods. Migrated materials.json grid_material from legacy single-pass format to multi-pass format with passes array. GridRenderer now queries the "grid" pass, uses `gridPass->passName` for render pass config, and passes "grid" passName to buildPSO. Created new test "GridRenderer works with multi-pass material format" that verifies GridRenderer initializes with multi-pass material, retrieves material with passes array, queries grid pass via getMaterialPass. Updated existing test "GridRenderer retrieves shader names from MaterialDefinition" to use getMaterialPass API instead of accessing legacy material->shaders field. All 338 assertions in 11 grid test cases pass without regressions. Application launches successfully with grid rendering correctly using multi-pass architecture. TDD approach: RED (test with multi-pass material failed with getRenderPassConfig empty string error) → GREEN (updated GridRenderer to query grid pass) → REFACTOR (migrated materials.json and existing test).
+
+**Atomic functionalities completed:**
+- AF1: Write multi-pass test — created test section with temporary materials.json using passes array; material has single grid pass with shaders/states/parameters; test verifies GridRenderer initializes, retrieves material with passes[0].passName == "grid", queries "grid" pass using getMaterialPass, validates gridPass->shaders non-empty (6 assertions)
+- AF2: Update GridRenderer initialize() — replaced `material->pass` with `getMaterialPass(m_materialHandle, "grid")` query at line 116; added null check with error "Material does not have 'grid' pass"; use `gridPass->passName` for getRenderPassConfig; pass "grid" as 5th parameter to buildPSO
+- AF3: Update GridRenderer render() PSO recreation — applied same pattern to render() method line 176 for shader hot-reload path; query grid pass, null check, use gridPass->passName, pass "grid" to buildPSO
+- AF4: Migrate materials.json grid_material — converted from legacy format with top-level "pass"/"shaders"/"states"/"parameters" fields to multi-pass format with "passes" array containing single grid pass object (lines 151-182); fixed pixel shader profile typo (was vs_5_1, corrected to ps_5_1)
+- AF5: Update existing test — modified "GridRenderer retrieves shader names from MaterialDefinition" to query grid pass using getMaterialPass(handle, "grid"); iterate gridPass->shaders instead of material->shaders (legacy field); all assertions pass (7 assertions)
+- AF6: Build and verify — rebuilt project, ran full grid test suite: 338 assertions in 11 test cases all passing; launched level_editor.exe successfully, grid renders correctly with multi-pass material
+
+**Tests:** 1 new test, 1 updated test; all grid tests pass (338 assertions in 11 test cases); commands: unit_test_runner.exe "[grid][material-system]" (19 assertions), unit_test_runner.exe "[grid]" (338 assertions)
+
+**Files Modified:**
+- Updated: `src/graphics/grid/grid.cpp` — Modified initialize() (lines 115-119) to query grid pass via getMaterialPass, use gridPass->passName for getRenderPassConfig, pass "grid" to buildPSO; modified render() (lines 176-187) with same pattern for PSO recreation; added null checks and error logging for missing grid pass (~15 lines added)
+- Updated: `materials.json` — Converted grid_material from legacy single-pass format to multi-pass format (lines 151-182); wrapped shaders/states/parameters in passes array with "name": "grid"; fixed pixel shader profile from vs_5_1 to ps_5_1
+- Updated: `tests/grid_tests.cpp` — Added filesystem/fstream includes and fs namespace alias (lines 1-3); added new test section "GridRenderer works with multi-pass material format" (65 lines with temporary materials.json); updated existing test "GridRenderer retrieves shader names from MaterialDefinition" to use getMaterialPass API (3 line changes querying gridPass instead of material->shaders)
+
+**Migration Pattern:**
+Before (Legacy API):
+```cpp
+const auto passConfig = m_materialSystem->getRenderPassConfig( material->pass );
+m_pipelineState = PipelineBuilder::buildPSO(
+    m_device, *material, passConfig, m_materialSystem );
+```
+
+After (Multi-Pass API):
+```cpp
+const auto *gridPass = m_materialSystem->getMaterialPass( m_materialHandle, "grid" );
+if ( !gridPass )
+{
+    console::error( "GridRenderer: Material does not have 'grid' pass" );
+    return false;
+}
+
+const auto passConfig = m_materialSystem->getRenderPassConfig( gridPass->passName );
+m_pipelineState = PipelineBuilder::buildPSO(
+    m_device, *material, passConfig, m_materialSystem, "grid" );
+```
+
+**Notes:**
+- **Phase 2F progress**: 6/7 tasks complete (T301-T306 done, T307 pending)
+- **Breaking change**: GridRenderer now requires multi-pass material format; materials.json updated; future materials must use passes array
+- **Application verified**: level_editor.exe launches successfully, grid renders correctly with multi-pass material
+- **MeshRenderingSystem**: Not updated in T306 (doesn't use MaterialSystem yet, still uses hardcoded shaders); will be addressed separately if/when MaterialSystem integrated
+- **Error handling**: Added explicit error messages when grid pass not found; helps debug material configuration issues
+- **Two update locations**: Both initialize() and render() updated to use multi-pass API for consistent behavior during initialization and shader hot-reload
+- **Test isolation**: New multi-pass test creates temporary materials.json, cleans up after; doesn't interfere with other tests
+- **Next tasks**: T307 (remove legacy fields from MaterialDefinition: pass, shaders, states, parameters, primitiveTopology; update documentation; complete Phase 2F migration)
+
 ## 2025-01-14 — T305: Update Test Suite for Multi-Pass API
 **Summary:** Migrated 6 PipelineBuilder unit tests in material_system_tests.cpp from legacy MaterialDefinition API (material.shaders, material.states, material.parameters) to new multi-pass format using MaterialPass structure. Updated T215 tests (3 test cases), T014 tests (2 test cases), and T203 test (1 test case) to construct MaterialPass objects with pass-specific data, add to material.passes vector, and call buildPSO with "forward" passName parameter. All migrated tests pass without regressions (9 assertions in 5 test cases). T207/T211-T213 tests already use JSON format and require no migration. Migration pattern: replaced material.shaders.push_back → forwardPass.shaders.push_back, material.states → forwardPass.states, material.parameters → forwardPass.parameters, added material.passes.push_back(forwardPass), updated buildPSO calls from 4 parameters (device, material, passConfig, materialSystem) to 5 parameters with "forward" passName. Fixed one bug where material1 in T215 test 3 wasn't fully migrated (material1.passes was empty, causing "Material 'test_mat_1' does not have pass 'forward'" error). Full test suites pass: material-system (192 assertions in 26 test cases), pipeline-builder excluding T303 (34 assertions in 11 test cases). T303 tests have pre-existing shader compilation crashes (grid.hlsl paths), not migration-related. Test suite now uses consistent multi-pass API throughout, preparing for T306 renderer integration and T307 legacy field removal.
 

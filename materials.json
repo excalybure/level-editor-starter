@@ -149,41 +149,43 @@
 		},
 		{
 			"id": "grid_material",
-			"pass": "grid",
-			"shaders": {
-				"vertex": {
-					"file": "shaders/grid.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_5_1"
+			"passes": [{
+				"name": "grid",
+				"shaders": {
+					"vertex": {
+						"file": "shaders/grid.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_5_1"
+					},
+					"pixel": {
+						"file": "shaders/grid.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_5_1"
+					}
 				},
-				"pixel": {
-					"file": "shaders/grid.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_5_1"
-				}
-			},
-			"states": {
-				"rasterizer": "solid_none",
-				"depthStencil": "depth_read_only",
-				"blend": "alpha_blend"
-			},
-			"parameters": [
-				{
-					"name": "gridSpacing",
-					"type": "float",
-					"defaultValue": 1.0
+				"states": {
+					"rasterizer": "solid_none",
+					"depthStencil": "depth_read_only",
+					"blend": "alpha_blend"
 				},
-				{
-					"name": "majorGridInterval",
-					"type": "float",
-					"defaultValue": 10.0
-				},
-				{
-					"name": "lineColor",
-					"type": "float4",
-					"defaultValue": [0.5, 0.5, 0.5, 0.5]
-				}
-			],
+				"parameters": [
+					{
+						"name": "gridSpacing",
+						"type": "float",
+						"defaultValue": 1.0
+					},
+					{
+						"name": "majorGridInterval",
+						"type": "float",
+						"defaultValue": 10.0
+					},
+					{
+						"name": "lineColor",
+						"type": "float4",
+						"defaultValue": [0.5, 0.5, 0.5, 0.5]
+					}
+				]
+			}],
 			"enabled": true
 		},
 		{

@@ -10,6 +10,11 @@
 #include "graphics/shader_manager/shader_manager.h"
 #include "graphics/material_system/material_system.h"
 
+#include <filesystem>
+#include <fstream>
+
+namespace fs = std::filesystem;
+
 TEST_CASE( "Grid Settings Configuration", "[grid][settings]" )
 {
 	SECTION( "Default grid settings" )
@@ -507,15 +512,20 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 		REQUIRE( rendererInitialized );
 
 		// Assert - GridRenderer should retrieve MaterialDefinition and use shader names
-		const auto *material = materialSystem.getMaterial( renderer.getMaterialHandle() );
+		const auto handle = renderer.getMaterialHandle();
+		const auto *material = materialSystem.getMaterial( handle );
 		REQUIRE( material != nullptr );
 		REQUIRE( material->id == "grid_material" );
-		REQUIRE_FALSE( material->shaders.empty() );
+
+		// Query the grid pass from multi-pass material
+		const auto *gridPass = materialSystem.getMaterialPass( handle, "grid" );
+		REQUIRE( gridPass != nullptr );
+		REQUIRE_FALSE( gridPass->shaders.empty() );
 
 		// Verify shader references exist and match expected stages
 		bool hasVertexShader = false;
 		bool hasPixelShader = false;
-		for ( const auto &shaderRef : material->shaders )
+		for ( const auto &shaderRef : gridPass->shaders )
 		{
 			if ( shaderRef.stage == graphics::material_system::ShaderStage::Vertex )
 				hasVertexShader = true;
@@ -526,5 +536,106 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 		REQUIRE( hasPixelShader );
 
 		renderer.shutdown();
+	}
+
+	SECTION( "GridRenderer works with multi-pass material format" )
+	{
+		dx12::Device device;
+		if ( !requireHeadlessDevice( device, "GridRenderer multi-pass material" ) )
+			return;
+
+		// Arrange - Create temporary materials JSON with multi-pass format
+		const auto tempDir = fs::temp_directory_path() / "grid_multipass_test";
+		fs::create_directories( tempDir );
+		const auto jsonPath = tempDir / "materials_multipass.json";
+
+		{
+			std::ofstream out( jsonPath );
+			out << R"({
+				"materials": [{
+					"id": "grid_material",
+					"passes": [{
+						"name": "grid",
+						"shaders": {
+							"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_1" },
+							"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_1" }
+						},
+						"states": {
+							"rasterizer": "solid_none",
+							"depthStencil": "depth_read_only",
+							"blend": "alpha_blend"
+						}
+					}]
+				}],
+				"renderPasses": [{
+					"name": "grid",
+					"queue": "Background",
+					"states": {
+						"renderTarget": "GridOnly",
+						"depthStencil": "depth_read_only",
+						"rasterizer": "solid_none",
+						"blend": "alpha_blend"
+					}
+				}],
+				"states": {
+					"depthStencilStates": {
+						"depth_read_only": {
+							"depthEnable": true,
+							"depthWriteMask": "Zero",
+							"depthFunc": "Less"
+						}
+					},
+					"rasterizerStates": {
+						"solid_none": {
+							"fillMode": "Solid",
+							"cullMode": "None"
+						}
+					},
+					"blendStates": {
+						"alpha_blend": {
+							"renderTargets": [{
+								"blendEnable": true,
+								"srcBlend": "SrcAlpha",
+								"destBlend": "InvSrcAlpha",
+								"blendOp": "Add"
+							}]
+						}
+					},
+					"renderTargetStates": {
+						"GridOnly": {
+							"rtvFormats": ["R8G8B8A8_UNORM"],
+							"sampleCount": 1
+						}
+					}
+				}
+			})";
+		}
+
+		// Act - Initialize MaterialSystem with multi-pass material
+		graphics::material_system::MaterialSystem materialSystem;
+		const bool materialSystemInitialized = materialSystem.initialize( jsonPath.string() );
+		REQUIRE( materialSystemInitialized );
+
+		// Initialize GridRenderer with multi-pass material
+		grid::GridRenderer renderer;
+		const bool rendererInitialized = renderer.initialize( &device, &materialSystem );
+		REQUIRE( rendererInitialized );
+
+		// Assert - GridRenderer should work with multi-pass format
+		const auto handle = renderer.getMaterialHandle();
+		REQUIRE( handle.isValid() );
+
+		const auto *material = materialSystem.getMaterial( handle );
+		REQUIRE( material != nullptr );
+		REQUIRE_FALSE( material->passes.empty() );
+		REQUIRE( material->passes[0].passName == "grid" );
+
+		// Verify grid pass has shaders
+		const auto *gridPass = materialSystem.getMaterialPass( handle, "grid" );
+		REQUIRE( gridPass != nullptr );
+		REQUIRE_FALSE( gridPass->shaders.empty() );
+
+		renderer.shutdown();
+		fs::remove_all( tempDir );
 	}
 }

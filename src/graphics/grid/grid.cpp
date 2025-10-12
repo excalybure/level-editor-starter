@@ -112,10 +112,17 @@ bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::
 		return false;
 	}
 
-	// Create pipeline state from material
-	const auto passConfig = m_materialSystem->getRenderPassConfig( material->pass );
+	// Create pipeline state from material - query "grid" pass
+	const auto *gridPass = m_materialSystem->getMaterialPass( m_materialHandle, "grid" );
+	if ( !gridPass )
+	{
+		console::error( "GridRenderer: Material does not have 'grid' pass" );
+		return false;
+	}
+
+	const auto passConfig = m_materialSystem->getRenderPassConfig( gridPass->passName );
 	m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
-		m_device, *material, passConfig, m_materialSystem );
+		m_device, *material, passConfig, m_materialSystem, "grid" );
 	if ( !m_pipelineState )
 	{
 		console::warning( "Initial pipeline state creation failed, will retry when shaders are ready" );
@@ -173,9 +180,17 @@ bool GridRenderer::render( const camera::Camera &camera,
 			return false;
 		}
 
-		const auto passConfig = m_materialSystem->getRenderPassConfig( material->pass );
+		// Query "grid" pass from material
+		const auto *gridPass = m_materialSystem->getMaterialPass( m_materialHandle, "grid" );
+		if ( !gridPass )
+		{
+			console::error( "GridRenderer: Material does not have 'grid' pass for PSO recreation" );
+			return false;
+		}
+
+		const auto passConfig = m_materialSystem->getRenderPassConfig( gridPass->passName );
 		m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
-			m_device, *material, passConfig, m_materialSystem );
+			m_device, *material, passConfig, m_materialSystem, "grid" );
 
 		if ( !m_pipelineState )
 		{
