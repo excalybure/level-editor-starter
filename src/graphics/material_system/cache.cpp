@@ -57,7 +57,7 @@ void PipelineCache::store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineSt
 		}
 
 		// Different material/pass with same hash = collision
-		console::fatal( "PSO cache hash collision detected: material '{}' pass '{}' collides with '{}' pass '{}'",
+		console::errorAndThrow( "PSO cache hash collision detected: material '{}' pass '{}' collides with '{}' pass '{}'",
 			materialId,
 			passName,
 			it->second.materialId,

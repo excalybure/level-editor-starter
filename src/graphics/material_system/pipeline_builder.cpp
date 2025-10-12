@@ -109,7 +109,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Validate required shader stages for graphics PSO (T203-AF5)
 	if ( !vsBlob )
 	{
-		console::fatal( "Material '{}' missing required Vertex shader for graphics pipeline", material.id );
+		console::errorAndThrow( "Material '{}' missing required Vertex shader for graphics pipeline", material.id );
 	}
 
 	// Build pipeline state descriptor
@@ -174,7 +174,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 	if ( !rootSignature )
 	{
-		console::fatal( "Failed to create root signature for material: {}", material.id );
+		console::errorAndThrow( "Failed to create root signature for material: {}", material.id );
 		return nullptr;
 	}
 

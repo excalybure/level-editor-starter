@@ -91,7 +91,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		// Check for duplicate shader stages
 		if ( seenStages.find( shaderRef.stage ) != seenStages.end() )
 		{
-			console::fatal( "MaterialParser: Duplicate shader stage '{}' in material '{}'",
+			console::errorAndThrow( "MaterialParser: Duplicate shader stage '{}' in material '{}'",
 				it.key(),
 				material.id );
 		}
@@ -100,13 +100,13 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		// Only accept object mode (legacy string mode no longer supported)
 		if ( it.value().is_string() )
 		{
-			console::fatal( "MaterialParser: Legacy string shader references no longer supported. Shader '{}' in material '{}' must be an object with 'file', 'profile', etc.",
+			console::errorAndThrow( "MaterialParser: Legacy string shader references no longer supported. Shader '{}' in material '{}' must be an object with 'file', 'profile', etc.",
 				it.key(),
 				material.id );
 		}
 		else if ( !it.value().is_object() )
 		{
-			console::fatal( "MaterialParser: Shader '{}' in material '{}' must be an object",
+			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' must be an object",
 				it.key(),
 				material.id );
 		}
@@ -117,7 +117,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		// Required: file
 		if ( !shaderObj.contains( "file" ) || !shaderObj["file"].is_string() )
 		{
-			console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field",
+			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field",
 				it.key(),
 				material.id );
 		}
@@ -126,7 +126,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		// Validate file path exists (relative to current working directory)
 		if ( !std::filesystem::exists( shaderRef.file ) )
 		{
-			console::fatal( "MaterialParser: Shader file '{}' for shader '{}' in material '{}' does not exist",
+			console::errorAndThrow( "MaterialParser: Shader file '{}' for shader '{}' in material '{}' does not exist",
 				shaderRef.file,
 				it.key(),
 				material.id );
@@ -135,7 +135,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		// Required: profile
 		if ( !shaderObj.contains( "profile" ) || !shaderObj["profile"].is_string() )
 		{
-			console::fatal( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field",
+			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field",
 				it.key(),
 				material.id );
 		}
@@ -146,7 +146,7 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		const std::regex profileRegex( R"((vs|ps|ds|hs|gs|cs)_\d+_\d+)" );
 		if ( !std::regex_match( profile, profileRegex ) )
 		{
-			console::fatal( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y",
+			console::errorAndThrow( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y",
 				profile,
 				it.key(),
 				material.id );
@@ -277,7 +277,7 @@ ShaderStage parseShaderStage( const std::string &stageStr )
 	if ( stageStr == "compute" || stageStr == "cs" )
 		return ShaderStage::Compute;
 
-	console::fatal( "MaterialParser: Unknown shader stage '{}'", stageStr );
+	console::errorAndThrow( "MaterialParser: Unknown shader stage '{}'", stageStr );
 	return ShaderStage::Vertex; // Won't reach here due to fatal
 }
 

@@ -1364,23 +1364,28 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	// Add vertex shader
 	graphics::material_system::ShaderReference vsShader;
 	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
-	vsShader.file = "simple.hlsl";
+	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
-	vsShader.profile = "vs_6_7";
+	vsShader.profile = "vs_5_1";
 	material.shaders.push_back( vsShader );
 
 	// Add pixel shader
 	graphics::material_system::ShaderReference psShader;
 	psShader.stage = graphics::material_system::ShaderStage::Pixel;
-	psShader.file = "simple.hlsl";
+	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
-	psShader.profile = "ps_6_7";
+	psShader.profile = "ps_5_1";
 	material.shaders.push_back( psShader );
 
 	// Add parameter
 	material.parameters = {
 		{ "testParam", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
 	};
+
+	// Add required state blocks
+	material.states.rasterizer = "default_raster";
+	material.states.depthStencil = "default_depth";
+	material.states.blend = "default_blend";
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1415,7 +1420,7 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
-	vsShader.profile = "vs_5_0";
+	vsShader.profile = "vs_5_1";
 	material.shaders.push_back( vsShader );
 
 	// Add pixel shader
@@ -1423,10 +1428,15 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	psShader.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
-	psShader.profile = "ps_5_0";
+	psShader.profile = "ps_5_1";
 	material.shaders.push_back( psShader );
 
 	// No parameters
+
+	// Add required state blocks
+	material.states.rasterizer = "default_raster";
+	material.states.depthStencil = "default_depth";
+	material.states.blend = "default_blend";
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1461,7 +1471,7 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	vsShader1.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader1.file = "shaders/simple.hlsl";
 	vsShader1.entryPoint = "VSMain";
-	vsShader1.profile = "vs_5_0";
+	vsShader1.profile = "vs_5_1";
 	material1.shaders.push_back( vsShader1 );
 
 	// Add pixel shader
@@ -1469,13 +1479,18 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	psShader1.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader1.file = "shaders/simple.hlsl";
 	psShader1.entryPoint = "PSMain";
-	psShader1.profile = "ps_5_0";
+	psShader1.profile = "ps_5_1";
 	material1.shaders.push_back( psShader1 );
 
 	// Add parameter
 	material1.parameters = {
 		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
 	};
+
+	// Add required state blocks
+	material1.states.rasterizer = "default_raster";
+	material1.states.depthStencil = "default_depth";
+	material1.states.blend = "default_blend";
 
 	graphics::material_system::MaterialDefinition material2;
 	material2.id = "test_mat_2";
@@ -1485,7 +1500,7 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	vsShader2.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader2.file = "shaders/simple.hlsl";
 	vsShader2.entryPoint = "VSMain";
-	vsShader2.profile = "vs_5_0";
+	vsShader2.profile = "vs_5_1";
 	material2.shaders.push_back( vsShader2 );
 
 	// Add pixel shader
@@ -1493,13 +1508,18 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	psShader2.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader2.file = "shaders/simple.hlsl";
 	psShader2.entryPoint = "PSMain";
-	psShader2.profile = "ps_5_0";
+	psShader2.profile = "ps_5_1";
 	material2.shaders.push_back( psShader2 );
 
 	// Add parameter - same name and type as material1
 	material2.parameters = {
 		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 0.0f, 1.0f, 0.0f, 1.0f } ) }
 	};
+
+	// Add required state blocks
+	material2.states.rasterizer = "default_raster";
+	material2.states.depthStencil = "default_depth";
+	material2.states.blend = "default_blend";
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;

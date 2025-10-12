@@ -36,7 +36,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 				// Check for duplicate IDs
 				if ( m_rasterizerStates.find( id ) != m_rasterizerStates.end() )
 				{
-					console::fatal( "Duplicate rasterizer state ID: '{}'", id );
+					console::errorAndThrow( "Duplicate rasterizer state ID: '{}'", id );
 				}
 
 				m_rasterizerStates[id] = state;
@@ -53,7 +53,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 
 				if ( m_depthStencilStates.find( id ) != m_depthStencilStates.end() )
 				{
-					console::fatal( "Duplicate depth stencil state ID: '{}'", id );
+					console::errorAndThrow( "Duplicate depth stencil state ID: '{}'", id );
 				}
 
 				m_depthStencilStates[id] = state;
@@ -70,7 +70,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 
 				if ( m_blendStates.find( id ) != m_blendStates.end() )
 				{
-					console::fatal( "Duplicate blend state ID: '{}'", id );
+					console::errorAndThrow( "Duplicate blend state ID: '{}'", id );
 				}
 
 				m_blendStates[id] = state;
@@ -87,7 +87,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 
 				if ( m_renderTargetStates.find( id ) != m_renderTargetStates.end() )
 				{
-					console::fatal( "Duplicate render target state ID: '{}'", id );
+					console::errorAndThrow( "Duplicate render target state ID: '{}'", id );
 				}
 
 				m_renderTargetStates[id] = state;
@@ -104,7 +104,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 
 				if ( m_vertexFormats.find( id ) != m_vertexFormats.end() )
 				{
-					console::fatal( "Duplicate vertex format ID: '{}'", id );
+					console::errorAndThrow( "Duplicate vertex format ID: '{}'", id );
 				}
 
 				m_vertexFormats[id] = format;
@@ -123,7 +123,7 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 			// Check for duplicate names
 			if ( m_renderPasses.find( renderPass.name ) != m_renderPasses.end() )
 			{
-				console::fatal( "Duplicate render pass name: '{}'", renderPass.name );
+				console::errorAndThrow( "Duplicate render pass name: '{}'", renderPass.name );
 			}
 
 			m_renderPasses[renderPass.name] = renderPass;
@@ -243,7 +243,7 @@ RenderPassConfig MaterialSystem::getRenderPassConfig( const std::string &passNam
 	const auto *passDef = getRenderPass( passName );
 	if ( !passDef )
 	{
-		console::fatal( "MaterialSystem::getRenderPassConfig: Undefined render pass: {}", passName );
+		console::errorAndThrow( "MaterialSystem::getRenderPassConfig: Undefined render pass: {}", passName );
 		return {};
 	}
 
@@ -251,7 +251,7 @@ RenderPassConfig MaterialSystem::getRenderPassConfig( const std::string &passNam
 	const auto *rtState = getRenderTargetState( passDef->states.renderTarget );
 	if ( !rtState )
 	{
-		console::fatal( "MaterialSystem::getRenderPassConfig: Undefined render target state '{}' referenced by render pass '{}'",
+		console::errorAndThrow( "MaterialSystem::getRenderPassConfig: Undefined render target state '{}' referenced by render pass '{}'",
 			passDef->states.renderTarget,
 			passName );
 		return {};

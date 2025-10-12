@@ -332,7 +332,7 @@ TEST_CASE( "UI integration initialization and frame loop", "[ui][integration]" )
 
 	editor::UI ui;
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
+	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager, nullptr ) );
 
 	SECTION( "Multiple frames do not crash and maintain layout" )
 	{
@@ -450,7 +450,7 @@ TEST_CASE( "UI Grid Settings Integration with Viewports", "[ui][grid][viewport][
 
 	editor::UI ui;
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager ) );
+	REQUIRE( ui.initialize( window.getHandle(), &device, shaderManager, nullptr ) );
 
 	REQUIRE_NOTHROW( device.beginFrame() );
 

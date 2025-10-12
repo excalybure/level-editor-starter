@@ -86,12 +86,12 @@
 				"vertex": {
 					"file": "shaders/simple.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_6_0"
+					"profile": "vs_5_1"
 				},
 				"pixel": {
 					"file": "shaders/simple.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_6_0"
+					"profile": "ps_5_1"
 				}
 			},
 			"states": {
@@ -125,12 +125,12 @@
 				"vertex": {
 					"file": "shaders/unlit.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_6_0"
+					"profile": "vs_5_1"
 				},
 				"pixel": {
 					"file": "shaders/unlit.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_6_0"
+					"profile": "ps_5_1"
 				}
 			},
 			"states": {
@@ -154,12 +154,12 @@
 				"vertex": {
 					"file": "shaders/grid.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_6_0"
+					"profile": "vs_5_1"
 				},
 				"pixel": {
 					"file": "shaders/grid.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_6_0"
+					"profile": "ps_5_1"
 				}
 			},
 			"states": {
@@ -193,12 +193,12 @@
 				"vertex": {
 					"file": "shaders/unlit.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_6_0"
+					"profile": "vs_5_1"
 				},
 				"pixel": {
 					"file": "shaders/unlit.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_6_0"
+					"profile": "ps_5_1"
 				}
 			},
 			"states": {
@@ -222,12 +222,12 @@
 				"vertex": {
 					"file": "shaders/simple.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_6_0"
+					"profile": "vs_5_1"
 				},
 				"pixel": {
 					"file": "shaders/simple.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_6_0"
+					"profile": "ps_5_1"
 				}
 			},
 			"states": {

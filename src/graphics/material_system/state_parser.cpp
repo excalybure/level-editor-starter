@@ -15,7 +15,7 @@ D3D12_FILL_MODE StateBlockParser::parseFillMode( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid FillMode value: '{}'. Must be 'Solid' or 'Wireframe'.", str );
+		console::errorAndThrow( "Invalid FillMode value: '{}'. Must be 'Solid' or 'Wireframe'.", str );
 		return D3D12_FILL_MODE_SOLID; // Unreachable, but silences compiler warning
 	}
 
@@ -33,7 +33,7 @@ D3D12_CULL_MODE StateBlockParser::parseCullMode( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid CullMode value: '{}'. Must be 'None', 'Front', or 'Back'.", str );
+		console::errorAndThrow( "Invalid CullMode value: '{}'. Must be 'None', 'Front', or 'Back'.", str );
 		return D3D12_CULL_MODE_NONE;
 	}
 
@@ -56,7 +56,7 @@ D3D12_COMPARISON_FUNC StateBlockParser::parseComparisonFunc( const std::string &
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid ComparisonFunc value: '{}'. Must be one of: Never, Less, Equal, LessEqual, Greater, NotEqual, GreaterEqual, Always.", str );
+		console::errorAndThrow( "Invalid ComparisonFunc value: '{}'. Must be one of: Never, Less, Equal, LessEqual, Greater, NotEqual, GreaterEqual, Always.", str );
 		return D3D12_COMPARISON_FUNC_NEVER;
 	}
 
@@ -88,7 +88,7 @@ D3D12_BLEND StateBlockParser::parseBlendFactor( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid Blend factor value: '{}'. Must be a valid D3D12_BLEND value.", str );
+		console::errorAndThrow( "Invalid Blend factor value: '{}'. Must be a valid D3D12_BLEND value.", str );
 		return D3D12_BLEND_ZERO;
 	}
 
@@ -108,7 +108,7 @@ D3D12_BLEND_OP StateBlockParser::parseBlendOp( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid BlendOp value: '{}'. Must be one of: Add, Subtract, RevSubtract, Min, Max.", str );
+		console::errorAndThrow( "Invalid BlendOp value: '{}'. Must be one of: Add, Subtract, RevSubtract, Min, Max.", str );
 		return D3D12_BLEND_OP_ADD;
 	}
 
@@ -139,7 +139,7 @@ D3D12_LOGIC_OP StateBlockParser::parseLogicOp( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid LogicOp value: '{}'.", str );
+		console::errorAndThrow( "Invalid LogicOp value: '{}'.", str );
 		return D3D12_LOGIC_OP_NOOP;
 	}
 
@@ -162,7 +162,7 @@ D3D12_STENCIL_OP StateBlockParser::parseStencilOp( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid StencilOp value: '{}'. Must be one of: Keep, Zero, Replace, IncrSat, DecrSat, Invert, Incr, Decr.", str );
+		console::errorAndThrow( "Invalid StencilOp value: '{}'. Must be one of: Keep, Zero, Replace, IncrSat, DecrSat, Invert, Incr, Decr.", str );
 		return D3D12_STENCIL_OP_KEEP;
 	}
 
@@ -179,7 +179,7 @@ D3D12_DEPTH_WRITE_MASK StateBlockParser::parseDepthWriteMask( const std::string 
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid DepthWriteMask value: '{}'. Must be 'Zero' or 'All'.", str );
+		console::errorAndThrow( "Invalid DepthWriteMask value: '{}'. Must be 'Zero' or 'All'.", str );
 		return D3D12_DEPTH_WRITE_MASK_ZERO;
 	}
 
@@ -199,7 +199,7 @@ UINT8 StateBlockParser::parseColorWriteMask( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid ColorWriteMask value: '{}'. Must be one of: Red, Green, Blue, Alpha, All.", str );
+		console::errorAndThrow( "Invalid ColorWriteMask value: '{}'. Must be one of: Red, Green, Blue, Alpha, All.", str );
 		return D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
 
@@ -235,7 +235,7 @@ DXGI_FORMAT StateBlockParser::parseFormat( const std::string &str )
 	const auto it = mapping.find( str );
 	if ( it == mapping.end() )
 	{
-		console::fatal( "Invalid DXGI_FORMAT value: '{}'. Format not supported in parser.", str );
+		console::errorAndThrow( "Invalid DXGI_FORMAT value: '{}'. Format not supported in parser.", str );
 		return DXGI_FORMAT_UNKNOWN;
 	}
 

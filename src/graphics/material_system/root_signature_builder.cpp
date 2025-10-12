@@ -10,6 +10,14 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 {
 	RootSignatureSpec spec;
 
+	// Add default frame/view constant buffer binding (b0)
+	// Most shaders need this for view-projection matrices, etc.
+	ResourceBinding frameConstants;
+	frameConstants.name = "FrameConstants";
+	frameConstants.type = ResourceBindingType::CBV;
+	frameConstants.slot = 0; // Always at b0
+	spec.resourceBindings.push_back( frameConstants );
+
 	// Add bindings from material parameters
 	AddParameterBindings( material, spec.resourceBindings );
 
@@ -19,7 +27,7 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 	// Sort for deterministic ordering (important for hashing)
 	SortBindings( spec.resourceBindings );
 
-	// Assign slots after sorting
+	// Assign slots after sorting (starting from b1 since b0 is reserved)
 	AssignSlots( spec.resourceBindings );
 
 	return spec;
@@ -50,7 +58,7 @@ void RootSignatureBuilder::ValidateBindings( const std::vector<ResourceBinding> 
 	{
 		if ( seenNames.contains( binding.name ) )
 		{
-			console::fatal( "Duplicate resource binding name '{}' in root signature", binding.name );
+			console::errorAndThrow( "Duplicate resource binding name '{}' in root signature", binding.name );
 		}
 		seenNames.insert( binding.name );
 	}
@@ -64,10 +72,17 @@ void RootSignatureBuilder::SortBindings( std::vector<ResourceBinding> &bindings 
 
 void RootSignatureBuilder::AssignSlots( std::vector<ResourceBinding> &bindings )
 {
-	// Assign sequential slots after sorting
-	int nextSlot = 0;
+	// Assign sequential slots for bindings that don't have explicit slots
+	// Start from b1 since b0 is reserved for FrameConstants
+	int nextSlot = 1;
 	for ( auto &binding : bindings )
 	{
+		// Skip bindings that already have explicit slots (like FrameConstants at b0)
+		if ( binding.slot >= 0 )
+		{
+			continue;
+		}
+
 		binding.slot = nextSlot++;
 	}
 }

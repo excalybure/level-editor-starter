@@ -1,7 +1,7 @@
 // Simple shader - Basic rendering with view-projection matrix and vertex colors
 // Used by the immediate-mode renderer for basic drawing operations
 
-cbuffer ConstantBuffer : register(b0)
+cbuffer FrameConstants : register(b0)
 {
     float4x4 viewProjectionMatrix;
 };
