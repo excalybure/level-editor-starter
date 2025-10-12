@@ -1,5 +1,6 @@
 #include "graphics/material_system/material_instance.h"
 #include "graphics/material_system/pipeline_builder.h"
+#include "graphics/shader_manager/shader_manager.h"
 
 namespace graphics::material_system
 {
@@ -7,8 +8,9 @@ namespace graphics::material_system
 MaterialInstance::MaterialInstance(
 	dx12::Device *device,
 	MaterialSystem *materialSystem,
+	shader_manager::ShaderManager *shaderManager,
 	const std::string &materialId )
-	: m_device( device ), m_materialSystem( materialSystem )
+	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager )
 {
 	// AF2: Query MaterialHandle from MaterialSystem using material ID
 	m_materialHandle = m_materialSystem->getMaterialHandle( materialId );
@@ -22,11 +24,24 @@ MaterialInstance::MaterialInstance(
 			m_rootSignature = PipelineBuilder::getRootSignature( m_device, *material );
 		}
 	}
+
+	// T305-AF3: Register hot-reload callback if ShaderManager provided
+	if ( m_shaderManager )
+	{
+		m_hotReloadCallbackHandle = m_shaderManager->registerReloadCallback(
+			[this]( shader_manager::ShaderHandle, const shader_manager::ShaderBlob & ) {
+				this->onShaderReloaded();
+			} );
+	}
 }
 
 MaterialInstance::~MaterialInstance()
 {
-	// Cleanup will be added as needed
+	// T305-AF4: Unregister hot-reload callback
+	if ( m_shaderManager && m_hotReloadCallbackHandle != 0 )
+	{
+		m_shaderManager->unregisterReloadCallback( m_hotReloadCallbackHandle );
+	}
 }
 
 bool MaterialInstance::isValid() const
@@ -158,6 +173,25 @@ bool MaterialInstance::setupCommandList( ID3D12GraphicsCommandList *commandList,
 	commandList->SetGraphicsRootSignature( rootSig );
 
 	return true;
+}
+
+void MaterialInstance::onShaderReloaded()
+{
+	// T305-AF2: Mark all passes dirty and clear PSO cache
+	const MaterialDefinition *material = getMaterial();
+	if ( !material )
+	{
+		return;
+	}
+
+	// Add all pass names to dirty set
+	for ( const auto &pass : material->passes )
+	{
+		m_dirtyPasses.insert( pass.passName );
+	}
+
+	// Clear cached PSOs (they will be recreated on next access)
+	m_pipelineStates.clear();
 }
 
 } // namespace graphics::material_system

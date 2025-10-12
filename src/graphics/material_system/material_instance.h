@@ -13,6 +13,11 @@ namespace dx12
 class Device;
 }
 
+namespace shader_manager
+{
+class ShaderManager;
+}
+
 namespace graphics::material_system
 {
 
@@ -25,10 +30,12 @@ public:
 	// Create material instance from material ID
 	// device: DX12 device for PSO/root signature creation
 	// materialSystem: Material system for querying definitions
+	// shaderManager: Shader manager for hot-reload (can be nullptr)
 	// materialId: Material ID to look up (e.g., "grid_material", "pbr_material")
 	MaterialInstance(
 		dx12::Device *device,
 		MaterialSystem *materialSystem,
+		shader_manager::ShaderManager *shaderManager,
 		const std::string &materialId );
 
 	~MaterialInstance();
@@ -68,9 +75,15 @@ private:
 	// Create pipeline state for specific pass using PipelineBuilder
 	// Returns true on success, false on failure
 	bool createPipelineStateForPass( const std::string &passName );
+
+	// Hot-reload callback - marks all passes dirty and clears PSO cache
+	void onShaderReloaded();
+
 	dx12::Device *m_device = nullptr;
 	MaterialSystem *m_materialSystem = nullptr;
+	shader_manager::ShaderManager *m_shaderManager = nullptr;
 	MaterialHandle m_materialHandle;
+	size_t m_hotReloadCallbackHandle = 0;
 
 	// Single root signature shared by all passes
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
