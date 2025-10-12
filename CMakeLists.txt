@@ -324,6 +324,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_pass_tests.cpp
     tests/material_parser_multipass_tests.cpp
     tests/pipeline_builder_multipass_tests.cpp
+    tests/material_system_pass_query_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

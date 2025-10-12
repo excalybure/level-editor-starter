@@ -40,6 +40,14 @@ public:
 	// Returns nullptr if handle invalid
 	const MaterialDefinition *getMaterial( MaterialHandle handle ) const;
 
+	// Query specific pass from material by handle and pass name
+	// Returns nullptr if handle invalid or pass not found
+	const MaterialPass *getMaterialPass( MaterialHandle handle, const std::string &passName ) const;
+
+	// Check if material has specific pass
+	// Returns false if handle invalid or pass not found
+	bool hasMaterialPass( MaterialHandle handle, const std::string &passName ) const;
+
 	// Query state blocks by ID
 	// Returns nullptr if state not found
 	const RasterizerStateBlock *getRasterizerState( const std::string &id ) const;

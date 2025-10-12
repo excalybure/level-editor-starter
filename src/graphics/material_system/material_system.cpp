@@ -177,6 +177,20 @@ const MaterialDefinition *MaterialSystem::getMaterial( MaterialHandle handle ) c
 	return &m_materials[handle.index];
 }
 
+const MaterialPass *MaterialSystem::getMaterialPass( MaterialHandle handle, const std::string &passName ) const
+{
+	if ( !handle.isValid() || handle.index >= m_materials.size() )
+		return nullptr;
+
+	const auto &material = m_materials[handle.index];
+	return material.getPass( passName );
+}
+
+bool MaterialSystem::hasMaterialPass( MaterialHandle handle, const std::string &passName ) const
+{
+	return getMaterialPass( handle, passName ) != nullptr;
+}
+
 const RasterizerStateBlock *MaterialSystem::getRasterizerState( const std::string &id ) const
 {
 	const auto it = m_rasterizerStates.find( id );
