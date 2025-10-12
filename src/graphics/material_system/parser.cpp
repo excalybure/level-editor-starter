@@ -321,4 +321,20 @@ RenderPassDefinition MaterialParser::parseRenderPass( const nlohmann::json &json
 	return renderPass;
 }
 
+// MaterialDefinition query methods
+const MaterialPass *MaterialDefinition::getPass( const std::string &passName ) const
+{
+	for ( const auto &materialPass : passes )
+	{
+		if ( materialPass.passName == passName )
+			return &materialPass;
+	}
+	return nullptr;
+}
+
+bool MaterialDefinition::hasPass( const std::string &passName ) const
+{
+	return getPass( passName ) != nullptr;
+}
+
 } // namespace graphics::material_system

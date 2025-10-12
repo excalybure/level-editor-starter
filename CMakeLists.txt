@@ -321,6 +321,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/object_creation_integration_tests.cpp
     tests/editor_config_tests.cpp
     tests/material_system_tests.cpp
+    tests/material_pass_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

@@ -78,7 +78,7 @@ void RootSignatureBuilder::AssignSlots( std::vector<ResourceBinding> &bindings )
 	// Assign sequential slots for bindings that don't have explicit slots
 	// Start from the first available slot (b1 if FrameConstants at b0 exists, otherwise b0)
 	int nextSlot = 0;
-	
+
 	// Find the first available slot after any explicitly assigned slots
 	for ( const auto &binding : bindings )
 	{
@@ -87,7 +87,7 @@ void RootSignatureBuilder::AssignSlots( std::vector<ResourceBinding> &bindings )
 			nextSlot = binding.slot + 1;
 		}
 	}
-	
+
 	for ( auto &binding : bindings )
 	{
 		// Skip bindings that already have explicit slots (like FrameConstants at b0)

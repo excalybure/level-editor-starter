@@ -7,7 +7,6 @@
       "binaryDir": "${sourceDir}/build/ninja-msvc",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
-        "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
@@ -22,7 +21,6 @@
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
         "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-        "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_CXX_FLAGS": "/EHsc /experimental:module"

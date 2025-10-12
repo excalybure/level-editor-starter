@@ -65,18 +65,33 @@ struct RenderPassDefinition
 	StateReferences states; // Reuse StateReferences for render pass states
 };
 
+// Material pass structure (single rendering pass within a material)
+struct MaterialPass
+{
+	std::string passName;															 // Pass identifier (e.g., "forward", "depth_prepass")
+	std::vector<ShaderReference> shaders;											 // Shaders specific to this pass
+	StateReferences states;															 // State blocks for this pass
+	std::vector<Parameter> parameters;												 // Pass-specific parameters
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE topology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // Topology for this pass
+};
+
 // Material definition structure
 struct MaterialDefinition
 {
 	std::string id;
-	std::string pass;
-	std::string vertexFormat; // References VertexFormat.id from MaterialSystem
-	std::vector<ShaderReference> shaders;
-	std::vector<Parameter> parameters;
-	StateReferences states;
-	D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	std::string pass;																		  // Legacy: single pass name (for backward compatibility)
+	std::vector<MaterialPass> passes;														  // Multi-pass support
+	std::string vertexFormat;																  // References VertexFormat.id from MaterialSystem
+	std::vector<ShaderReference> shaders;													  // Legacy: shaders (backward compatibility)
+	std::vector<Parameter> parameters;														  // Material-level parameters
+	StateReferences states;																	  // Legacy: states (backward compatibility)
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // Legacy topology
 	bool enabled = true;
 	std::string versionHash;
+
+	// Query methods
+	const MaterialPass *getPass( const std::string &passName ) const;
+	bool hasPass( const std::string &passName ) const;
 };
 
 // Helper function to convert ShaderStage to string (for hashing and lookups)
