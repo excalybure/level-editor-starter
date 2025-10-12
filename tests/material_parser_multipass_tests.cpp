@@ -174,12 +174,12 @@ TEST_CASE( "MaterialParser falls back to legacy single-pass format", "[material-
 	// Act
 	const auto material = MaterialParser::parse( materialJson );
 
-	// Assert - legacy fields populated, passes array empty
+	// Assert - legacy format converted to multi-pass with single pass
 	REQUIRE( material.id == "legacy_material" );
-	REQUIRE( material.pass == "forward" );
-	REQUIRE( material.shaders.size() == 2 );
-	REQUIRE( material.states.rasterizer == "solid_back" );
-	REQUIRE( material.passes.empty() ); // Passes not populated in legacy mode
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].passName == "forward" );
+	REQUIRE( material.passes[0].shaders.size() == 2 );
+	REQUIRE( material.passes[0].states.rasterizer == "solid_back" );
 }
 
 TEST_CASE( "MaterialParser handles missing pass name gracefully", "[material-parser][T302][unit]" )

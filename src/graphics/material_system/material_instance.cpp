@@ -77,4 +77,58 @@ ID3D12RootSignature *MaterialInstance::getRootSignature() const
 	return m_rootSignature.Get();
 }
 
+bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
+{
+	// T303-AF1: Create PSO using PipelineBuilder::buildPSO()
+	const MaterialDefinition *material = getMaterial();
+	if ( !material )
+	{
+		return false;
+	}
+
+	// Query render pass config from MaterialSystem
+	const RenderPassConfig passConfig = m_materialSystem->getRenderPassConfig( passName );
+
+	// Build PSO using PipelineBuilder
+	auto pso = PipelineBuilder::buildPSO( m_device, *material, passConfig, m_materialSystem, passName );
+	if ( !pso )
+	{
+		return false;
+	}
+
+	// Store in cache
+	m_pipelineStates[passName] = std::move( pso );
+
+	// T303-AF3: Remove from dirty set on successful creation
+	m_dirtyPasses.erase( passName );
+
+	return true;
+}
+
+ID3D12PipelineState *MaterialInstance::getPipelineState( const std::string &passName )
+{
+	// T303-AF2: Lazy creation with caching
+	// Check if pass exists
+	if ( !hasPass( passName ) )
+	{
+		return nullptr;
+	}
+
+	// Check if PSO already cached and not dirty
+	const auto it = m_pipelineStates.find( passName );
+	const bool needsCreation = ( it == m_pipelineStates.end() ) || ( m_dirtyPasses.count( passName ) > 0 );
+
+	if ( needsCreation )
+	{
+		// Create or recreate PSO
+		if ( !createPipelineStateForPass( passName ) )
+		{
+			return nullptr;
+		}
+	}
+
+	// Return raw pointer from cache
+	return m_pipelineStates[passName].Get();
+}
+
 } // namespace graphics::material_system

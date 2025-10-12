@@ -752,14 +752,15 @@ TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T0
 
 	// Assert
 	REQUIRE( material.id == "basic_lit" );
-	REQUIRE( material.pass == "forward" );
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].passName == "forward" );
 	REQUIRE( material.enabled == true ); // default value
-	REQUIRE( material.shaders.size() == 2 );
+	REQUIRE( material.passes[0].shaders.size() == 2 );
 
 	// Check vertex shader
 	bool foundVertex = false;
 	bool foundPixel = false;
-	for ( const auto &shader : material.shaders )
+	for ( const auto &shader : material.passes[0].shaders )
 	{
 		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
 		{
@@ -775,7 +776,7 @@ TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T0
 	REQUIRE( foundVertex );
 	REQUIRE( foundPixel );
 
-	REQUIRE( material.parameters.empty() );
+	REQUIRE( material.passes[0].parameters.empty() );
 	REQUIRE( material.versionHash.empty() );
 }
 
@@ -823,28 +824,29 @@ TEST_CASE( "MaterialParser parses material with all optional fields", "[material
 
 	// Assert
 	REQUIRE( material.id == "advanced_lit" );
-	REQUIRE( material.pass == "deferred" );
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].passName == "deferred" );
 	REQUIRE( material.enabled == false );
 	REQUIRE( material.versionHash == "abc123" );
 
 	// Check shaders
-	REQUIRE( material.shaders.size() == 2 );
+	REQUIRE( material.passes[0].shaders.size() == 2 );
 
 	// Check parameters
-	REQUIRE( material.parameters.size() == 2 );
-	REQUIRE( material.parameters[0].name == "roughness" );
-	REQUIRE( material.parameters[0].type == graphics::material_system::ParameterType::Float );
-	REQUIRE( material.parameters[0].defaultValue == 0.5 );
+	REQUIRE( material.passes[0].parameters.size() == 2 );
+	REQUIRE( material.passes[0].parameters[0].name == "roughness" );
+	REQUIRE( material.passes[0].parameters[0].type == graphics::material_system::ParameterType::Float );
+	REQUIRE( material.passes[0].parameters[0].defaultValue == 0.5 );
 
-	REQUIRE( material.parameters[1].name == "tint" );
-	REQUIRE( material.parameters[1].type == graphics::material_system::ParameterType::Float4 );
-	REQUIRE( material.parameters[1].defaultValue.is_array() );
-	REQUIRE( material.parameters[1].defaultValue.size() == 4 );
+	REQUIRE( material.passes[0].parameters[1].name == "tint" );
+	REQUIRE( material.passes[0].parameters[1].type == graphics::material_system::ParameterType::Float4 );
+	REQUIRE( material.passes[0].parameters[1].defaultValue.is_array() );
+	REQUIRE( material.passes[0].parameters[1].defaultValue.size() == 4 );
 
 	// Check states
-	REQUIRE( material.states.rasterizer == "cull_back" );
-	REQUIRE( material.states.depthStencil == "depth_test_write" );
-	REQUIRE( material.states.blend == "alpha_blend" );
+	REQUIRE( material.passes[0].states.rasterizer == "cull_back" );
+	REQUIRE( material.passes[0].states.depthStencil == "depth_test_write" );
+	REQUIRE( material.passes[0].states.blend == "alpha_blend" );
 }
 
 // ============================================================================
@@ -1219,9 +1221,12 @@ TEST_CASE( "RootSignatureBuilder generates spec with CBV binding", "[root-signat
 	// Arrange - material with single CBV parameter
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_mat";
-	material.parameters = {
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+	pass.parameters = {
 		{ "ViewProjection", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 0, 0, 0, 0 } ) }
 	};
+	material.passes.push_back( pass );
 
 	// Act - build root signature spec (this will fail until RootSignatureBuilder exists)
 	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
@@ -1238,11 +1243,14 @@ TEST_CASE( "RootSignatureBuilder generates spec with multiple bindings sorted by
 	// Arrange - material with multiple parameters (unsorted)
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_mat";
-	material.parameters = {
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+	pass.parameters = {
 		{ "ZLast", graphics::material_system::ParameterType::Float, 0.0f },
 		{ "AFirst", graphics::material_system::ParameterType::Int, 0 },
 		{ "MMiddle", graphics::material_system::ParameterType::Bool, false }
 	};
+	material.passes.push_back( pass );
 
 	// Act - build root signature spec
 	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
@@ -1262,7 +1270,10 @@ TEST_CASE( "RootSignatureBuilder handles material with no parameters", "[root-si
 	// Arrange - material with no parameters
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_mat";
-	material.parameters = {};
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+	pass.parameters = {};
+	material.passes.push_back( pass );
 
 	// Act - build root signature spec
 	const auto spec = graphics::material_system::RootSignatureBuilder::Build( material );
@@ -2294,11 +2305,12 @@ TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end
 	REQUIRE( material != nullptr );
 	REQUIRE( material->id == "IntegrationTestMaterial" );
 
-	// Assert - Material should have shader configuration
-	REQUIRE_FALSE( material->shaders.empty() );
+	// Assert - Material should have at least one pass with shader configuration
+	REQUIRE_FALSE( material->passes.empty() );
+	REQUIRE_FALSE( material->passes[0].shaders.empty() );
 
-	// Assert - Material should have pass set
-	REQUIRE( material->pass == "forward" );
+	// Assert - Material should have pass name set
+	REQUIRE( material->passes[0].passName == "forward" );
 
 	// Note: PSO building is not tested here as it requires D3D12 device initialization
 	// PSO functionality is validated in PipelineBuilder tests (T013, T014)
@@ -2338,13 +2350,14 @@ TEST_CASE( "MaterialParser parses shader with all fields present", "[material-pa
 
 	// Assert
 	REQUIRE( material.id == "shader_test" );
-	REQUIRE( material.shaders.size() == 2 );
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].shaders.size() == 2 );
 
 	// Find vertex shader
 	const auto *vsShader = (const graphics::material_system::ShaderReference *)nullptr;
 	const auto *psShader = (const graphics::material_system::ShaderReference *)nullptr;
 
-	for ( const auto &shader : material.shaders )
+	for ( const auto &shader : material.passes[0].shaders )
 	{
 		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
 			vsShader = &shader;
@@ -2386,8 +2399,9 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
 
 	// Assert
-	REQUIRE( material.shaders.size() == 1 );
-	const auto &vsShader = material.shaders[0];
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].shaders.size() == 1 );
+	const auto &vsShader = material.passes[0].shaders[0];
 
 	// Required fields should be present
 	REQUIRE( vsShader.file == "shaders/simple.hlsl" );
@@ -2440,13 +2454,14 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 
 	// Assert
 	REQUIRE( material.id == "test_valid_shaders" );
-	REQUIRE( material.shaders.size() == 2 );
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].shaders.size() == 2 );
 
 	// Find shaders
 	const auto *vsShader = (const graphics::material_system::ShaderReference *)nullptr;
 	const auto *psShader = (const graphics::material_system::ShaderReference *)nullptr;
 
-	for ( const auto &shader : material.shaders )
+	for ( const auto &shader : material.passes[0].shaders )
 	{
 		if ( shader.stage == graphics::material_system::ShaderStage::Vertex )
 			vsShader = &shader;
@@ -3454,9 +3469,12 @@ TEST_CASE( "MaterialDefinition has primitiveTopology field with TRIANGLE default
 
 	MaterialDefinition material;
 	material.id = "test_material";
-	material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	MaterialPass pass;
+	pass.passName = "forward";
+	pass.topology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	material.passes.push_back( pass );
 
-	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
+	REQUIRE( material.passes[0].topology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
 }
 
 TEST_CASE( "MaterialParser extracts primitiveTopology from JSON", "[material-parser][T212][unit]" )
@@ -3477,7 +3495,8 @@ TEST_CASE( "MaterialParser extracts primitiveTopology from JSON", "[material-par
 
 	// Assert
 	REQUIRE( material.id == "line_material" );
-	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
+	REQUIRE( material.passes.size() == 1 );
+	REQUIRE( material.passes[0].topology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
 }
 
 TEST_CASE( "MaterialParser defaults primitiveTopology to TRIANGLE when absent", "[material-parser][T212][unit]" )
@@ -3497,7 +3516,8 @@ TEST_CASE( "MaterialParser defaults primitiveTopology to TRIANGLE when absent", 
 
 	// Assert
 	REQUIRE( material.id == "default_material" );
-	REQUIRE( material.primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
+	REQUIRE( material.passes.size() >= 1 );
+	REQUIRE( material.passes[0].topology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE );
 }
 
 TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-system][T212][integration]" )
@@ -3529,7 +3549,8 @@ TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-s
 
 	const auto *material = materialSystem.getMaterial( materialHandle );
 	REQUIRE( material != nullptr );
-	REQUIRE( material->primitiveTopology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
+	REQUIRE( material->passes.size() >= 1 );
+	REQUIRE( material->passes[0].topology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
 
 	fs::remove_all( testDir );
 }
@@ -3605,7 +3626,8 @@ TEST_CASE( "PipelineBuilder uses sample desc from RenderTargetStateBlock", "[pip
 
 	const auto *material = materialSystem.getMaterial( materialHandle );
 	REQUIRE( material != nullptr );
-	REQUIRE( material->states.renderTarget == "MSAA4x" );
+	REQUIRE( material->passes.size() >= 1 );
+	REQUIRE( material->passes[0].states.renderTarget == "MSAA4x" );
 
 	fs::remove_all( testDir );
 }

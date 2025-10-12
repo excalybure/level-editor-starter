@@ -2,6 +2,8 @@
 
 #include "graphics/material_system/material_system.h"
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <d3d12.h>
 #include <wrl/client.h>
 
@@ -54,13 +56,26 @@ public:
 	// Returns nullptr if root signature not created or material invalid
 	ID3D12RootSignature *getRootSignature() const;
 
+	// Get or create pipeline state for specific pass (lazy creation with caching)
+	// Returns nullptr if pass doesn't exist or PSO creation fails
+	ID3D12PipelineState *getPipelineState( const std::string &passName );
+
 private:
+	// Create pipeline state for specific pass using PipelineBuilder
+	// Returns true on success, false on failure
+	bool createPipelineStateForPass( const std::string &passName );
 	dx12::Device *m_device = nullptr;
 	MaterialSystem *m_materialSystem = nullptr;
 	MaterialHandle m_materialHandle;
 
 	// Single root signature shared by all passes
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+
+	// Per-pass PSO cache (lazy creation)
+	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> m_pipelineStates;
+
+	// Dirty flags for PSO recreation (e.g., after hot-reload)
+	std::unordered_set<std::string> m_dirtyPasses;
 };
 
 } // namespace graphics::material_system
