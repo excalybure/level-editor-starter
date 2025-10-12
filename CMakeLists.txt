@@ -73,6 +73,7 @@ add_library(graphics STATIC
   src/graphics/material_system/root_signature_cache.cpp
   src/graphics/material_system/pipeline_builder.cpp
   src/graphics/material_system/state_parser.cpp
+  src/graphics/material_system/material_instance.cpp
 )
 
 target_include_directories(graphics PUBLIC 
@@ -325,6 +326,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_parser_multipass_tests.cpp
     tests/pipeline_builder_multipass_tests.cpp
     tests/material_system_pass_query_tests.cpp
+    tests/material_instance_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

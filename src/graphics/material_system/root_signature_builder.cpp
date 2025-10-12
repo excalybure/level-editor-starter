@@ -40,16 +40,20 @@ void RootSignatureBuilder::AddParameterBindings(
 	const MaterialDefinition &material,
 	std::vector<ResourceBinding> &bindings )
 {
-	// For now, treat all parameters as CBVs (Constant Buffer Views)
-	// Full implementation would use shader reflection to determine actual binding types
-	for ( const auto &param : material.parameters )
+	// TODO: Parameters are now in MaterialPass, not MaterialDefinition
+	// This needs to be refactored to iterate over all passes and collect their parameters
+	// For now, collecting from first pass if it exists
+	if ( !material.passes.empty() && !material.passes[0].parameters.empty() )
 	{
-		ResourceBinding binding;
-		binding.name = param.name;
-		binding.type = ResourceBindingType::CBV;
-		binding.slot = -1; // Will be assigned later
+		for ( const auto &param : material.passes[0].parameters )
+		{
+			ResourceBinding binding;
+			binding.name = param.name;
+			binding.type = ResourceBindingType::CBV;
+			binding.slot = -1; // Will be assigned later
 
-		bindings.push_back( binding );
+			bindings.push_back( binding );
+		}
 	}
 }
 
