@@ -447,3 +447,177 @@ TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr",
 // Note: Test for "MaterialInstance getPipelineState recreates PSO when marked dirty"
 // will be added in T305 when hot-reload integration is implemented, as we need
 // a way to mark passes as dirty (via onShaderReloaded callback)
+
+// T304 Tests: Command List Setup
+
+TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[material-instance][T304][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	REQUIRE( instance.isValid() );
+	REQUIRE( instance.hasPass( "grid" ) );
+
+	// Get command list for testing
+	ID3D12GraphicsCommandList *commandList = device.getCommandList();
+	REQUIRE( commandList != nullptr );
+
+	// Act - setup command list with material's grid pass
+	const bool success = instance.setupCommandList( commandList, "grid" );
+
+	// Assert - should succeed and set PSO and root signature
+	REQUIRE( success );
+	// Note: Can't directly verify PSO/root sig were set on command list (D3D12 API limitation)
+	// but we can verify the method returned true, indicating both resources were available
+}
+
+TEST_CASE( "MaterialInstance setupCommandList returns false for invalid pass", "[material-instance][T304][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList invalid pass test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	REQUIRE( instance.isValid() );
+
+	// Get command list
+	ID3D12GraphicsCommandList *commandList = device.getCommandList();
+	REQUIRE( commandList != nullptr );
+
+	// Act - setup with non-existent pass
+	const bool success = instance.setupCommandList( commandList, "nonexistent_pass" );
+
+	// Assert - should fail gracefully
+	REQUIRE_FALSE( success );
+}
+
+TEST_CASE( "MaterialInstance setupCommandList returns false for nullptr command list", "[material-instance][T304][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList nullptr test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	REQUIRE( instance.isValid() );
+
+	// Act - pass nullptr command list
+	const bool success = instance.setupCommandList( nullptr, "grid" );
+
+	// Assert - should fail gracefully
+	REQUIRE_FALSE( success );
+}
+
+TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "[material-instance][T304][integration]" )
+{
+	// Arrange - create temp JSON with multi-pass material
+	const auto tempDir = fs::temp_directory_path() / "material_instance_t304_test";
+	fs::create_directories( tempDir );
+	const auto jsonPath = tempDir / "test_materials.json";
+
+	std::ofstream file( jsonPath );
+	file << R"({
+		"states": {
+			"renderTargetStates": {
+				"MainColor": {
+					"rtvFormats": ["R8G8B8A8_UNORM"],
+					"dsvFormat": "D32_FLOAT",
+					"samples": 1
+				},
+				"ShadowMap": {
+					"rtvFormats": ["R32_FLOAT"],
+					"dsvFormat": "D32_FLOAT",
+					"samples": 1
+				}
+			},
+			"depthStencilStates": {
+				"depth_test": { "depthEnable": true, "depthWriteMask": "All", "depthFunc": "LessEqual", "stencilEnable": false }
+			},
+			"rasterizerStates": {
+				"solid_back": { "fillMode": "Solid", "cullMode": "Back", "frontCounterClockwise": false }
+			},
+			"blendStates": {
+				"opaque": { "alphaToCoverage": false, "independentBlend": false, "renderTargets": [{ "enable": false }] }
+			}
+		},
+		"materials": [{
+			"id": "multipass_material",
+			"passes": [
+				{
+					"name": "forward",
+					"shaders": {
+						"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_1" },
+						"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_1" }
+					},
+					"states": { "rasterizer": "solid_back", "depthStencil": "depth_test", "blend": "opaque" }
+				},
+				{
+					"name": "shadow",
+					"shaders": {
+						"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_1" },
+						"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_1" }
+					},
+					"states": { "rasterizer": "solid_back", "depthStencil": "depth_test", "blend": "opaque" }
+				}
+			]
+		}],
+		"renderPasses": [
+			{ "name": "forward", "queue": "Geometry", "states": { "renderTarget": "MainColor" } },
+			{ "name": "shadow", "queue": "Geometry", "states": { "renderTarget": "ShadowMap" } }
+		]
+	})";
+	file.close();
+
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance multi-pass setupCommandList test" ) )
+	{
+		fs::remove_all( tempDir );
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( jsonPath.string() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "multipass_material" );
+	REQUIRE( instance.isValid() );
+	REQUIRE( instance.hasPass( "forward" ) );
+	REQUIRE( instance.hasPass( "shadow" ) );
+
+	// Get command list
+	ID3D12GraphicsCommandList *commandList = device.getCommandList();
+	REQUIRE( commandList != nullptr );
+
+	// Act - setup with forward pass, then shadow pass
+	const bool forwardSuccess = instance.setupCommandList( commandList, "forward" );
+	const bool shadowSuccess = instance.setupCommandList( commandList, "shadow" );
+
+	// Assert - both should succeed
+	REQUIRE( forwardSuccess );
+	REQUIRE( shadowSuccess );
+
+	// Cleanup
+	fs::remove_all( tempDir );
+}

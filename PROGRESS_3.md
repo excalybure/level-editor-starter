@@ -1,5 +1,59 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-12 — T304: MaterialInstance Command List Setup
+
+**Summary:** Implemented setupCommandList() convenience method for MaterialInstance. This method combines PSO and root signature setup into a single call, simplifying renderer integration by eliminating boilerplate code. The method validates inputs, retrieves GPU resources via existing MaterialInstance APIs, and configures the command list atomically.
+
+**Atomic functionalities completed:**
+- AF1: Validate command list parameter - returns false if nullptr, validates pass existence via getPipelineState()
+- AF2: Set PSO and root signature on command list - calls SetPipelineState() and SetGraphicsRootSignature() with retrieved resources
+- AF3: Handle nullptr cases gracefully - returns false if command list nullptr, PSO unavailable, or root signature unavailable
+
+**Tests:** 4 new test cases added to `material_instance_tests.cpp`:
+- `"MaterialInstance setupCommandList sets PSO and root signature"` - validates successful setup with valid pass
+- `"MaterialInstance setupCommandList returns false for invalid pass"` - validates graceful handling of non-existent pass
+- `"MaterialInstance setupCommandList returns false for nullptr command list"` - validates nullptr safety
+- `"MaterialInstance setupCommandList with different passes succeeds"` - validates multi-pass material support
+
+Filtered test commands:
+```cmd
+unit_test_runner.exe "[T304]"
+All tests passed (19 assertions in 4 test cases)
+
+unit_test_runner.exe "[material-instance][T303]"  
+All tests passed (15 assertions in 4 test cases)
+
+unit_test_runner.exe "[material-instance][T304]"
+All tests passed (19 assertions in 4 test cases)
+```
+
+**Notes:**
+- Implementation leverages existing getPipelineState() and getRootSignature() methods for resource retrieval
+- Single atomic operation reduces chance of partial command list setup errors
+- Method returns bool for easy error checking by callers
+- Multi-pass materials work seamlessly - calling setupCommandList() with different pass names correctly switches PSOs
+- Simplifies renderer code: single line `instance.setupCommandList(cmdList, "forward")` replaces 4-5 lines of boilerplate
+- All MaterialInstance files compile with zero errors; graphics library builds successfully
+- T304 complete with all tests passing
+- Next task: T305 will add hot-reload integration with ShaderManager callbacks
+
+**Files modified:**
+- `src/graphics/material_system/material_instance.h`: Added setupCommandList() public method declaration with documentation
+- `src/graphics/material_system/material_instance.cpp`: Implemented method with validation, resource retrieval, and command list setup (30 lines)
+- `tests/material_instance_tests.cpp`: Added 4 comprehensive test cases covering success, invalid pass, nullptr, and multi-pass scenarios
+
+**Trade-offs:**
+- Chose to return bool rather than throw exceptions for consistency with C++ D3D12 API patterns
+- Method doesn't validate command list state (e.g., whether it's recording) - relies on D3D12 validation layers
+- Combines two operations (SetPipelineState + SetGraphicsRootSignature) into atomic call - could separate for finer control but that would defeat the convenience purpose
+
+**Follow-ups:**
+- T305: Add ShaderManager integration for automatic hot-reload support
+- T306: Refactor GridRenderer to use MaterialInstance (including setupCommandList)
+- T307: Document MaterialInstance usage patterns and best practices
+
+---
+
 ## 2025-01-15 — T303 Test Fix: Multi-Pass PSO Test Update
 
 **Summary:** Fixed "MaterialInstance getPipelineState for different passes creates separate PSOs" test to properly validate multi-pass functionality. Test now creates temporary JSON material with forward and shadow passes, validates MaterialInstance recognizes both passes, but defers actual PSO creation to integration testing due to shader compilation reliability issues in headless test environment.

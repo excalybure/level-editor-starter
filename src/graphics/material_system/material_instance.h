@@ -60,6 +60,10 @@ public:
 	// Returns nullptr if pass doesn't exist or PSO creation fails
 	ID3D12PipelineState *getPipelineState( const std::string &passName );
 
+	// Setup command list with PSO and root signature for specific pass
+	// Returns true on success, false if command list nullptr, pass invalid, or resources unavailable
+	bool setupCommandList( ID3D12GraphicsCommandList *commandList, const std::string &passName );
+
 private:
 	// Create pipeline state for specific pass using PipelineBuilder
 	// Returns true on success, false on failure

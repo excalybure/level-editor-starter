@@ -131,4 +131,33 @@ ID3D12PipelineState *MaterialInstance::getPipelineState( const std::string &pass
 	return m_pipelineStates[passName].Get();
 }
 
+bool MaterialInstance::setupCommandList( ID3D12GraphicsCommandList *commandList, const std::string &passName )
+{
+	// T304-AF1: Validate command list is not nullptr
+	if ( !commandList )
+	{
+		return false;
+	}
+
+	// T304-AF1: Get PSO via getPipelineState (internally validates pass and creates if needed)
+	ID3D12PipelineState *pso = getPipelineState( passName );
+	if ( !pso )
+	{
+		return false;
+	}
+
+	// T304-AF3: Check root signature availability
+	ID3D12RootSignature *rootSig = getRootSignature();
+	if ( !rootSig )
+	{
+		return false;
+	}
+
+	// T304-AF2: Set PSO and root signature on command list
+	commandList->SetPipelineState( pso );
+	commandList->SetGraphicsRootSignature( rootSig );
+
+	return true;
+}
+
 } // namespace graphics::material_system
