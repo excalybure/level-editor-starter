@@ -203,89 +203,97 @@ bool ReferenceValidator::validateReferences(
 {
 	bool allValid = true;
 
-	// Validate pass reference
-	const auto passIt = std::find( knownPasses.begin(), knownPasses.end(), material.pass );
-	if ( passIt == knownPasses.end() )
+	// Validate pass references (multi-pass format)
+	for ( const auto &pass : material.passes )
 	{
-		console::error( "Material '{}': references undefined pass '{}'", material.id, material.pass );
-		allValid = false;
-	}
-
-	// Validate shader references
-	for ( const auto &shaderRef : material.shaders )
-	{
-		// Skip validation if using file-based shaders (modern approach)
-		// File existence is validated during parsing
-		if ( !shaderRef.file.empty() )
-			continue;
-
-		// Legacy shader ID validation
-		bool shaderFound = false;
-
-		if ( document.contains( "shaders" ) && document["shaders"].is_object() )
+		const auto passIt = std::find( knownPasses.begin(), knownPasses.end(), pass.passName );
+		if ( passIt == knownPasses.end() )
 		{
-			const auto &shadersObj = document["shaders"];
-			const std::string stageStr = graphics::material_system::shaderStageToString( shaderRef.stage );
-			if ( shadersObj.contains( stageStr ) && shadersObj[stageStr].is_array() )
+			console::error( "Material '{}': pass '{}' references undefined pass name '{}'",
+				material.id,
+				pass.passName,
+				pass.passName );
+			allValid = false;
+		}
+
+		// Validate shader references for this pass
+		for ( const auto &shaderRef : pass.shaders )
+		{
+			// Skip validation if using file-based shaders (modern approach)
+			// File existence is validated during parsing
+			if ( !shaderRef.file.empty() )
+				continue;
+
+			// Legacy shader ID validation
+			bool shaderFound = false;
+
+			if ( document.contains( "shaders" ) && document["shaders"].is_object() )
 			{
-				for ( const auto &shaderEntry : shadersObj[stageStr] )
+				const auto &shadersObj = document["shaders"];
+				const std::string stageStr = graphics::material_system::shaderStageToString( shaderRef.stage );
+				if ( shadersObj.contains( stageStr ) && shadersObj[stageStr].is_array() )
 				{
-					if ( shaderEntry.contains( "id" ) && shaderEntry["id"] == shaderRef.shaderId )
+					for ( const auto &shaderEntry : shadersObj[stageStr] )
 					{
-						shaderFound = true;
-						break;
+						if ( shaderEntry.contains( "id" ) && shaderEntry["id"] == shaderRef.shaderId )
+						{
+							shaderFound = true;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if ( !shaderFound )
-		{
-			console::error( "Material '{}': references undefined shader '{}' (stage: {})",
-				material.id,
-				shaderRef.shaderId,
-				graphics::material_system::shaderStageToString( shaderRef.stage ) );
-			allValid = false;
-		}
-	}
-
-	// Validate state references
-	const auto validateStateRef = [&]( const std::string &stateId, const std::string &stateType ) {
-		if ( stateId.empty() )
-			return; // Optional state
-
-		bool stateFound = false;
-
-		if ( document.contains( "states" ) && document["states"].is_object() )
-		{
-			const auto &statesObj = document["states"];
-			if ( statesObj.contains( stateType ) && statesObj[stateType].is_array() )
+			if ( !shaderFound )
 			{
-				for ( const auto &stateEntry : statesObj[stateType] )
-				{
-					if ( stateEntry.contains( "id" ) && stateEntry["id"] == stateId )
-					{
-						stateFound = true;
-						break;
-					}
-				}
+				console::error( "Material '{}' pass '{}': references undefined shader '{}' (stage: {})",
+					material.id,
+					pass.passName,
+					shaderRef.shaderId,
+					graphics::material_system::shaderStageToString( shaderRef.stage ) );
+				allValid = false;
 			}
 		}
 
-		if ( !stateFound )
-		{
-			console::error( "Material '{}': references undefined {} state '{}'",
-				material.id,
-				stateType,
-				stateId );
-			allValid = false;
-		}
-	};
+		// Validate state references for this pass
+		const auto validateStateRef = [&]( const std::string &stateId, const std::string &stateType ) {
+			if ( stateId.empty() )
+				return; // Optional state
 
-	validateStateRef( material.states.rasterizer, "rasterizer" );
-	validateStateRef( material.states.depthStencil, "depthStencil" );
-	validateStateRef( material.states.blend, "blend" );
-	validateStateRef( material.states.renderTarget, "renderTarget" );
+			bool stateFound = false;
+
+			if ( document.contains( "states" ) && document["states"].is_object() )
+			{
+				const auto &statesObj = document["states"];
+				if ( statesObj.contains( stateType ) && statesObj[stateType].is_array() )
+				{
+					for ( const auto &stateEntry : statesObj[stateType] )
+					{
+						if ( stateEntry.contains( "id" ) && stateEntry["id"] == stateId )
+						{
+							stateFound = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if ( !stateFound )
+			{
+				console::error( "Material '{}' pass '{}': references undefined {} state '{}'",
+					material.id,
+					pass.passName,
+					stateType,
+					stateId );
+				allValid = false;
+			}
+		};
+
+		validateStateRef( pass.states.rasterizer, "rasterizer" );
+		validateStateRef( pass.states.depthStencil, "depthStencil" );
+		validateStateRef( pass.states.blend, "blend" );
+		validateStateRef( pass.states.renderTarget, "renderTarget" );
+	}
 
 	return allValid;
 }

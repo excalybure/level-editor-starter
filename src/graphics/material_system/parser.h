@@ -79,13 +79,8 @@ struct MaterialPass
 struct MaterialDefinition
 {
 	std::string id;
-	std::string pass;																		  // Legacy: single pass name (for backward compatibility)
-	std::vector<MaterialPass> passes;														  // Multi-pass support
-	std::string vertexFormat;																  // References VertexFormat.id from MaterialSystem
-	std::vector<ShaderReference> shaders;													  // Legacy: shaders (backward compatibility)
-	std::vector<Parameter> parameters;														  // Material-level parameters
-	StateReferences states;																	  // Legacy: states (backward compatibility)
-	D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // Legacy topology
+	std::vector<MaterialPass> passes; // Multi-pass support
+	std::string vertexFormat;		  // References VertexFormat.id from MaterialSystem
 	bool enabled = true;
 	std::string versionHash;
 

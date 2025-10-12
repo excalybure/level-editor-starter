@@ -64,7 +64,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	}
 
 	// Compile shaders using MaterialShaderCompiler (T012)
-	// T203: Use shader info from material.shaders instead of hardcoded simple.hlsl
+	// T203: Use shader info from material pass
 
 	// Storage for compiled shader blobs (must persist until PSO creation)
 	Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
@@ -73,8 +73,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	Microsoft::WRL::ComPtr<ID3DBlob> hsBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
 
-	// Compile shaders from pass-specific or legacy material definition
-	const auto &shadersToCompile = materialPass ? materialPass->shaders : material.shaders;
+	// Get shaders from pass (required in multi-pass architecture)
+	if ( !materialPass )
+	{
+		console::error( "PipelineBuilder: materialPass is required, cannot build PSO for material '{}'", material.id );
+		return nullptr;
+	}
+
+	const auto &shadersToCompile = materialPass->shaders;
 	for ( const auto &shaderRef : shadersToCompile )
 	{
 		// Convert shader defines vector to map (T203-AF4)
@@ -197,8 +203,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	psoDesc.pRootSignature = rootSignature.Get();
 
 	// Rasterizer state - query from MaterialSystem or use D3D12 defaults
-	// Use pass-specific state if available, otherwise fall back to material state
-	const StateReferences &statesToUse = materialPass ? materialPass->states : material.states;
+	// Use pass-specific state (materialPass is guaranteed non-null from check above)
+	const StateReferences &statesToUse = materialPass->states;
 	const RasterizerStateBlock *rasterizerState = nullptr;
 	if ( materialSystem && !statesToUse.rasterizer.empty() )
 	{
@@ -316,8 +322,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Sample mask
 	psoDesc.SampleMask = UINT_MAX;
 
-	// Primitive topology - use pass-specific or material's specified topology
-	psoDesc.PrimitiveTopologyType = materialPass ? materialPass->topology : material.primitiveTopology;
+	// Primitive topology - use pass-specific topology (materialPass is guaranteed non-null)
+	psoDesc.PrimitiveTopologyType = materialPass->topology;
 
 	// Render target formats - query from MaterialSystem or use passConfig
 	const RenderTargetStateBlock *renderTargetState = nullptr;

@@ -41,9 +41,8 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	}
 	material.id = jsonMaterial["id"].get<std::string>();
 
-	// Check for multi-pass format ("passes" array) vs legacy format ("pass" string)
+	// Check for multi-pass format ("passes" array)
 	const bool hasPassesArray = jsonMaterial.contains( "passes" ) && jsonMaterial["passes"].is_array();
-	const bool hasLegacyPass = jsonMaterial.contains( "pass" ) && jsonMaterial["pass"].is_string();
 
 	if ( hasPassesArray )
 	{
@@ -58,43 +57,9 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 			}
 		}
 	}
-	else if ( hasLegacyPass )
-	{
-		// Parse legacy single-pass format
-		material.pass = jsonMaterial["pass"].get<std::string>();
-
-		// Parse legacy shaders (required)
-		if ( jsonMaterial.contains( "shaders" ) && jsonMaterial["shaders"].is_object() )
-		{
-			parseShaders( material.shaders, jsonMaterial["shaders"], material.id );
-		}
-		else
-		{
-			console::error( "MaterialParser: Missing or invalid 'shaders' field in material '{}'", material.id );
-			return material;
-		}
-
-		// Parse legacy states (optional)
-		if ( jsonMaterial.contains( "states" ) && jsonMaterial["states"].is_object() )
-		{
-			parseStates( material.states, jsonMaterial["states"] );
-		}
-
-		// Parse legacy parameters (optional)
-		if ( jsonMaterial.contains( "parameters" ) && jsonMaterial["parameters"].is_array() )
-		{
-			parseParameters( material.parameters, jsonMaterial["parameters"], material.id );
-		}
-
-		// Parse legacy primitiveTopology (optional)
-		if ( jsonMaterial.contains( "primitiveTopology" ) && jsonMaterial["primitiveTopology"].is_string() )
-		{
-			material.primitiveTopology = parseTopology( jsonMaterial["primitiveTopology"].get<std::string>() );
-		}
-	}
 	else
 	{
-		console::error( "MaterialParser: Missing or invalid 'pass' field in material '{}'", material.id );
+		console::error( "MaterialParser: Material '{}' missing 'passes' array. Only multi-pass format is supported.", material.id );
 		return material;
 	}
 

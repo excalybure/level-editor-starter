@@ -25,23 +25,38 @@ PSOHash computePSOHash( const MaterialDefinition &material, const std::string &p
 	// Combine with render pass config name
 	hash ^= hasher( passConfig.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 
-	// Query pass-specific data if passName provided
+	// Query pass-specific data
 	const MaterialPass *materialPass = nullptr;
 	if ( !passName.empty() )
 	{
 		materialPass = material.getPass( passName );
+		if ( !materialPass )
+		{
+			console::error( "Material '{}': pass '{}' not found", material.id, passName );
+			return 0; // Return invalid hash
+		}
+	}
+	else
+	{
+		// No pass name provided - must have at least one pass
+		if ( material.passes.empty() )
+		{
+			console::error( "Material '{}': no passes defined", material.id );
+			return 0; // Return invalid hash
+		}
+		materialPass = &material.passes[0]; // Use first pass as default
 	}
 
-	// Combine shader ids (use pass-specific or material shaders)
-	const auto &shadersToHash = materialPass ? materialPass->shaders : material.shaders;
+	// Use pass-specific shaders and states
+	const auto &shadersToHash = materialPass->shaders;
 	for ( const auto &shaderRef : shadersToHash )
 	{
 		hash ^= hasher( shaderStageToString( shaderRef.stage ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 		hash ^= hasher( shaderRef.shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 	}
 
-	// Combine state block ids (use pass-specific or material states)
-	const StateReferences &statesToHash = materialPass ? materialPass->states : material.states;
+	// Combine state block ids from pass
+	const StateReferences &statesToHash = materialPass->states;
 	hash ^= hasher( statesToHash.rasterizer ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 	hash ^= hasher( statesToHash.depthStencil ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 	hash ^= hasher( statesToHash.blend ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
