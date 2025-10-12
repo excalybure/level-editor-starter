@@ -213,3 +213,70 @@ TEST_CASE( "MaterialInstance getHandle returns valid handle", "[material-instanc
 	// Assert
 	REQUIRE( handle.isValid() );
 }
+
+// T302 Tests: Root Signature Integration
+
+TEST_CASE( "MaterialInstance retrieves root signature on construction", "[material-instance-T302][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance root signature test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	// Act
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+
+	// Assert - root signature should be created during construction
+	REQUIRE( instance.isValid() );
+	REQUIRE( instance.getRootSignature() != nullptr );
+}
+
+TEST_CASE( "MaterialInstance getRootSignature returns valid pointer", "[material-instance-T302][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance getRootSignature test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	REQUIRE( instance.isValid() );
+
+	// Act
+	ID3D12RootSignature *rootSig = instance.getRootSignature();
+
+	// Assert
+	REQUIRE( rootSig != nullptr );
+}
+
+TEST_CASE( "MaterialInstance with invalid material has no root signature", "[material-instance-T302][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance invalid root signature test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	// Act
+	MaterialInstance instance( &device, &materialSystem, "nonexistent_material" );
+
+	// Assert
+	REQUIRE_FALSE( instance.isValid() );
+	REQUIRE( instance.getRootSignature() == nullptr );
+}

@@ -2,6 +2,8 @@
 
 #include "graphics/material_system/material_system.h"
 #include <string>
+#include <d3d12.h>
+#include <wrl/client.h>
 
 // Forward declarations
 namespace dx12
@@ -48,10 +50,17 @@ public:
 	// Get material handle
 	MaterialHandle getHandle() const { return m_materialHandle; }
 
+	// Get root signature (shared across all passes)
+	// Returns nullptr if root signature not created or material invalid
+	ID3D12RootSignature *getRootSignature() const;
+
 private:
 	dx12::Device *m_device = nullptr;
 	MaterialSystem *m_materialSystem = nullptr;
 	MaterialHandle m_materialHandle;
+
+	// Single root signature shared by all passes
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 };
 
 } // namespace graphics::material_system

@@ -1,4 +1,5 @@
 #include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/pipeline_builder.h"
 
 namespace graphics::material_system
 {
@@ -11,6 +12,16 @@ MaterialInstance::MaterialInstance(
 {
 	// AF2: Query MaterialHandle from MaterialSystem using material ID
 	m_materialHandle = m_materialSystem->getMaterialHandle( materialId );
+
+	// T302-AF1: Call PipelineBuilder::getRootSignature() if material is valid
+	if ( m_materialHandle.isValid() )
+	{
+		const MaterialDefinition *material = m_materialSystem->getMaterial( m_materialHandle );
+		if ( material )
+		{
+			m_rootSignature = PipelineBuilder::getRootSignature( m_device, *material );
+		}
+	}
 }
 
 MaterialInstance::~MaterialInstance()
@@ -58,6 +69,12 @@ const MaterialPass *MaterialInstance::getPass( const std::string &passName ) con
 {
 	// AF5: Query specific pass from MaterialSystem
 	return m_materialSystem->getMaterialPass( m_materialHandle, passName );
+}
+
+ID3D12RootSignature *MaterialInstance::getRootSignature() const
+{
+	// T302-AF3: Return raw pointer from ComPtr, nullptr if not created
+	return m_rootSignature.Get();
 }
 
 } // namespace graphics::material_system
