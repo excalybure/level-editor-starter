@@ -113,6 +113,11 @@ public:
 
 private:
 	static ParameterType parseParameterType( const std::string &typeStr );
+	static MaterialPass parseMaterialPass( const nlohmann::json &jsonPass, const std::string &materialId );
+	static void parseShaders( std::vector<ShaderReference> &outShaders, const nlohmann::json &shadersObj, const std::string &contextId );
+	static void parseParameters( std::vector<Parameter> &outParameters, const nlohmann::json &parametersArray, const std::string &contextId );
+	static void parseStates( StateReferences &outStates, const nlohmann::json &statesObj );
+	static D3D12_PRIMITIVE_TOPOLOGY_TYPE parseTopology( const std::string &topologyStr );
 };
 
 } // namespace graphics::material_system

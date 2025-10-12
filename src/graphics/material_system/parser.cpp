@@ -41,140 +41,67 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	}
 	material.id = jsonMaterial["id"].get<std::string>();
 
-	if ( !jsonMaterial.contains( "pass" ) || !jsonMaterial["pass"].is_string() )
+	// Check for multi-pass format ("passes" array) vs legacy format ("pass" string)
+	const bool hasPassesArray = jsonMaterial.contains( "passes" ) && jsonMaterial["passes"].is_array();
+	const bool hasLegacyPass = jsonMaterial.contains( "pass" ) && jsonMaterial["pass"].is_string();
+
+	if ( hasPassesArray )
+	{
+		// Parse multi-pass format
+		const auto &passesArray = jsonMaterial["passes"];
+		for ( const auto &passJson : passesArray )
+		{
+			MaterialPass pass = parseMaterialPass( passJson, material.id );
+			if ( !pass.passName.empty() ) // Only add valid passes
+			{
+				material.passes.push_back( std::move( pass ) );
+			}
+		}
+	}
+	else if ( hasLegacyPass )
+	{
+		// Parse legacy single-pass format
+		material.pass = jsonMaterial["pass"].get<std::string>();
+
+		// Parse legacy shaders (required)
+		if ( jsonMaterial.contains( "shaders" ) && jsonMaterial["shaders"].is_object() )
+		{
+			parseShaders( material.shaders, jsonMaterial["shaders"], material.id );
+		}
+		else
+		{
+			console::error( "MaterialParser: Missing or invalid 'shaders' field in material '{}'", material.id );
+			return material;
+		}
+
+		// Parse legacy states (optional)
+		if ( jsonMaterial.contains( "states" ) && jsonMaterial["states"].is_object() )
+		{
+			parseStates( material.states, jsonMaterial["states"] );
+		}
+
+		// Parse legacy parameters (optional)
+		if ( jsonMaterial.contains( "parameters" ) && jsonMaterial["parameters"].is_array() )
+		{
+			parseParameters( material.parameters, jsonMaterial["parameters"], material.id );
+		}
+
+		// Parse legacy primitiveTopology (optional)
+		if ( jsonMaterial.contains( "primitiveTopology" ) && jsonMaterial["primitiveTopology"].is_string() )
+		{
+			material.primitiveTopology = parseTopology( jsonMaterial["primitiveTopology"].get<std::string>() );
+		}
+	}
+	else
 	{
 		console::error( "MaterialParser: Missing or invalid 'pass' field in material '{}'", material.id );
 		return material;
 	}
-	material.pass = jsonMaterial["pass"].get<std::string>();
 
-	// Parse vertexFormat (optional)
+	// Parse vertexFormat (optional - applies to all passes)
 	if ( jsonMaterial.contains( "vertexFormat" ) && jsonMaterial["vertexFormat"].is_string() )
 	{
 		material.vertexFormat = jsonMaterial["vertexFormat"].get<std::string>();
-	}
-
-	// Parse primitiveTopology (optional, defaults to TRIANGLE)
-	if ( jsonMaterial.contains( "primitiveTopology" ) && jsonMaterial["primitiveTopology"].is_string() )
-	{
-		const std::string topologyStr = jsonMaterial["primitiveTopology"].get<std::string>();
-		if ( topologyStr == "Triangle" )
-			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		else if ( topologyStr == "Line" )
-			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-		else if ( topologyStr == "Point" )
-			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
-		else if ( topologyStr == "Patch" )
-			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-		else
-		{
-			console::error( "MaterialParser: Unknown primitiveTopology '{}', defaulting to Triangle", topologyStr );
-			material.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-	}
-
-	// Parse shaders (required)
-	if ( !jsonMaterial.contains( "shaders" ) || !jsonMaterial["shaders"].is_object() )
-	{
-		console::error( "MaterialParser: Missing or invalid 'shaders' field in material '{}'", material.id );
-		return material;
-	}
-
-	const auto &shadersObj = jsonMaterial["shaders"];
-	std::unordered_set<ShaderStage> seenStages; // Track for duplicate detection
-
-	for ( auto it = shadersObj.begin(); it != shadersObj.end(); ++it )
-	{
-		ShaderReference shaderRef;
-		shaderRef.stage = parseShaderStage( it.key() );
-
-		// Check for duplicate shader stages
-		if ( seenStages.find( shaderRef.stage ) != seenStages.end() )
-		{
-			console::errorAndThrow( "MaterialParser: Duplicate shader stage '{}' in material '{}'",
-				it.key(),
-				material.id );
-		}
-		seenStages.insert( shaderRef.stage );
-
-		// Only accept object mode (legacy string mode no longer supported)
-		if ( it.value().is_string() )
-		{
-			console::errorAndThrow( "MaterialParser: Legacy string shader references no longer supported. Shader '{}' in material '{}' must be an object with 'file', 'profile', etc.",
-				it.key(),
-				material.id );
-		}
-		else if ( !it.value().is_object() )
-		{
-			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' must be an object",
-				it.key(),
-				material.id );
-		}
-
-		// Parse inline shader object
-		const auto &shaderObj = it.value();
-
-		// Required: file
-		if ( !shaderObj.contains( "file" ) || !shaderObj["file"].is_string() )
-		{
-			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' missing required 'file' field",
-				it.key(),
-				material.id );
-		}
-		shaderRef.file = shaderObj["file"].get<std::string>();
-
-		// Validate file path exists (relative to current working directory)
-		if ( !std::filesystem::exists( shaderRef.file ) )
-		{
-			console::errorAndThrow( "MaterialParser: Shader file '{}' for shader '{}' in material '{}' does not exist",
-				shaderRef.file,
-				it.key(),
-				material.id );
-		}
-
-		// Required: profile
-		if ( !shaderObj.contains( "profile" ) || !shaderObj["profile"].is_string() )
-		{
-			console::errorAndThrow( "MaterialParser: Shader '{}' in material '{}' missing required 'profile' field",
-				it.key(),
-				material.id );
-		}
-		shaderRef.profile = shaderObj["profile"].get<std::string>();
-
-		// Validate profile format (vs_X_Y, ps_X_Y, etc.)
-		const std::string &profile = shaderRef.profile;
-		const std::regex profileRegex( R"((vs|ps|ds|hs|gs|cs)_\d+_\d+)" );
-		if ( !std::regex_match( profile, profileRegex ) )
-		{
-			console::errorAndThrow( "MaterialParser: Invalid profile '{}' for shader '{}' in material '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y",
-				profile,
-				it.key(),
-				material.id );
-		}
-
-		// Optional: entry (default "main")
-		if ( shaderObj.contains( "entry" ) && shaderObj["entry"].is_string() )
-		{
-			shaderRef.entryPoint = shaderObj["entry"].get<std::string>();
-		}
-		else
-		{
-			shaderRef.entryPoint = "main";
-		}
-
-		// Optional: defines
-		if ( shaderObj.contains( "defines" ) && shaderObj["defines"].is_array() )
-		{
-			for ( const auto &defineJson : shaderObj["defines"] )
-			{
-				if ( defineJson.is_string() )
-				{
-					shaderRef.defines.push_back( defineJson.get<std::string>() );
-				}
-			}
-		}
-
-		material.shaders.push_back( shaderRef );
 	}
 
 	// Parse optional fields
@@ -186,62 +113,6 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 	if ( jsonMaterial.contains( "versionHash" ) && jsonMaterial["versionHash"].is_string() )
 	{
 		material.versionHash = jsonMaterial["versionHash"].get<std::string>();
-	}
-
-	// Parse parameters (optional)
-	if ( jsonMaterial.contains( "parameters" ) && jsonMaterial["parameters"].is_array() )
-	{
-		for ( const auto &paramJson : jsonMaterial["parameters"] )
-		{
-			Parameter param;
-
-			if ( !paramJson.contains( "name" ) || !paramJson["name"].is_string() )
-			{
-				console::error( "MaterialParser: Invalid parameter in material '{}' - missing 'name'", material.id );
-				continue;
-			}
-			param.name = paramJson["name"].get<std::string>();
-
-			if ( !paramJson.contains( "type" ) || !paramJson["type"].is_string() )
-			{
-				console::error( "MaterialParser: Invalid parameter '{}' in material '{}' - missing 'type'", param.name, material.id );
-				continue;
-			}
-			param.type = parseParameterType( paramJson["type"].get<std::string>() );
-
-			if ( paramJson.contains( "defaultValue" ) )
-			{
-				param.defaultValue = paramJson["defaultValue"];
-			}
-
-			material.parameters.push_back( param );
-		}
-	}
-
-	// Parse states (optional)
-	if ( jsonMaterial.contains( "states" ) && jsonMaterial["states"].is_object() )
-	{
-		const auto &statesObj = jsonMaterial["states"];
-
-		if ( statesObj.contains( "rasterizer" ) && statesObj["rasterizer"].is_string() )
-		{
-			material.states.rasterizer = statesObj["rasterizer"].get<std::string>();
-		}
-
-		if ( statesObj.contains( "depthStencil" ) && statesObj["depthStencil"].is_string() )
-		{
-			material.states.depthStencil = statesObj["depthStencil"].get<std::string>();
-		}
-
-		if ( statesObj.contains( "blend" ) && statesObj["blend"].is_string() )
-		{
-			material.states.blend = statesObj["blend"].get<std::string>();
-		}
-
-		if ( statesObj.contains( "renderTarget" ) && statesObj["renderTarget"].is_string() )
-		{
-			material.states.renderTarget = statesObj["renderTarget"].get<std::string>();
-		}
 	}
 
 	return material;
@@ -319,6 +190,224 @@ RenderPassDefinition MaterialParser::parseRenderPass( const nlohmann::json &json
 	}
 
 	return renderPass;
+}
+
+// Helper: Parse MaterialPass from JSON
+MaterialPass MaterialParser::parseMaterialPass( const nlohmann::json &jsonPass, const std::string &materialId )
+{
+	MaterialPass pass;
+
+	// Parse required name field
+	if ( !jsonPass.contains( "name" ) || !jsonPass["name"].is_string() )
+	{
+		console::error( "MaterialParser: Pass in material '{}' missing required 'name' field", materialId );
+		return pass; // Return empty pass (will be skipped by caller)
+	}
+	pass.passName = jsonPass["name"].get<std::string>();
+
+	// Parse shaders (required)
+	if ( jsonPass.contains( "shaders" ) && jsonPass["shaders"].is_object() )
+	{
+		parseShaders( pass.shaders, jsonPass["shaders"], materialId + "::" + pass.passName );
+	}
+	else
+	{
+		console::error( "MaterialParser: Pass '{}' in material '{}' missing 'shaders' field", pass.passName, materialId );
+		pass.passName.clear(); // Mark as invalid
+		return pass;
+	}
+
+	// Parse optional states
+	if ( jsonPass.contains( "states" ) && jsonPass["states"].is_object() )
+	{
+		parseStates( pass.states, jsonPass["states"] );
+	}
+
+	// Parse optional parameters
+	if ( jsonPass.contains( "parameters" ) && jsonPass["parameters"].is_array() )
+	{
+		parseParameters( pass.parameters, jsonPass["parameters"], materialId + "::" + pass.passName );
+	}
+
+	// Parse optional primitiveTopology
+	if ( jsonPass.contains( "primitiveTopology" ) && jsonPass["primitiveTopology"].is_string() )
+	{
+		pass.topology = parseTopology( jsonPass["primitiveTopology"].get<std::string>() );
+	}
+
+	return pass;
+}
+
+// Helper: Parse shaders object into vector
+void MaterialParser::parseShaders( std::vector<ShaderReference> &outShaders, const nlohmann::json &shadersObj, const std::string &contextId )
+{
+	std::unordered_set<ShaderStage> seenStages; // Track for duplicate detection
+
+	for ( auto it = shadersObj.begin(); it != shadersObj.end(); ++it )
+	{
+		ShaderReference shaderRef;
+		shaderRef.stage = parseShaderStage( it.key() );
+
+		// Check for duplicate shader stages
+		if ( seenStages.find( shaderRef.stage ) != seenStages.end() )
+		{
+			console::errorAndThrow( "MaterialParser: Duplicate shader stage '{}' in '{}'",
+				it.key(),
+				contextId );
+		}
+		seenStages.insert( shaderRef.stage );
+
+		// Only accept object mode
+		if ( it.value().is_string() )
+		{
+			console::errorAndThrow( "MaterialParser: Legacy string shader references no longer supported. Shader '{}' in '{}' must be an object with 'file', 'profile', etc.",
+				it.key(),
+				contextId );
+		}
+		else if ( !it.value().is_object() )
+		{
+			console::errorAndThrow( "MaterialParser: Shader '{}' in '{}' must be an object",
+				it.key(),
+				contextId );
+		}
+
+		// Parse inline shader object
+		const auto &shaderObj = it.value();
+
+		// Required: file
+		if ( !shaderObj.contains( "file" ) || !shaderObj["file"].is_string() )
+		{
+			console::errorAndThrow( "MaterialParser: Shader '{}' in '{}' missing required 'file' field",
+				it.key(),
+				contextId );
+		}
+		shaderRef.file = shaderObj["file"].get<std::string>();
+
+		// Validate file path exists
+		if ( !std::filesystem::exists( shaderRef.file ) )
+		{
+			console::errorAndThrow( "MaterialParser: Shader file '{}' for shader '{}' in '{}' does not exist",
+				shaderRef.file,
+				it.key(),
+				contextId );
+		}
+
+		// Required: profile
+		if ( !shaderObj.contains( "profile" ) || !shaderObj["profile"].is_string() )
+		{
+			console::errorAndThrow( "MaterialParser: Shader '{}' in '{}' missing required 'profile' field",
+				it.key(),
+				contextId );
+		}
+		shaderRef.profile = shaderObj["profile"].get<std::string>();
+
+		// Validate profile format
+		const std::string &profile = shaderRef.profile;
+		const std::regex profileRegex( R"((vs|ps|ds|hs|gs|cs)_\d+_\d+)" );
+		if ( !std::regex_match( profile, profileRegex ) )
+		{
+			console::errorAndThrow( "MaterialParser: Invalid profile '{}' for shader '{}' in '{}'. Expected format: (vs|ps|ds|hs|gs|cs)_X_Y",
+				profile,
+				it.key(),
+				contextId );
+		}
+
+		// Optional: entry (default "main")
+		if ( shaderObj.contains( "entry" ) && shaderObj["entry"].is_string() )
+		{
+			shaderRef.entryPoint = shaderObj["entry"].get<std::string>();
+		}
+		else
+		{
+			shaderRef.entryPoint = "main";
+		}
+
+		// Optional: defines
+		if ( shaderObj.contains( "defines" ) && shaderObj["defines"].is_array() )
+		{
+			for ( const auto &defineJson : shaderObj["defines"] )
+			{
+				if ( defineJson.is_string() )
+				{
+					shaderRef.defines.push_back( defineJson.get<std::string>() );
+				}
+			}
+		}
+
+		outShaders.push_back( shaderRef );
+	}
+}
+
+// Helper: Parse parameters array
+void MaterialParser::parseParameters( std::vector<Parameter> &outParameters, const nlohmann::json &parametersArray, const std::string &contextId )
+{
+	for ( const auto &paramJson : parametersArray )
+	{
+		Parameter param;
+
+		if ( !paramJson.contains( "name" ) || !paramJson["name"].is_string() )
+		{
+			console::error( "MaterialParser: Invalid parameter in '{}' - missing 'name'", contextId );
+			continue;
+		}
+		param.name = paramJson["name"].get<std::string>();
+
+		if ( !paramJson.contains( "type" ) || !paramJson["type"].is_string() )
+		{
+			console::error( "MaterialParser: Invalid parameter '{}' in '{}' - missing 'type'", param.name, contextId );
+			continue;
+		}
+		param.type = parseParameterType( paramJson["type"].get<std::string>() );
+
+		if ( paramJson.contains( "defaultValue" ) )
+		{
+			param.defaultValue = paramJson["defaultValue"];
+		}
+
+		outParameters.push_back( param );
+	}
+}
+
+// Helper: Parse states object
+void MaterialParser::parseStates( StateReferences &outStates, const nlohmann::json &statesObj )
+{
+	if ( statesObj.contains( "rasterizer" ) && statesObj["rasterizer"].is_string() )
+	{
+		outStates.rasterizer = statesObj["rasterizer"].get<std::string>();
+	}
+
+	if ( statesObj.contains( "depthStencil" ) && statesObj["depthStencil"].is_string() )
+	{
+		outStates.depthStencil = statesObj["depthStencil"].get<std::string>();
+	}
+
+	if ( statesObj.contains( "blend" ) && statesObj["blend"].is_string() )
+	{
+		outStates.blend = statesObj["blend"].get<std::string>();
+	}
+
+	if ( statesObj.contains( "renderTarget" ) && statesObj["renderTarget"].is_string() )
+	{
+		outStates.renderTarget = statesObj["renderTarget"].get<std::string>();
+	}
+}
+
+// Helper: Parse primitiveTopology string
+D3D12_PRIMITIVE_TOPOLOGY_TYPE MaterialParser::parseTopology( const std::string &topologyStr )
+{
+	if ( topologyStr == "Triangle" )
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	else if ( topologyStr == "Line" )
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+	else if ( topologyStr == "Point" )
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	else if ( topologyStr == "Patch" )
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	else
+	{
+		console::error( "MaterialParser: Unknown primitiveTopology '{}', defaulting to Triangle", topologyStr );
+		return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	}
 }
 
 // MaterialDefinition query methods
