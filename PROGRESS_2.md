@@ -1,5 +1,69 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-01-14 — T305: Update Test Suite for Multi-Pass API
+**Summary:** Migrated 6 PipelineBuilder unit tests in material_system_tests.cpp from legacy MaterialDefinition API (material.shaders, material.states, material.parameters) to new multi-pass format using MaterialPass structure. Updated T215 tests (3 test cases), T014 tests (2 test cases), and T203 test (1 test case) to construct MaterialPass objects with pass-specific data, add to material.passes vector, and call buildPSO with "forward" passName parameter. All migrated tests pass without regressions (9 assertions in 5 test cases). T207/T211-T213 tests already use JSON format and require no migration. Migration pattern: replaced material.shaders.push_back → forwardPass.shaders.push_back, material.states → forwardPass.states, material.parameters → forwardPass.parameters, added material.passes.push_back(forwardPass), updated buildPSO calls from 4 parameters (device, material, passConfig, materialSystem) to 5 parameters with "forward" passName. Fixed one bug where material1 in T215 test 3 wasn't fully migrated (material1.passes was empty, causing "Material 'test_mat_1' does not have pass 'forward'" error). Full test suites pass: material-system (192 assertions in 26 test cases), pipeline-builder excluding T303 (34 assertions in 11 test cases). T303 tests have pre-existing shader compilation crashes (grid.hlsl paths), not migration-related. Test suite now uses consistent multi-pass API throughout, preparing for T306 renderer integration and T307 legacy field removal.
+
+**Atomic functionalities completed:**
+- AF1: Identify tests using legacy API — grep_search found 6 test cases manually constructing MaterialDefinition with material.shaders.push_back() and material.states assignments: T215 (3 tests lines ~1345-1560), T014 (2 tests lines ~1730-1850), T203 (1 test lines ~1850-1900)
+- AF2: Migrate T215 test 1 (root sig from params) — replaced material construction with MaterialPass forwardPass containing shaders + Float4 parameter + states; added forwardPass to material.passes; updated buildPSO call to include "forward" passName; test passes (1 assertion)
+- AF3: Migrate T215 test 2 (empty root sig) — updated parameterless material to use MaterialPass with shaders + states only; test passes (1 assertion)
+- AF4: Migrate T215 test 3 (cache reuse) — updated both material1 and material2 to MaterialPass format (forwardPass1/forwardPass2); fixed material1 which was initially partially migrated (material1.shaders still existed); test passes (2 assertions)
+- AF5: Migrate T014 tests (PSO creation + caching) — updated both tests to use MaterialPass with simple.hlsl shaders and states; tests pass (4 assertions in 2 test cases)
+- AF6: Migrate T203 test (shader compilation) — updated test using grid.hlsl shaders to MaterialPass format; test passes (1 assertion)
+- AF7: Build and verify all tests — ran unit_test_runner.exe for T014/T203/T215 individually and together; all 5 migrated tests passing (9 assertions total); verified no regressions in material-system suite (192 assertions) and pipeline-builder suite excluding T303 (34 assertions)
+
+**Tests:** 6 tests migrated (T215: 3 tests with 4 assertions, T014: 2 tests with 4 assertions, T203: 1 test with 1 assertion); all migrated tests pass; filtered commands: unit_test_runner.exe "[pipeline-builder][T014]", unit_test_runner.exe "[pipeline-builder][T203]", unit_test_runner.exe "[pipeline-builder][T215]"; full suite: unit_test_runner.exe "[material-system]" (192 assertions), unit_test_runner.exe "[pipeline-builder]" "~[T303]" (34 assertions)
+
+**Files Modified:**
+- Updated: `tests/material_system_tests.cpp` — Migrated 6 test cases (~150 lines changed): T215 test 1 "PipelineBuilder builds PSO with root signature from material parameters" (lines ~1360-1410) replaced material.shaders/parameters/states with MaterialPass forwardPass; T215 test 2 "PipelineBuilder builds PSO with empty root signature for parameterless material" (lines ~1415-1455) updated to MaterialPass format; T215 test 3 "PipelineBuilder reuses cached root signature for identical material parameters" (lines ~1468-1560) updated material1 and material2 to forwardPass1/forwardPass2; T014 test 1 "PipelineBuilder creates PSO from MaterialDefinition" (lines ~1745-1785) updated to MaterialPass with simple.hlsl shaders; T014 test 2 "PipelineBuilder caches and reuses PSO for identical requests" (lines ~1790-1830) updated to MaterialPass; T203 test "PipelineBuilder compiles shaders from material shader info" (lines ~1855-1895) updated grid.hlsl shaders to MaterialPass; all buildPSO calls changed from 4 parameters to 5 parameters with "forward" passName
+
+**Migration Pattern:**
+Before (Legacy API):
+```cpp
+MaterialDefinition material;
+material.id = "test_mat";
+material.pass = "forward";  // Legacy field
+
+ShaderReference vsShader;
+vsShader.file = "shaders/simple.hlsl";
+material.shaders.push_back(vsShader);  // Legacy field
+
+material.states.rasterizer = "default";  // Legacy field
+material.parameters = {...};  // Legacy field
+
+auto pso = buildPSO(&device, material, passConfig);  // 4 params
+```
+
+After (Multi-Pass API):
+```cpp
+MaterialDefinition material;
+material.id = "test_mat";
+
+MaterialPass forwardPass;
+forwardPass.passName = "forward";
+
+ShaderReference vsShader;
+vsShader.file = "shaders/simple.hlsl";
+forwardPass.shaders.push_back(vsShader);  // Pass-specific
+
+forwardPass.states.rasterizer = "default";  // Pass-specific
+forwardPass.parameters = {...};  // Pass-specific
+
+material.passes.push_back(forwardPass);  // New passes vector
+
+auto pso = buildPSO(&device, material, passConfig, nullptr, "forward");  // 5 params with passName
+```
+
+**Notes:**
+- **Backward compatibility**: Legacy fields (material.pass, material.shaders, material.states, material.primitiveTopology) still exist in MaterialDefinition; will be removed in T307
+- **Test coverage unchanged**: Same 9 assertions, same test logic, only API structure changed
+- **No regressions**: All existing tests continue passing; full suites verified
+- **T215 test 3 bug**: Initial multi_replace_string_in_file for material1 didn't fully apply (material1.shaders/parameters/states remained), causing "Material 'test_mat_1' does not have pass 'forward'" error; fixed with single replace_string_in_file using exact 30-line match
+- **T303 test crashes**: 1 T303 test ("PipelineBuilder uses pass-specific topology") crashes due to shader compilation issue (grid.hlsl path), NOT related to T305 migration; other T303 tests like "PipelineBuilder returns nullptr for invalid pass name" pass successfully
+- **Tests not migrated**: T207 (3 tests), T211-T213 (3 tests), T303 (6 tests) already use JSON format or multi-pass API, no changes needed
+- **Phase 2F progress**: 5/7 tasks complete (T301-T305 done, T306-T307 pending)
+- **Next tasks**: T306 (update GridRenderer/MeshRenderingSystem to use getMaterialPass), T307 (remove legacy fields, documentation, complete Phase 2F)
+
 ## 2025-01-14 — T302: Update Parser for Multi-Pass Materials
 **Summary:** Extended MaterialParser to parse multi-pass JSON format with "passes" array while maintaining full backward compatibility with legacy single-pass "pass" string format. Parser now detects format type using boolean flags: hasPassesArray checks for "passes" array field, hasLegacyPass checks for "pass" string field. Multi-pass branch iterates passes array calling parseMaterialPass helper for each, validates pass has non-empty passName before adding to material.passes vector. Legacy branch preserves original inline parsing logic for pass/shaders/states/parameters/primitiveTopology fields. Refactored parser with 5 new private helper methods: parseMaterialPass (constructs MaterialPass from JSON, returns empty pass with cleared passName on error), parseShaders (parses shaders object into vector with file validation and profile regex), parseParameters (parses parameters array), parseStates (parses states object), parseTopology (parses primitiveTopology string to D3D12 enum). Multi-pass JSON format: {"passes": [{"name": "forward", "shaders": {...}, "states": {...}, "parameters": [...], "primitiveTopology": "..."}]}. Legacy format: {"pass": "forward", "shaders": {...}, "states": {...}, "parameters": [...], "primitiveTopology": "..."}. All parser tests pass: 94 assertions in 15 test cases including 7 new T302 tests (single pass, multiple passes, pass-specific parameters, pass-specific topology, minimal pass, legacy fallback, missing pass name handling). TDD approach: RED (7 test cases created, 5 failing expecting passes.size() > 0) → GREEN (helper methods implemented, all tests pass) → REFACTOR (removed debug logging, verified no regressions). Multi-pass parsing enables materials to define depth prepass + forward lit, shadow casting + forward rendering, or debug wireframe passes in single material definition, critical for modern rendering pipelines.
 

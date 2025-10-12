@@ -1356,9 +1356,13 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	// Arrange - MaterialSystem with shader info
 	graphics::material_system::MaterialSystem materialSystem;
 
-	// Arrange - Material with 1 parameter (CBV binding)
+	// Arrange - Material with 1 parameter (CBV binding) using multi-pass format
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_mat_with_params";
+
+	// Create "forward" pass with shaders and parameter
+	graphics::material_system::MaterialPass forwardPass;
+	forwardPass.passName = "forward";
 
 	// Add vertex shader
 	graphics::material_system::ShaderReference vsShader;
@@ -1366,7 +1370,7 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
 	vsShader.profile = "vs_5_1";
-	material.shaders.push_back( vsShader );
+	forwardPass.shaders.push_back( vsShader );
 
 	// Add pixel shader
 	graphics::material_system::ShaderReference psShader;
@@ -1374,17 +1378,20 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
 	psShader.profile = "ps_5_1";
-	material.shaders.push_back( psShader );
+	forwardPass.shaders.push_back( psShader );
 
 	// Add parameter
-	material.parameters = {
+	forwardPass.parameters = {
 		{ "testParam", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
 	};
 
 	// Add required state blocks
-	material.states.rasterizer = "default_raster";
-	material.states.depthStencil = "default_depth";
-	material.states.blend = "default_blend";
+	forwardPass.states.rasterizer = "default_raster";
+	forwardPass.states.depthStencil = "default_depth";
+	forwardPass.states.blend = "default_blend";
+
+	// Add pass to material
+	material.passes.push_back( forwardPass );
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1393,8 +1400,8 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build PSO (should use RootSignatureBuilder + RootSignatureCache internally)
-	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem );
+	// Act - build PSO with "forward" pass (should use RootSignatureBuilder + RootSignatureCache internally)
+	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully with root signature from material parameters
 	REQUIRE( pso != nullptr );
@@ -1410,9 +1417,13 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	// Arrange - MaterialSystem with shader info
 	graphics::material_system::MaterialSystem materialSystem;
 
-	// Arrange - Material with 0 parameters
+	// Arrange - Material with 0 parameters using multi-pass format
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_mat_no_params";
+
+	// Create "forward" pass with shaders (no parameters)
+	graphics::material_system::MaterialPass forwardPass;
+	forwardPass.passName = "forward";
 
 	// Add vertex shader
 	graphics::material_system::ShaderReference vsShader;
@@ -1420,7 +1431,7 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
 	vsShader.profile = "vs_5_1";
-	material.shaders.push_back( vsShader );
+	forwardPass.shaders.push_back( vsShader );
 
 	// Add pixel shader
 	graphics::material_system::ShaderReference psShader;
@@ -1428,14 +1439,17 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
 	psShader.profile = "ps_5_1";
-	material.shaders.push_back( psShader );
+	forwardPass.shaders.push_back( psShader );
 
 	// No parameters
 
 	// Add required state blocks
-	material.states.rasterizer = "default_raster";
-	material.states.depthStencil = "default_depth";
-	material.states.blend = "default_blend";
+	forwardPass.states.rasterizer = "default_raster";
+	forwardPass.states.depthStencil = "default_depth";
+	forwardPass.states.blend = "default_blend";
+
+	// Add pass to material
+	material.passes.push_back( forwardPass );
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1444,8 +1458,8 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build PSO (should create empty root signature)
-	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem );
+	// Act - build PSO with "forward" pass (should create empty root signature)
+	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully with empty root signature
 	REQUIRE( pso != nullptr );
@@ -1461,9 +1475,13 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	// Arrange - MaterialSystem with shader info
 	graphics::material_system::MaterialSystem materialSystem;
 
-	// Arrange - Two materials with identical parameters
+	// Arrange - Two materials with identical parameters using multi-pass format
 	graphics::material_system::MaterialDefinition material1;
 	material1.id = "test_mat_1";
+
+	// Create "forward" pass for material1
+	graphics::material_system::MaterialPass forwardPass1;
+	forwardPass1.passName = "forward";
 
 	// Add vertex shader
 	graphics::material_system::ShaderReference vsShader1;
@@ -1471,7 +1489,7 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	vsShader1.file = "shaders/simple.hlsl";
 	vsShader1.entryPoint = "VSMain";
 	vsShader1.profile = "vs_5_1";
-	material1.shaders.push_back( vsShader1 );
+	forwardPass1.shaders.push_back( vsShader1 );
 
 	// Add pixel shader
 	graphics::material_system::ShaderReference psShader1;
@@ -1479,20 +1497,27 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	psShader1.file = "shaders/simple.hlsl";
 	psShader1.entryPoint = "PSMain";
 	psShader1.profile = "ps_5_1";
-	material1.shaders.push_back( psShader1 );
+	forwardPass1.shaders.push_back( psShader1 );
 
 	// Add parameter
-	material1.parameters = {
+	forwardPass1.parameters = {
 		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 1.0f, 0.0f, 0.0f, 1.0f } ) }
 	};
 
 	// Add required state blocks
-	material1.states.rasterizer = "default_raster";
-	material1.states.depthStencil = "default_depth";
-	material1.states.blend = "default_blend";
+	forwardPass1.states.rasterizer = "default_raster";
+	forwardPass1.states.depthStencil = "default_depth";
+	forwardPass1.states.blend = "default_blend";
+
+	// Add pass to material
+	material1.passes.push_back( forwardPass1 );
 
 	graphics::material_system::MaterialDefinition material2;
 	material2.id = "test_mat_2";
+
+	// Create "forward" pass for material2
+	graphics::material_system::MaterialPass forwardPass2;
+	forwardPass2.passName = "forward";
 
 	// Add vertex shader
 	graphics::material_system::ShaderReference vsShader2;
@@ -1500,7 +1525,7 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	vsShader2.file = "shaders/simple.hlsl";
 	vsShader2.entryPoint = "VSMain";
 	vsShader2.profile = "vs_5_1";
-	material2.shaders.push_back( vsShader2 );
+	forwardPass2.shaders.push_back( vsShader2 );
 
 	// Add pixel shader
 	graphics::material_system::ShaderReference psShader2;
@@ -1508,17 +1533,20 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	psShader2.file = "shaders/simple.hlsl";
 	psShader2.entryPoint = "PSMain";
 	psShader2.profile = "ps_5_1";
-	material2.shaders.push_back( psShader2 );
+	forwardPass2.shaders.push_back( psShader2 );
 
 	// Add parameter - same name and type as material1
-	material2.parameters = {
+	forwardPass2.parameters = {
 		{ "color", graphics::material_system::ParameterType::Float4, nlohmann::json::array( { 0.0f, 1.0f, 0.0f, 1.0f } ) }
 	};
 
 	// Add required state blocks
-	material2.states.rasterizer = "default_raster";
-	material2.states.depthStencil = "default_depth";
-	material2.states.blend = "default_blend";
+	forwardPass2.states.rasterizer = "default_raster";
+	forwardPass2.states.depthStencil = "default_depth";
+	forwardPass2.states.blend = "default_blend";
+
+	// Add pass to material
+	material2.passes.push_back( forwardPass2 );
 
 	// Arrange - RenderPassConfig
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1527,9 +1555,9 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build two PSOs with identical root signatures
-	const auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material1, passConfig, &materialSystem );
-	const auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material2, passConfig, &materialSystem );
+	// Act - build two PSOs with "forward" pass (identical root signatures)
+	const auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material1, passConfig, &materialSystem, "forward" );
+	const auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material2, passConfig, &materialSystem, "forward" );
 
 	// Assert - both PSOs created successfully (cache hit on second)
 	REQUIRE( pso1 != nullptr );
@@ -1719,27 +1747,35 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO creation" ) )
 		return;
 
-	// Arrange - minimal MaterialDefinition
+	// Arrange - minimal MaterialDefinition using multi-pass format
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_simple_material";
-	material.pass = "forward";
+
+	// Create "forward" pass
+	graphics::material_system::MaterialPass forwardPass;
+	forwardPass.passName = "forward";
+
 	// Using inline shader mode
 	graphics::material_system::ShaderReference vsRef;
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
 	vsRef.profile = "vs_5_0";
-	material.shaders.push_back( vsRef );
+	forwardPass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
 	psRef.profile = "ps_5_0";
-	material.shaders.push_back( psRef );
-	material.states.rasterizer = "default_raster";
-	material.states.depthStencil = "default_depth";
-	material.states.blend = "default_blend";
+	forwardPass.shaders.push_back( psRef );
+
+	forwardPass.states.rasterizer = "default_raster";
+	forwardPass.states.depthStencil = "default_depth";
+	forwardPass.states.blend = "default_blend";
+
+	// Add pass to material
+	material.passes.push_back( forwardPass );
 
 	// Arrange - render pass config
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1748,8 +1784,8 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build PSO (this will fail until buildPSO is implemented)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+	// Act - build PSO with "forward" pass
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - PSO handle should be valid (non-null, usable for rendering)
 	REQUIRE( pso != nullptr );
@@ -1762,27 +1798,35 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO caching" ) )
 		return;
 
-	// Arrange - minimal MaterialDefinition
+	// Arrange - minimal MaterialDefinition using multi-pass format
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_cached_material";
-	material.pass = "forward";
+
+	// Create "forward" pass
+	graphics::material_system::MaterialPass forwardPass;
+	forwardPass.passName = "forward";
+
 	// Using inline shader mode
 	graphics::material_system::ShaderReference vsRef;
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
 	vsRef.profile = "vs_5_0";
-	material.shaders.push_back( vsRef );
+	forwardPass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
 	psRef.profile = "ps_5_0";
-	material.shaders.push_back( psRef );
-	material.states.rasterizer = "default_raster";
-	material.states.depthStencil = "default_depth";
-	material.states.blend = "default_blend";
+	forwardPass.shaders.push_back( psRef );
+
+	forwardPass.states.rasterizer = "default_raster";
+	forwardPass.states.depthStencil = "default_depth";
+	forwardPass.states.blend = "default_blend";
+
+	// Add pass to material
+	material.passes.push_back( forwardPass );
 
 	// Arrange - render pass config
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1791,9 +1835,9 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build PSO twice with identical inputs
-	auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
-	auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+	// Act - build PSO twice with "forward" pass (identical inputs)
+	auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
+	auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - both should be valid
 	REQUIRE( pso1 != nullptr );
@@ -1814,10 +1858,13 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 	if ( !requireHeadlessDevice( device, "PipelineBuilder shader info usage" ) )
 		return;
 
-	// Arrange - MaterialDefinition using grid.hlsl instead of simple.hlsl
+	// Arrange - MaterialDefinition using grid.hlsl instead of simple.hlsl (multi-pass format)
 	graphics::material_system::MaterialDefinition material;
 	material.id = "test_grid_material";
-	material.pass = "forward";
+
+	// Create "forward" pass
+	graphics::material_system::MaterialPass forwardPass;
+	forwardPass.passName = "forward";
 
 	// Vertex shader from grid.hlsl
 	graphics::material_system::ShaderReference vsRef;
@@ -1825,7 +1872,7 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 	vsRef.file = "shaders/grid.hlsl";
 	vsRef.entryPoint = "VSMain";
 	vsRef.profile = "vs_5_0";
-	material.shaders.push_back( vsRef );
+	forwardPass.shaders.push_back( vsRef );
 
 	// Pixel shader from grid.hlsl
 	graphics::material_system::ShaderReference psRef;
@@ -1833,11 +1880,14 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 	psRef.file = "shaders/grid.hlsl";
 	psRef.entryPoint = "PSMain";
 	psRef.profile = "ps_5_0";
-	material.shaders.push_back( psRef );
+	forwardPass.shaders.push_back( psRef );
 
-	material.states.rasterizer = "default_raster";
-	material.states.depthStencil = "default_depth";
-	material.states.blend = "default_blend";
+	forwardPass.states.rasterizer = "default_raster";
+	forwardPass.states.depthStencil = "default_depth";
+	forwardPass.states.blend = "default_blend";
+
+	// Add pass to material
+	material.passes.push_back( forwardPass );
 
 	// Arrange - render pass config
 	graphics::material_system::RenderPassConfig passConfig;
@@ -1846,8 +1896,8 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - build PSO (should use grid.hlsl shaders, not hardcoded simple.hlsl)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig );
+	// Act - build PSO with "forward" pass (should use grid.hlsl shaders, not hardcoded simple.hlsl)
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - PSO should be created successfully using material shader info
 	REQUIRE( pso != nullptr );
