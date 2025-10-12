@@ -214,6 +214,12 @@ bool ReferenceValidator::validateReferences(
 	// Validate shader references
 	for ( const auto &shaderRef : material.shaders )
 	{
+		// Skip validation if using file-based shaders (modern approach)
+		// File existence is validated during parsing
+		if ( !shaderRef.file.empty() )
+			continue;
+
+		// Legacy shader ID validation
 		bool shaderFound = false;
 
 		if ( document.contains( "shaders" ) && document["shaders"].is_object() )

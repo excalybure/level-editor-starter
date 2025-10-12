@@ -858,8 +858,16 @@ TEST_CASE( "ReferenceValidator detects undefined pass reference", "[reference-va
         "id": "invalid_pass_mat",
         "pass": "nonexistent_pass",
         "shaders": {
-            "vertex": "vs1",
-            "pixel": "ps1"
+            "vertex": {
+                "file": "shaders/simple.hlsl",
+                "entry": "VSMain",
+                "profile": "vs_5_1"
+            },
+            "pixel": {
+                "file": "shaders/simple.hlsl",
+                "entry": "PSMain",
+                "profile": "ps_5_1"
+            }
         }
     })" );
 
@@ -893,8 +901,16 @@ TEST_CASE( "ReferenceValidator detects undefined state reference", "[reference-v
         "id": "invalid_state_mat",
         "pass": "forward",
         "shaders": {
-            "vertex": "vs1",
-            "pixel": "ps1"
+            "vertex": {
+                "file": "shaders/simple.hlsl",
+                "entry": "VSMain",
+                "profile": "vs_5_1"
+            },
+            "pixel": {
+                "file": "shaders/simple.hlsl",
+                "entry": "PSMain",
+                "profile": "ps_5_1"
+            }
         },
         "states": {
             "rasterizer": "missing_state"
@@ -928,7 +944,8 @@ TEST_CASE( "ReferenceValidator detects undefined state reference", "[reference-v
 
 TEST_CASE( "ReferenceValidator detects undefined shader reference", "[reference-validator][T010][unit]" )
 {
-	// Arrange - material referencing non-existent shader
+	// Arrange - material referencing shader with file that doesn't exist
+	// Note: File existence is now validated during parsing, so we expect an exception
 	const json materialJson = json::parse( R"({
         "id": "invalid_shader_mat",
         "pass": "forward",
@@ -936,36 +953,18 @@ TEST_CASE( "ReferenceValidator detects undefined shader reference", "[reference-
             "vertex": {
                 "file": "shaders/missing.hlsl",
                 "entry": "VSMain",
-                "profile": "vs_6_0"
+                "profile": "vs_5_1"
             },
             "pixel": {
                 "file": "shaders/simple.hlsl",
                 "entry": "PSMain",
-                "profile": "ps_6_0"
+                "profile": "ps_5_1"
             }
         }
     })" );
 
-	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
-
-	const std::vector<std::string> knownPasses = { "forward" };
-
-	// Document with shaders but not the one referenced
-	const json document = json::parse( R"({
-        "materials": [],
-        "renderPasses": [],
-        "shaders": {
-            "vertex": [{"id": "vs1"}],
-            "pixel": [{"id": "ps1"}]
-        }
-    })" );
-
-	graphics::material_system::ReferenceValidator validator;
-
-	// Act & Assert
-	const bool valid = validator.validateReferences( material, knownPasses, document );
-
-	REQUIRE_FALSE( valid );
+	// Act & Assert - parsing should throw because file doesn't exist
+	REQUIRE_THROWS( graphics::material_system::MaterialParser::parse( materialJson ) );
 }
 
 TEST_CASE( "ReferenceValidator accepts valid references", "[reference-validator][T010][unit]" )
@@ -978,12 +977,12 @@ TEST_CASE( "ReferenceValidator accepts valid references", "[reference-validator]
             "vertex": {
                 "file": "shaders/simple.hlsl",
                 "entry": "VSMain",
-                "profile": "vs_6_0"
+                "profile": "vs_5_1"
             },
             "pixel": {
                 "file": "shaders/simple.hlsl",
                 "entry": "PSMain",
-                "profile": "ps_6_0"
+                "profile": "ps_5_1"
             }
         },
         "states": {

@@ -43,7 +43,9 @@ public:
 	// Build root signature spec from material definition
 	// Note: This simplified version infers bindings from parameters only.
 	// Full implementation would use shader reflection (DXIL analysis).
-	static RootSignatureSpec Build( const MaterialDefinition &material );
+	// @param material - Material definition to build root signature for
+	// @param includeFrameConstants - If true, adds default FrameConstants CBV at b0 (required for most shaders)
+	static RootSignatureSpec Build( const MaterialDefinition &material, bool includeFrameConstants = false );
 
 private:
 	// Convert material parameters to resource bindings

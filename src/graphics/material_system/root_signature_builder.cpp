@@ -6,17 +6,20 @@
 namespace graphics::material_system
 {
 
-RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material )
+RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material, bool includeFrameConstants )
 {
 	RootSignatureSpec spec;
 
-	// Add default frame/view constant buffer binding (b0)
+	// Optionally add default frame/view constant buffer binding (b0)
 	// Most shaders need this for view-projection matrices, etc.
-	ResourceBinding frameConstants;
-	frameConstants.name = "FrameConstants";
-	frameConstants.type = ResourceBindingType::CBV;
-	frameConstants.slot = 0; // Always at b0
-	spec.resourceBindings.push_back( frameConstants );
+	if ( includeFrameConstants )
+	{
+		ResourceBinding frameConstants;
+		frameConstants.name = "FrameConstants";
+		frameConstants.type = ResourceBindingType::CBV;
+		frameConstants.slot = 0; // Always at b0
+		spec.resourceBindings.push_back( frameConstants );
+	}
 
 	// Add bindings from material parameters
 	AddParameterBindings( material, spec.resourceBindings );
@@ -73,8 +76,18 @@ void RootSignatureBuilder::SortBindings( std::vector<ResourceBinding> &bindings 
 void RootSignatureBuilder::AssignSlots( std::vector<ResourceBinding> &bindings )
 {
 	// Assign sequential slots for bindings that don't have explicit slots
-	// Start from b1 since b0 is reserved for FrameConstants
-	int nextSlot = 1;
+	// Start from the first available slot (b1 if FrameConstants at b0 exists, otherwise b0)
+	int nextSlot = 0;
+	
+	// Find the first available slot after any explicitly assigned slots
+	for ( const auto &binding : bindings )
+	{
+		if ( binding.slot >= nextSlot )
+		{
+			nextSlot = binding.slot + 1;
+		}
+	}
+	
 	for ( auto &binding : bindings )
 	{
 		// Skip bindings that already have explicit slots (like FrameConstants at b0)

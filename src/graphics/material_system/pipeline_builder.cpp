@@ -25,7 +25,8 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineBuilder::getRootSignature(
 		return nullptr;
 	}
 
-	const auto rootSigSpec = RootSignatureBuilder::Build( material );
+	// Include FrameConstants (b0) for view-projection matrices required by shaders
+	const auto rootSigSpec = RootSignatureBuilder::Build( material, true );
 	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 }
 
@@ -170,7 +171,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
 	// Root signature - use RootSignatureBuilder + RootSignatureCache (T215)
-	const auto rootSigSpec = RootSignatureBuilder::Build( material );
+	// Include FrameConstants (b0) for view-projection matrices required by shaders
+	const auto rootSigSpec = RootSignatureBuilder::Build( material, true );
 	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 	if ( !rootSignature )
 	{
