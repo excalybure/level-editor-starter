@@ -3218,9 +3218,9 @@ TEST_CASE( "MaterialParser extracts vertexFormat from JSON", "[vertex-format][T2
 		"id": "test_material",
 		"pass": "forward",
 		"vertexFormat": "PositionNormalUV",
-		"shaders": [
-			{ "stage": "Vertex", "file": "test.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" }
-		]
+		"shaders": {
+			"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+		}
 	})";
 	const json j = json::parse( jsonStr );
 
@@ -3238,9 +3238,9 @@ TEST_CASE( "MaterialParser defaults vertexFormat to empty string if absent", "[v
 	const std::string jsonStr = R"({
 		"id": "test_material",
 		"pass": "forward",
-		"shaders": [
-			{ "stage": "Vertex", "file": "test.hlsl", "entryPoint": "VSMain", "profile": "vs_5_0" }
-		]
+		"shaders": {
+			"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+		}
 	})";
 	const json j = json::parse( jsonStr );
 

@@ -34,7 +34,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	dx12::Device *device,
 	const MaterialDefinition &material,
 	const RenderPassConfig &passConfig,
-	const MaterialSystem *materialSystem )
+	const MaterialSystem *materialSystem,
+	const std::string &passName )
 {
 	if ( !device || !device->get() )
 	{
@@ -42,8 +43,20 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		return nullptr;
 	}
 
-	// Check cache first
-	const PSOHash hash = computePSOHash( material, passConfig );
+	// Query MaterialPass if passName provided (multi-pass material)
+	const MaterialPass *materialPass = nullptr;
+	if ( !passName.empty() )
+	{
+		materialPass = material.getPass( passName );
+		if ( !materialPass )
+		{
+			console::error( "PipelineBuilder::buildPSO: Material '{}' does not have pass '{}'", material.id, passName );
+			return nullptr;
+		}
+	}
+
+	// Check cache first (include passName in hash for multi-pass)
+	const PSOHash hash = computePSOHash( material, passName, passConfig );
 	auto cachedPSO = s_cache.get( hash );
 	if ( cachedPSO )
 	{
@@ -60,8 +73,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	Microsoft::WRL::ComPtr<ID3DBlob> hsBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
 
-	// Compile each shader from material definition
-	for ( const auto &shaderRef : material.shaders )
+	// Compile shaders from pass-specific or legacy material definition
+	const auto &shadersToCompile = materialPass ? materialPass->shaders : material.shaders;
+	for ( const auto &shaderRef : shadersToCompile )
 	{
 		// Convert shader defines vector to map (T203-AF4)
 		// Shader defines are simple flags (no values), so use empty string as value
@@ -183,10 +197,12 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	psoDesc.pRootSignature = rootSignature.Get();
 
 	// Rasterizer state - query from MaterialSystem or use D3D12 defaults
+	// Use pass-specific state if available, otherwise fall back to material state
+	const StateReferences &statesToUse = materialPass ? materialPass->states : material.states;
 	const RasterizerStateBlock *rasterizerState = nullptr;
-	if ( materialSystem && !material.states.rasterizer.empty() )
+	if ( materialSystem && !statesToUse.rasterizer.empty() )
 	{
-		rasterizerState = materialSystem->getRasterizerState( material.states.rasterizer );
+		rasterizerState = materialSystem->getRasterizerState( statesToUse.rasterizer );
 	}
 
 	if ( rasterizerState )
@@ -222,9 +238,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 
 	// Blend state - query from MaterialSystem or use D3D12 defaults
 	const BlendStateBlock *blendState = nullptr;
-	if ( materialSystem && !material.states.blend.empty() )
+	if ( materialSystem && !statesToUse.blend.empty() )
 	{
-		blendState = materialSystem->getBlendState( material.states.blend );
+		blendState = materialSystem->getBlendState( statesToUse.blend );
 	}
 
 	if ( blendState )
@@ -260,9 +276,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 
 	// Depth/stencil state - query from MaterialSystem or use D3D12 defaults
 	const DepthStencilStateBlock *depthStencilState = nullptr;
-	if ( materialSystem && !material.states.depthStencil.empty() )
+	if ( materialSystem && !statesToUse.depthStencil.empty() )
 	{
-		depthStencilState = materialSystem->getDepthStencilState( material.states.depthStencil );
+		depthStencilState = materialSystem->getDepthStencilState( statesToUse.depthStencil );
 	}
 
 	if ( depthStencilState )
@@ -300,14 +316,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Sample mask
 	psoDesc.SampleMask = UINT_MAX;
 
-	// Primitive topology - use material's specified topology
-	psoDesc.PrimitiveTopologyType = material.primitiveTopology;
+	// Primitive topology - use pass-specific or material's specified topology
+	psoDesc.PrimitiveTopologyType = materialPass ? materialPass->topology : material.primitiveTopology;
 
 	// Render target formats - query from MaterialSystem or use passConfig
 	const RenderTargetStateBlock *renderTargetState = nullptr;
-	if ( materialSystem && !material.states.renderTarget.empty() )
+	if ( materialSystem && !statesToUse.renderTarget.empty() )
 	{
-		renderTargetState = materialSystem->getRenderTargetState( material.states.renderTarget );
+		renderTargetState = materialSystem->getRenderTargetState( statesToUse.renderTarget );
 	}
 
 	if ( renderTargetState )
@@ -344,8 +360,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		return nullptr;
 	}
 
-	// Store in cache for future reuse
-	s_cache.store( hash, pso, material.id, passConfig.name );
+	// Store in cache for future reuse (include pass name in cache key)
+	const std::string cacheKey = passName.empty() ? material.id : material.id + ":" + passName;
+	s_cache.store( hash, pso, cacheKey, passConfig.name );
 
 	return pso;
 }

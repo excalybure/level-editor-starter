@@ -17,7 +17,8 @@ using PSOHash = size_t;
 
 // Compute deterministic hash from material + pass configuration
 // Used for PSO cache key generation
-PSOHash computePSOHash( const MaterialDefinition &material, const RenderPassConfig &passConfig );
+// passName: Specific pass name for multi-pass materials (empty for legacy)
+PSOHash computePSOHash( const MaterialDefinition &material, const std::string &passName, const RenderPassConfig &passConfig );
 
 // Cache for Pipeline State Objects
 // Stores PSOs by hash and detects collisions

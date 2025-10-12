@@ -9,27 +9,42 @@ namespace graphics::material_system
 
 // Compute stable hash for PSO cache key
 // Combines material id, pass name, shader ids, and state ids
-PSOHash computePSOHash( const MaterialDefinition &material, const RenderPassConfig &passConfig )
+PSOHash computePSOHash( const MaterialDefinition &material, const std::string &passName, const RenderPassConfig &passConfig )
 {
 	std::hash<std::string> hasher;
 
 	// Start with material id
 	size_t hash = hasher( material.id );
 
-	// Combine with pass name
+	// Combine with pass name (multi-pass materials need different PSOs per pass)
+	if ( !passName.empty() )
+	{
+		hash ^= hasher( passName ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	}
+
+	// Combine with render pass config name
 	hash ^= hasher( passConfig.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 
-	// Combine shader ids (sorted for stability)
-	for ( const auto &shaderRef : material.shaders )
+	// Query pass-specific data if passName provided
+	const MaterialPass *materialPass = nullptr;
+	if ( !passName.empty() )
+	{
+		materialPass = material.getPass( passName );
+	}
+
+	// Combine shader ids (use pass-specific or material shaders)
+	const auto &shadersToHash = materialPass ? materialPass->shaders : material.shaders;
+	for ( const auto &shaderRef : shadersToHash )
 	{
 		hash ^= hasher( shaderStageToString( shaderRef.stage ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 		hash ^= hasher( shaderRef.shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 	}
 
-	// Combine state block ids
-	hash ^= hasher( material.states.rasterizer ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-	hash ^= hasher( material.states.depthStencil ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-	hash ^= hasher( material.states.blend ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	// Combine state block ids (use pass-specific or material states)
+	const StateReferences &statesToHash = materialPass ? materialPass->states : material.states;
+	hash ^= hasher( statesToHash.rasterizer ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	hash ^= hasher( statesToHash.depthStencil ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	hash ^= hasher( statesToHash.blend ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 
 	return hash;
 }

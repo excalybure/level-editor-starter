@@ -35,11 +35,13 @@ public:
 	// Returns ID3D12PipelineState on success, nullptr on failure
 	// Automatically caches PSOs and reuses them for identical requests
 	// MaterialSystem pointer is optional - if provided, state blocks will be queried; if nullptr, uses D3D12 defaults
+	// passName: Specific pass to build PSO for (multi-pass materials); empty string uses legacy format
 	static Microsoft::WRL::ComPtr<ID3D12PipelineState> buildPSO(
 		dx12::Device *device,
 		const MaterialDefinition &material,
 		const RenderPassConfig &passConfig,
-		const MaterialSystem *materialSystem = nullptr );
+		const MaterialSystem *materialSystem = nullptr,
+		const std::string &passName = "" );
 
 	// Get or create root signature for a material
 	// Uses shared cache for efficient reuse across materials
