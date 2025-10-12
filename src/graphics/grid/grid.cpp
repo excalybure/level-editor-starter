@@ -97,40 +97,21 @@ bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::
 		return false;
 	}
 
-	const auto *material = m_materialSystem->getMaterial( m_materialHandle );
-	if ( !material )
+	// Create MaterialInstance for PSO and root signature management
+	// Pass nullptr for ShaderManager since GridRenderer doesn't use hot-reload
+	m_materialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+		m_device, m_materialSystem, nullptr, "grid_material" );
+
+	if ( !m_materialInstance->isValid() )
 	{
-		console::error( "GridRenderer: Failed to get grid material definition" );
+		console::error( "GridRenderer: Failed to create MaterialInstance" );
 		return false;
 	}
 
-	// Get root signature for material (uses shared cache)
-	m_rootSignature = graphics::material_system::PipelineBuilder::getRootSignature( m_device, *material );
-	if ( !m_rootSignature )
-	{
-		console::error( "GridRenderer: Failed to create root signature from material" );
-		return false;
-	}
-
-	// Create pipeline state from material - query "grid" pass
-	const auto *gridPass = m_materialSystem->getMaterialPass( m_materialHandle, "grid" );
-	if ( !gridPass )
+	if ( !m_materialInstance->hasPass( "grid" ) )
 	{
 		console::error( "GridRenderer: Material does not have 'grid' pass" );
 		return false;
-	}
-
-	const auto passConfig = m_materialSystem->getRenderPassConfig( gridPass->passName );
-	m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
-		m_device, *material, passConfig, m_materialSystem, "grid" );
-	if ( !m_pipelineState )
-	{
-		console::warning( "Initial pipeline state creation failed, will retry when shaders are ready" );
-		m_pipelineStateDirty = true;
-	}
-	else
-	{
-		m_pipelineStateDirty = false;
 	}
 
 	// Create constant buffer
@@ -151,8 +132,7 @@ void GridRenderer::shutdown()
 	}
 
 	m_constantBuffer.Reset();
-	m_pipelineState.Reset();
-	m_rootSignature.Reset();
+	m_materialInstance.reset();
 	m_device = nullptr;
 	m_materialSystem = nullptr;
 }
@@ -165,45 +145,6 @@ bool GridRenderer::render( const camera::Camera &camera,
 {
 	if ( !m_device || !m_constantBuffer )
 	{
-		return false;
-	}
-
-	// Check if pipeline state needs recreation
-	if ( m_pipelineStateDirty )
-	{
-		console::info( "Grid pipeline state is dirty, recreating..." );
-
-		const auto *material = m_materialSystem->getMaterial( m_materialHandle );
-		if ( !material )
-		{
-			console::error( "Failed to get grid material for PSO recreation" );
-			return false;
-		}
-
-		// Query "grid" pass from material
-		const auto *gridPass = m_materialSystem->getMaterialPass( m_materialHandle, "grid" );
-		if ( !gridPass )
-		{
-			console::error( "GridRenderer: Material does not have 'grid' pass for PSO recreation" );
-			return false;
-		}
-
-		const auto passConfig = m_materialSystem->getRenderPassConfig( gridPass->passName );
-		m_pipelineState = graphics::material_system::PipelineBuilder::buildPSO(
-			m_device, *material, passConfig, m_materialSystem, "grid" );
-
-		if ( !m_pipelineState )
-		{
-			console::error( "Failed to recreate grid pipeline state" );
-			return false;
-		}
-
-		m_pipelineStateDirty = false;
-	}
-
-	if ( !m_pipelineState )
-	{
-		console::warning( "Grid pipeline state not available for rendering" );
 		return false;
 	}
 
@@ -238,9 +179,12 @@ bool GridRenderer::render( const camera::Camera &camera,
 	scissorRect.bottom = static_cast<LONG>( viewportHeight );
 	commandList->RSSetScissorRects( 1, &scissorRect );
 
-	// Set pipeline state
-	commandList->SetPipelineState( m_pipelineState.Get() );
-	commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
+	// Use MaterialInstance to set PSO and root signature
+	if ( !m_materialInstance->setupCommandList( commandList, "grid" ) )
+	{
+		console::warning( "Grid MaterialInstance failed to setup command list" );
+		return false;
+	}
 
 	// Bind constant buffer
 	commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );

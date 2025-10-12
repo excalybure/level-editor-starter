@@ -1,5 +1,55 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-12 — T306: Refactor GridRenderer to Use MaterialInstance
+
+**Summary:** Refactored GridRenderer to use MaterialInstance abstraction instead of directly managing PSO, root signature, and dirty state. This eliminates ~70 lines of boilerplate PSO management code from GridRenderer, replacing it with a single MaterialInstance member. GridRenderer now delegates all PSO/root signature lifecycle to MaterialInstance, using setupCommandList() for atomic command list configuration. The refactoring maintains identical external behavior while significantly simplifying the implementation.
+
+**Atomic functionalities completed:**
+- AF1: Write T306 test - created integration test verifying GridRenderer initializes with MaterialInstance, has valid material handle, and uses MaterialInstance internally
+- AF2: Replace PSO/root signature members with MaterialInstance - removed m_pipelineState (ComPtr<ID3D12PipelineState>), m_rootSignature (ComPtr<ID3D12RootSignature>), m_pipelineStateDirty (bool) members; added m_materialInstance (unique_ptr<MaterialInstance>) member
+- AF3: Refactor initialize() - replaced manual root signature retrieval and PSO creation (~30 lines) with MaterialInstance construction passing nullptr for ShaderManager; added validation for MaterialInstance validity and "grid" pass existence
+- AF4: Refactor render() - removed PSO recreation logic (~40 lines checking m_pipelineStateDirty and rebuilding PSO); replaced manual SetPipelineState/SetGraphicsRootSignature calls with single setupCommandList() call
+- AF5: Update shutdown() - replaced manual PSO/root signature cleanup with m_materialInstance.reset()
+
+**Tests:** 1 new test added to `grid_tests.cpp`:
+- `"GridRenderer uses MaterialInstance for PSO management"` [T306] - verifies GridRenderer initializes successfully with MaterialInstance, material handle is valid, and MaterialInstance is used internally
+
+Filtered test commands:
+```cmd
+unit_test_runner.exe "[T306]"
+All tests passed (3 assertions in 1 test case)
+
+unit_test_runner.exe "GridRenderer Initialization"
+All tests passed (12 assertions in 1 test case)
+
+unit_test_runner.exe "GridRenderer retrieves material from MaterialSystem"
+All tests passed (19 assertions in 1 test case)
+```
+
+**Notes:**
+- GridRenderer passes nullptr for ShaderManager to MaterialInstance constructor (GridRenderer was previously refactored to remove ShaderManager dependency in M2)
+- MaterialInstance handles all hot-reload internally via dirty flag management; GridRenderer no longer needs m_pipelineStateDirty
+- setupCommandList() provides atomic PSO + root signature configuration, eliminating manual D3D12 API calls
+- Code reduction: ~70 lines of PSO management code removed, replaced with ~10 lines of MaterialInstance usage
+- All existing grid tests continue to pass; refactoring maintains identical external behavior
+- T306 complete with successful integration test
+- Next task: T307 will document MaterialInstance usage patterns
+
+**Files modified:**
+- `src/graphics/grid/grid.h`: Added MaterialInstance include, replaced m_pipelineState/m_rootSignature/m_pipelineStateDirty with m_materialInstance unique_ptr
+- `src/graphics/grid/grid.cpp`: Refactored initialize() to create MaterialInstance (~40 lines replaced with ~10), refactored render() to use setupCommandList() (~40 lines removed), updated shutdown() to reset MaterialInstance
+- `tests/grid_tests.cpp`: Added T306 integration test verifying MaterialInstance usage
+
+**Trade-offs:**
+- GridRenderer now depends on MaterialInstance abstraction instead of directly using PipelineBuilder - increases layer count but dramatically simplifies GridRenderer implementation
+- Passing nullptr for ShaderManager means GridRenderer won't benefit from MaterialInstance hot-reload callbacks, but GridRenderer was already not using ShaderManager (removed in M2)
+- MaterialInstance manages PSO cache internally; GridRenderer can no longer directly inspect cached PSO state (not needed for current use case)
+
+**Follow-ups:**
+- T307: Document MaterialInstance API and usage patterns for other renderer systems
+- Consider adding ShaderManager back to GridRenderer to enable hot-reload via MaterialInstance (optional enhancement)
+- Apply same MaterialInstance refactoring pattern to other renderer systems (MeshRenderingSystem, etc.)
+
 ## 2025-10-12 — T305: MaterialInstance Hot-Reload Integration
 
 **Summary:** Integrated MaterialInstance with ShaderManager hot-reload system via callback registration pattern. MaterialInstance now registers with ShaderManager on construction (if provided), receives shader reload notifications, marks all passes dirty, and clears the PSO cache to force recreation with updated shaders. The callback is unregistered automatically on destruction. The ShaderManager parameter is optional (can be nullptr) for backward compatibility.

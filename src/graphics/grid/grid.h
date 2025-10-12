@@ -10,6 +10,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "graphics/material_system/material_system.h"
+#include "graphics/material_system/material_instance.h"
 
 namespace dx12
 {
@@ -101,12 +102,11 @@ public:
 private:
 	// D3D12 resources
 	dx12::Device *m_device = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
 	// Material system integration
 	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
 	graphics::material_system::MaterialHandle m_materialHandle;
+	std::unique_ptr<graphics::material_system::MaterialInstance> m_materialInstance;
 
 	// Constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
@@ -114,9 +114,6 @@ private:
 
 	// Grid settings
 	GridSettings m_settings;
-
-	// Pipeline state management
-	bool m_pipelineStateDirty = true; // Flag to track when pipeline state needs recreation
 
 	// Helper functions
 	bool createConstantBuffer();
