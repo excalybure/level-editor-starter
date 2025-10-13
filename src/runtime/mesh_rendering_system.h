@@ -13,7 +13,7 @@
 
 namespace renderer
 {
-class Renderer;
+class ImmediateRenderer;
 }
 
 namespace camera
@@ -47,7 +47,7 @@ class MeshRenderingSystem : public System
 public:
 	// Constructor with MaterialSystem, ShaderManager and optional SystemManager for world transform support
 	// Pass nullptr for systemManager in tests that don't need hierarchy support
-	MeshRenderingSystem( renderer::Renderer &renderer,
+	MeshRenderingSystem( renderer::ImmediateRenderer &renderer,
 		graphics::material_system::MaterialSystem *materialSystem,
 		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
 		systems::SystemManager *systemManager );
@@ -63,7 +63,7 @@ public:
 	void renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera );
 
 private:
-	renderer::Renderer &m_renderer;
+	renderer::ImmediateRenderer &m_renderer;
 	graphics::material_system::MaterialSystem *m_materialSystem;
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 	systems::SystemManager *m_systemManager = nullptr;

@@ -1,5 +1,5 @@
 #include "runtime/mesh_rendering_system.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/material_system/material_instance.h"
 #include "core/console.h"
@@ -42,7 +42,7 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
+MeshRenderingSystem::MeshRenderingSystem( renderer::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
 	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available

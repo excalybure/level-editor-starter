@@ -145,16 +145,18 @@ private:
 	void createBuffer( const std::vector<uint16_t> &indices );
 };
 
-// Simple immediate-mode renderer
-class Renderer
+// Simple immediate-mode renderer for debug visualization (lines, wireframes, etc.)
+// Note: This uses a custom PSO cache for dynamic state combinations and should NOT
+// be migrated to MaterialInstance pattern. See MATERIALINSTANCE_MIGRATION_CANDIDATES.md
+class ImmediateRenderer
 {
 public:
-	explicit Renderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager );
-	~Renderer();
+	explicit ImmediateRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager );
+	~ImmediateRenderer();
 
 	// No copy/move for now
-	Renderer( const Renderer & ) = delete;
-	Renderer &operator=( const Renderer & ) = delete;
+	ImmediateRenderer( const ImmediateRenderer & ) = delete;
+	ImmediateRenderer &operator=( const ImmediateRenderer & ) = delete;
 
 	// Frame lifecycle
 	void beginFrame();

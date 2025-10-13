@@ -2,7 +2,7 @@
 #include <fstream>
 
 #include "graphics/shader_manager/shader_manager.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;
 using shader_manager::ShaderInfo;

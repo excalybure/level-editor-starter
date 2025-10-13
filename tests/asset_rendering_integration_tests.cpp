@@ -1,9 +1,9 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
 #include "editor/ui.h"
@@ -53,7 +53,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		renderer::Renderer renderer( device, *shaderManager );
+		renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 		// Act - create MeshRenderingSystem
 		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, nullptr );
@@ -70,7 +70,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		renderer::Renderer renderer( device, *shaderManager );
+		renderer::ImmediateRenderer renderer( device, *shaderManager );
 		systems::SystemManager systemManager;
 		ecs::Scene scene;
 

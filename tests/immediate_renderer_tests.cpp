@@ -1,4 +1,4 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
 #include <filesystem>
@@ -9,7 +9,7 @@
 
 #include "shader_test_utils.h"
 
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "graphics/shader_manager/shader_compiler.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"
@@ -297,7 +297,7 @@ TEST_CASE( "ViewProjection accessor", "[renderer]" )
 	if ( !requireHeadlessDevice( device, "viewProj" ) )
 		return;
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 	math::Mat4<> custom = math::Mat4<>::identity();
 	custom.row0.x = 2.0f; // mutate something
 	renderer.setViewProjectionMatrix( custom );
@@ -370,15 +370,15 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "renderer::Renderer creation" ) )
+				if ( !requireHeadlessDevice( device, "renderer::ImmediateRenderer creation" ) )
 					return;
 				shader_manager::ShaderManager shaderManager;
-				const renderer::Renderer renderer( device, shaderManager );
+				const renderer::ImmediateRenderer renderer( device, shaderManager );
 				// Just test that it constructs without throwing
 			}
 			catch ( const std::runtime_error &e )
 			{
-				WARN( "renderer::Renderer creation failed (D3D12 may not be available): " << e.what() );
+				WARN( "renderer::ImmediateRenderer creation failed (D3D12 may not be available): " << e.what() );
 			}
 		}() );
 	}
@@ -432,7 +432,7 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 
 	device.beginFrame();
 	renderer.beginFrame();
@@ -465,7 +465,7 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 	device.beginFrame();
 	renderer.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
@@ -483,7 +483,7 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
@@ -501,7 +501,7 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
@@ -520,7 +520,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	REQUIRE( requireDevice( window, device, "pso cache" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer r( device, shaderManager );
+	renderer::ImmediateRenderer r( device, shaderManager );
 	device.beginFrame();
 	r.beginFrame();
 

@@ -1,11 +1,11 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
 // We'll start by testing the basic module can be imported
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "engine/camera/camera.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/shader_manager/shader_manager.h"
@@ -17,7 +17,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Act & Assert - should compile and create without error
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
@@ -30,7 +30,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
@@ -46,7 +46,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -69,7 +69,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 
 	components::Transform transform;  // Default: identity transform
@@ -94,7 +94,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -116,7 +116,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -145,7 +145,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
@@ -181,7 +181,7 @@ TEST_CASE( "Renderer getCommandContext provides access to command context during
 	REQUIRE( device.initializeHeadless() );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::Renderer renderer( device, shaderManager );
+	renderer::ImmediateRenderer renderer( device, shaderManager );
 
 	// Act & Assert - No active frame, should return nullptr
 	REQUIRE( renderer.getCommandContext() == nullptr );
@@ -205,7 +205,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
@@ -232,7 +232,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	scene.addComponent( child, components::MeshRenderer{} );
 
 	// Set up hierarchy
-	// Child at world (11,0,0), parent at (10,0,0) → local becomes (1,0,0)
+	// Child at world (11,0,0), parent at (10,0,0) ? local becomes (1,0,0)
 	scene.setParent( child, parent );
 
 	// Update transform system to compute world matrices

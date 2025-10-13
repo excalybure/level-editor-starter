@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "immediate_renderer.h"
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -208,8 +208,8 @@ void IndexBuffer::update( const std::vector<uint16_t> &indices )
 	}
 }
 
-// Renderer implementation
-Renderer::Renderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager )
+// ImmediateRenderer implementation
+ImmediateRenderer::ImmediateRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager )
 	: m_device( device ), m_shaderManager( shaderManager )
 {
 	createRootSignature();
@@ -217,7 +217,7 @@ Renderer::Renderer( dx12::Device &device, shader_manager::ShaderManager &shaderM
 	createConstantBuffer();
 }
 
-Renderer::~Renderer()
+ImmediateRenderer::~ImmediateRenderer()
 {
 	waitForGPU();
 
@@ -227,7 +227,7 @@ Renderer::~Renderer()
 	}
 }
 
-void Renderer::createRootSignature()
+void ImmediateRenderer::createRootSignature()
 {
 	// Root parameter for constant buffer
 	D3D12_ROOT_PARAMETER1 rootParameter = {};
@@ -252,7 +252,7 @@ void Renderer::createRootSignature()
 		0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) ) );
 }
 
-void Renderer::compileDefaultShaders()
+void ImmediateRenderer::compileDefaultShaders()
 {
 	if ( !m_vsBlob || !m_psBlob )
 	{
@@ -293,12 +293,12 @@ void Renderer::compileDefaultShaders()
 	}
 }
 
-Renderer::PipelineStateKey Renderer::makeKeyFromState( const RenderState &state, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology ) const noexcept
+ImmediateRenderer::PipelineStateKey ImmediateRenderer::makeKeyFromState( const RenderState &state, D3D12_PRIMITIVE_TOPOLOGY_TYPE topology ) const noexcept
 {
 	return PipelineStateKey{ state.isDepthTestEnabled(), state.isDepthWriteEnabled(), state.isWireframeEnabled(), state.isBlendEnabled(), state.getCullMode(), topology };
 }
 
-void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
+void ImmediateRenderer::createPipelineStateForKey( const PipelineStateKey &key )
 {
 	// Build a temporary RenderState reflecting the key
 	RenderState temp;
@@ -346,7 +346,7 @@ void Renderer::createPipelineStateForKey( const PipelineStateKey &key )
 	m_psoCache.emplace( key, pso );
 }
 
-D3D12_PRIMITIVE_TOPOLOGY_TYPE Renderer::topologyToTopologyType( D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+D3D12_PRIMITIVE_TOPOLOGY_TYPE ImmediateRenderer::topologyToTopologyType( D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
 	switch ( topology )
 	{
@@ -363,7 +363,7 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE Renderer::topologyToTopologyType( D3D_PRIMITIVE_TO
 	}
 }
 
-void Renderer::ensurePipelineForCurrentState( D3D12_PRIMITIVE_TOPOLOGY_TYPE topology )
+void ImmediateRenderer::ensurePipelineForCurrentState( D3D12_PRIMITIVE_TOPOLOGY_TYPE topology )
 {
 	compileDefaultShaders();
 	const auto key = makeKeyFromState( m_currentRenderState, topology );
@@ -376,7 +376,7 @@ void Renderer::ensurePipelineForCurrentState( D3D12_PRIMITIVE_TOPOLOGY_TYPE topo
 	m_activePipelineState = it->second;
 }
 
-void Renderer::createConstantBuffer()
+void ImmediateRenderer::createConstantBuffer()
 {
 	const UINT constantBufferSize = ( sizeof( math::Mat4<> ) + 255 ) & ~255; // Align to 256 bytes
 
@@ -407,19 +407,19 @@ void Renderer::createConstantBuffer()
 }
 
 
-void Renderer::beginFrame()
+void ImmediateRenderer::beginFrame()
 {
 	// Validate that beginFrame hasn't already been called
 	if ( m_inFrame )
 	{
-		console::error( "Renderer::beginFrame called when already in frame. Call endFrame() first." );
+		console::error( "ImmediateRenderer::beginFrame called when already in frame. Call endFrame() first." );
 		return;
 	}
 
 	// Validate that Device is in frame (Device::beginFrame should be called first)
 	if ( !m_device.isInFrame() )
 	{
-		console::error( "Renderer::beginFrame called but Device is not in frame. Call Device::beginFrame() first." );
+		console::error( "ImmediateRenderer::beginFrame called but Device is not in frame. Call Device::beginFrame() first." );
 		return;
 	}
 
@@ -429,7 +429,7 @@ void Renderer::beginFrame()
 
 	if ( !m_currentContext )
 	{
-		console::error( "Renderer::beginFrame failed - no command context. Ensure Device::beginFrame() was called first." );
+		console::error( "ImmediateRenderer::beginFrame failed - no command context. Ensure Device::beginFrame() was called first." );
 		return;
 	}
 
@@ -467,18 +467,18 @@ void Renderer::beginFrame()
 	m_currentContext->get()->RSSetScissorRects( 1, &scissorRect );
 }
 
-void Renderer::endFrame()
+void ImmediateRenderer::endFrame()
 {
 	// Validate that we're actually in a frame
 	if ( !m_inFrame )
 	{
-		console::error( "Renderer::endFrame called when not in frame. Call beginFrame() first." );
+		console::error( "ImmediateRenderer::endFrame called when not in frame. Call beginFrame() first." );
 		return;
 	}
 
 	if ( !m_currentContext )
 	{
-		console::error( "Renderer::endFrame called but no command context available." );
+		console::error( "ImmediateRenderer::endFrame called but no command context available." );
 		m_inFrame = false;
 		return;
 	}
@@ -489,7 +489,7 @@ void Renderer::endFrame()
 	m_inFrame = false;
 }
 
-void Renderer::clear( const Color &clearColor ) noexcept
+void ImmediateRenderer::clear( const Color &clearColor ) noexcept
 {
 	if ( !m_currentContext )
 		return;
@@ -497,26 +497,26 @@ void Renderer::clear( const Color &clearColor ) noexcept
 	// TODO: Device should provide configurable clear color methods
 	// For now, skip additional clearing since Device already clears in beginFrame()
 	// This could be enhanced to allow custom clear colors via Device interface
-	console::info( "Renderer::clear() - Device already cleared render target in beginFrame()" );
+	console::info( "ImmediateRenderer::clear() - Device already cleared render target in beginFrame()" );
 }
 
-void Renderer::clearDepth( float depth ) noexcept
+void ImmediateRenderer::clearDepth( float depth ) noexcept
 {
 	if ( !m_currentContext )
 		return;
 
 	// TODO: Device should manage depth buffer and provide depth clear methods
 	// For now, depth clearing is not available since Device doesn't expose depth buffer
-	console::warning( "Renderer::clearDepth() - Depth buffer management should be moved to Device" );
+	console::warning( "ImmediateRenderer::clearDepth() - Depth buffer management should be moved to Device" );
 }
 
-void Renderer::setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept
+void ImmediateRenderer::setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept
 {
 	m_viewProjectionMatrix = viewProj;
 	updateConstantBuffer();
 }
 
-void Renderer::updateConstantBuffer()
+void ImmediateRenderer::updateConstantBuffer()
 {
 	if ( m_constantBufferData )
 	{
@@ -525,14 +525,14 @@ void Renderer::updateConstantBuffer()
 }
 
 
-void Renderer::setRenderState( const RenderState &state ) noexcept
+void ImmediateRenderer::setRenderState( const RenderState &state ) noexcept
 {
 	m_currentRenderState = state;
 	// Invalidate active PSO; will lazily fetch from cache
 	m_activePipelineState.Reset();
 }
 
-void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+void ImmediateRenderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
 	if ( vertices.empty() )
 		return;
@@ -576,7 +576,7 @@ void Renderer::drawVertices( const std::vector<Vertex> &vertices, D3D_PRIMITIVE_
 	( *m_currentContext )->DrawInstanced( static_cast<UINT>( vertices.size() ), 1, 0, 0 );
 }
 
-void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
+void ImmediateRenderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology ) noexcept
 {
 	if ( vertices.empty() || indices.empty() )
 		return;
@@ -634,7 +634,7 @@ void Renderer::drawIndexed( const std::vector<Vertex> &vertices, const std::vect
 	( *m_currentContext )->DrawIndexedInstanced( static_cast<UINT>( indices.size() ), 1, 0, 0, 0 );
 }
 
-void Renderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color ) noexcept
+void ImmediateRenderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color ) noexcept
 {
 	const std::vector<Vertex> vertices = {
 		{ start, color },
@@ -644,7 +644,7 @@ void Renderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, con
 }
 
 
-void Renderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color ) noexcept
+void ImmediateRenderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color ) noexcept
 {
 	const math::Vec3<> halfSize = size * 0.5f;
 
@@ -678,7 +678,7 @@ void Renderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<>
 }
 
 
-void Renderer::waitForGPU() noexcept
+void ImmediateRenderer::waitForGPU() noexcept
 {
 	// This would typically use a fence to wait for GPU completion
 	// For now, this is a placeholder - actual implementation would need fence synchronization

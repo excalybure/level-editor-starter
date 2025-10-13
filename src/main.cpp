@@ -6,7 +6,7 @@
 #include "graphics/material_system/material_system.h"
 #include "engine/integration/asset_gltf_integration.h"
 #include "engine/picking.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/pix/pix.h"
@@ -128,7 +128,7 @@ int main()
 	engine::GPUResourceManager gpuResourceManager( device );
 
 	// Create renderer for 3D graphics
-	renderer::Renderer renderer( device, *shaderManager );
+	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Create system manager and add systems
 	systems::SystemManager systemManager;

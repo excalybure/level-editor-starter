@@ -12,7 +12,7 @@
 #include "math/color.h"
 #include "math/matrix.h"
 #include "math/vec.h"
-#include "graphics/renderer/renderer.h"
+#include "graphics/renderer/immediate_renderer.h"
 #include "graphics/material_system/pipeline_builder.h"
 #include "core/console.h"
 
