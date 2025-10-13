@@ -133,9 +133,6 @@ public:
 	// Frame state query
 	bool isInFrame() const noexcept { return m_inFrame; }
 
-	// Debug layer integration - process accumulated debug messages
-	void processDebugMessages();
-
 	// Render target management - restore backbuffer for ImGui after viewport rendering
 	void setBackbufferRenderTarget();
 
@@ -170,9 +167,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Debug> m_debugController;
 
 #ifdef _DEBUG
-	// Debug layer message polling
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> m_infoQueue;
-	UINT64 m_lastMessageIndex = 0;
+	// Debug layer message callback (real-time)
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue1> m_infoQueue;
+	DWORD m_callbackCookie = 0;
 #endif
 
 	// Command and swap chain wrappers
@@ -210,6 +207,8 @@ private:
 	void findAdapter();
 	void createDevice();
 	void configureDebugBreaks();
+	void setupDebugMessageCallback();
+	void cleanupDebugMessageCallback();
 	void createCommandObjects();
 	void createSwapChain( HWND window_handle );
 	void createDescriptorHeaps();

@@ -9,6 +9,37 @@
 #endif
 #include "core/console.h"
 
+#ifdef _DEBUG
+// Debug message callback for real-time message processing
+static void CALLBACK DebugMessageCallback(
+	D3D12_MESSAGE_CATEGORY Category,
+	D3D12_MESSAGE_SEVERITY Severity,
+	D3D12_MESSAGE_ID ID,
+	LPCSTR pDescription,
+	void *pContext )
+{
+	// Format and route to console based on severity
+	const std::string message = std::format( "[D3D12] {}", pDescription );
+
+	switch ( Severity )
+	{
+	case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+	case D3D12_MESSAGE_SEVERITY_ERROR:
+		console::error( message );
+		break;
+	case D3D12_MESSAGE_SEVERITY_WARNING:
+		console::warning( message );
+		break;
+	case D3D12_MESSAGE_SEVERITY_INFO:
+		console::info( message );
+		break;
+	case D3D12_MESSAGE_SEVERITY_MESSAGE:
+		console::debug( message );
+		break;
+	}
+}
+#endif
+
 namespace dx12
 {
 
@@ -125,6 +156,11 @@ void Device::shutdown()
 		waitForPreviousFrame();
 	}
 
+#ifdef _DEBUG
+	// Cleanup debug message callback
+	cleanupDebugMessageCallback();
+#endif
+
 	// Close fence event
 	if ( m_fenceEvent )
 	{
@@ -156,9 +192,6 @@ void Device::beginFrame()
 		console::error( "Device::beginFrame called when already in frame. Call endFrame() first." );
 		return;
 	}
-
-	// Process any new D3D12 debug messages first
-	processDebugMessages();
 
 	// Always reset command context if available
 	if ( !m_device || !m_commandContext )
@@ -362,12 +395,15 @@ void Device::createDevice()
 #ifdef _DEBUG
 	// Configure debug layer to break on errors and warnings
 	configureDebugBreaks();
+	// Setup real-time debug message callback
+	setupDebugMessageCallback();
 #endif
 }
 
 void Device::configureDebugBreaks()
 {
 #ifdef _DEBUG
+	// Try to get ID3D12InfoQueue1 first (Windows 10 1809+), fallback to ID3D12InfoQueue
 	if ( SUCCEEDED( m_device->QueryInterface( IID_PPV_ARGS( m_infoQueue.GetAddressOf() ) ) ) )
 	{
 		// Break on D3D12 errors
@@ -384,55 +420,40 @@ void Device::configureDebugBreaks()
 #endif
 }
 
-void Device::processDebugMessages()
+void Device::setupDebugMessageCallback()
 {
 #ifdef _DEBUG
-	if ( !m_infoQueue )
-		return;
-
-	const UINT64 messageCount = m_infoQueue->GetNumStoredMessages();
-
-	// Process any new messages since last time
-	for ( UINT64 i = m_lastMessageIndex; i < messageCount; ++i )
+	// m_infoQueue was already queried in configureDebugBreaks()
+	if ( m_infoQueue )
 	{
-		SIZE_T messageLength = 0;
+		// Register callback for real-time message processing
+		const HRESULT hr = m_infoQueue->RegisterMessageCallback(
+			DebugMessageCallback,
+			D3D12_MESSAGE_CALLBACK_FLAG_NONE,
+			this,
+			&m_callbackCookie );
 
-		// Get the size of the message
-		HRESULT hr = m_infoQueue->GetMessage( i, nullptr, &messageLength );
 		if ( FAILED( hr ) )
-			continue;
-
-		// Allocate memory for the message
-		std::vector<BYTE> messageBytes( messageLength );
-		D3D12_MESSAGE *pMessage = reinterpret_cast<D3D12_MESSAGE *>( messageBytes.data() );
-
-		// Get the actual message
-		hr = m_infoQueue->GetMessage( i, pMessage, &messageLength );
-		if ( FAILED( hr ) )
-			continue;
-
-		// Format and route to console based on severity
-		const std::string message = std::format( "[D3D12] {}", pMessage->pDescription );
-
-		switch ( pMessage->Severity )
 		{
-		case D3D12_MESSAGE_SEVERITY_ERROR:
-			console::error( message );
-			break;
-		case D3D12_MESSAGE_SEVERITY_WARNING:
-			console::warning( message );
-			break;
-		case D3D12_MESSAGE_SEVERITY_INFO:
-			console::info( message );
-			break;
-		case D3D12_MESSAGE_SEVERITY_MESSAGE:
-			console::debug( message );
-			break;
+			console::warning( "Failed to register D3D12 debug message callback" );
 		}
 	}
+	else
+	{
+		console::warning( "ID3D12InfoQueue1 not available, debug messages will not be captured" );
+	}
+#endif
+}
 
-	// Update the last processed message index
-	m_lastMessageIndex = messageCount;
+void Device::cleanupDebugMessageCallback()
+{
+#ifdef _DEBUG
+	if ( m_infoQueue && m_callbackCookie != 0 )
+	{
+		m_infoQueue->UnregisterMessageCallback( m_callbackCookie );
+		m_callbackCookie = 0;
+	}
+	m_infoQueue.Reset();
 #endif
 }
 
