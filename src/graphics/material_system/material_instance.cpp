@@ -10,11 +10,11 @@ MaterialInstance::MaterialInstance(
 	const std::string &materialId )
 	: m_device( device ), m_materialSystem( materialSystem )
 {
-	m_materialHandle = m_materialSystem->getMaterialHandle( materialId );
+	const MaterialHandle materialHandle = m_materialSystem->getMaterialHandle( materialId );
 
-	if ( m_materialHandle.isValid() )
+	if ( materialHandle.isValid() )
 	{
-		m_materialDefinition = m_materialSystem->getMaterial( m_materialHandle );
+		m_materialDefinition = m_materialSystem->getMaterial( materialHandle );
 	}
 
 	if ( m_materialDefinition )

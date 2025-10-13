@@ -1,5 +1,41 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-13 — T307.5: Remove Unnecessary m_materialHandle Member
+
+**Summary:** Removed `m_materialHandle` member variable from MaterialInstance after realizing it was only used once in the constructor. Since we already cache the `MaterialDefinition*` pointer, the handle is unnecessary - we query it once, use it to get the definition, then never need it again. This further simplifies MaterialInstance and reduces memory footprint by 4-8 bytes per instance.
+
+**Atomic functionalities completed:**
+- AF1: Convert m_materialHandle to local variable - changed from member to const local in constructor
+- AF2: Remove getHandle() method - deleted public getter that returned the handle
+- AF3: Update/remove tests - replaced getHandle() test with equivalent isValid() check, removed redundant test case
+
+**Tests:** All tests pass with one test removed:
+```cmd
+unit_test_runner.exe "[material-instance]"
+All tests passed (43 assertions in 10 test cases)
+```
+
+**Notes:**
+- MaterialHandle was only used in constructor to query MaterialDefinition pointer
+- After caching the MaterialDefinition*, the handle is never accessed again
+- getHandle() method removed since callers can get all needed info via getMaterial()
+- Memory savings: 4-8 bytes per MaterialInstance (handle is typically an index + generation counter)
+- No functional changes - MaterialInstance behavior identical
+
+**Files modified:**
+- `src/graphics/material_system/material_instance.h`: Removed m_materialHandle member, removed getHandle() method
+- `src/graphics/material_system/material_instance.cpp`: Changed m_materialHandle to local const variable in constructor
+- `tests/material_instance_tests.cpp`: Updated constructor test to check isValid() instead of getHandle(), removed redundant getHandle test
+
+**Trade-offs:**
+- None - this is a pure simplification with no downsides
+- If callers needed the handle in the future, they could call getMaterial()->id or query MaterialSystem directly
+
+**Follow-ups:**
+- None - this completes the MaterialInstance simplification
+
+---
+
 ## 2025-10-13 — T307: Remove Redundant Hot-Reload Infrastructure from MaterialInstance
 
 **Summary:** Removed all hot-reload infrastructure from MaterialInstance after realizing it was completely redundant. PipelineBuilder has its own static cache that automatically handles shader recompilation via content hashing - when a shader file changes, the hash changes, and PipelineBuilder creates a new PSO with fresh bytecode. MaterialInstance's callback registration, dirty flags, and onShaderReloaded() method were unnecessary duplication. This simplification removes ~40 lines of dead code and eliminates an entire dependency (ShaderManager) from MaterialInstance.

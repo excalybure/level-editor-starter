@@ -48,9 +48,6 @@ public:
 	// Query specific material pass (nullptr if not found)
 	const MaterialPass *getPass( const std::string &passName ) const;
 
-	// Get material handle
-	MaterialHandle getHandle() const { return m_materialHandle; }
-
 	// Get root signature (shared across all passes)
 	// Returns nullptr if root signature not created or material invalid
 	ID3D12RootSignature *getRootSignature() const;
@@ -70,7 +67,6 @@ private:
 
 	dx12::Device *m_device = nullptr;
 	MaterialSystem *m_materialSystem = nullptr;
-	MaterialHandle m_materialHandle;
 	const MaterialDefinition *m_materialDefinition = nullptr; // Cached pointer for performance
 
 	// Single root signature shared by all passes

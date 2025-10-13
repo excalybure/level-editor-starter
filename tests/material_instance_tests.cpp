@@ -31,9 +31,9 @@ TEST_CASE( "MaterialInstance constructor stores device and material system", "[m
 	// Act - just create the instance
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
 
-	// Assert - check that getHandle() works (indicates MaterialSystem integration)
-	const MaterialHandle handle = instance.getHandle();
-	REQUIRE( handle.isValid() );
+	// Assert - check that material was found and is valid (indicates MaterialSystem integration)
+	REQUIRE( instance.isValid() );
+	REQUIRE( instance.getMaterial() != nullptr );
 }
 
 TEST_CASE( "MaterialInstance with valid material ID is valid", "[material-instance-T301][unit]" )
@@ -189,30 +189,6 @@ TEST_CASE( "MaterialInstance getMaterial returns correct material definition", "
 	// Assert
 	REQUIRE( material != nullptr );
 	REQUIRE( material->id == "grid_material" );
-}
-
-TEST_CASE( "MaterialInstance getHandle returns valid handle", "[material-instance-T301][unit]" )
-{
-	// Arrange
-	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getHandle test" ) )
-	{
-		return;
-	}
-
-	MaterialSystem materialSystem;
-
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
-	REQUIRE( initialized );
-
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
-	REQUIRE( instance.isValid() );
-
-	// Act
-	const MaterialHandle handle = instance.getHandle();
-
-	// Assert
-	REQUIRE( handle.isValid() );
 }
 
 // T302 Tests: Root Signature Integration
