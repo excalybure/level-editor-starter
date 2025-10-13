@@ -175,7 +175,6 @@ void SelectionRenderer::setupRenderingResources()
 			m_outlineMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
 				&m_device,
 				m_materialSystem,
-				&m_shaderManager,
 				"selection_outline" );
 
 			if ( !m_outlineMaterialInstance->isValid() )
@@ -191,7 +190,6 @@ void SelectionRenderer::setupRenderingResources()
 			m_rectMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
 				&m_device,
 				m_materialSystem,
-				&m_shaderManager,
 				"selection_rect" );
 
 			if ( !m_rectMaterialInstance->isValid() )

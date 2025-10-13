@@ -51,7 +51,6 @@ MeshRenderingSystem::MeshRenderingSystem( renderer::ImmediateRenderer &renderer,
 		m_defaultMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
 			&renderer.getDevice(),
 			m_materialSystem,
-			m_shaderManager.get(),
 			"mesh_unlit" );
 
 		if ( !m_defaultMaterialInstance->isValid() )

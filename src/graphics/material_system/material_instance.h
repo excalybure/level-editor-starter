@@ -13,11 +13,6 @@ namespace dx12
 class Device;
 }
 
-namespace shader_manager
-{
-class ShaderManager;
-}
-
 namespace graphics::material_system
 {
 
@@ -30,15 +25,12 @@ public:
 	// Create material instance from material ID
 	// device: DX12 device for PSO/root signature creation
 	// materialSystem: Material system for querying definitions
-	// shaderManager: Shader manager for hot-reload (can be nullptr)
 	// materialId: Material ID to look up (e.g., "grid_material", "pbr_material")
 	MaterialInstance(
 		dx12::Device *device,
 		MaterialSystem *materialSystem,
-		shader_manager::ShaderManager *shaderManager,
 		const std::string &materialId );
 
-	~MaterialInstance();
 
 	// No copy (manages GPU resources and callbacks)
 	MaterialInstance( const MaterialInstance & ) = delete;
@@ -76,24 +68,17 @@ private:
 	// Returns true on success, false on failure
 	bool createPipelineStateForPass( const std::string &passName );
 
-	// Hot-reload callback - marks all passes dirty and clears PSO cache
-	void onShaderReloaded();
-
 	dx12::Device *m_device = nullptr;
 	MaterialSystem *m_materialSystem = nullptr;
-	shader_manager::ShaderManager *m_shaderManager = nullptr;
 	MaterialHandle m_materialHandle;
 	const MaterialDefinition *m_materialDefinition = nullptr; // Cached pointer for performance
-	size_t m_hotReloadCallbackHandle = 0;
 
 	// Single root signature shared by all passes
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
 	// Per-pass PSO cache (lazy creation)
+	// Note: PipelineBuilder has its own global cache that handles shader hot-reload
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> m_pipelineStates;
-
-	// Dirty flags for PSO recreation (e.g., after hot-reload)
-	std::unordered_set<std::string> m_dirtyPasses;
 };
 
 } // namespace graphics::material_system

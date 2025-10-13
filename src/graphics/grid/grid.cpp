@@ -98,9 +98,8 @@ bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::
 	}
 
 	// Create MaterialInstance for PSO and root signature management
-	// Pass nullptr for ShaderManager since GridRenderer doesn't use hot-reload
 	m_materialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
-		m_device, m_materialSystem, nullptr, "grid_material" );
+		m_device, m_materialSystem, "grid_material" );
 
 	if ( !m_materialInstance->isValid() )
 	{

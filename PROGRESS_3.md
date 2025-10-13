@@ -1,5 +1,58 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-13 — T307: Remove Redundant Hot-Reload Infrastructure from MaterialInstance
+
+**Summary:** Removed all hot-reload infrastructure from MaterialInstance after realizing it was completely redundant. PipelineBuilder has its own static cache that automatically handles shader recompilation via content hashing - when a shader file changes, the hash changes, and PipelineBuilder creates a new PSO with fresh bytecode. MaterialInstance's callback registration, dirty flags, and onShaderReloaded() method were unnecessary duplication. This simplification removes ~40 lines of dead code and eliminates an entire dependency (ShaderManager) from MaterialInstance.
+
+**Atomic functionalities completed:**
+- AF1: Remove ShaderManager parameter from constructor - simplified constructor signature from 4 to 3 parameters
+- AF2: Remove callback registration/unregistration - eliminated m_hotReloadCallbackHandle and m_shaderManager member
+- AF3: Remove dirty flag mechanism - deleted m_dirtyPasses unordered_set and all dirty flag checks
+- AF4: Remove onShaderReloaded() method - deleted entire method and its logic
+- AF5: Simplify getPipelineState() - removed needsCreation logic with dirty flag check, now just checks cache existence
+- AF6: Simplify createPipelineStateForPass() - removed dirty flag erasure
+- AF7: Update all call sites - fixed GridRenderer, MeshRenderingSystem, SelectionRenderer constructor calls
+- AF8: Remove T305 hot-reload tests - deleted 5 obsolete tests, added explanatory note about PipelineBuilder handling hot-reload
+
+**Tests:** Removed 5 T305 tests (now obsolete), all remaining tests pass:
+```cmd
+unit_test_runner.exe "[material-instance]"
+All tests passed (43 assertions in 10 test cases)
+
+unit_test_runner.exe "[material]"
+All tests passed (110 assertions in 7 test cases)
+```
+
+**Notes:**
+- **Key insight**: PipelineBuilder already handles shader hot-reload via its global static cache and content hashing
+- When shader files change, PipelineBuilder detects the change automatically because `MaterialShaderCompiler::CompileWithDefines()` reads from disk
+- MaterialInstance's PSO cache (`m_pipelineStates`) is a secondary cache for quick lookups, but doesn't need invalidation logic
+- PipelineBuilder's cache is authoritative; MaterialInstance cache is just for avoiding redundant buildPSO() calls
+- Code reduction: ~40 lines removed from MaterialInstance (header + implementation)
+- Dependency reduction: MaterialInstance no longer depends on ShaderManager at all
+- All existing functionality preserved - hot-reload still works, just handled at the PipelineBuilder level
+- Constructor signature change required updates in 4 files: material_instance_tests.cpp, grid.cpp, mesh_rendering_system.cpp, selection_renderer.cpp
+
+**Files modified:**
+- `src/graphics/material_system/material_instance.h`: Removed ShaderManager forward declaration, removed ShaderManager parameter from constructor, removed onShaderReloaded(), removed m_shaderManager/m_hotReloadCallbackHandle/m_dirtyPasses members
+- `src/graphics/material_system/material_instance.cpp`: Removed shader_manager include, simplified constructor (no callback registration), removed destructor callback cleanup, simplified getPipelineState() and createPipelineStateForPass(), deleted onShaderReloaded()
+- `src/graphics/grid/grid.cpp`: Updated MaterialInstance constructor call (removed nullptr parameter)
+- `src/runtime/mesh_rendering_system.cpp`: Updated MaterialInstance constructor call (removed m_shaderManager.get() parameter)
+- `src/editor/selection_renderer.cpp`: Updated 2 MaterialInstance constructor calls (removed &m_shaderManager parameters)
+- `tests/material_instance_tests.cpp`: Removed shader_manager include, updated 20+ constructor calls (removed nullptr/&shaderManager parameters), removed 5 T305 hot-reload tests, added explanatory notes
+
+**Trade-offs:**
+- MaterialInstance is simpler and more focused - only manages PSO/root signature lifecycle
+- Hot-reload is less explicit - no longer visible in MaterialInstance API, happens transparently via PipelineBuilder
+- Slightly less control - can't force PSO recreation without clearing PipelineBuilder's global cache (but no use case for this exists)
+
+**Follow-ups:**
+- Consider removing MaterialInstance's PSO cache entirely - it's redundant with PipelineBuilder's cache
+- Document hot-reload behavior in PipelineBuilder documentation (automatic via content hashing)
+- Profile to see if double-caching (PipelineBuilder + MaterialInstance) provides measurable benefit
+
+---
+
 ## 2025-10-13 — T306: Cache MaterialDefinition Pointer in MaterialInstance
 
 **Summary:** Optimized MaterialInstance to cache the MaterialDefinition pointer instead of repeatedly querying MaterialSystem. Previously, every call to `isValid()`, `hasPass()`, `getMaterial()`, `getPass()`, and `onShaderReloaded()` performed a pointer lookup through MaterialSystem's internal data structures using the MaterialHandle. Now the MaterialDefinition pointer is cached once during construction and refreshed during hot-reload, eliminating repeated lookups. This optimization is safe because the MaterialDefinition is owned by MaterialSystem and remains stable for the lifetime of the MaterialHandle.
