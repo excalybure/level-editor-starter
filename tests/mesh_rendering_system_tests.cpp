@@ -20,7 +20,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	renderer::Renderer renderer( device, *shaderManager );
 
 	// Act & Assert - should compile and create without error
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 }
 
 TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
@@ -31,7 +31,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
@@ -47,7 +47,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create an entity with both Transform and MeshRenderer components
@@ -70,7 +70,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 
 	components::Transform transform;  // Default: identity transform
 	camera::PerspectiveCamera camera; // Default camera
@@ -95,7 +95,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with empty mesh renderer (no GPU mesh)
@@ -117,7 +117,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create multiple entities with different component combinations
@@ -146,7 +146,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with non-identity transform and empty mesh renderer
@@ -212,7 +212,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 
 	// Create MeshRenderingSystem with SystemManager access for hierarchy support
-	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager, &systemManager );
+	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, &systemManager );
 	systemManager.initialize( scene );
 
 	// Create parent and child entities

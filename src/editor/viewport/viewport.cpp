@@ -1008,14 +1008,6 @@ void ViewportManager::render()
 				// Get the MeshRenderingSystem and call its render method
 				if ( auto *meshRenderingSystem = m_systemManager->getSystem<systems::MeshRenderingSystem>() )
 				{
-					pix::ScopedEvent pixSceneContent( commandList, pix::MarkerColor::Orange, "Scene Content Rendering" );
-
-					// Set root signature FIRST before binding any parameters
-					{
-						pix::ScopedEvent pixRootSig( commandList, pix::MarkerColor::Red, "Root Signature Setup" );
-						meshRenderingSystem->setRootSignature( commandList );
-					}
-
 					// Update and bind frame constants for this viewport
 					{
 						pix::ScopedEvent pixFrameConstants( commandList, pix::MarkerColor::Blue, "Frame Constants" );

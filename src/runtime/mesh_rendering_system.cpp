@@ -1,6 +1,7 @@
 #include "runtime/mesh_rendering_system.h"
 #include "graphics/renderer/renderer.h"
 #include "graphics/gpu/material_gpu.h"
+#include "graphics/material_system/material_instance.h"
 #include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
@@ -41,14 +42,34 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
-	: m_renderer( renderer ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
+MeshRenderingSystem::MeshRenderingSystem( renderer::Renderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
+	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
 {
-	createRootSignature();
-
-	if ( !registerShaders() )
+	// Phase 2: Create default MaterialInstance if MaterialSystem available
+	if ( m_materialSystem )
 	{
-		console::error( "MeshRenderingSystem: Failed to register shaders" );
+		m_defaultMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+			&renderer.getDevice(),
+			m_materialSystem,
+			m_shaderManager.get(),
+			"mesh_unlit" );
+
+		if ( !m_defaultMaterialInstance->isValid() )
+		{
+			console::error( "MeshRenderingSystem: Failed to create default material instance" );
+		}
+		else if ( !m_defaultMaterialInstance->hasPass( "forward" ) )
+		{
+			console::error( "MeshRenderingSystem: Material 'mesh_unlit' does not have 'forward' pass" );
+		}
+		else
+		{
+			console::info( "MeshRenderingSystem: Successfully created MaterialInstance for 'mesh_unlit'" );
+		}
+	}
+	else
+	{
+		console::warning( "MeshRenderingSystem: No MaterialSystem provided - system may not render correctly" );
 	}
 
 	if ( !systemManager )
@@ -63,59 +84,6 @@ void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
 	// Rendering happens in the render() method
 }
 
-bool MeshRenderingSystem::registerShaders()
-{
-	if ( !m_shaderManager )
-	{
-		console::error( "MeshRenderingSystem: ShaderManager not available for shader registration" );
-		return false;
-	}
-
-	// Register vertex shader
-	m_vertexShaderHandle = m_shaderManager->registerShader(
-		"shaders/unlit.hlsl",
-		"VSMain",
-		"vs_5_0",
-		shader_manager::ShaderType::Vertex );
-
-	if ( m_vertexShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
-	{
-		console::error( "MeshRenderingSystem: Failed to register vertex shader" );
-		return false;
-	}
-
-	// Register pixel shader
-	m_pixelShaderHandle = m_shaderManager->registerShader(
-		"shaders/unlit.hlsl",
-		"PSMain",
-		"ps_5_0",
-		shader_manager::ShaderType::Pixel );
-
-	if ( m_pixelShaderHandle == shader_manager::INVALID_SHADER_HANDLE )
-	{
-		console::error( "MeshRenderingSystem: Failed to register pixel shader" );
-		return false;
-	}
-
-	// Set up reload callback for shader hot reloading
-	m_callbackHandle = m_shaderManager->registerReloadCallback(
-		[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob &newShader ) {
-			// When shaders are reloaded, invalidate pipeline state cache
-			if ( handle == m_vertexShaderHandle || handle == m_pixelShaderHandle )
-			{
-				console::info( "MeshRenderingSystem: Shader reloaded, clearing pipeline state cache" );
-				m_pipelineStateCache.clear();
-			}
-		} );
-
-	if ( m_callbackHandle == shader_manager::INVALID_CALLBACK_HANDLE )
-	{
-		console::warning( "MeshRenderingSystem: Failed to register shader reload callback" );
-	}
-
-	return true;
-}
-
 void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera )
 {
 	// Get command context for binding
@@ -128,6 +96,19 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 	auto *commandList = commandContext->get();
 	if ( !commandList )
 	{
+		return;
+	}
+
+	// Phase 3: Setup material for rendering using MaterialInstance
+	if ( !m_defaultMaterialInstance || !m_defaultMaterialInstance->isValid() )
+	{
+		console::error( "MeshRenderingSystem: No valid MaterialInstance available for rendering" );
+		return;
+	}
+
+	if ( !m_defaultMaterialInstance->setupCommandList( commandList, "forward" ) )
+	{
+		console::warning( "MeshRenderingSystem: Failed to setup MaterialInstance for rendering" );
 		return;
 	}
 
@@ -244,25 +225,19 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 		// Bind primitive GPU buffers and material (material binding is handled by primitive)
 		primitive.bindForRendering( commandList );
 
-		// Get and set the appropriate pipeline state for the material
-		if ( primitive.hasMaterial() )
+		// Phase 3: Material PSO is already set via MaterialInstance in render() method
+		// No need to call getMaterialPipelineState() per primitive anymore
+
+		// Issue the draw call
+		if ( primitive.hasIndexBuffer() )
 		{
-			auto *pipelineState = getMaterialPipelineState( *primitive.getMaterial() );
-			if ( pipelineState )
-			{
-				commandList->SetPipelineState( pipelineState );
-				// Issue the draw call
-				if ( primitive.hasIndexBuffer() )
-				{
-					// Indexed drawing
-					commandList->DrawIndexedInstanced( primitive.getIndexCount(), 1, 0, 0, 0 );
-				}
-				else
-				{
-					// Non-indexed drawing
-					commandList->DrawInstanced( primitive.getVertexCount(), 1, 0, 0 );
-				}
-			}
+			// Indexed drawing
+			commandList->DrawIndexedInstanced( primitive.getIndexCount(), 1, 0, 0, 0 );
+		}
+		else
+		{
+			// Non-indexed drawing
+			commandList->DrawInstanced( primitive.getVertexCount(), 1, 0, 0 );
 		}
 	}
 }
@@ -282,155 +257,6 @@ math::Mat4f MeshRenderingSystem::calculateMVPMatrix(
 
 	// Calculate MVP matrix: Projection * View * Model
 	return projectionMatrix * viewMatrix * modelMatrix;
-}
-
-void MeshRenderingSystem::createRootSignature()
-{
-	// Get device from renderer for root signature creation
-	auto &device = m_renderer.getDevice();
-
-	// Create root signature matching unlit.hlsl shader expectations
-	// b0 - Frame constants (view/projection matrices) - using CBV (too large for root constants)
-	// b1 - Object constants (world matrix) - using root constants for better performance
-	// b2 - Material constants (base color, etc.) - using CBV
-	D3D12_ROOT_PARAMETER rootParams[3] = {};
-
-	// Frame constants (b0) - using CBV since it's too large for root constants (68 DWORDs > 64 limit)
-	rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParams[0].Descriptor.ShaderRegister = 0; // b0
-	rootParams[0].Descriptor.RegisterSpace = 0;
-	rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-
-	// Object constants (b1) - using 32-bit constants for better performance (32 DWORDs fits in limit)
-	rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-	rootParams[1].Constants.ShaderRegister = 1; // b1
-	rootParams[1].Constants.RegisterSpace = 0;
-	rootParams[1].Constants.Num32BitValues = sizeof( ObjectConstants ) / 4; // Convert bytes to 32-bit values
-	rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-
-	// Material constants (b2) - keep as CBV for traditional constant buffer
-	rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParams[2].Descriptor.ShaderRegister = 2; // b2
-	rootParams[2].Descriptor.RegisterSpace = 0;
-	rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-	rootSigDesc.NumParameters = 3;
-	rootSigDesc.pParameters = rootParams;
-	rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-	HRESULT hr = D3D12SerializeRootSignature( &rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &serializedRootSig, &errorBlob );
-	if ( SUCCEEDED( hr ) )
-	{
-		hr = device->CreateRootSignature( 0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) );
-	}
-}
-
-ID3D12PipelineState *MeshRenderingSystem::getMaterialPipelineState( const engine::gpu::MaterialGPU &material )
-{
-	// Generate cache key based on material properties
-	auto *sourceMaterial = material.getSourceMaterial().get();
-	if ( !sourceMaterial )
-	{
-		return nullptr;
-	}
-
-	const std::string cacheKey = sourceMaterial->getPath();
-
-	// Check if pipeline state is already cached
-	auto it = m_pipelineStateCache.find( cacheKey );
-	if ( it != m_pipelineStateCache.end() )
-	{
-		return it->second.Get();
-	}
-
-	// Create new pipeline state for this material
-	auto pipelineState = createMaterialPipelineState( material );
-	if ( pipelineState )
-	{
-		m_pipelineStateCache[cacheKey] = pipelineState;
-		return pipelineState.Get();
-	}
-
-	return nullptr;
-}
-
-Microsoft::WRL::ComPtr<ID3D12PipelineState> MeshRenderingSystem::createMaterialPipelineState( const engine::gpu::MaterialGPU &material )
-{
-	// Get device from renderer
-	auto &device = m_renderer.getDevice();
-
-	Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-	Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-
-	// Use ShaderManager if available, otherwise fall back to D3DCompileFromFile
-	if ( m_shaderManager )
-	{
-		// Get current shader blobs from shader manager
-		const shader_manager::ShaderBlob *vertexShader = m_shaderManager->getShaderBlob( m_vertexShaderHandle );
-		const shader_manager::ShaderBlob *pixelShader = m_shaderManager->getShaderBlob( m_pixelShaderHandle );
-
-		if ( !vertexShader || !pixelShader || !vertexShader->isValid() || !pixelShader->isValid() )
-		{
-			console::warning( "MeshRenderingSystem: Shaders not ready for pipeline state creation" );
-			return nullptr;
-		}
-
-		vsBlob = vertexShader->blob;
-		psBlob = pixelShader->blob;
-	}
-	else
-	{
-		console::error( "MeshRenderingSystem: Shader manager is not set. Skipping pipeline state creation" );
-		return nullptr;
-	}
-
-	// Create pipeline state
-	const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.InputLayout = { inputLayout, _countof( inputLayout ) };
-	psoDesc.pRootSignature = m_rootSignature.Get(); // Use our managed root signature
-	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
-	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
-	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.SampleDesc.Count = 1;
-	// Depth stencil state (disable depth testing for viewport rendering)
-	psoDesc.DepthStencilState.DepthEnable = FALSE; // Disable depth testing
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
-
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
-	const HRESULT hr = device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &pipelineState ) );
-	if ( FAILED( hr ) )
-	{
-		console::error( "MeshRenderingSystem: Failed to create pipeline state for material" );
-		return nullptr;
-	}
-	return pipelineState;
-}
-
-void MeshRenderingSystem::setRootSignature( ID3D12GraphicsCommandList *commandList )
-{
-	if ( m_rootSignature && commandList )
-	{
-		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
-	}
 }
 
 } // namespace systems

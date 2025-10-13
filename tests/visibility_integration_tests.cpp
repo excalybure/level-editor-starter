@@ -17,7 +17,7 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with Transform, MeshRenderer, and Visible components
@@ -74,7 +74,7 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity without Visible component (should still render)
@@ -99,7 +99,7 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with castShadows=false
@@ -131,7 +131,7 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=false
@@ -177,7 +177,7 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -218,7 +218,7 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -259,7 +259,7 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	renderer::Renderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
 	ecs::Scene scene;
 
 	// Create grandparent (visible=false)

@@ -137,7 +137,7 @@ int main()
 	systemManager.addSystem<systems::TransformSystem>();
 
 	// Add MeshRenderingSystem to handle 3D mesh rendering with hierarchy support
-	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager, &systemManager );
+	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, &materialSystem, shaderManager, &systemManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );

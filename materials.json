@@ -238,6 +238,64 @@
 				"blend": "opaque"
 			},
 			"enabled": true
+		},
+		{
+			"id": "mesh_unlit",
+			"passes": [
+				{
+					"name": "forward",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/unlit.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_5_0"
+						},
+						"pixel": {
+							"file": "shaders/unlit.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_5_0"
+						}
+					},
+					"vertexFormat": "PositionNormalUVTangentColor",
+					"states": {
+						"rasterizer": "solid_back",
+						"depthStencil": "depth_read_only",
+						"blend": "opaque"
+					},
+					"primitiveTopology": "Triangle",
+					"parameters": [
+						{
+							"name": "FrameConstants",
+							"binding": "b0",
+							"type": "cbv"
+						},
+						{
+							"name": "ObjectConstants",
+							"binding": "b1",
+							"type": "cbv"
+						},
+						{
+							"name": "MaterialConstants",
+							"binding": "b2",
+							"type": "cbv"
+						}
+					]
+				}
+			],
+			"enabled": true
+		}
+	],
+	"vertexFormats": [
+		{
+			"id": "PositionNormalUVTangentColor",
+			"stride": 64,
+			"elements": [
+				{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+				{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 },
+				{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 },
+				{ "semantic": "TANGENT", "format": "R32G32B32A32_FLOAT", "offset": 32 },
+				{ "semantic": "COLOR", "format": "R32G32B32A32_FLOAT", "offset": 48 }
+			]
 		}
 	],
 	"renderPasses": [

@@ -56,7 +56,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		renderer::Renderer renderer( device, *shaderManager );
 
 		// Act - create MeshRenderingSystem
-		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, shaderManager, nullptr );
+		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, nullptr );
 
 		// Assert
 		REQUIRE( meshRenderingSystem != nullptr );
@@ -75,7 +75,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		ecs::Scene scene;
 
 		// Act - add system to manager
-		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, shaderManager, nullptr );
+		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, nullptr );
 
 		// Assert
 		REQUIRE( meshRenderingSystem != nullptr );
