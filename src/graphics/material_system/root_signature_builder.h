@@ -45,7 +45,9 @@ public:
 	// Full implementation would use shader reflection (DXIL analysis).
 	// @param material - Material definition to build root signature for
 	// @param includeFrameConstants - If true, adds default FrameConstants CBV at b0 (required for most shaders)
-	static RootSignatureSpec Build( const MaterialDefinition &material, bool includeFrameConstants = false );
+	// @param includeObjectConstants - If true, adds default ObjectConstants CBV at b1 (world/normal matrices)
+	// @param includeMaterialConstants - If true, adds default MaterialConstants CBV at b2 (material properties)
+	static RootSignatureSpec Build( const MaterialDefinition &material, bool includeFrameConstants = false, bool includeObjectConstants = false, bool includeMaterialConstants = false );
 
 private:
 	// Convert material parameters to resource bindings

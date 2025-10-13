@@ -6,7 +6,7 @@
 namespace graphics::material_system
 {
 
-RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material, bool includeFrameConstants )
+RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material, bool includeFrameConstants, bool includeObjectConstants, bool includeMaterialConstants )
 {
 	RootSignatureSpec spec;
 
@@ -19,6 +19,28 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 		frameConstants.type = ResourceBindingType::CBV;
 		frameConstants.slot = 0; // Always at b0
 		spec.resourceBindings.push_back( frameConstants );
+	}
+
+	// Optionally add object transform constant buffer binding (b1)
+	// Contains world matrix and normal matrix
+	if ( includeObjectConstants )
+	{
+		ResourceBinding objectConstants;
+		objectConstants.name = "ObjectConstants";
+		objectConstants.type = ResourceBindingType::CBV;
+		objectConstants.slot = 1; // Always at b1
+		spec.resourceBindings.push_back( objectConstants );
+	}
+
+	// Optionally add material properties constant buffer binding (b2)
+	// Contains base color, metallic, roughness, etc.
+	if ( includeMaterialConstants )
+	{
+		ResourceBinding materialConstants;
+		materialConstants.name = "MaterialConstants";
+		materialConstants.type = ResourceBindingType::CBV;
+		materialConstants.slot = 2; // Always at b2
+		spec.resourceBindings.push_back( materialConstants );
 	}
 
 	// Add bindings from material parameters

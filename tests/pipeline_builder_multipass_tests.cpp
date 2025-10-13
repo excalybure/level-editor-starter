@@ -22,19 +22,37 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 	std::filesystem::create_directories( testDir );
 
 	const std::string jsonContent = R"({
-		"vertexFormats": [
-			{
-				"id": "PositionNormalUVTangentColor",
-				"stride": 52,
-				"elements": [
-					{ "semantic": "POSITION", "semanticIndex": 0, "format": "R32G32B32_FLOAT", "alignedByteOffset": 0 },
-					{ "semantic": "NORMAL", "semanticIndex": 0, "format": "R32G32B32_FLOAT", "alignedByteOffset": 12 },
-					{ "semantic": "TEXCOORD", "semanticIndex": 0, "format": "R32G32_FLOAT", "alignedByteOffset": 24 },
-					{ "semantic": "TANGENT", "semanticIndex": 0, "format": "R32G32B32A32_FLOAT", "alignedByteOffset": 32 },
-					{ "semantic": "COLOR", "semanticIndex": 0, "format": "R32G32B32A32_FLOAT", "alignedByteOffset": 48 }
-				]
+		"states": {
+			"rasterizerStates": {
+				"solid_back": { "fillMode": "Solid", "cullMode": "Back", "frontCounterClockwise": false }
+			},
+			"depthStencilStates": {
+				"depth_write": { "depthEnable": true, "depthWriteMask": "All", "depthFunc": "Less", "stencilEnable": false },
+				"depth_test": { "depthEnable": true, "depthWriteMask": "Zero", "depthFunc": "LessEqual", "stencilEnable": false }
+			},
+			"blendStates": {
+				"opaque": { "alphaToCoverage": false, "independentBlend": false, "renderTargets": [{ "enable": false }] }
+			},
+			"renderTargetStates": {
+				"MainColor": {
+					"rtvFormats": ["R8G8B8A8_UNORM"],
+					"dsvFormat": "D32_FLOAT",
+					"samples": 1
+				}
+			},
+			"vertexFormats": {
+				"PositionNormalUVTangentColor": {
+					"stride": 52,
+					"elements": [
+						{ "semantic": "POSITION", "semanticIndex": 0, "format": "R32G32B32_FLOAT", "offset": 0 },
+						{ "semantic": "NORMAL", "semanticIndex": 0, "format": "R32G32B32_FLOAT", "offset": 12 },
+						{ "semantic": "TEXCOORD", "semanticIndex": 0, "format": "R32G32_FLOAT", "offset": 24 },
+						{ "semantic": "TANGENT", "semanticIndex": 0, "format": "R32G32B32A32_FLOAT", "offset": 32 },
+						{ "semantic": "COLOR", "semanticIndex": 0, "format": "R32G32B32A32_FLOAT", "offset": 48 }
+					]
+				}
 			}
-		],
+		},
 		"materials": [
 			{
 				"id": "multipass_material",
@@ -54,8 +72,8 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 					{
 						"name": "forward",
 						"shaders": {
-							"vertex": { "file": "shaders/simple.hlsl", "profile": "vs_5_1", "entry": "VSMain" },
-							"pixel": { "file": "shaders/simple.hlsl", "profile": "ps_5_1", "entry": "PSMain" }
+							"vertex": { "file": "shaders/unlit.hlsl", "profile": "vs_5_1", "entry": "VSMain" },
+							"pixel": { "file": "shaders/unlit.hlsl", "profile": "ps_5_1", "entry": "PSMain" }
 						},
 						"states": {
 							"rasterizer": "solid_back",
@@ -66,6 +84,10 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 					}
 				]
 			}
+		],
+		"renderPasses": [
+			{ "name": "depth_prepass", "queue": "Geometry", "states": { "renderTarget": "MainColor" } },
+			{ "name": "forward", "queue": "Geometry", "states": { "renderTarget": "MainColor" } }
 		]
 	})";
 

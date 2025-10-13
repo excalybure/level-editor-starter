@@ -468,6 +468,9 @@ TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[ma
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "grid" ) );
 
+	// Begin frame to reset command list
+	device.beginFrame();
+
 	// Get command list for testing
 	ID3D12GraphicsCommandList *commandList = device.getCommandList();
 	REQUIRE( commandList != nullptr );
@@ -606,6 +609,9 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "forward" ) );
 	REQUIRE( instance.hasPass( "shadow" ) );
+
+	// Begin frame to reset command list
+	device.beginFrame();
 
 	// Get command list
 	ID3D12GraphicsCommandList *commandList = device.getCommandList();

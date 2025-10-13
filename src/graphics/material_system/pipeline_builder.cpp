@@ -25,8 +25,8 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineBuilder::getRootSignature(
 		return nullptr;
 	}
 
-	// Include FrameConstants (b0) for view-projection matrices required by shaders
-	const auto rootSigSpec = RootSignatureBuilder::Build( material, true );
+	// Include standard constant buffers for 3D rendering
+	const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
 	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 }
 
@@ -191,8 +191,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
 	// Root signature - use RootSignatureBuilder + RootSignatureCache (T215)
-	// Include FrameConstants (b0) for view-projection matrices required by shaders
-	const auto rootSigSpec = RootSignatureBuilder::Build( material, true );
+	// Include standard constant buffers: FrameConstants (b0), ObjectConstants (b1), MaterialConstants (b2)
+	// These are required by most 3D shaders (e.g., unlit.hlsl)
+	const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
 	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 	if ( !rootSignature )
 	{
@@ -355,6 +356,14 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		psoDesc.DSVFormat = passConfig.dsvFormat;
 		psoDesc.SampleDesc.Count = 1;
 		psoDesc.SampleDesc.Quality = 0;
+	}
+
+	// If no DSV format specified but depth/stencil is enabled, disable depth/stencil to avoid DX12 warning
+	if ( psoDesc.DSVFormat == DXGI_FORMAT_UNKNOWN && psoDesc.DepthStencilState.DepthEnable )
+	{
+		psoDesc.DepthStencilState.DepthEnable = FALSE;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		psoDesc.DepthStencilState.StencilEnable = FALSE;
 	}
 
 	// Create PSO
