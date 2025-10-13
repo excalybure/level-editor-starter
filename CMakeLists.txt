@@ -66,7 +66,6 @@ add_library(graphics STATIC
   src/graphics/material_system/loader.cpp
   src/graphics/material_system/validator.cpp
   src/graphics/material_system/parser.cpp
-  src/graphics/material_system/builder.cpp
   src/graphics/material_system/cache.cpp
   src/graphics/material_system/shader_compiler.cpp
   src/graphics/material_system/root_signature_builder.cpp

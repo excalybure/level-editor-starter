@@ -1,2 +1,0 @@
-﻿Filters: "Dynamic buffer reuse vs growth"
-Randomness seeded to: 3225020558
