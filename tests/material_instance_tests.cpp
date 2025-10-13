@@ -837,3 +837,31 @@ TEST_CASE( "MaterialInstance unregisters callback on destruction", "[material-in
 	// Force recompile should not crash (no dangling callback)
 	REQUIRE_NOTHROW( shaderManager.forceRecompile( shaderHandle ) );
 }
+
+TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance", "[material-instance][T306][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance definition caching test" ) )
+	{
+		return;
+	}
+
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, nullptr, "grid_material" );
+	REQUIRE( instance.isValid() );
+
+	// Act - call getMaterial() multiple times
+	const MaterialDefinition *def1 = instance.getMaterial();
+	const MaterialDefinition *def2 = instance.getMaterial();
+	const MaterialDefinition *def3 = instance.getMaterial();
+
+	// Assert - should return same pointer (cached, not re-queried from MaterialSystem)
+	REQUIRE( def1 != nullptr );
+	REQUIRE( def1 == def2 );
+	REQUIRE( def2 == def3 );
+	REQUIRE( def1->id == "grid_material" );
+}

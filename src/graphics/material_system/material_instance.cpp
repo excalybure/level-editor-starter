@@ -15,14 +15,16 @@ MaterialInstance::MaterialInstance(
 	// AF2: Query MaterialHandle from MaterialSystem using material ID
 	m_materialHandle = m_materialSystem->getMaterialHandle( materialId );
 
-	// T302-AF1: Call PipelineBuilder::getRootSignature() if material is valid
+	// T306: Cache MaterialDefinition pointer for performance
 	if ( m_materialHandle.isValid() )
 	{
-		const MaterialDefinition *material = m_materialSystem->getMaterial( m_materialHandle );
-		if ( material )
-		{
-			m_rootSignature = PipelineBuilder::getRootSignature( m_device, *material );
-		}
+		m_materialDefinition = m_materialSystem->getMaterial( m_materialHandle );
+	}
+
+	// T302-AF1: Call PipelineBuilder::getRootSignature() if material is valid
+	if ( m_materialDefinition )
+	{
+		m_rootSignature = PipelineBuilder::getRootSignature( m_device, *m_materialDefinition );
 	}
 
 	// T305-AF3: Register hot-reload callback if ShaderManager provided
@@ -47,43 +49,42 @@ MaterialInstance::~MaterialInstance()
 bool MaterialInstance::isValid() const
 {
 	// AF3: Check if material handle is valid and has at least one pass
-	if ( !m_materialHandle.isValid() )
-	{
-		return false;
-	}
-
-	const MaterialDefinition *material = m_materialSystem->getMaterial( m_materialHandle );
-	if ( !material )
+	// T306: Use cached pointer instead of querying MaterialSystem
+	if ( !m_materialDefinition )
 	{
 		return false;
 	}
 
 	// Check that material has at least one pass
-	return !material->passes.empty();
+	return !m_materialDefinition->passes.empty();
 }
 
 bool MaterialInstance::hasPass( const std::string &passName ) const
 {
 	// AF4: Query material definition and use MaterialDefinition::hasPass()
-	const MaterialDefinition *material = m_materialSystem->getMaterial( m_materialHandle );
-	if ( !material )
+	// T306: Use cached pointer instead of querying MaterialSystem
+	if ( !m_materialDefinition )
 	{
 		return false;
 	}
 
-	return material->hasPass( passName );
+	return m_materialDefinition->hasPass( passName );
 }
 
 const MaterialDefinition *MaterialInstance::getMaterial() const
 {
-	// AF5: Query from MaterialSystem using handle
-	return m_materialSystem->getMaterial( m_materialHandle );
+	// AF5: Return cached pointer (T306)
+	return m_materialDefinition;
 }
 
 const MaterialPass *MaterialInstance::getPass( const std::string &passName ) const
 {
-	// AF5: Query specific pass from MaterialSystem
-	return m_materialSystem->getMaterialPass( m_materialHandle, passName );
+	// AF5: Query specific pass using cached pointer (T306)
+	if ( !m_materialDefinition )
+	{
+		return nullptr;
+	}
+	return m_materialDefinition->getPass( passName );
 }
 
 ID3D12RootSignature *MaterialInstance::getRootSignature() const
@@ -178,14 +179,19 @@ bool MaterialInstance::setupCommandList( ID3D12GraphicsCommandList *commandList,
 void MaterialInstance::onShaderReloaded()
 {
 	// T305-AF2: Mark all passes dirty and clear PSO cache
-	const MaterialDefinition *material = getMaterial();
-	if ( !material )
+	// T306: Refresh cached pointer in case MaterialSystem updated definition in-place
+	if ( m_materialHandle.isValid() )
+	{
+		m_materialDefinition = m_materialSystem->getMaterial( m_materialHandle );
+	}
+
+	if ( !m_materialDefinition )
 	{
 		return;
 	}
 
 	// Add all pass names to dirty set
-	for ( const auto &pass : material->passes )
+	for ( const auto &pass : m_materialDefinition->passes )
 	{
 		m_dirtyPasses.insert( pass.passName );
 	}

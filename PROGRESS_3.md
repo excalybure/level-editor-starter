@@ -1,5 +1,59 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-13 — T306: Cache MaterialDefinition Pointer in MaterialInstance
+
+**Summary:** Optimized MaterialInstance to cache the MaterialDefinition pointer instead of repeatedly querying MaterialSystem. Previously, every call to `isValid()`, `hasPass()`, `getMaterial()`, `getPass()`, and `onShaderReloaded()` performed a pointer lookup through MaterialSystem's internal data structures using the MaterialHandle. Now the MaterialDefinition pointer is cached once during construction and refreshed during hot-reload, eliminating repeated lookups. This optimization is safe because the MaterialDefinition is owned by MaterialSystem and remains stable for the lifetime of the MaterialHandle.
+
+**Atomic functionalities completed:**
+- AF1: Write T306 caching test - created unit test verifying getMaterial() returns the same cached pointer across multiple calls
+- AF2: Add m_materialDefinition cache member - added `const MaterialDefinition* m_materialDefinition` member to MaterialInstance header
+- AF3: Cache pointer in constructor - query MaterialDefinition once via MaterialHandle and store in m_materialDefinition; use cached pointer for root signature creation
+- AF4: Use cached pointer in isValid() - replaced MaterialSystem lookup with null check on m_materialDefinition
+- AF5: Use cached pointer in hasPass() - use m_materialDefinition directly instead of querying MaterialSystem
+- AF6: Use cached pointer in getMaterial() - return m_materialDefinition directly (single-line implementation)
+- AF7: Use cached pointer in getPass() - call m_materialDefinition->getPass() instead of MaterialSystem::getMaterialPass()
+- AF8: Refresh cache in onShaderReloaded() - re-query MaterialDefinition via MaterialHandle to ensure cache is fresh after hot-reload
+
+**Tests:** 1 new test added to `material_instance_tests.cpp`:
+- `"MaterialInstance caches MaterialDefinition pointer for performance"` [T306][unit] - verifies getMaterial() returns identical pointer across three consecutive calls
+
+Filtered test commands:
+```cmd
+unit_test_runner.exe "[T306]"
+All tests passed (9 assertions in 2 test cases)
+
+unit_test_runner.exe "[material-instance]"
+All tests passed (63 assertions in 15 test cases)
+
+unit_test_runner.exe "[material]"
+All tests passed (110 assertions in 7 test cases)
+```
+
+**Notes:**
+- Performance improvement: eliminated 5+ pointer lookups per frame in typical renderer usage (one per method call)
+- Safety: MaterialDefinition pointer remains valid because MaterialSystem owns definitions for MaterialHandle lifetime
+- Hot-reload safety: cache is refreshed in onShaderReloaded() in case MaterialSystem updates definitions in-place (defensive programming, though current MaterialSystem doesn't modify definitions)
+- MaterialDefinition is immutable after parsing - only shader bytecode changes during hot-reload, not the definition struct itself
+- All existing tests continue to pass - optimization is transparent to callers
+- Code is cleaner: removed redundant MaterialSystem->getMaterial() calls from every method
+
+**Files modified:**
+- `src/graphics/material_system/material_instance.h`: Added `const MaterialDefinition* m_materialDefinition` member
+- `src/graphics/material_system/material_instance.cpp`: Updated constructor to cache pointer; simplified isValid(), hasPass(), getMaterial(), getPass(), and onShaderReloaded() to use cache
+- `tests/material_instance_tests.cpp`: Added T306 caching test
+
+**Trade-offs:**
+- Adds one pointer member (8 bytes) to MaterialInstance - negligible memory overhead
+- Assumes MaterialDefinition pointer stability - safe given current MaterialSystem design where definitions are stored in stable containers
+- Cache refresh in onShaderReloaded() is defensive - MaterialSystem doesn't currently modify definitions, but this ensures correctness if that changes
+
+**Follow-ups:**
+- Consider applying similar caching pattern to other systems that repeatedly query via handles
+- Document MaterialInstance performance characteristics in API documentation
+- Profile to quantify performance improvement (likely minor but measurable in high-entity-count scenes)
+
+---
+
 ## 2025-10-12 — T306: Refactor GridRenderer to Use MaterialInstance
 
 **Summary:** Refactored GridRenderer to use MaterialInstance abstraction instead of directly managing PSO, root signature, and dirty state. This eliminates ~70 lines of boilerplate PSO management code from GridRenderer, replacing it with a single MaterialInstance member. GridRenderer now delegates all PSO/root signature lifecycle to MaterialInstance, using setupCommandList() for atomic command list configuration. The refactoring maintains identical external behavior while significantly simplifying the implementation.

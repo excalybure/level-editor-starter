@@ -83,6 +83,7 @@ private:
 	MaterialSystem *m_materialSystem = nullptr;
 	shader_manager::ShaderManager *m_shaderManager = nullptr;
 	MaterialHandle m_materialHandle;
+	const MaterialDefinition *m_materialDefinition = nullptr; // Cached pointer for performance
 	size_t m_hotReloadCallbackHandle = 0;
 
 	// Single root signature shared by all passes
