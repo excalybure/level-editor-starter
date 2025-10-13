@@ -287,15 +287,15 @@ void Viewport::setupInputHandler( editor::SelectionManager *selectionManager, pi
 	}
 }
 
-void Viewport::setupSelectionRenderer( dx12::Device *device, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
+void Viewport::setupSelectionRenderer( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
 {
-	if ( device && shaderManager )
+	if ( device && materialSystem && shaderManager )
 	{
-		m_selectionRenderer = std::make_unique<editor::SelectionRenderer>( *device, *shaderManager, systemManager );
+		m_selectionRenderer = std::make_unique<editor::SelectionRenderer>( *device, materialSystem, *shaderManager, systemManager );
 	}
 	else
 	{
-		console::warning( "Cannot setup selection renderer: missing device or shader manager" );
+		console::warning( "Cannot setup selection renderer: missing device, material system, or shader manager" );
 	}
 }
 
@@ -844,7 +844,7 @@ void ViewportManager::setupInputHandlersForExistingViewports()
 			if ( viewport )
 			{
 				viewport->setupInputHandler( m_selectionManager, m_pickingSystem, m_systemManager );
-				viewport->setupSelectionRenderer( m_device, m_shaderManager, m_systemManager );
+				viewport->setupSelectionRenderer( m_device, m_materialSystem, m_shaderManager, m_systemManager );
 				if ( m_scene )
 				{
 					viewport->setScene( m_scene );

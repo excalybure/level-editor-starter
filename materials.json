@@ -12,6 +12,12 @@
 				"depthWriteMask": "Zero",
 				"depthFunc": "Always",
 				"stencilEnable": false
+			},
+			"disabled": {
+				"depthEnable": false,
+				"depthWriteMask": "Zero",
+				"depthFunc": "Always",
+				"stencilEnable": false
 			}
 		},
 		"rasterizerStates": {
@@ -59,6 +65,22 @@
 						"blendOp": "Add",
 						"srcBlendAlpha": "One",
 						"destBlendAlpha": "InvSrcAlpha",
+						"blendOpAlpha": "Add",
+						"writeMask": "All"
+					}
+				]
+			},
+			"additive_blend": {
+				"alphaToCoverage": false,
+				"independentBlend": false,
+				"renderTargets": [
+					{
+						"enable": true,
+						"srcBlend": "One",
+						"destBlend": "One",
+						"blendOp": "Add",
+						"srcBlendAlpha": "One",
+						"destBlendAlpha": "One",
 						"blendOpAlpha": "Add",
 						"writeMask": "All"
 					}
@@ -277,6 +299,76 @@
 						{
 							"name": "MaterialConstants",
 							"binding": "b2",
+							"type": "cbv"
+						}
+					]
+				}
+			],
+			"enabled": true
+		},
+		{
+			"id": "selection_outline",
+			"passes": [
+				{
+					"name": "outline",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/selection_outline.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_5_1"
+						},
+						"pixel": {
+							"file": "shaders/selection_outline.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_5_1"
+						}
+					},
+					"vertexFormat": "PositionNormalUVTangentColor",
+					"states": {
+						"rasterizer": "solid_back",
+						"depthStencil": "disabled",
+						"blend": "alpha_blend"
+					},
+					"primitiveTopology": "Triangle",
+					"parameters": [
+						{
+							"name": "OutlineConstants",
+							"binding": "b0",
+							"type": "root_constants",
+							"size": 96
+						}
+					]
+				}
+			],
+			"enabled": true
+		},
+		{
+			"id": "selection_rect",
+			"passes": [
+				{
+					"name": "rect",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/selection_rect.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_5_1"
+						},
+						"pixel": {
+							"file": "shaders/selection_rect.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_5_1"
+						}
+					},
+					"states": {
+						"rasterizer": "solid_none",
+						"depthStencil": "disabled",
+						"blend": "alpha_blend"
+					},
+					"primitiveTopology": "Triangle",
+					"parameters": [
+						{
+							"name": "RectConstants",
+							"binding": "b1",
 							"type": "cbv"
 						}
 					]

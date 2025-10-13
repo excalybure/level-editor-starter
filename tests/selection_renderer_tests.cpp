@@ -5,6 +5,7 @@
 #include "runtime/components.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/material_system/material_system.h"
 #include "math/math.h"
 #include "math/vec.h"
 #include "math/matrix.h"
@@ -73,16 +74,18 @@ TEST_CASE( "SelectionStyle - Default values", "[selection-renderer][style]" )
 TEST_CASE( "SelectionRenderer - Construction", "[selection-renderer][construction]" )
 {
 	MockDevice device;
+	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "materials.json" );
 	MockShaderManager shaderManager;
 
 	SECTION( "Basic construction succeeds" )
 	{
-		REQUIRE_NOTHROW( editor::SelectionRenderer{ device, shaderManager } );
+		REQUIRE_NOTHROW( editor::SelectionRenderer{ device, &materialSystem, shaderManager } );
 	}
 
 	SECTION( "Style accessors work" )
 	{
-		editor::SelectionRenderer renderer{ device, shaderManager };
+		editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
 		auto &style = renderer.getStyle();
 		REQUIRE( style.selectedColor.x == 1.0f );
@@ -99,8 +102,10 @@ TEST_CASE( "SelectionRenderer - Construction", "[selection-renderer][constructio
 TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" )
 {
 	MockDevice device;
+	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "materials.json" );
 	MockShaderManager shaderManager;
-	editor::SelectionRenderer renderer{ device, shaderManager };
+	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
 	ecs::Scene scene;
 	auto entity = scene.createEntity( "TestEntity" );
@@ -132,8 +137,10 @@ TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" 
 TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer][selected]" )
 {
 	MockDevice device;
+	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "materials.json" );
 	MockShaderManager shaderManager;
-	editor::SelectionRenderer renderer{ device, shaderManager };
+	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
 	ecs::Scene scene;
 
@@ -170,8 +177,10 @@ TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer
 TEST_CASE( "SelectionRenderer - Animation support", "[selection-renderer][animation]" )
 {
 	MockDevice device;
+	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "materials.json" );
 	MockShaderManager shaderManager;
-	editor::SelectionRenderer renderer{ device, shaderManager };
+	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
 	auto &style = renderer.getStyle();
 

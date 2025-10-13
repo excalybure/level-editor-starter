@@ -14,6 +14,7 @@
 #include "runtime/ecs.h"
 #include "core/time.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/material_system/material_instance.h"
 #include "graphics/gpu/mesh_gpu.h"
 #include "runtime/systems.h"
 #include "platform/dx12/dx12_device.h"
@@ -21,8 +22,8 @@
 namespace editor
 {
 
-SelectionRenderer::SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager )
-	: m_device( device ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
+SelectionRenderer::SelectionRenderer( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager )
+	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
 {
 	setupRenderingResources();
 }
@@ -49,15 +50,11 @@ void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 		return;
 	}
 
-	// Set pipeline state for outline rendering if available
-	if ( m_outlinePipelineState )
+	// Setup material instance for outline rendering
+	if ( !m_outlineMaterialInstance || !m_outlineMaterialInstance->setupCommandList( commandList, "outline" ) )
 	{
-		commandList->SetPipelineState( m_outlinePipelineState.Get() );
-	}
-
-	if ( m_rootSignature )
-	{
-		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
+		console::warning( "SelectionRenderer: Failed to setup outline material instance" );
+		return;
 	}
 
 	// Iterate through all entities with Selected component
@@ -123,25 +120,11 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		return;
 	}
 
-	// Check if shaders are ready
-	const auto *vsBlob = m_shaderManager.getShaderBlob( m_rectVertexShader );
-	const auto *psBlob = m_shaderManager.getShaderBlob( m_rectPixelShader );
-
-	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
+	// Setup material instance for rect rendering
+	if ( !m_rectMaterialInstance || !m_rectMaterialInstance->setupCommandList( commandList, "rect" ) )
 	{
-		console::warning( "Selection rectangle shaders not ready, skipping render" );
+		console::warning( "SelectionRenderer: Failed to setup rect material instance" );
 		return;
-	}
-
-	// Set pipeline state for rectangle rendering
-	if ( m_rectPipelineState )
-	{
-		commandList->SetPipelineState( m_rectPipelineState.Get() );
-	}
-
-	if ( m_rootSignature )
-	{
-		commandList->SetGraphicsRootSignature( m_rootSignature.Get() );
 	}
 
 	// Update constant buffer with rectangle bounds
@@ -186,37 +169,48 @@ void SelectionRenderer::setupRenderingResources()
 {
 	try
 	{
-		// Register shaders with ShaderManager
-		m_outlineVertexShader = m_shaderManager.registerShader(
-			"shaders/selection_outline.hlsl",
-			"VSMain",
-			"vs_5_1",
-			shader_manager::ShaderType::Vertex );
+		// Create MaterialInstance for outline rendering
+		if ( m_materialSystem )
+		{
+			m_outlineMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+				&m_device,
+				m_materialSystem,
+				&m_shaderManager,
+				"selection_outline" );
 
-		m_outlinePixelShader = m_shaderManager.registerShader(
-			"shaders/selection_outline.hlsl",
-			"PSMain",
-			"ps_5_1",
-			shader_manager::ShaderType::Pixel );
+			if ( !m_outlineMaterialInstance->isValid() )
+			{
+				console::error( "SelectionRenderer: Failed to create outline material instance" );
+			}
+			else if ( !m_outlineMaterialInstance->hasPass( "outline" ) )
+			{
+				console::error( "SelectionRenderer: Material 'selection_outline' does not have 'outline' pass" );
+			}
 
-		m_rectVertexShader = m_shaderManager.registerShader(
-			"shaders/selection_rect.hlsl",
-			"VSMain",
-			"vs_5_1",
-			shader_manager::ShaderType::Vertex );
+			// Create MaterialInstance for rect selection rendering
+			m_rectMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+				&m_device,
+				m_materialSystem,
+				&m_shaderManager,
+				"selection_rect" );
 
-		m_rectPixelShader = m_shaderManager.registerShader(
-			"shaders/selection_rect.hlsl",
-			"PSMain",
-			"ps_5_1",
-			shader_manager::ShaderType::Pixel );
+			if ( !m_rectMaterialInstance->isValid() )
+			{
+				console::error( "SelectionRenderer: Failed to create rect material instance" );
+			}
+			else if ( !m_rectMaterialInstance->hasPass( "rect" ) )
+			{
+				console::error( "SelectionRenderer: Material 'selection_rect' does not have 'rect' pass" );
+			}
+		}
+		else
+		{
+			console::warning( "SelectionRenderer: No MaterialSystem provided - selection rendering will not work" );
+		}
 
-		// Create D3D12 resources
-		createRootSignature();
+		// Create constant buffer and rect vertex buffer (still needed for rect selection)
 		createConstantBuffer();
 		createRectVertexBuffer();
-		createRectPipelineState();
-		createOutlinePipelineState();
 	}
 	catch ( const std::exception &e )
 	{
@@ -248,32 +242,9 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 	const math::Mat4<> worldMatrix = getEntityWorldMatrix( entity, scene );
 	const math::Mat4<> worldViewProj = projMatrix * viewMatrix * worldMatrix;
 
-	// Check if outline shaders are ready
-	const auto *vsBlob = m_shaderManager.getShaderBlob( m_outlineVertexShader );
-	const auto *psBlob = m_shaderManager.getShaderBlob( m_outlinePixelShader );
-
-	if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
-	{
-		console::warning( "Selection outline shaders not ready, skipping outline render" );
-		return;
-	}
-
-	// Set pipeline state for outline rendering
-	if ( m_outlinePipelineState )
-	{
-		commandList->SetPipelineState( m_outlinePipelineState.Get() );
-	}
-
 	// Set per-entity constants using root constants
 	// This ensures each draw call has its own unique matrix and color data
 	{
-		struct OutlineConstants
-		{
-			math::Mat4<> worldViewProj;
-			math::Vec4<> outlineColor;
-			math::Vec4<> screenParams; // width, height, outlineWidth, time
-		};
-
 		OutlineConstants constants;
 		constants.worldViewProj = worldViewProj;
 		constants.outlineColor = color;
@@ -350,139 +321,6 @@ math::Vec4<> SelectionRenderer::animateColor( const math::Vec4<> &baseColor, flo
 		baseColor.z * pulse,
 		baseColor.w
 	};
-}
-
-void SelectionRenderer::createRootSignature()
-{
-	if ( m_device.isValid() )
-	{
-		// Create root signature with root constants for per-entity outline data
-		// Root constants allow us to set unique data per draw call without buffer aliasing
-		D3D12_ROOT_PARAMETER rootParams[2] = {};
-
-		// Root constants for outline rendering (worldViewProj + outlineColor + screenParams)
-		// 16 floats (matrix) + 4 floats (color) + 4 floats (screen params) = 24 DWORD values
-		rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootParams[0].Constants.ShaderRegister = 0;
-		rootParams[0].Constants.RegisterSpace = 0;
-		rootParams[0].Constants.Num32BitValues = 24; // Mat4 + Vec4 + Vec4
-		rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-		// Constant buffer for rectangle selection (less frequent updates)
-		rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		rootParams[1].Descriptor.ShaderRegister = 1;
-		rootParams[1].Descriptor.RegisterSpace = 0;
-		rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-		D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-		rootSigDesc.NumParameters = 2;
-		rootSigDesc.pParameters = rootParams;
-		rootSigDesc.NumStaticSamplers = 0;
-		rootSigDesc.pStaticSamplers = nullptr;
-		rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-		Microsoft::WRL::ComPtr<ID3DBlob> signature;
-		Microsoft::WRL::ComPtr<ID3DBlob> error;
-
-		HRESULT hr = D3D12SerializeRootSignature( &rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error );
-		if ( FAILED( hr ) )
-		{
-			if ( error )
-			{
-				console::error( "Failed to serialize root signature: {}", reinterpret_cast<const char *>( error->GetBufferPointer() ) );
-			}
-			else
-			{
-				console::error( "Failed to create selection renderer root signature. hr is {}", hr );
-			}
-		}
-
-		hr = m_device->CreateRootSignature( 0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS( &m_rootSignature ) );
-		if ( FAILED( hr ) )
-		{
-			console::error( "Failed to create selection renderer root signature. hr is {}", hr );
-		}
-	}
-}
-
-void SelectionRenderer::createRectPipelineState()
-{
-	if ( m_device.isValid() )
-	{
-		// Check if shaders are compiled
-		const auto *vsBlob = m_shaderManager.getShaderBlob( m_rectVertexShader );
-		const auto *psBlob = m_shaderManager.getShaderBlob( m_rectPixelShader );
-
-		if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
-		{
-			console::warning( "Rectangle shaders not ready, will create pipeline state later" );
-			return;
-		}
-
-		// Define input layout for rectangle vertices (just position)
-		D3D12_INPUT_ELEMENT_DESC inputElements[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		// Create blend state for transparent rectangle overlay
-		D3D12_BLEND_DESC blendDesc = {};
-		blendDesc.AlphaToCoverageEnable = FALSE;
-		blendDesc.IndependentBlendEnable = FALSE;
-		blendDesc.RenderTarget[0].BlendEnable = TRUE;
-		blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
-		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-		// Create rasterizer state
-		D3D12_RASTERIZER_DESC rasterizerDesc = {};
-		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-		rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-		rasterizerDesc.FrontCounterClockwise = FALSE;
-		rasterizerDesc.DepthBias = 0;
-		rasterizerDesc.DepthBiasClamp = 0.0f;
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-		rasterizerDesc.DepthClipEnable = TRUE;
-		rasterizerDesc.MultisampleEnable = FALSE;
-		rasterizerDesc.AntialiasedLineEnable = FALSE;
-		rasterizerDesc.ForcedSampleCount = 0;
-		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-		// Disable depth testing for UI overlay
-		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-		depthStencilDesc.DepthEnable = FALSE;
-		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		depthStencilDesc.StencilEnable = FALSE;
-
-		// Create pipeline state
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.pRootSignature = m_rootSignature.Get();
-		psoDesc.VS = { vsBlob->blob->GetBufferPointer(), vsBlob->blob->GetBufferSize() };
-		psoDesc.PS = { psBlob->blob->GetBufferPointer(), psBlob->blob->GetBufferSize() };
-		psoDesc.BlendState = blendDesc;
-		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.RasterizerState = rasterizerDesc;
-		psoDesc.DepthStencilState = depthStencilDesc;
-		psoDesc.InputLayout = { inputElements, _countof( inputElements ) };
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		psoDesc.NumRenderTargets = 1;
-		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer
-		psoDesc.SampleDesc.Count = 1;
-		psoDesc.SampleDesc.Quality = 0;
-
-		HRESULT hr = m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_rectPipelineState ) );
-		if ( FAILED( hr ) )
-		{
-			console::error( "Failed to create rectangle pipeline state. hr was {}", hr );
-		}
-	}
 }
 
 void SelectionRenderer::createConstantBuffer()
@@ -640,81 +478,6 @@ void SelectionRenderer::createRectVertexBuffer()
 		m_rectIndexBufferView.BufferLocation = m_rectIndexBuffer->GetGPUVirtualAddress();
 		m_rectIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
 		m_rectIndexBufferView.SizeInBytes = indexBufferSize;
-	}
-}
-
-void SelectionRenderer::createOutlinePipelineState()
-{
-	if ( m_device.isValid() )
-	{
-		// Check if shaders are compiled
-		const auto *vsBlob = m_shaderManager.getShaderBlob( m_outlineVertexShader );
-		const auto *psBlob = m_shaderManager.getShaderBlob( m_outlinePixelShader );
-
-		if ( !vsBlob || !psBlob || !vsBlob->isValid() || !psBlob->isValid() )
-		{
-			console::warning( "Outline shaders not ready, will create pipeline state later" );
-			return;
-		}
-
-		// Define input layout for outline vertices (position, normal, UV)
-		D3D12_INPUT_ELEMENT_DESC inputElements[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		// Create blend state for outline rendering (no blending, replace)
-		D3D12_BLEND_DESC blendDesc = {};
-		blendDesc.AlphaToCoverageEnable = FALSE;
-		blendDesc.IndependentBlendEnable = FALSE;
-		blendDesc.RenderTarget[0].BlendEnable = FALSE;
-		blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
-		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-		// Create rasterizer state for outline (wireframe or inflated geometry)
-		D3D12_RASTERIZER_DESC rasterizerDesc = {};
-		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
-		rasterizerDesc.FrontCounterClockwise = FALSE;
-		rasterizerDesc.DepthBias = 0;
-		rasterizerDesc.DepthBiasClamp = 0.0f;
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-		rasterizerDesc.DepthClipEnable = TRUE;
-		rasterizerDesc.MultisampleEnable = FALSE;
-		rasterizerDesc.AntialiasedLineEnable = FALSE;
-		rasterizerDesc.ForcedSampleCount = 0;
-		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-		// Disable depth testing for selection outline rendering (viewport render targets don't have depth buffers)
-		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-		depthStencilDesc.DepthEnable = FALSE;
-		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		depthStencilDesc.StencilEnable = FALSE;
-
-		// Create pipeline state
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.pRootSignature = m_rootSignature.Get();
-		psoDesc.VS = { vsBlob->blob->GetBufferPointer(), vsBlob->blob->GetBufferSize() };
-		psoDesc.PS = { psBlob->blob->GetBufferPointer(), psBlob->blob->GetBufferSize() };
-		psoDesc.BlendState = blendDesc;
-		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.RasterizerState = rasterizerDesc;
-		psoDesc.DepthStencilState = depthStencilDesc;
-		psoDesc.InputLayout = { inputElements, _countof( inputElements ) };
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		psoDesc.NumRenderTargets = 1;
-		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN; // No depth buffer - viewport render targets don't have depth buffers
-		psoDesc.SampleDesc.Count = 1;
-		psoDesc.SampleDesc.Quality = 0;
-
-		HRESULT hr = m_device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_outlinePipelineState ) );
-		if ( FAILED( hr ) )
-		{
-			console::error( "Failed to create outline pipeline state. hr was {}", hr );
-		}
 	}
 }
 

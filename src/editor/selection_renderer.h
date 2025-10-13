@@ -5,6 +5,7 @@
 #include "math/vec.h"
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/material_system/material_system.h"
 #include "platform/dx12/dx12_device.h"
 #include "runtime/entity.h"
 
@@ -17,6 +18,11 @@ class Scene;
 namespace systems
 {
 class SystemManager;
+}
+
+namespace graphics::material_system
+{
+class MaterialInstance;
 }
 
 namespace editor
@@ -38,7 +44,7 @@ struct SelectionStyle
 class SelectionRenderer
 {
 public:
-	SelectionRenderer( dx12::Device &device, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager = nullptr );
+	SelectionRenderer( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, shader_manager::ShaderManager &shaderManager, systems::SystemManager *systemManager = nullptr );
 	~SelectionRenderer() = default;
 
 	// No copy/move for now
@@ -75,21 +81,17 @@ public:
 
 private:
 	dx12::Device &m_device;
+	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
 	shader_manager::ShaderManager &m_shaderManager;
 	systems::SystemManager *m_systemManager = nullptr;
 	SelectionStyle m_style;
 
-	// Shader handles
-	shader_manager::ShaderHandle m_outlineVertexShader = shader_manager::INVALID_SHADER_HANDLE;
-	shader_manager::ShaderHandle m_outlinePixelShader = shader_manager::INVALID_SHADER_HANDLE;
-	shader_manager::ShaderHandle m_rectVertexShader = shader_manager::INVALID_SHADER_HANDLE;
-	shader_manager::ShaderHandle m_rectPixelShader = shader_manager::INVALID_SHADER_HANDLE;
+	// Material instances for rendering
+	std::unique_ptr<graphics::material_system::MaterialInstance> m_outlineMaterialInstance;
+	std::unique_ptr<graphics::material_system::MaterialInstance> m_rectMaterialInstance;
 
-	// Rendering resources
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_outlinePipelineState;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_rectPipelineState;
+	// Constant buffer for rect rendering (outline uses root constants via MaterialInstance)
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 	void *m_constantBufferData = nullptr;
 
 	// Rectangle rendering buffers
@@ -107,9 +109,6 @@ private:
 	};
 
 	void setupRenderingResources();
-	void createRootSignature();
-	void createOutlinePipelineState();
-	void createRectPipelineState();
 	void createConstantBuffer();
 	void createRectVertexBuffer();
 
