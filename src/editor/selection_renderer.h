@@ -6,6 +6,7 @@
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "graphics/material_system/material_system.h"
+#include "graphics/material_system/material_instance.h"
 #include "platform/dx12/dx12_device.h"
 #include "runtime/entity.h"
 
@@ -18,11 +19,6 @@ class Scene;
 namespace systems
 {
 class SystemManager;
-}
-
-namespace graphics::material_system
-{
-class MaterialInstance;
 }
 
 namespace editor

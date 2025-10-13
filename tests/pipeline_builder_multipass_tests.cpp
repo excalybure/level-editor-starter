@@ -72,7 +72,7 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 	std::ofstream( testDir / "materials.json" ) << jsonContent;
 
 	MaterialSystem materialSystem;
-	if ( !materialSystem.initialize( (testDir / "materials.json").string() ) )
+	if ( !materialSystem.initialize( ( testDir / "materials.json" ).string() ) )
 	{
 		WARN( "MaterialSystem initialization failed" );
 		fs::remove_all( testDir );
@@ -155,7 +155,7 @@ TEST_CASE( "PipelineBuilder builds different PSOs for different passes", "[pipel
 	std::ofstream( testDir / "materials.json" ) << jsonContent;
 
 	MaterialSystem materialSystem;
-	if ( !materialSystem.initialize( (testDir / "materials.json").string() ) )
+	if ( !materialSystem.initialize( ( testDir / "materials.json" ).string() ) )
 	{
 		WARN( "MaterialSystem initialization failed" );
 		fs::remove_all( testDir );
