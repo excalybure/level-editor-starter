@@ -154,9 +154,9 @@ TEST_CASE( "MaterialParser parses pass-specific topology", "[material-parser][T3
 	REQUIRE( material.passes[0].topology == D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE );
 }
 
-TEST_CASE( "MaterialParser falls back to legacy single-pass format", "[material-parser][T302][unit]" )
+TEST_CASE( "MaterialParser rejects legacy single-pass format", "[material-parser][T302][unit]" )
 {
-	// Arrange - JSON without passes array (legacy format)
+	// Arrange - JSON without passes array (legacy format - no longer supported)
 	const json materialJson = {
 		{ "id", "legacy_material" },
 		{ "pass", "forward" },
@@ -174,12 +174,9 @@ TEST_CASE( "MaterialParser falls back to legacy single-pass format", "[material-
 	// Act
 	const auto material = MaterialParser::parse( materialJson );
 
-	// Assert - legacy format converted to multi-pass with single pass
+	// Assert - legacy format is rejected (returns empty material with no passes)
 	REQUIRE( material.id == "legacy_material" );
-	REQUIRE( material.passes.size() == 1 );
-	REQUIRE( material.passes[0].passName == "forward" );
-	REQUIRE( material.passes[0].shaders.size() == 2 );
-	REQUIRE( material.passes[0].states.rasterizer == "solid_back" );
+	REQUIRE( material.passes.empty() ); // Should be empty since legacy format not supported
 }
 
 TEST_CASE( "MaterialParser handles missing pass name gracefully", "[material-parser][T302][unit]" )

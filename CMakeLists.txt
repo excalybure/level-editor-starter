@@ -59,7 +59,7 @@ add_library(graphics STATIC
   src/graphics/gpu/material_gpu.cpp
   src/graphics/gpu/mesh_gpu.cpp
   src/graphics/grid/grid.cpp
-  src/graphics/renderer/renderer.cpp
+  src/graphics/renderer/immediate_renderer.cpp
   src/graphics/shader_manager/shader_compiler.cpp
   src/graphics/shader_manager/shader_manager.cpp
   src/graphics/material_system/material_system.cpp
@@ -257,7 +257,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/picking_tests.cpp
     tests/picking_selection_integration_tests.cpp
     tests/dx12_tests.cpp
-    tests/renderer_tests.cpp
+    tests/immediate_renderer_tests.cpp
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp
     tests/viewport_tests.cpp
@@ -272,7 +272,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/selection_tests.cpp
     tests/selection_renderer_tests.cpp
     tests/app_tests.cpp
-    tests/renderer_integration_tests.cpp
+    tests/immediate_renderer_integration_tests.cpp
     tests/integration_tests.cpp
     tests/ui_tests.cpp
     tests/ui_scene_operations_tests.cpp

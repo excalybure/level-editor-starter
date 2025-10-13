@@ -302,4 +302,3 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 	// None should render: grandparent invisible makes entire subtree invisible
 	REQUIRE_NOTHROW( system.render( scene, camera ) );
 }
-

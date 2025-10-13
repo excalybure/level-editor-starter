@@ -732,19 +732,21 @@ TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T0
 	// Arrange - minimal material with required fields (using inline shader objects)
 	const json materialJson = json::parse( R"({
         "id": "basic_lit",
-        "pass": "forward",
-        "shaders": {
-            "vertex": {
-                "file": "shaders/simple.hlsl",
-                "entry": "VSMain",
-                "profile": "vs_6_0"
-            },
-            "pixel": {
-                "file": "shaders/simple.hlsl",
-                "entry": "PSMain",
-                "profile": "ps_6_0"
+        "passes": [{
+            "name": "forward",
+            "shaders": {
+                "vertex": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "VSMain",
+                    "profile": "vs_6_0"
+                },
+                "pixel": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "PSMain",
+                    "profile": "ps_6_0"
+                }
             }
-        }
+        }]
     })" );
 
 	// Act
@@ -785,36 +787,38 @@ TEST_CASE( "MaterialParser parses material with all optional fields", "[material
 	// Arrange - material with all optional fields populated (using inline shader objects)
 	const json materialJson = json::parse( R"({
         "id": "advanced_lit",
-        "pass": "deferred",
-        "shaders": {
-            "vertex": {
-                "file": "shaders/simple.hlsl",
-                "entry": "VSMain",
-                "profile": "vs_6_0"
+        "passes": [{
+            "name": "deferred",
+            "shaders": {
+                "vertex": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "VSMain",
+                    "profile": "vs_6_0"
+                },
+                "pixel": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "PSMain",
+                    "profile": "ps_6_0"
+                }
             },
-            "pixel": {
-                "file": "shaders/simple.hlsl",
-                "entry": "PSMain",
-                "profile": "ps_6_0"
+            "parameters": [
+                {
+                    "name": "roughness",
+                    "type": "float",
+                    "defaultValue": 0.5
+                },
+                {
+                    "name": "tint",
+                    "type": "float4",
+                    "defaultValue": [1.0, 0.8, 0.6, 1.0]
+                }
+            ],
+            "states": {
+                "rasterizer": "cull_back",
+                "depthStencil": "depth_test_write",
+                "blend": "alpha_blend"
             }
-        },
-        "parameters": [
-            {
-                "name": "roughness",
-                "type": "float",
-                "defaultValue": 0.5
-            },
-            {
-                "name": "tint",
-                "type": "float4",
-                "defaultValue": [1.0, 0.8, 0.6, 1.0]
-            }
-        ],
-        "states": {
-            "rasterizer": "cull_back",
-            "depthStencil": "depth_test_write",
-            "blend": "alpha_blend"
-        },
+        }],
         "enabled": false,
         "versionHash": "abc123"
     })" );
@@ -858,19 +862,21 @@ TEST_CASE( "ReferenceValidator detects undefined pass reference", "[reference-va
 	// Arrange - material referencing non-existent pass
 	const json materialJson = json::parse( R"({
         "id": "invalid_pass_mat",
-        "pass": "nonexistent_pass",
-        "shaders": {
-            "vertex": {
-                "file": "shaders/simple.hlsl",
-                "entry": "VSMain",
-                "profile": "vs_5_1"
-            },
-            "pixel": {
-                "file": "shaders/simple.hlsl",
-                "entry": "PSMain",
-                "profile": "ps_5_1"
+        "passes": [{
+            "name": "nonexistent_pass",
+            "shaders": {
+                "vertex": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "VSMain",
+                    "profile": "vs_5_1"
+                },
+                "pixel": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "PSMain",
+                    "profile": "ps_5_1"
+                }
             }
-        }
+        }]
     })" );
 
 	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
@@ -901,22 +907,24 @@ TEST_CASE( "ReferenceValidator detects undefined state reference", "[reference-v
 	// Arrange - material referencing non-existent rasterizer state
 	const json materialJson = json::parse( R"({
         "id": "invalid_state_mat",
-        "pass": "forward",
-        "shaders": {
-            "vertex": {
-                "file": "shaders/simple.hlsl",
-                "entry": "VSMain",
-                "profile": "vs_5_1"
+        "passes": [{
+            "name": "forward",
+            "shaders": {
+                "vertex": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "VSMain",
+                    "profile": "vs_5_1"
+                },
+                "pixel": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "PSMain",
+                    "profile": "ps_5_1"
+                }
             },
-            "pixel": {
-                "file": "shaders/simple.hlsl",
-                "entry": "PSMain",
-                "profile": "ps_5_1"
+            "states": {
+                "rasterizer": "missing_state"
             }
-        },
-        "states": {
-            "rasterizer": "missing_state"
-        }
+        }]
     })" );
 
 	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
@@ -950,19 +958,21 @@ TEST_CASE( "ReferenceValidator detects undefined shader reference", "[reference-
 	// Note: File existence is now validated during parsing, so we expect an exception
 	const json materialJson = json::parse( R"({
         "id": "invalid_shader_mat",
-        "pass": "forward",
-        "shaders": {
-            "vertex": {
-                "file": "shaders/missing.hlsl",
-                "entry": "VSMain",
-                "profile": "vs_5_1"
-            },
-            "pixel": {
-                "file": "shaders/simple.hlsl",
-                "entry": "PSMain",
-                "profile": "ps_5_1"
+        "passes": [{
+            "name": "forward",
+            "shaders": {
+                "vertex": {
+                    "file": "shaders/missing.hlsl",
+                    "entry": "VSMain",
+                    "profile": "vs_5_1"
+                },
+                "pixel": {
+                    "file": "shaders/simple.hlsl",
+                    "entry": "PSMain",
+                    "profile": "ps_5_1"
+                }
             }
-        }
+        }]
     })" );
 
 	// Act & Assert - parsing should throw because file doesn't exist
@@ -1945,8 +1955,9 @@ TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeli
 			"materials": [
 				{
 					"id": "wireframe_material",
-					"pass": "forward",
-					"shaders": {
+					"passes": [{
+						"name": "forward",
+						"shaders": {
 						"vertex": {
 							"file": "shaders/simple.hlsl",
 							"entry": "VSMain",
@@ -1955,12 +1966,13 @@ TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeli
 						"pixel": {
 							"file": "shaders/simple.hlsl",
 							"entry": "PSMain",
-							"profile": "ps_5_0"
+								"profile": "ps_5_0"
+							}
+						},
+						"states": {
+							"rasterizer": "Wireframe"
 						}
-					},
-					"states": {
-						"rasterizer": "Wireframe"
-					}
+					}]
 				}
 			],
 			"renderPasses": []
@@ -1984,7 +1996,7 @@ TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeli
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use wireframe rasterizer state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem );
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2022,22 +2034,24 @@ TEST_CASE( "PipelineBuilder uses depth stencil state from MaterialSystem", "[pip
 			"materials": [
 				{
 					"id": "depth_readonly_material",
-					"pass": "forward",
-					"shaders": {
-						"vertex": {
-							"file": "shaders/simple.hlsl",
-							"entry": "VSMain",
-							"profile": "vs_5_0"
+					"passes": [{
+						"name": "forward",
+						"shaders": {
+							"vertex": {
+								"file": "shaders/simple.hlsl",
+								"entry": "VSMain",
+								"profile": "vs_5_0"
+							},
+							"pixel": {
+								"file": "shaders/simple.hlsl",
+								"entry": "PSMain",
+								"profile": "ps_5_0"
+							}
 						},
-						"pixel": {
-							"file": "shaders/simple.hlsl",
-							"entry": "PSMain",
-							"profile": "ps_5_0"
+						"states": {
+							"depthStencil": "DepthReadOnly"
 						}
-					},
-					"states": {
-						"depthStencil": "DepthReadOnly"
-					}
+					}]
 				}
 			],
 			"renderPasses": []
@@ -2061,7 +2075,7 @@ TEST_CASE( "PipelineBuilder uses depth stencil state from MaterialSystem", "[pip
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use depth-read-only state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem );
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2106,22 +2120,24 @@ TEST_CASE( "PipelineBuilder uses blend state from MaterialSystem", "[pipeline-bu
 			"materials": [
 				{
 					"id": "alpha_blend_material",
-					"pass": "forward",
-					"shaders": {
-						"vertex": {
-							"file": "shaders/simple.hlsl",
-							"entry": "VSMain",
-							"profile": "vs_5_0"
+					"passes": [{
+						"name": "forward",
+						"shaders": {
+							"vertex": {
+								"file": "shaders/simple.hlsl",
+								"entry": "VSMain",
+								"profile": "vs_5_0"
+							},
+							"pixel": {
+								"file": "shaders/simple.hlsl",
+								"entry": "PSMain",
+								"profile": "ps_5_0"
+							}
 						},
-						"pixel": {
-							"file": "shaders/simple.hlsl",
-							"entry": "PSMain",
-							"profile": "ps_5_0"
+						"states": {
+							"blend": "AlphaBlend"
 						}
-					},
-					"states": {
-						"blend": "AlphaBlend"
-					}
+					}]
 				}
 			],
 			"renderPasses": []
@@ -2145,7 +2161,7 @@ TEST_CASE( "PipelineBuilder uses blend state from MaterialSystem", "[pipeline-bu
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use alpha blend state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem );
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2256,24 +2272,26 @@ TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end
 			"materials": [
 				{
 					"id": "IntegrationTestMaterial",
-					"pass": "forward",
-					"shaders": {
-						"vertex": {
-							"file": "shaders/simple.hlsl",
-							"entry": "VSMain",
-							"profile": "vs_6_0"
+					"passes": [{
+						"name": "forward",
+						"shaders": {
+							"vertex": {
+								"file": "shaders/simple.hlsl",
+								"entry": "VSMain",
+								"profile": "vs_6_0"
+							},
+							"pixel": {
+								"file": "shaders/simple.hlsl",
+								"entry": "PSMain",
+								"profile": "ps_6_0"
+							}
 						},
-						"pixel": {
-							"file": "shaders/simple.hlsl",
-							"entry": "PSMain",
-							"profile": "ps_6_0"
+						"states": {
+							"rasterizer": "solid_back",
+							"depthStencil": "depth_test_write",
+							"blend": "opaque"
 						}
-					},
-					"states": {
-						"rasterizer": "solid_back",
-						"depthStencil": "depth_test_write",
-						"blend": "opaque"
-					}
+					}]
 				}
 			],
 			"renderPasses": [
@@ -2328,21 +2346,23 @@ TEST_CASE( "MaterialParser parses shader with all fields present", "[material-pa
 	// Arrange - material with inline shader objects containing all fields
 	const json materialJson = json::parse( R"({
 		"id": "shader_test",
-		"pass": "forward",
-		"shaders": {
-			"vs": {
-				"file": "shaders/simple.hlsl",
-				"entry": "VSMain",
-				"profile": "vs_6_7",
-				"defines": ["IS_PREPASS", "USE_NORMALS"]
-			},
-			"ps": {
-				"file": "shaders/simple.hlsl",
-				"entry": "PSMain",
-				"profile": "ps_6_7",
-				"defines": ["ENABLE_LIGHTING"]
+		"passes": [{
+			"name": "forward",
+			"shaders": {
+				"vs": {
+					"file": "shaders/simple.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_6_7",
+					"defines": ["IS_PREPASS", "USE_NORMALS"]
+				},
+				"ps": {
+					"file": "shaders/simple.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_6_7",
+					"defines": ["ENABLE_LIGHTING"]
+				}
 			}
-		}
+		}]
 	})" );
 
 	// Act
@@ -2386,13 +2406,15 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 	// Arrange - shader with only required fields (file and profile) using existing file
 	const json materialJson = json::parse( R"({
 		"id": "minimal_shader_test",
-		"pass": "forward",
-		"shaders": {
-			"vs": {
-				"file": "shaders/simple.hlsl",
-				"profile": "vs_5_0"
+		"passes": [{
+			"name": "forward",
+			"shaders": {
+				"vs": {
+					"file": "shaders/simple.hlsl",
+					"profile": "vs_5_0"
+				}
 			}
-		}
+		}]
 	})" );
 
 	// Act
@@ -2434,19 +2456,21 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 	// Arrange - material with valid inline shaders (file paths exist in project)
 	const json materialJson = json::parse( R"({
 		"id": "test_valid_shaders",
-		"pass": "forward",
-		"shaders": {
-			"vs": {
-				"file": "shaders/simple.hlsl",
-				"entry": "VSMain",
-				"profile": "vs_5_0"
-			},
-			"ps": {
-				"file": "shaders/simple.hlsl",
-				"entry": "PSMain",
-				"profile": "ps_5_0"
+		"passes": [{
+			"name": "forward",
+			"shaders": {
+				"vs": {
+					"file": "shaders/simple.hlsl",
+					"entry": "VSMain",
+					"profile": "vs_5_0"
+				},
+				"ps": {
+					"file": "shaders/simple.hlsl",
+					"entry": "PSMain",
+					"profile": "ps_5_0"
+				}
 			}
-		}
+		}]
 	})" );
 
 	// Act
@@ -3281,11 +3305,13 @@ TEST_CASE( "MaterialParser extracts vertexFormat from JSON", "[vertex-format][T2
 	// Arrange - JSON with vertexFormat field
 	const std::string jsonStr = R"({
 		"id": "test_material",
-		"pass": "forward",
 		"vertexFormat": "PositionNormalUV",
-		"shaders": {
-			"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
-		}
+		"passes": [{
+			"name": "forward",
+			"shaders": {
+				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+			}
+		}]
 	})";
 	const json j = json::parse( jsonStr );
 
@@ -3302,10 +3328,12 @@ TEST_CASE( "MaterialParser defaults vertexFormat to empty string if absent", "[v
 	// Arrange - JSON without vertexFormat field
 	const std::string jsonStr = R"({
 		"id": "test_material",
-		"pass": "forward",
-		"shaders": {
-			"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
-		}
+		"passes": [{
+			"name": "forward",
+			"shaders": {
+				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+			}
+		}]
 	})";
 	const json j = json::parse( jsonStr );
 
@@ -3339,12 +3367,14 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 		},
 		"materials": [{
 			"id": "lit_material",
-			"pass": "forward",
 			"vertexFormat": "PositionNormalUV",
-			"shaders": {
-				"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_0" },
-				"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_0" }
-			}
+			"passes": [{
+				"name": "forward",
+				"shaders": {
+					"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_0" },
+					"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_0" }
+				}
+			}]
 		}],
 		"renderPasses": []
 	})";
@@ -3411,20 +3441,22 @@ TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builde
 			"materials": [
 				{
 					"id": "lit_material",
-					"pass": "forward",
 					"vertexFormat": "PositionNormalUV",
-					"shaders": {
-						"vertex": {
-							"file": "shaders/grid.hlsl",
-							"entry": "VSMain",
-							"profile": "vs_5_0"
-						},
-						"pixel": {
-							"file": "shaders/grid.hlsl",
-							"entry": "PSMain",
-							"profile": "ps_5_0"
+					"passes": [{
+						"name": "forward",
+						"shaders": {
+							"vertex": {
+								"file": "shaders/grid.hlsl",
+								"entry": "VSMain",
+								"profile": "vs_5_0"
+							},
+							"pixel": {
+								"file": "shaders/grid.hlsl",
+								"entry": "PSMain",
+								"profile": "ps_5_0"
+							}
 						}
-					}
+					}]
 				}
 			],
 			"renderPasses": []
@@ -3448,7 +3480,7 @@ TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builde
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use PositionNormalUV vertex format)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem );
+	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using vertex format
 	REQUIRE( pso != nullptr );
@@ -3485,9 +3517,7 @@ TEST_CASE( "MaterialParser extracts primitiveTopology from JSON", "[material-par
 	// Arrange - material JSON with primitiveTopology: Line
 	const json materialJson = {
 		{ "id", "line_material" },
-		{ "pass", "forward" },
-		{ "primitiveTopology", "Line" },
-		{ "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } }
+		{ "passes", json::array( { { { "name", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } } } } ) }
 	};
 
 	// Act
@@ -3507,8 +3537,7 @@ TEST_CASE( "MaterialParser defaults primitiveTopology to TRIANGLE when absent", 
 	// Arrange - material JSON without primitiveTopology field
 	const json materialJson = {
 		{ "id", "default_material" },
-		{ "pass", "forward" },
-		{ "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } }
+		{ "passes", json::array( { { { "name", "forward" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } } } } ) }
 	};
 
 	// Act
@@ -3531,7 +3560,7 @@ TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-s
 	fs::create_directories( testDir );
 
 	const json materialsJson = {
-		{ "materials", json::array( { { { "id", "line_material" }, { "pass", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/grid.hlsl" }, { "entry", "VSMain" }, { "profile", "vs_6_0" } } }, { "pixel", { { "file", "shaders/grid.hlsl" }, { "entry", "PSMain" }, { "profile", "ps_6_0" } } } } } } } ) }
+		{ "materials", json::array( { { { "id", "line_material" }, { "passes", json::array( { { { "name", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/grid.hlsl" }, { "entry", "VSMain" }, { "profile", "vs_6_0" } } }, { "pixel", { { "file", "shaders/grid.hlsl" }, { "entry", "PSMain" }, { "profile", "ps_6_0" } } } } } } } ) } } } ) }
 	};
 
 	const auto materialsPath = testDir / "materials.json";
@@ -3582,22 +3611,24 @@ TEST_CASE( "PipelineBuilder uses sample desc from RenderTargetStateBlock", "[pip
 		},
 		"materials": [{
 			"id": "msaa_material",
-			"pass": "forward",
-			"states": {
-				"renderTarget": "MSAA4x"
-			},
-			"shaders": {
-				"vertex": {
-					"file": "shaders/grid.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_6_0"
+			"passes": [{
+				"name": "forward",
+				"states": {
+					"renderTarget": "MSAA4x"
 				},
-				"pixel": {
-					"file": "shaders/grid.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_6_0"
+				"shaders": {
+					"vertex": {
+						"file": "shaders/grid.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_6_0"
+					},
+					"pixel": {
+						"file": "shaders/grid.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_6_0"
+					}
 				}
-			}
+			}]
 		}],
 		"renderPasses": []
 	})";
