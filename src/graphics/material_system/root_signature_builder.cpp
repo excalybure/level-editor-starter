@@ -95,9 +95,13 @@ RootSignatureSpec RootSignatureBuilder::Build(
 	}
 
 	// Merge and validate bindings (removes duplicates, validates conflicts)
-	spec.resourceBindings = MergeAndValidateBindings( spec.resourceBindings );
+	const auto merged = MergeAndValidateBindings( spec.resourceBindings );
 
-	// Sort bindings for deterministic output
+	// Group bindings into CBVs vs descriptor table resources
+	GroupBindingsForRootSignature( merged, spec );
+
+	// Populate legacy unified vector for backward compatibility
+	spec.resourceBindings = merged;
 	SortBindings( spec.resourceBindings );
 
 	return spec;
@@ -273,6 +277,38 @@ std::vector<ResourceBinding> RootSignatureBuilder::MergeAndValidateBindings(
 	}
 
 	return merged;
+}
+
+void RootSignatureBuilder::GroupBindingsForRootSignature(
+	const std::vector<ResourceBinding> &merged,
+	RootSignatureSpec &outSpec )
+{
+	// Clear output vectors
+	outSpec.cbvRootDescriptors.clear();
+	outSpec.descriptorTableResources.clear();
+
+	// Separate bindings by type
+	for ( const auto &binding : merged )
+	{
+		if ( binding.type == ResourceBindingType::CBV )
+		{
+			// CBVs use root descriptors (2 DWORDs per CBV)
+			outSpec.cbvRootDescriptors.push_back( binding );
+		}
+		else
+		{
+			// SRVs, UAVs, Samplers use descriptor tables (1 DWORD per table)
+			outSpec.descriptorTableResources.push_back( binding );
+		}
+	}
+
+	// Sort both groups for deterministic output
+	std::sort( outSpec.cbvRootDescriptors.begin(), outSpec.cbvRootDescriptors.end() );
+	std::sort( outSpec.descriptorTableResources.begin(), outSpec.descriptorTableResources.end() );
+
+	console::info( "RootSignatureBuilder: Grouped {} CBVs and {} descriptor table resources",
+		outSpec.cbvRootDescriptors.size(),
+		outSpec.descriptorTableResources.size() );
 }
 
 } // namespace graphics::material_system

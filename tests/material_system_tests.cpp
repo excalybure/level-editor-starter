@@ -1726,6 +1726,63 @@ TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "
 	REQUIRE( frameConstantsCount == 1 ); // Should appear exactly once
 }
 
+TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[root-signature][phase2][unit]" )
+{
+	// This test verifies that bindings are correctly separated into:
+	// - cbvRootDescriptors (CBVs use root descriptors, 2 DWORDs each)
+	// - descriptorTableResources (SRVs/UAVs/Samplers use descriptor tables, 1 DWORD per table)
+
+	// Arrange
+	shader_manager::ShaderManager shaderManager;
+	const std::unordered_map<std::string, std::string> emptyDefines;
+
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+
+	shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		shader_manager::ShaderType::Vertex );
+
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.file = "shaders/simple.hlsl";
+	vsRef.entryPoint = "VSMain";
+	vsRef.profile = "vs_5_1";
+	pass.shaders.push_back( vsRef );
+
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+
+	// Act
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build(
+		pass,
+		&shaderManager,
+		&reflectionCache );
+
+	// Assert - FrameConstants is a CBV, should be in cbvRootDescriptors
+	REQUIRE( !spec.cbvRootDescriptors.empty() );
+	REQUIRE( spec.cbvRootDescriptors.size() == 1 );
+	REQUIRE( spec.cbvRootDescriptors[0].name == "FrameConstants" );
+	REQUIRE( spec.cbvRootDescriptors[0].type == graphics::material_system::ResourceBindingType::CBV );
+	REQUIRE( spec.cbvRootDescriptors[0].slot == 0 );
+
+	// Assert - simple.hlsl has no SRVs/UAVs/Samplers, so descriptorTableResources should be empty
+	REQUIRE( spec.descriptorTableResources.empty() );
+
+	// Assert - legacy unified vector should still be populated for backward compatibility
+	REQUIRE( !spec.resourceBindings.empty() );
+	REQUIRE( spec.resourceBindings.size() == 1 );
+}
+
 // ============================================================================
 // T214: Root Signature Cache
 // ============================================================================

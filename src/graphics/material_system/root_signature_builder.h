@@ -16,6 +16,15 @@ namespace graphics::material_system
 // Root signature specification
 struct RootSignatureSpec
 {
+	// CBVs use root descriptors (2 DWORDs per CBV)
+	std::vector<ResourceBinding> cbvRootDescriptors;
+
+	// SRVs, UAVs, and Samplers use descriptor tables (1 DWORD per table)
+	// Will be organized into tables in a future phase
+	std::vector<ResourceBinding> descriptorTableResources;
+
+	// Legacy: unified bindings list (for backward compatibility)
+	// Will be deprecated once all consumers migrate to split vectors
 	std::vector<ResourceBinding> resourceBindings;
 };
 
@@ -59,6 +68,15 @@ private:
 	// @return Merged bindings with duplicates removed
 	static std::vector<ResourceBinding> MergeAndValidateBindings(
 		const std::vector<ResourceBinding> &bindings );
+
+	// Group bindings into CBVs (root descriptors) vs other resources (descriptor tables)
+	// CBVs are placed in root signature as root descriptors (2 DWORDs each)
+	// SRVs, UAVs, Samplers are placed in descriptor tables (1 DWORD per table)
+	// @param merged - Merged bindings from all shaders
+	// @param outSpec - RootSignatureSpec to populate with grouped bindings
+	static void GroupBindingsForRootSignature(
+		const std::vector<ResourceBinding> &merged,
+		RootSignatureSpec &outSpec );
 };
 
 } // namespace graphics::material_system
