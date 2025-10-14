@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <unordered_map>
+#include <shared_mutex>
 
 namespace graphics::material_system
 {
@@ -46,6 +47,7 @@ private:
 	};
 
 	std::unordered_map<PSOHash, CacheEntry> m_cache;
+	mutable std::shared_mutex m_mutex;
 };
 
 } // namespace graphics::material_system

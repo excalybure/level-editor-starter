@@ -66,6 +66,7 @@ PSOHash computePSOHash( const MaterialDefinition &material, const std::string &p
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineCache::get( PSOHash hash ) const
 {
+	std::shared_lock<std::shared_mutex> lock( m_mutex );
 	const auto it = m_cache.find( hash );
 	if ( it == m_cache.end() )
 		return nullptr;
@@ -75,6 +76,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineCache::get( PSOHash hash ) c
 
 void PipelineCache::store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineState> pso, const std::string &materialId, const std::string &passName )
 {
+	std::unique_lock<std::shared_mutex> lock( m_mutex );
 	// Check for hash collision (same hash, different material/pass)
 	const auto it = m_cache.find( hash );
 	if ( it != m_cache.end() )
@@ -105,6 +107,7 @@ void PipelineCache::store( PSOHash hash, Microsoft::WRL::ComPtr<ID3D12PipelineSt
 
 void PipelineCache::clear()
 {
+	std::unique_lock<std::shared_mutex> lock( m_mutex );
 	m_cache.clear();
 }
 
