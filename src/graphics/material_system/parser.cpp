@@ -75,11 +75,6 @@ MaterialDefinition MaterialParser::parse( const nlohmann::json &jsonMaterial )
 		material.enabled = jsonMaterial["enabled"].get<bool>();
 	}
 
-	if ( jsonMaterial.contains( "versionHash" ) && jsonMaterial["versionHash"].is_string() )
-	{
-		material.versionHash = jsonMaterial["versionHash"].get<std::string>();
-	}
-
 	return material;
 }
 

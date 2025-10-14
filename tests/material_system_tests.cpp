@@ -779,7 +779,6 @@ TEST_CASE( "MaterialParser parses minimal valid material", "[material-parser][T0
 	REQUIRE( foundPixel );
 
 	REQUIRE( material.passes[0].parameters.empty() );
-	REQUIRE( material.versionHash.empty() );
 }
 
 TEST_CASE( "MaterialParser parses material with all optional fields", "[material-parser][T009][unit]" )
@@ -817,13 +816,10 @@ TEST_CASE( "MaterialParser parses material with all optional fields", "[material
                 "rasterizer": "cull_back",
                 "depthStencil": "depth_test_write",
                 "blend": "alpha_blend"
-            }
-        }],
-        "enabled": false,
-        "versionHash": "abc123"
-    })" );
-
-	// Act
+			}
+		}],
+		"enabled": false
+	})" ); // Act
 	const auto material = graphics::material_system::MaterialParser::parse( materialJson );
 
 	// Assert
@@ -831,7 +827,6 @@ TEST_CASE( "MaterialParser parses material with all optional fields", "[material
 	REQUIRE( material.passes.size() == 1 );
 	REQUIRE( material.passes[0].passName == "deferred" );
 	REQUIRE( material.enabled == false );
-	REQUIRE( material.versionHash == "abc123" );
 
 	// Check shaders
 	REQUIRE( material.passes[0].shaders.size() == 2 );

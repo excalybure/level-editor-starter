@@ -82,7 +82,6 @@ struct MaterialDefinition
 	std::vector<MaterialPass> passes; // Multi-pass support
 	std::string vertexFormat;		  // References VertexFormat.id from MaterialSystem
 	bool enabled = true;
-	std::string versionHash;
 
 	// Query methods
 	const MaterialPass *getPass( const std::string &passName ) const;
