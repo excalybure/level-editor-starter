@@ -21,31 +21,14 @@ struct ShaderBlob;
 namespace renderer
 {
 
-// Simple RGBA color struct for rendering
-// TODO: most likely want to move that to color.h
-struct Color
-{
-	float r, g, b, a;
-
-	constexpr Color() : r( 0 ), g( 0 ), b( 0 ), a( 1 ) {}
-	constexpr Color( float r_, float g_, float b_, float a_ = 1.0f ) : r( r_ ), g( g_ ), b( b_ ), a( a_ ) {}
-
-	static constexpr Color white() noexcept { return Color{ 1, 1, 1, 1 }; }
-	static constexpr Color black() noexcept { return Color{ 0, 0, 0, 1 }; }
-	static constexpr Color red() noexcept { return Color{ 1, 0, 0, 1 }; }
-	static constexpr Color green() noexcept { return Color{ 0, 1, 0, 1 }; }
-	static constexpr Color blue() noexcept { return Color{ 0, 0, 1, 1 }; }
-	static constexpr Color transparent() noexcept { return Color{ 0, 0, 0, 0 }; }
-};
-
 // Simple vertex format for basic rendering
 struct Vertex
 {
 	math::Vec3<> position;
-	Color color;
+	math::Color color;
 
 	constexpr Vertex() = default;
-	constexpr Vertex( const math::Vec3<> &pos, const Color &col ) noexcept
+	constexpr Vertex( const math::Vec3<> &pos, const math::Color &col ) noexcept
 		: position( pos ), color( col ) {}
 };
 
@@ -163,7 +146,7 @@ public:
 	void endFrame();
 
 	// Clear operations
-	void clear( const Color &clearColor = Color{ 0.1f, 0.1f, 0.1f, 1.0f } ) noexcept;
+	void clear( const math::Color &clearColor = math::Color{ 0.1f, 0.1f, 0.1f, 1.0f } ) noexcept;
 	void clearDepth( float depth = 1.0f ) noexcept;
 
 	// Set render state and shaders
@@ -200,8 +183,8 @@ public:
 	void drawIndexed( const std::vector<Vertex> &vertices, const std::vector<uint16_t> &indices, D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST ) noexcept;
 
 	// Convenience drawing methods
-	void drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color = Color::white() ) noexcept;
-	void drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color = Color::white() ) noexcept;
+	void drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const math::Color &color = math::Color::white() ) noexcept;
+	void drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const math::Color &color = math::Color::white() ) noexcept;
 
 	// Resource management
 	void waitForGPU() noexcept;

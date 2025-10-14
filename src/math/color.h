@@ -282,4 +282,20 @@ constexpr auto temperatureToRgb( T kelvin )
 	};
 }
 
+// Simple RGBA color struct for rendering
+struct Color
+{
+	float r, g, b, a;
+
+	constexpr Color() : r( 0 ), g( 0 ), b( 0 ), a( 1 ) {}
+	constexpr Color( float r_, float g_, float b_, float a_ = 1.0f ) : r( r_ ), g( g_ ), b( b_ ), a( a_ ) {}
+
+	static constexpr Color white() noexcept { return Color{ 1, 1, 1, 1 }; }
+	static constexpr Color black() noexcept { return Color{ 0, 0, 0, 1 }; }
+	static constexpr Color red() noexcept { return Color{ 1, 0, 0, 1 }; }
+	static constexpr Color green() noexcept { return Color{ 0, 1, 0, 1 }; }
+	static constexpr Color blue() noexcept { return Color{ 0, 0, 1, 1 }; }
+	static constexpr Color transparent() noexcept { return Color{ 0, 0, 0, 0 }; }
+};
+
 } // namespace math

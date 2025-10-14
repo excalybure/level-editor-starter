@@ -24,7 +24,7 @@ TEST_CASE( "Renderer Vertex Format", "[renderer]" )
 	SECTION( "Vertex can be constructed" )
 	{
 		const math::Vec3<> position{ 1.0f, 2.0f, 3.0f };
-		const renderer::Color color{ 1.0f, 0.5f, 0.0f, 1.0f };
+		const math::Color color{ 1.0f, 0.5f, 0.0f, 1.0f };
 
 		const renderer::Vertex vertex( position, color );
 
@@ -239,9 +239,9 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 
 	// Start with 3 vertices
 	std::vector<renderer::Vertex> verts = {
-		{ { 0, 0, 0 }, renderer::Color::red() },
-		{ { 1, 0, 0 }, renderer::Color::green() },
-		{ { 0, 1, 0 }, renderer::Color::blue() }
+		{ { 0, 0, 0 }, math::Color::red() },
+		{ { 1, 0, 0 }, math::Color::green() },
+		{ { 0, 1, 0 }, math::Color::blue() }
 	};
 	renderer::VertexBuffer vb( device, verts );
 	REQUIRE( vb.getVertexCount() == 3 );
@@ -252,7 +252,7 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 	REQUIRE( vb.getVertexCount() == 3 );
 
 	// Larger update -> count grows
-	verts.push_back( { { 0, 0, 1 }, renderer::Color::white() } );
+	verts.push_back( { { 0, 0, 1 }, math::Color::white() } );
 	vb.update( verts );
 	REQUIRE( vb.getVertexCount() == 4 );
 
@@ -317,9 +317,9 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 					return; // Skip if unsupported
 
 				const std::vector<renderer::Vertex> vertices = {
-					{ math::Vec3<>{ 0.0f, 1.0f, 0.0f }, renderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
-					{ math::Vec3<>{ -1.0f, -1.0f, 0.0f }, renderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
-					{ math::Vec3<>{ 1.0f, -1.0f, 0.0f }, renderer::Color{ 0.0f, 0.0f, 1.0f, 1.0f } }
+					{ math::Vec3<>{ 0.0f, 1.0f, 0.0f }, math::Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
+					{ math::Vec3<>{ -1.0f, -1.0f, 0.0f }, math::Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
+					{ math::Vec3<>{ 1.0f, -1.0f, 0.0f }, math::Color{ 0.0f, 0.0f, 1.0f, 1.0f } }
 				};
 
 				const renderer::VertexBuffer vb( device, vertices );
@@ -438,9 +438,9 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	renderer.beginFrame();
 
 	std::vector<renderer::Vertex> tri = {
-		{ { 0, 0, 0 }, renderer::Color::red() },
-		{ { 1, 0, 0 }, renderer::Color::green() },
-		{ { 0, 1, 0 }, renderer::Color::blue() }
+		{ { 0, 0, 0 }, math::Color::red() },
+		{ { 1, 0, 0 }, math::Color::green() },
+		{ { 0, 1, 0 }, math::Color::blue() }
 	};
 	renderer.drawVertices( tri );
 	ID3D12Resource *firstVB = renderer.getDynamicVertexResource();
@@ -448,7 +448,7 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	tri[1].position.y = 0.2f;
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexResource() == firstVB );
-	tri.push_back( { { 0, 0, 1 }, renderer::Color::white() } );
+	tri.push_back( { { 0, 0, 1 }, math::Color::white() } );
 	renderer.drawVertices( tri );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 4 );
 	REQUIRE( renderer.getDynamicVertexResource() != firstVB );
@@ -468,7 +468,7 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	renderer::ImmediateRenderer renderer( device, shaderManager );
 	device.beginFrame();
 	renderer.beginFrame();
-	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
+	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::white() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 2 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 0 );
 	renderer.endFrame();
@@ -486,7 +486,7 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 	renderer::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
-	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
@@ -504,8 +504,8 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 	renderer::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
-	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::white() );
-	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, renderer::Color::red() );
+	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::white() );
+	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::red() );
 	REQUIRE( renderer.getDynamicVertexCapacity() == 8 );
 	REQUIRE( renderer.getDynamicIndexCapacity() == 24 );
 	renderer.endFrame();
@@ -524,7 +524,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	device.beginFrame();
 	r.beginFrame();
 
-	std::vector<renderer::Vertex> tri = { { { 0, 0, 0 }, renderer::Color::red() }, { { 1, 0, 0 }, renderer::Color::green() }, { { 0, 1, 0 }, renderer::Color::blue() } };
+	std::vector<renderer::Vertex> tri = { { { 0, 0, 0 }, math::Color::red() }, { { 1, 0, 0 }, math::Color::green() }, { { 0, 1, 0 }, math::Color::blue() } };
 	r.drawVertices( tri );
 	REQUIRE( r.getPipelineStateCacheSize() == 1 );
 

@@ -489,7 +489,7 @@ void ImmediateRenderer::endFrame()
 	m_inFrame = false;
 }
 
-void ImmediateRenderer::clear( const Color &clearColor ) noexcept
+void ImmediateRenderer::clear( const math::Color &clearColor ) noexcept
 {
 	if ( !m_currentContext )
 		return;
@@ -634,7 +634,7 @@ void ImmediateRenderer::drawIndexed( const std::vector<Vertex> &vertices, const 
 	( *m_currentContext )->DrawIndexedInstanced( static_cast<UINT>( indices.size() ), 1, 0, 0, 0 );
 }
 
-void ImmediateRenderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const Color &color ) noexcept
+void ImmediateRenderer::drawLine( const math::Vec3<> &start, const math::Vec3<> &end, const math::Color &color ) noexcept
 {
 	const std::vector<Vertex> vertices = {
 		{ start, color },
@@ -644,7 +644,7 @@ void ImmediateRenderer::drawLine( const math::Vec3<> &start, const math::Vec3<> 
 }
 
 
-void ImmediateRenderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const Color &color ) noexcept
+void ImmediateRenderer::drawWireframeCube( const math::Vec3<> &center, const math::Vec3<> &size, const math::Color &color ) noexcept
 {
 	const math::Vec3<> halfSize = size * 0.5f;
 
