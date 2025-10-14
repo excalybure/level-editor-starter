@@ -8,6 +8,7 @@
 #include "graphics/material_system/root_signature_builder.h"
 #include "graphics/material_system/root_signature_cache.h"
 #include "graphics/material_system/pso_builder.h"
+#include "graphics/material_system/shader_reflection.h"
 #include "graphics/material_system/state_blocks.h"
 #include "graphics/material_system/state_parser.h"
 #include "core/console.h"
@@ -1285,6 +1286,73 @@ TEST_CASE( "RootSignatureBuilder handles material with no parameters", "[root-si
 
 	// Assert - spec should be empty
 	REQUIRE( spec.resourceBindings.empty() );
+}
+
+// ============================================================================
+// Shader Reflection Tests
+// ============================================================================
+
+TEST_CASE( "ShaderReflection extracts CBV binding from simple shader", "[reflection][unit]" )
+{
+	// Arrange - compile simple.hlsl which has FrameConstants at b0
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+	REQUIRE( vsBlob.blob != nullptr );
+
+	// Act - reflect on the compiled shader
+	const auto bindings = graphics::material_system::ShaderReflection::Reflect( &vsBlob );
+
+	// Assert - should successfully extract bindings
+	REQUIRE( bindings.success );
+	REQUIRE( !bindings.bindings.empty() );
+
+	// Find FrameConstants binding
+	bool foundFrameConstants = false;
+	for ( const auto &binding : bindings.bindings )
+	{
+		if ( binding.name == "FrameConstants" )
+		{
+			foundFrameConstants = true;
+			REQUIRE( binding.type == graphics::material_system::ResourceBindingType::CBV );
+			REQUIRE( binding.slot == 0 );
+			break;
+		}
+	}
+
+	REQUIRE( foundFrameConstants );
+}
+
+TEST_CASE( "ShaderReflection handles invalid blob gracefully", "[reflection][unit]" )
+{
+	// Arrange - null blob
+	const shader_manager::ShaderBlob *nullBlob = nullptr;
+
+	// Act - reflect on null blob
+	const auto bindings = graphics::material_system::ShaderReflection::Reflect( nullBlob );
+
+	// Assert - should fail gracefully
+	REQUIRE_FALSE( bindings.success );
+	REQUIRE( bindings.bindings.empty() );
+}
+
+TEST_CASE( "ShaderReflection handles invalid shader data", "[reflection][unit]" )
+{
+	// Arrange - create invalid blob
+	shader_manager::ShaderBlob invalidBlob;
+	invalidBlob.blob = nullptr; // Invalid
+
+	// Act - reflect on invalid blob
+	const auto bindings = graphics::material_system::ShaderReflection::Reflect( &invalidBlob );
+
+	// Assert - should fail gracefully
+	REQUIRE_FALSE( bindings.success );
+	REQUIRE( bindings.bindings.empty() );
 }
 
 // ============================================================================

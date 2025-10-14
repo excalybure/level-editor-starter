@@ -73,6 +73,7 @@ add_library(graphics STATIC
   src/graphics/material_system/pso_builder.cpp
   src/graphics/material_system/state_parser.cpp
   src/graphics/material_system/material_instance.cpp
+  src/graphics/material_system/shader_reflection.cpp
 )
 
 target_include_directories(graphics PUBLIC 
