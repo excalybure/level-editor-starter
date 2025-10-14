@@ -245,17 +245,15 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 		// 2D snapping
 		math::Vec2<> point2d( 1.3f, 2.7f );
 		math::Vec2<> snapped2d = grid::GridUtils::snapToGrid( point2d, spacing );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE(snapped2d.x == Catch::Matchers::WithinAbs(1.0f, 0.001f));
-		// REQUIRE(snapped2d.y == Catch::Matchers::WithinAbs(3.0f, 0.001f));
+		REQUIRE_THAT( snapped2d.x, Catch::Matchers::WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( snapped2d.y, Catch::Matchers::WithinAbs( 3.0f, 0.001f ) );
 
 		// 3D snapping
 		math::Vec3<> point3d( 1.3f, 2.7f, -0.4f );
 		math::Vec3<> snapped3d = grid::GridUtils::snapToGrid( point3d, spacing );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE_THAT(snapped3d.x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
-		// REQUIRE_THAT(snapped3d.y, Catch::Matchers::WithinAbs(3.0f, 0.001f));
-		// REQUIRE_THAT(snapped3d.z, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+		REQUIRE_THAT( snapped3d.x, Catch::Matchers::WithinAbs( 1.0f, 0.001f ) );
+		REQUIRE_THAT( snapped3d.y, Catch::Matchers::WithinAbs( 3.0f, 0.001f ) );
+		REQUIRE_THAT( snapped3d.z, Catch::Matchers::WithinAbs( 0.0f, 0.001f ) );
 
 		// Exact grid points should remain unchanged
 		math::Vec2<> exactPoint( 2.0f, 3.0f );
@@ -316,10 +314,9 @@ TEST_CASE( "GridUtils Utility Functions", "[grid][utils]" )
 
 		// Invalid axis should return gray
 		math::Vec3<> invalidColor = grid::GridUtils::getAxisColor( 5 );
-		// TODO: Fix floating point comparison syntax
-		// REQUIRE(invalidColor.x == Catch::Matchers::WithinAbs(0.5f, 0.001f));
-		// REQUIRE(invalidColor.y == Catch::Matchers::WithinAbs(0.5f, 0.001f));
-		// REQUIRE(invalidColor.z == Catch::Matchers::WithinAbs(0.5f, 0.001f));
+		REQUIRE_THAT( invalidColor.x, Catch::Matchers::WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( invalidColor.y, Catch::Matchers::WithinAbs( 0.5f, 0.001f ) );
+		REQUIRE_THAT( invalidColor.z, Catch::Matchers::WithinAbs( 0.5f, 0.001f ) );
 	}
 
 	SECTION( "Grid fade calculations" )
