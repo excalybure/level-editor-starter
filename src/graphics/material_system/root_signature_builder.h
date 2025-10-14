@@ -43,24 +43,9 @@ public:
 		shader_manager::ShaderManager *shaderManager,
 		ShaderReflectionCache *reflectionCache );
 
-	// Legacy Build() for backward compatibility - DEPRECATED
-	// Will be removed after all call sites are migrated to reflection-based Build()
-	static RootSignatureSpec Build( const MaterialDefinition &material, bool includeFrameConstants = false, bool includeObjectConstants = false, bool includeMaterialConstants = false );
-
 private:
-	// Convert material parameters to resource bindings
-	static void AddParameterBindings(
-		const MaterialDefinition &material,
-		std::vector<ResourceBinding> &bindings );
-
-	// Validate no duplicate binding names (fatal if found)
-	static void ValidateBindings( const std::vector<ResourceBinding> &bindings );
-
 	// Sort bindings for deterministic hashing
 	static void SortBindings( std::vector<ResourceBinding> &bindings );
-
-	// Assign slots to bindings
-	static void AssignSlots( std::vector<ResourceBinding> &bindings );
 
 	// Merge bindings from multiple shaders, removing duplicates
 	// Validates that duplicate names have matching type and slot

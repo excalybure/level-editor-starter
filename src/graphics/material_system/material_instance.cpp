@@ -19,7 +19,11 @@ MaterialInstance::MaterialInstance(
 
 	if ( m_materialDefinition )
 	{
-		m_rootSignature = PSOBuilder::getRootSignature( m_device, *m_materialDefinition );
+		m_rootSignature = PSOBuilder::getRootSignature(
+			m_device,
+			*m_materialDefinition,
+			m_materialSystem->getShaderManager(),
+			m_materialSystem->getReflectionCache() );
 	}
 }
 

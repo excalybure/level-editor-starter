@@ -37,29 +37,36 @@ struct RenderPassConfig
 class PSOBuilder
 {
 public:
-	// Build PSO from material definition and render pass configuration
+	// Build PSO from material definition and render pass configuration using shader reflection
 	// Returns ID3D12PipelineState on success, nullptr on failure
 	// Automatically caches PSOs and reuses them for identical requests
-	// MaterialSystem pointer is optional - if provided, state blocks will be queried; if nullptr, uses D3D12 defaults
-	// passName: Specific pass to build PSO for (multi-pass materials); empty string uses legacy format
-	// shaderManager, reflectionCache: Optional for reflection-based root signatures; if nullptr, uses legacy parameter-based root signature generation
+	// @param device - D3D12 device
+	// @param material - Material definition with passes
+	// @param passConfig - Render pass configuration (formats, sample count)
+	// @param materialSystem - Material system for querying state blocks (required)
+	// @param passName - Name of the pass to build PSO for (required for multi-pass materials)
+	// @param shaderManager - ShaderManager for retrieving compiled shader blobs (required)
+	// @param reflectionCache - Cache for shader reflection results (required)
 	static Microsoft::WRL::ComPtr<ID3D12PipelineState> build(
 		dx12::Device *device,
 		const MaterialDefinition &material,
 		const RenderPassConfig &passConfig,
-		const MaterialSystem *materialSystem = nullptr,
-		const std::string &passName = "",
-		shader_manager::ShaderManager *shaderManager = nullptr,
-		ShaderReflectionCache *reflectionCache = nullptr );
+		const MaterialSystem *materialSystem,
+		const std::string &passName,
+		shader_manager::ShaderManager *shaderManager,
+		ShaderReflectionCache *reflectionCache );
 
-	// Get or create root signature for a material
+	// Get or create root signature for a material pass using shader reflection
 	// Uses shared cache for efficient reuse across materials
-	// shaderManager, reflectionCache: Optional for reflection-based root signatures; if nullptr, uses legacy parameter-based generation
+	// @param device - D3D12 device
+	// @param material - Material definition with passes
+	// @param shaderManager - ShaderManager for retrieving compiled shader blobs (required)
+	// @param reflectionCache - Cache for shader reflection results (required)
 	static Microsoft::WRL::ComPtr<ID3D12RootSignature> getRootSignature(
 		dx12::Device *device,
 		const MaterialDefinition &material,
-		shader_manager::ShaderManager *shaderManager = nullptr,
-		ShaderReflectionCache *reflectionCache = nullptr );
+		shader_manager::ShaderManager *shaderManager,
+		ShaderReflectionCache *reflectionCache );
 
 	// Clear the PSO cache (useful for hot-reloading)
 	static void clearCache();

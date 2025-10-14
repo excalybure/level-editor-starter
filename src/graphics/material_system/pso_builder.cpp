@@ -27,17 +27,27 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 		return nullptr;
 	}
 
-	// Use reflection-based root signature generation if ShaderManager provided
-	if ( shaderManager && reflectionCache && !material.passes.empty() )
+	if ( !shaderManager )
 	{
-		// Use first pass for root signature (all passes should have compatible bindings)
-		const MaterialPass &pass = material.passes[0];
-		const auto rootSigSpec = RootSignatureBuilder::Build( pass, shaderManager, reflectionCache );
-		return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+		console::error( "PSOBuilder::getRootSignature: ShaderManager is required for reflection-based root signatures" );
+		return nullptr;
 	}
 
-	// Fallback to legacy parameter-based generation
-	const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
+	if ( !reflectionCache )
+	{
+		console::error( "PSOBuilder::getRootSignature: ReflectionCache is required for reflection-based root signatures" );
+		return nullptr;
+	}
+
+	if ( material.passes.empty() )
+	{
+		console::error( "PSOBuilder::getRootSignature: Material '{}' has no passes", material.id );
+		return nullptr;
+	}
+
+	// Use first pass for root signature (all passes should have compatible bindings)
+	const MaterialPass &pass = material.passes[0];
+	const auto rootSigSpec = RootSignatureBuilder::Build( pass, shaderManager, reflectionCache );
 	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 }
 
@@ -207,25 +217,17 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
 	// Root signature - use RootSignatureBuilder + RootSignatureCache (T215)
-	// Use reflection-based generation if ShaderManager available, otherwise fall back to legacy
+	// Root signature generation - use reflection-based approach
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-	if ( shaderManager && reflectionCache && materialPass )
+	if ( !shaderManager || !reflectionCache || !materialPass )
 	{
-		console::info( "PSOBuilder: Using reflection-based root signature generation" );
-		// Reflection-based: derive root signature from pass shaders
-		const auto rootSigSpec = RootSignatureBuilder::Build( *materialPass, shaderManager, reflectionCache );
-		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+		console::error( "PSOBuilder::build: ShaderManager, ReflectionCache, and MaterialPass are required" );
+		return nullptr;
 	}
-	else
-	{
-		console::info( "PSOBuilder: Using legacy root signature generation (shaderManager={}, reflectionCache={}, materialPass={})",
-			(void *)shaderManager,
-			(void *)reflectionCache,
-			(void *)materialPass );
-		// Legacy: use parameter-based generation
-		const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
-		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
-	}
+
+	console::info( "PSOBuilder: Using reflection-based root signature generation" );
+	const auto rootSigSpec = RootSignatureBuilder::Build( *materialPass, shaderManager, reflectionCache );
+	rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 
 	if ( !rootSignature )
 	{

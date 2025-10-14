@@ -1961,8 +1961,10 @@ TEST_CASE( "PSOBuilder builds PSO with root signature from material parameters",
 	if ( !requireHeadlessDevice( device, "PSOBuilder root sig from params" ) )
 		return;
 
-	// Arrange - MaterialSystem with shader info
+	// Arrange - ShaderManager and MaterialSystem with shader info
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "", &shaderManager ); // Empty path, we're not loading from file
 
 	// Arrange - Material with 1 parameter (CBV binding) using multi-pass format
 	graphics::material_system::MaterialDefinition material;
@@ -2009,7 +2011,7 @@ TEST_CASE( "PSOBuilder builds PSO with root signature from material parameters",
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should use RootSignatureBuilder + RootSignatureCache internally)
-	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward" );
+	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully with root signature from material parameters
 	REQUIRE( pso != nullptr );
@@ -2022,8 +2024,10 @@ TEST_CASE( "PSOBuilder builds PSO with empty root signature for parameterless ma
 	if ( !requireHeadlessDevice( device, "PSOBuilder empty root sig" ) )
 		return;
 
-	// Arrange - MaterialSystem with shader info
+	// Arrange - ShaderManager and MaterialSystem with shader info
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "", &shaderManager ); // Empty path, we're not loading from file
 
 	// Arrange - Material with 0 parameters using multi-pass format
 	graphics::material_system::MaterialDefinition material;
@@ -2067,7 +2071,7 @@ TEST_CASE( "PSOBuilder builds PSO with empty root signature for parameterless ma
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should create empty root signature)
-	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward" );
+	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully with empty root signature
 	REQUIRE( pso != nullptr );
@@ -2080,8 +2084,10 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	if ( !requireHeadlessDevice( device, "PSOBuilder cache reuse" ) )
 		return;
 
-	// Arrange - MaterialSystem with shader info
+	// Arrange - ShaderManager and MaterialSystem with shader info
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
+	materialSystem.initialize( "", &shaderManager ); // Empty path, we're not loading from file
 
 	// Arrange - Two materials with identical parameters using multi-pass format
 	graphics::material_system::MaterialDefinition material1;
@@ -2164,8 +2170,8 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	passConfig.numRenderTargets = 1;
 
 	// Act - build two PSOs with "forward" pass (identical root signatures)
-	const auto pso1 = graphics::material_system::PSOBuilder::build( &device, material1, passConfig, &materialSystem, "forward" );
-	const auto pso2 = graphics::material_system::PSOBuilder::build( &device, material2, passConfig, &materialSystem, "forward" );
+	const auto pso1 = graphics::material_system::PSOBuilder::build( &device, material1, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
+	const auto pso2 = graphics::material_system::PSOBuilder::build( &device, material2, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - both PSOs created successfully (cache hit on second)
 	REQUIRE( pso1 != nullptr );
@@ -2393,7 +2399,9 @@ TEST_CASE( "PSOBuilder creates PSO from MaterialDefinition", "[pipeline-builder]
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass
-	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	shader_manager::ShaderManager shaderManager;
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward", &shaderManager, &reflectionCache );
 
 	// Assert - PSO handle should be valid (non-null, usable for rendering)
 	REQUIRE( pso != nullptr );
@@ -2444,8 +2452,10 @@ TEST_CASE( "PSOBuilder caches and reuses PSO for identical requests", "[pipeline
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO twice with "forward" pass (identical inputs)
-	auto pso1 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
-	auto pso2 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	shader_manager::ShaderManager shaderManager;
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+	auto pso1 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward", &shaderManager, &reflectionCache );
+	auto pso2 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward", &shaderManager, &reflectionCache );
 
 	// Assert - both should be valid
 	REQUIRE( pso1 != nullptr );
@@ -2505,7 +2515,9 @@ TEST_CASE( "PSOBuilder compiles shaders from material shader info", "[pipeline-b
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should use grid.hlsl shaders, not hardcoded simple.hlsl)
-	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	shader_manager::ShaderManager shaderManager;
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward", &shaderManager, &reflectionCache );
 
 	// Assert - PSO should be created successfully using material shader info
 	REQUIRE( pso != nullptr );
@@ -2566,8 +2578,9 @@ TEST_CASE( "PSOBuilder uses rasterizer state from MaterialSystem", "[pipeline-bu
 		})";
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), &shaderManager ) );
 
 	const auto materialHandle = materialSystem.getMaterialHandle( "wireframe_material" );
 	REQUIRE( materialHandle.isValid() );
@@ -2583,7 +2596,7 @@ TEST_CASE( "PSOBuilder uses rasterizer state from MaterialSystem", "[pipeline-bu
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use wireframe rasterizer state)
-	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2645,10 +2658,9 @@ TEST_CASE( "PSOBuilder uses depth stencil state from MaterialSystem", "[pipeline
 		})";
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
-	// NOTE: Temporarily not using ShaderManager to avoid crash in this test
-	// shader_manager::ShaderManager shaderManager;
-	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), &shaderManager ) );
 
 	const auto materialHandle = materialSystem.getMaterialHandle( "depth_readonly_material" );
 	REQUIRE( materialHandle.isValid() );
@@ -2667,7 +2679,7 @@ TEST_CASE( "PSOBuilder uses depth stencil state from MaterialSystem", "[pipeline
 	graphics::material_system::PSOBuilder::clearCache();
 
 	// Act - build PSO with MaterialSystem using legacy path (reflection crashes in this test)
-	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2747,8 +2759,9 @@ TEST_CASE( "PSOBuilder uses blend state from MaterialSystem", "[pipeline-builder
 		})";
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), &shaderManager ) );
 
 	const auto materialHandle = materialSystem.getMaterialHandle( "alpha_blend_material" );
 	REQUIRE( materialHandle.isValid() );
@@ -2764,7 +2777,7 @@ TEST_CASE( "PSOBuilder uses blend state from MaterialSystem", "[pipeline-builder
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use alpha blend state)
-	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -4066,8 +4079,9 @@ TEST_CASE( "PSOBuilder uses vertex format from material", "[pipeline-builder][T2
 		})";
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), &shaderManager ) );
 
 	const auto materialHandle = materialSystem.getMaterialHandle( "lit_material" );
 	REQUIRE( materialHandle.isValid() );
@@ -4083,7 +4097,7 @@ TEST_CASE( "PSOBuilder uses vertex format from material", "[pipeline-builder][T2
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use PositionNormalUV vertex format)
-	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", materialSystem.getShaderManager(), materialSystem.getReflectionCache() );
 
 	// Assert - PSO created successfully using vertex format
 	REQUIRE( pso != nullptr );

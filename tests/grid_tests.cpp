@@ -383,8 +383,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE( requireDevice( window, device, "grid::Grid rendering integration" ) );
 
 		grid::GridRenderer renderer;
+		shader_manager::ShaderManager shaderManager;
 		graphics::material_system::MaterialSystem materialSystem;
-		materialSystem.initialize( "materials.json" );
+		materialSystem.initialize( "materials.json", &shaderManager );
 		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Create camera
@@ -423,8 +424,9 @@ TEST_CASE( "Grid Rendering Integration", "[grid][render][integration]" )
 		REQUIRE( requireDevice( window, device, "grid::Grid rendering with different settings" ) );
 
 		grid::GridRenderer renderer;
+		shader_manager::ShaderManager shaderManager;
 		graphics::material_system::MaterialSystem materialSystem;
-		materialSystem.initialize( "materials.json" );
+		materialSystem.initialize( "materials.json", &shaderManager );
 		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		camera::PerspectiveCamera camera;

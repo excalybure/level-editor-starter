@@ -45,8 +45,9 @@ TEST_CASE( "MaterialInstance with valid material ID is valid", "[material-instan
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	// Act
@@ -202,8 +203,9 @@ TEST_CASE( "MaterialInstance retrieves root signature on construction", "[materi
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	// Act
@@ -223,8 +225,9 @@ TEST_CASE( "MaterialInstance getRootSignature returns valid pointer", "[material
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -269,8 +272,9 @@ TEST_CASE( "MaterialInstance getPipelineState creates PSO on first access", "[ma
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -293,8 +297,9 @@ TEST_CASE( "MaterialInstance getPipelineState returns cached PSO on second acces
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -435,8 +440,9 @@ TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[ma
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -468,8 +474,9 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for invalid pass", "
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -576,8 +583,9 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 		return;
 	}
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( jsonPath.string() );
+	const bool initialized = materialSystem.initialize( jsonPath.string(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "multipass_material" );

@@ -117,14 +117,17 @@ TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][
 		return;
 	}
 
+	// Create ShaderManager for reflection-based root signatures
+	shader_manager::ShaderManager shaderManager;
+
 	RenderPassConfig passConfig;
 	passConfig.name = "depth_prepass";
 	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - Build PSO for "depth_prepass" pass
-	const auto pso = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass" );
+	// Act - Build PSO for "depth_prepass" pass with reflection
+	const auto pso = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass", &shaderManager, materialSystem.getReflectionCache() );
 
 	// Assert - PSO should be created using depth_prepass shaders (only vertex, no pixel)
 	REQUIRE( pso != nullptr );
@@ -332,8 +335,10 @@ TEST_CASE( "PSOBuilder returns nullptr when passName empty (no legacy support)",
 	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	passConfig.numRenderTargets = 1;
 
-	// Act - Build PSO with empty passName (should fail - no legacy support)
-	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "" );
+	// Act - Build PSO with empty passName (should fail - requires valid pass)
+	shader_manager::ShaderManager shaderManager;
+	ShaderReflectionCache reflectionCache;
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "", &shaderManager, &reflectionCache );
 
 	// Assert - Should return nullptr (legacy format not supported, empty passName not allowed)
 	REQUIRE( pso == nullptr );
@@ -373,7 +378,9 @@ TEST_CASE( "PSOBuilder returns nullptr for invalid pass name", "[pipeline-builde
 	passConfig.numRenderTargets = 1;
 
 	// Act - Try to build PSO for non-existent "shadow" pass
-	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "shadow" );
+	shader_manager::ShaderManager shaderManager;
+	ShaderReflectionCache reflectionCache;
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "shadow", &shaderManager, &reflectionCache );
 
 	// Assert - Should return nullptr for invalid pass
 	REQUIRE( pso == nullptr );
@@ -414,7 +421,9 @@ TEST_CASE( "PSOBuilder uses pass-specific topology", "[pipeline-builder][T303][i
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build PSO with Line topology
-	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "wireframe" );
+	shader_manager::ShaderManager shaderManager;
+	ShaderReflectionCache reflectionCache;
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "wireframe", &shaderManager, &reflectionCache );
 
 	// Assert - PSO should be created (validates topology is used correctly)
 	REQUIRE( pso != nullptr );
