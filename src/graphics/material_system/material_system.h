@@ -33,6 +33,7 @@ class MaterialSystem
 {
 public:
 	MaterialSystem() = default;
+	~MaterialSystem();
 
 	// Initialize system from JSON file
 	// Returns true on success, false if file not found or validation fails
@@ -86,6 +87,7 @@ private:
 	// Shader reflection support (optional, may be nullptr)
 	shader_manager::ShaderManager *m_shaderManager = nullptr;
 	ShaderReflectionCache m_reflectionCache;
+	shader_manager::CallbackHandle m_hotReloadCallbackHandle = shader_manager::INVALID_CALLBACK_HANDLE;
 
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
 	std::vector<MaterialDefinition> m_materials;

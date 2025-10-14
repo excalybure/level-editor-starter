@@ -9,6 +9,15 @@
 namespace graphics::material_system
 {
 
+MaterialSystem::~MaterialSystem()
+{
+	// Unregister hot-reload callback if we registered one
+	if ( m_shaderManager && m_hotReloadCallbackHandle != shader_manager::INVALID_CALLBACK_HANDLE )
+	{
+		m_shaderManager->unregisterReloadCallback( m_hotReloadCallbackHandle );
+	}
+}
+
 bool MaterialSystem::initialize( const std::string &jsonPath )
 {
 	return initialize( jsonPath, nullptr );
@@ -17,6 +26,20 @@ bool MaterialSystem::initialize( const std::string &jsonPath )
 bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::ShaderManager *shaderManager )
 {
 	m_shaderManager = shaderManager;
+
+	// Register hot-reload callback to invalidate reflection cache when shaders change
+	if ( m_shaderManager )
+	{
+		m_hotReloadCallbackHandle = m_shaderManager->registerReloadCallback(
+			[this]( shader_manager::ShaderHandle handle, const shader_manager::ShaderBlob & ) {
+				// Shader recompiled - invalidate cached reflection for this shader
+				m_reflectionCache.Invalidate( handle );
+
+				// TODO: Also invalidate PSO cache for materials using this shader
+				// This would require tracking which materials use which shaders
+			} );
+	}
+
 	// Load and merge JSON documents
 	::material_system::JsonLoader loader;
 	if ( !loader.load( jsonPath ) )

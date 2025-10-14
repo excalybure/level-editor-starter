@@ -1,5 +1,51 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-13 — Tasks 5.1 & 5.2: MaterialSystem Reflection Integration (COMPLETE)
+
+**Summary:** Completed Phase 5 (MaterialSystem Integration) from the reflection-based root signature plan. Task 5.1 was already implemented during Phase 3 (AF7-AF12), providing ShaderReflectionCache member and getters. Task 5.2 implemented hot-reload callback registration to automatically invalidate reflection cache when shaders are recompiled, ensuring correct root signatures after shader hot-reload.
+
+**Atomic functionalities completed:**
+- AF16: Verify Task 5.1 complete - confirmed MaterialSystem has ShaderReflectionCache member, ShaderManager pointer, and getters (lines 97-99 in .h, lines 46-49 for accessors)
+- AF17: Implement Task 5.2 hot-reload callback - register callback in initialize(), store CallbackHandle, call Invalidate() on shader reload, unregister in destructor
+
+**Implementation details:**
+- Added `CallbackHandle m_hotReloadCallbackHandle` member to MaterialSystem (initialized to INVALID_CALLBACK_HANDLE)
+- In `initialize()` when ShaderManager provided: register lambda callback via `registerReloadCallback()` that calls `m_reflectionCache.Invalidate(handle)`
+- Added destructor `~MaterialSystem()` that unregisters callback if valid
+- Callback invalidates reflection cache entry for reloaded shader, forcing re-reflection on next PSO build
+- TODO comment added: "Also invalidate PSO cache for materials using this shader" (future enhancement)
+
+**Tests:** All tests passing, no regressions:
+```cmd
+unit_test_runner.exe "[material]"
+All tests passed (110 assertions in 7 test cases)
+
+unit_test_runner.exe "[phase2]"
+All tests passed (26 assertions in 4 test cases)
+```
+
+**Notes:**
+- Task 5.1 already complete from Phase 3 - ShaderReflectionCache and ShaderManager integration done
+- Task 5.2 ensures reflection cache stays synchronized with shader hot-reloads
+- When shader recompiles: callback fired → cache invalidated → next root signature build re-reflects → correct bindings
+- PSO cache invalidation is separate concern (handled by PipelineBuilder's content hashing)
+- Proper cleanup via destructor prevents dangling callback registration
+
+**Files modified:**
+- `src/graphics/material_system/material_system.h`: Added destructor declaration, added m_hotReloadCallbackHandle member
+- `src/graphics/material_system/material_system.cpp`: Added destructor implementation, added callback registration in initialize()
+
+**Trade-offs:**
+- Callback only invalidates reflection cache, not PSO cache - PipelineBuilder handles PSO invalidation via bytecode hash changes
+- Could add material→shader dependency tracking for targeted PSO invalidation, but current approach is simple and correct
+
+**Follow-ups:**
+- Phase 5 complete! Reflection-based root signature system fully integrated
+- Next: Consider removing legacy Build() methods once all code paths migrate to reflection
+- Future: Add material→shader dependency tracking for smarter cache invalidation
+
+---
+
 ## 2025-10-13 — Task 4.1: Verify PSOBuilder Reflection Integration (ALREADY COMPLETE)
 
 **Summary:** Verified that PSOBuilder already correctly implements Task 4.1 from the reflection-based root signature plan. Both `build()` and `getRootSignature()` methods accept optional ShaderManager and ShaderReflectionCache parameters, use reflection-based root signature generation when available, and fall back to legacy parameter-based generation for backward compatibility. No changes needed - implementation matches plan perfectly.

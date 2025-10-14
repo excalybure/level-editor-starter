@@ -465,7 +465,7 @@ static ComPtr<ID3D12PipelineState> build(
 
 ## Phase 5: MaterialSystem Integration
 
-### **Task 5.1: Add ShaderReflectionCache to MaterialSystem**
+### **Task 5.1: Add ShaderReflectionCache to MaterialSystem** ✅ COMPLETE
 **File:** `src/graphics/material_system/material_system.h/cpp`
 
 ```cpp
@@ -484,7 +484,7 @@ public:
 
 ---
 
-### **Task 5.2: Register Shader Hot-Reload Callback**
+### **Task 5.2: Register Shader Hot-Reload Callback** ✅ COMPLETE
 **File:** `material_system.cpp` (initialization)
 
 ```cpp
@@ -651,6 +651,7 @@ auto spec = RootSignatureBuilder::Build(*pass, shaderManager, reflectionCache);
 - [x] Phase 3: Root signature cache updates (COMPLETE)
 - [x] Phase 4.1: PSO builder integration verification (COMPLETE - already done in Phase 3)
 - [ ] Phase 4.2: Remove AddParameterBindings (DEFERRED - legacy methods needed for fallback)
-- [x] Phase 5: Material system integration (COMPLETE - done in Phase 3)
+- [x] Phase 5.1: MaterialSystem ShaderReflectionCache (COMPLETE - done in Phase 3)
+- [x] Phase 5.2: Hot-reload callback registration (COMPLETE)
 - [x] Phase 6: Testing (COMPLETE - 136 assertions passing)
 - [ ] Phase 7: Migration (ONGOING - legacy fallback retained)
