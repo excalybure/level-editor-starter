@@ -110,6 +110,11 @@ RootSignatureSpec RootSignatureBuilder::Build(
 // Legacy Build() implementation - DEPRECATED
 RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material, bool includeFrameConstants, bool includeObjectConstants, bool includeMaterialConstants )
 {
+	console::info( "RootSignatureBuilder::Build (legacy) called: includeFrame={}, includeObject={}, includeMaterial={}",
+		includeFrameConstants,
+		includeObjectConstants,
+		includeMaterialConstants );
+
 	RootSignatureSpec spec;
 
 	// Optionally add default frame/view constant buffer binding (b0)
@@ -121,6 +126,7 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 		frameConstants.type = ResourceBindingType::CBV;
 		frameConstants.slot = 0; // Always at b0
 		spec.resourceBindings.push_back( frameConstants );
+		console::info( "  Added FrameConstants at b0" );
 	}
 
 	// Optionally add object transform constant buffer binding (b1)
@@ -132,6 +138,7 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 		objectConstants.type = ResourceBindingType::CBV;
 		objectConstants.slot = 1; // Always at b1
 		spec.resourceBindings.push_back( objectConstants );
+		console::info( "  Added ObjectConstants at b1" );
 	}
 
 	// Optionally add material properties constant buffer binding (b2)
@@ -143,6 +150,7 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 		materialConstants.type = ResourceBindingType::CBV;
 		materialConstants.slot = 2; // Always at b2
 		spec.resourceBindings.push_back( materialConstants );
+		console::info( "  Added MaterialConstants at b2" );
 	}
 
 	// Add bindings from material parameters
@@ -156,6 +164,14 @@ RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &materia
 
 	// Assign slots after sorting (starting from b1 since b0 is reserved)
 	AssignSlots( spec.resourceBindings );
+
+	// Group bindings for root signature creation (Phase 2 format)
+	GroupBindingsForRootSignature( spec.resourceBindings, spec );
+
+	console::info( "  Total bindings in spec: {} (cbvRootDescriptors={}, descriptorTableResources={})",
+		spec.resourceBindings.size(),
+		spec.cbvRootDescriptors.size(),
+		spec.descriptorTableResources.size() );
 
 	return spec;
 }

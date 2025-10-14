@@ -710,7 +710,7 @@ class MeshRenderer {
 ## References
 
 - **Existing Code:**
-  - `src/graphics/material_system/pipeline_builder.h/cpp` - PSO creation
+  - `src/graphics/material_system/pso_builder.h/cpp` - PSO creation
   - `src/graphics/material_system/material_system.h/cpp` - Material queries
   - `src/graphics/grid/grid.h/cpp` - Current manual management
   - `src/runtime/mesh_rendering_system.h/cpp` - PSO cache pattern

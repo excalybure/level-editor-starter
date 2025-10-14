@@ -50,6 +50,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	shader_manager::ShaderManager *shaderManager,
 	ShaderReflectionCache *reflectionCache )
 {
+	console::info( "PSOBuilder::build called for material '{}', pass '{}'", material.id, passName );
+	console::info( "  shaderManager={}, reflectionCache={}", (void *)shaderManager, (void *)reflectionCache );
+
 	if ( !device || !device->get() )
 	{
 		console::error( "PSOBuilder::build: invalid device" );
@@ -208,12 +211,17 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 	if ( shaderManager && reflectionCache && materialPass )
 	{
+		console::info( "PSOBuilder: Using reflection-based root signature generation" );
 		// Reflection-based: derive root signature from pass shaders
 		const auto rootSigSpec = RootSignatureBuilder::Build( *materialPass, shaderManager, reflectionCache );
 		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 	}
 	else
 	{
+		console::info( "PSOBuilder: Using legacy root signature generation (shaderManager={}, reflectionCache={}, materialPass={})",
+			(void *)shaderManager,
+			(void *)reflectionCache,
+			(void *)materialPass );
 		// Legacy: use parameter-based generation
 		const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
 		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );

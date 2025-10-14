@@ -194,7 +194,7 @@ Phase 1 (P1) of the data-driven material system is **complete and validated**. A
 - Handles materials with no parameters
 - **Note**: Current implementation is placeholder for PSO building
 
-#### 6. **PipelineBuilder** (`pipeline_builder.h/cpp`)
+#### 6. **PipelineBuilder** (`pso_builder.h/cpp`)
 - Builds D3D12 PSOs from MaterialDefinition + RenderPassConfig
 - Automatic PSO caching via hash
 - Hash collision detection (fatal error)
@@ -225,7 +225,7 @@ src/graphics/material_system/
 ├── parser.h/cpp           (~250 lines) - Material parsing
 ├── shader_compiler.h/cpp  (~150 lines) - Shader compilation
 ├── root_signature_builder.h/cpp (~100 lines) - Root signature gen
-├── pipeline_builder.h/cpp (~200 lines) - PSO building
+├── pso_builder.h/cpp (~200 lines) - PSO building
 ├── cache.h/cpp            (~120 lines) - PSO caching
 └── material_system.h/cpp  (~115 lines) - Public API
 

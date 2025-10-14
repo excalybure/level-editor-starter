@@ -111,7 +111,7 @@ void renderEntity(const MaterialComponent& matComp) {
 
 ### Example 4: Build PSO from Material
 ```cpp
-#include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/pso_builder.h"
 
 // Get material
 auto handle = materialSystem.getMaterialHandle("standard_opaque");

@@ -137,7 +137,7 @@ Modify `src/graphics/material_system/parser.cpp`:
 ---
 
 #### **T203: Update PipelineBuilder to Use Shader Info**
-Modify `src/graphics/material_system/pipeline_builder.cpp`:
+Modify `src/graphics/material_system/pso_builder.cpp`:
 - Replace hard-coded `shaderPath = "shaders/simple.hlsl"` (line 32)
 - Iterate `material.shaders` vector:
   - For each `ShaderReference`, call `MaterialShaderCompiler::CompileWithDefines()` with:
@@ -634,7 +634,7 @@ Remove hard-coded root signature creation (lines 73-106).
 ## Gap 6: Render Pass Configuration
 
 ### Current Limitation
-`RenderPassConfig` struct (pipeline_builder.h:19) is manually constructed by caller:
+`RenderPassConfig` struct (pso_builder.h:19) is manually constructed by caller:
 ```cpp
 RenderPassConfig passConfig;
 passConfig.name = "forward";
@@ -780,7 +780,7 @@ Update callers to use `materialSystem.getRenderPassConfig(material.pass)` instea
 ### SC-P2-001: Zero Hard-Coded Values in PSO Creation
 ✅ **Criteria**: `PipelineBuilder::buildPSO()` contains **no literal D3D12 enum values** (e.g., `D3D12_FILL_MODE_SOLID`, `D3D12_CULL_MODE_BACK`, etc.). All values derived from JSON.
 
-**Verification**: Code audit + grep search for `D3D12_FILL_MODE|D3D12_CULL_MODE|D3D12_BLEND_` in `pipeline_builder.cpp` returns zero matches.
+**Verification**: Code audit + grep search for `D3D12_FILL_MODE|D3D12_CULL_MODE|D3D12_BLEND_` in `pso_builder.cpp` returns zero matches.
 
 ---
 

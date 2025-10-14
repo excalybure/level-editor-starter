@@ -116,7 +116,7 @@
 ✅ `src/graphics/material_system/parser.h/cpp` (250 lines)  
 ✅ `src/graphics/material_system/shader_compiler.h/cpp` (150 lines)  
 ✅ `src/graphics/material_system/root_signature_builder.h/cpp` (100 lines)  
-✅ `src/graphics/material_system/pipeline_builder.h/cpp` (200 lines)  
+✅ `src/graphics/material_system/pso_builder.h/cpp` (200 lines)  
 ✅ `src/graphics/material_system/cache.h/cpp` (120 lines)  
 ✅ `src/graphics/material_system/material_system.h/cpp` (115 lines)  
 

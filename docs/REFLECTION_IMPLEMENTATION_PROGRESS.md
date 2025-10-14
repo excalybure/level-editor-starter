@@ -557,13 +557,13 @@ struct RootSignatureSpec {
 - Legacy API marked deprecated but retained for backward compatibility
 
 **Migration Blocked:**
-- Production code (pipeline_builder.cpp, pso_builder.cpp) lacks ShaderManager access
+- Production code (pso_builder.cpp, pso_builder.cpp) lacks ShaderManager access
 - Current: `getRootSignature(device, material)` 
 - Needed: `getRootSignature(device, pass, shaderManager, cache)`
 - Requires threading ShaderManager through PSOBuilder/PipelineBuilder
 
 **Call Site Inventory:**
-- Production: 4 locations (pipeline_builder.cpp:29,196 + pso_builder.cpp:29,196)
+- Production: 4 locations (pso_builder.cpp:29,196 + pso_builder.cpp:29,196)
 - Legacy tests: 3 locations (material_system_tests.cpp T013)
 - Phase 2 tests: 4 locations (already migrated ✅)
 
@@ -839,7 +839,7 @@ The new reflection-based `Build()` API is fully implemented and tested. However,
 ### Current Call Sites
 
 **Production Code (using legacy API):**
-- `src/graphics/material_system/pipeline_builder.cpp` - lines 29, 196
+- `src/graphics/material_system/pso_builder.cpp` - lines 29, 196
 - `src/graphics/material_system/pso_builder.cpp` - lines 29, 196
 
 **Legacy Tests (using deprecated API):**
@@ -853,7 +853,7 @@ The new reflection-based `Build()` API is fully implemented and tested. However,
 Current production functions lack `ShaderManager` access:
 
 ```cpp
-// Current signature (pipeline_builder.cpp:18)
+// Current signature (pso_builder.cpp:18)
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
     dx12::Device *device,
     const MaterialDefinition &material );
@@ -894,7 +894,7 @@ static RootSignatureSpec Build(
 **Step 1: Thread ShaderManager Through Pipeline**
 - Add `ShaderManager*` parameter to `PSOBuilder::build()` and `getRootSignature()`
 - Thread through MaterialSystem initialization
-- Create static `ShaderReflectionCache` instance in pipeline_builder.cpp
+- Create static `ShaderReflectionCache` instance in pso_builder.cpp
 
 **Step 2: Update Function Signatures**
 - Change `getRootSignature()` to accept `MaterialPass` instead of `MaterialDefinition`

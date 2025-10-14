@@ -3,6 +3,7 @@
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/material_system.h"
 #include "platform/dx12/dx12_device.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
@@ -18,7 +19,7 @@ namespace fs = std::filesystem;
 TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Create MaterialSystem with vertex format and material with two passes
-	const auto testDir = std::filesystem::temp_directory_path() / "pipeline_builder_test_T303_1";
+	const auto testDir = std::filesystem::temp_directory_path() / "pso_builder_test_T303_1";
 	std::filesystem::create_directories( testDir );
 
 	const std::string jsonContent = R"({
@@ -135,7 +136,7 @@ TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][
 TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Create MaterialSystem with vertex format and material with depth_prepass + forward passes
-	const auto testDir = std::filesystem::temp_directory_path() / "pipeline_builder_test_T303_2";
+	const auto testDir = std::filesystem::temp_directory_path() / "pso_builder_test_T303_2";
 	std::filesystem::create_directories( testDir );
 
 	const std::string jsonContent = R"({
@@ -176,8 +177,9 @@ TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-b
 
 	std::ofstream( testDir / "materials.json" ) << jsonContent;
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	if ( !materialSystem.initialize( ( testDir / "materials.json" ).string() ) )
+	if ( !materialSystem.initialize( ( testDir / "materials.json" ).string(), &shaderManager ) )
 	{
 		WARN( "MaterialSystem initialization failed" );
 		fs::remove_all( testDir );
@@ -190,6 +192,10 @@ TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-b
 	const auto *material = materialSystem.getMaterial( materialHandle );
 	REQUIRE( material != nullptr );
 
+	// Verify ShaderManager is properly set
+	REQUIRE( materialSystem.getShaderManager() == &shaderManager );
+	REQUIRE( materialSystem.getReflectionCache() != nullptr );
+
 	dx12::Device device;
 	if ( !device.initializeHeadless() )
 	{
@@ -203,9 +209,17 @@ TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-b
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - Build PSOs for both passes
-	const auto psoDepth = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass" );
-	const auto psoForward = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
+	// Clear PSO cache to ensure fresh builds with reflection
+	PSOBuilder::clearCache();
+
+	// Debug: verify we have all the needed components
+	INFO( "ShaderManager address: " << &shaderManager );
+	INFO( "MaterialSystem.getShaderManager(): " << materialSystem.getShaderManager() );
+	INFO( "MaterialSystem.getReflectionCache(): " << materialSystem.getReflectionCache() );
+
+	// Act - Build PSOs for both passes with reflection-based root signatures
+	const auto psoDepth = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass", &shaderManager, materialSystem.getReflectionCache() );
+	const auto psoForward = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", &shaderManager, materialSystem.getReflectionCache() );
 
 	// Assert - Different PSOs should be created (different shaders)
 	REQUIRE( psoDepth != nullptr );
@@ -218,39 +232,64 @@ TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-b
 
 TEST_CASE( "PSOBuilder caches PSOs per pass name", "[pipeline-builder][T303][integration]" )
 {
-	// Arrange - Material with forward pass
-	const json materialJson = {
-		{ "id", "test_material" },
-		{ "passes",
+	// Arrange - Material with forward pass using MaterialSystem
+	const auto testDir = fs::temp_directory_path() / "pso_cache_test";
+	fs::create_directories( testDir );
+
+	const json materialsJson = {
+		{ "materials",
 			json::array( {
 				{
-					{ "name", "forward" },
-					{ "shaders",
-						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
-						} },
+					{ "id", "test_cached_material" },
+					{ "passes",
+						json::array( {
+							{
+								{ "name", "forward" },
+								{ "shaders",
+									{
+										{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+										{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+									} },
+							},
+						} ) },
 				},
 			} ) },
 	};
 
-	const auto material = MaterialParser::parse( materialJson );
+	std::ofstream( testDir / "materials.json" ) << materialsJson.dump( 2 );
 
 	dx12::Device device;
 	if ( !device.initializeHeadless() )
 	{
 		WARN( "D3D12 headless initialization failed (possibly unsupported hardware)" );
+		fs::remove_all( testDir );
 		return;
 	}
+
+	shader_manager::ShaderManager shaderManager;
+	MaterialSystem materialSystem;
+	if ( !materialSystem.initialize( ( testDir / "materials.json" ).string(), &shaderManager ) )
+	{
+		WARN( "MaterialSystem initialization failed" );
+		fs::remove_all( testDir );
+		return;
+	}
+
+	const auto materialHandle = materialSystem.getMaterialHandle( "test_cached_material" );
+	REQUIRE( materialHandle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( materialHandle );
+	REQUIRE( material != nullptr );
 
 	RenderPassConfig passConfig;
 	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 	passConfig.numRenderTargets = 1;
 
-	// Act - Build same PSO twice
-	const auto pso1 = PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
-	const auto pso2 = PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	// Act - Build same PSO twice with reflection
+	PSOBuilder::clearCache();
+	const auto pso1 = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", &shaderManager, materialSystem.getReflectionCache() );
+	const auto pso2 = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward", &shaderManager, materialSystem.getReflectionCache() );
 
 	// Assert - Should return same cached PSO
 	REQUIRE( pso1 != nullptr );
@@ -258,6 +297,7 @@ TEST_CASE( "PSOBuilder caches PSOs per pass name", "[pipeline-builder][T303][int
 	REQUIRE( pso1.Get() == pso2.Get() ); // Same PSO object (cached)
 
 	device.shutdown();
+	fs::remove_all( testDir );
 }
 
 TEST_CASE( "PSOBuilder returns nullptr when passName empty (no legacy support)", "[pipeline-builder][T303][integration]" )
