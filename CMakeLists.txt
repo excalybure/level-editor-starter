@@ -257,6 +257,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/picking_tests.cpp
     tests/picking_selection_integration_tests.cpp
     tests/dx12_tests.cpp
+    tests/device_tests.cpp
     tests/immediate_renderer_tests.cpp
     tests/camera_tests.cpp
     tests/camera_controller_tests.cpp

@@ -4,6 +4,7 @@
 #include <dxgi1_6.h>
 #include <memory>
 #include <wrl.h>
+#include "math/color.h"
 
 namespace dx12
 {
@@ -127,6 +128,10 @@ public:
 	void beginFrame();
 	void endFrame();
 	void present();
+
+	// Clear operations (only valid during frame)
+	void clear( const math::Color &clearColor = math::Color{ 0.2f, 0.2f, 0.2f, 1.0f } ) noexcept;
+	void clearDepth( float depth = 1.0f ) noexcept;
 
 	bool isValid() const { return m_device != nullptr; }
 

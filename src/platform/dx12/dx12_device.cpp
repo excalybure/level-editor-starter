@@ -300,6 +300,51 @@ void Device::endFrame()
 	m_inFrame = false;
 }
 
+void Device::clear( const math::Color &clearColor ) noexcept
+{
+	// Validate we're in a frame
+	if ( !m_inFrame || !m_commandContext )
+	{
+		return; // Not in frame or no command context - safe no-op
+	}
+
+	// In headless mode, there's no render target to clear
+	if ( !m_swapChain || !m_rtvHeap )
+	{
+		return; // Headless mode - no render targets
+	}
+
+	// Get current back buffer RTV handle
+	const UINT frameIndex = m_swapChain->getCurrentBackBufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+	rtvHandle.ptr += frameIndex * m_rtvDescriptorSize;
+
+	// Clear render target with specified color
+	const float color[4] = { clearColor.r, clearColor.g, clearColor.b, clearColor.a };
+	m_commandContext->get()->ClearRenderTargetView( rtvHandle, color, 0, nullptr );
+}
+
+void Device::clearDepth( float depth ) noexcept
+{
+	// Validate we're in a frame
+	if ( !m_inFrame || !m_commandContext )
+	{
+		return; // Not in frame or no command context - safe no-op
+	}
+
+	// Check if depth buffer is available
+	if ( !m_swapChain || !m_dsvHeap || !m_depthBuffer )
+	{
+		return; // No depth buffer available - safe no-op
+	}
+
+	// Get depth stencil view handle
+	const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	// Clear depth buffer with specified depth value
+	m_commandContext->get()->ClearDepthStencilView( dsvHandle, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr );
+}
+
 void Device::present()
 {
 	if ( !m_device || !m_commandContext || !m_swapChain )

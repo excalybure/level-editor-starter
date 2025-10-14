@@ -491,23 +491,12 @@ void ImmediateRenderer::endFrame()
 
 void ImmediateRenderer::clear( const math::Color &clearColor ) noexcept
 {
-	if ( !m_currentContext )
-		return;
-
-	// TODO: Device should provide configurable clear color methods
-	// For now, skip additional clearing since Device already clears in beginFrame()
-	// This could be enhanced to allow custom clear colors via Device interface
-	console::info( "ImmediateRenderer::clear() - Device already cleared render target in beginFrame()" );
+	m_device.clear( clearColor );
 }
 
 void ImmediateRenderer::clearDepth( float depth ) noexcept
 {
-	if ( !m_currentContext )
-		return;
-
-	// TODO: Device should manage depth buffer and provide depth clear methods
-	// For now, depth clearing is not available since Device doesn't expose depth buffer
-	console::warning( "ImmediateRenderer::clearDepth() - Depth buffer management should be moved to Device" );
+	m_device.clearDepth( depth );
 }
 
 void ImmediateRenderer::setViewProjectionMatrix( const math::Mat4<> &viewProj ) noexcept

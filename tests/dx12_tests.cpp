@@ -3,6 +3,7 @@
 
 // We need to import the module for testing
 #include "platform/dx12/dx12_device.h"
+#include "math/color.h"
 #include "test_dx12_helpers.h"
 
 
@@ -148,6 +149,25 @@ TEST_CASE( "D3D12 Headless Frame Functions Are No-Op", "[dx12]" )
 	REQUIRE_NOTHROW( device.beginFrame() );
 	REQUIRE_NOTHROW( device.endFrame() );
 	REQUIRE_NOTHROW( device.present() );
+}
+
+TEST_CASE( "D3D12 Device Clear Methods", "[dx12]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "device clear methods" ) )
+		return;
+
+	// Clear methods should be safe to call during a frame
+	REQUIRE_NOTHROW( device.beginFrame() );
+	REQUIRE_NOTHROW( device.clear() );
+	REQUIRE_NOTHROW( device.clear( math::Color{ 1.0f, 0.0f, 0.0f, 1.0f } ) );
+	REQUIRE_NOTHROW( device.clearDepth() );
+	REQUIRE_NOTHROW( device.clearDepth( 0.5f ) );
+	REQUIRE_NOTHROW( device.endFrame() );
+
+	// Clear methods should be safe no-ops when not in frame
+	REQUIRE_NOTHROW( device.clear() );
+	REQUIRE_NOTHROW( device.clearDepth() );
 }
 
 TEST_CASE( "D3D12 Multi-Device Independence", "[dx12]" )

@@ -4,6 +4,7 @@
 #include "test_dx12_helpers.h"
 
 #include "platform/dx12/dx12_device.h"
+#include "math/color.h"
 
 
 TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
@@ -318,5 +319,55 @@ TEST_CASE( "Device Resource Management", "[dx12][device][resources]" )
 		REQUIRE( desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 		REQUIRE( desc.NumDescriptors > 0 );
 		REQUIRE( ( desc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE ) != 0 );
+	}
+}
+
+TEST_CASE( "Device Clear Operations", "[dx12][device][clear]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::Device clear operations" ) )
+		return;
+
+	SECTION( "Clear with custom color during frame" )
+	{
+		device.beginFrame();
+
+		// Should be callable without crash
+		const math::Color customColor{ 1.0f, 0.0f, 0.0f, 1.0f };
+		REQUIRE_NOTHROW( device.clear( customColor ) );
+
+		device.endFrame();
+	}
+
+	SECTION( "Clear with default color during frame" )
+	{
+		device.beginFrame();
+		REQUIRE_NOTHROW( device.clear() );
+		device.endFrame();
+	}
+
+	SECTION( "Clear outside frame should be safe" )
+	{
+		// Should handle gracefully when not in frame
+		REQUIRE_NOTHROW( device.clear() );
+	}
+
+	SECTION( "ClearDepth with custom depth during frame" )
+	{
+		device.beginFrame();
+		REQUIRE_NOTHROW( device.clearDepth( 0.5f ) );
+		device.endFrame();
+	}
+
+	SECTION( "ClearDepth with default depth during frame" )
+	{
+		device.beginFrame();
+		REQUIRE_NOTHROW( device.clearDepth() );
+		device.endFrame();
+	}
+
+	SECTION( "ClearDepth outside frame should be safe" )
+	{
+		REQUIRE_NOTHROW( device.clearDepth() );
 	}
 }
