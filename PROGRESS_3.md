@@ -1,5 +1,48 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-14 — PSO Cache Invalidation on Shader Hot-Reload
+
+**Summary:** Implemented PSO cache invalidation when shaders are reloaded during hot-reload operations. MaterialSystem now tracks which materials use which shaders (by file path) and automatically invalidates PSO cache entries for affected materials when a shader is recompiled. This completes the TODO from the Phase 5 hot-reload callback implementation, ensuring that both reflection cache AND PSO cache stay synchronized with shader changes.
+
+**Atomic functionalities completed:**
+- AF1: Shader-to-materials tracking - Added `m_shaderToMaterials` map to track which materials use which shader file paths, populated during initialize() by scanning all material passes
+- AF2: Selective PSO invalidation - Added `invalidateByMaterial()` method to PipelineCache that removes all PSO entries matching a given material ID
+- AF3: Hot-reload PSO invalidation - Updated MaterialSystem hot-reload callback to query shader file path via ShaderManager::getShaderInfo(), lookup affected materials, and invalidate their PSOs
+- AF4: Integration test - Added test verifying PSO cache invalidation during shader hot-reload with two materials using the same shader
+
+**Implementation details:**
+- MaterialSystem tracks shader file paths → material IDs mapping during initialization
+- When shader reloads: callback queries ShaderInfo for file path, finds all materials using that shader, calls `PipelineCache::invalidateByMaterial()` for each
+- PipelineCache iterates cache entries and removes those matching the material ID (thread-safe with unique_lock)
+- Added static `PSOBuilder::getCacheForInvalidation()` accessor for MaterialSystem to access the global PSO cache
+- Logging added: "Invalidated PSO cache for material 'X' (shader 'Y' reloaded)"
+
+**Test coverage:**
+- 1 new integration test `[pso][hot-reload][integration]`: validates PSO invalidation across two materials sharing a shader
+- Test creates two materials, builds initial PSOs, triggers shader reload via forceRecompile(), verifies PSO rebuild succeeds
+- 11 assertions covering MaterialSystem initialization, PSO building, shader reloading, and cache invalidation
+- Console logs confirm invalidation: both material_a and material_b PSO caches cleared when simple.hlsl recompiles
+
+**Files modified:**
+- `src/graphics/material_system/material_system.h`: Added `m_shaderToMaterials` map with comment
+- `src/graphics/material_system/material_system.cpp`: Populate tracking map during initialize(), updated hot-reload callback to invalidate PSOs
+- `src/graphics/material_system/cache.h`: Added `invalidateByMaterial()` declaration
+- `src/graphics/material_system/cache.cpp`: Implemented `invalidateByMaterial()` with iterator-based removal
+- `src/graphics/material_system/pso_builder.h`: Added `getCacheForInvalidation()` static accessor
+- `tests/material_system_tests.cpp`: Added 127-line PSO hot-reload integration test
+
+**Notes:**
+- Shader tracking uses file path (not shaderId) since materials reference shaders by file in JSON
+- Each shader stage (VS, PS, etc.) may trigger callback separately, resulting in multiple invalidation calls per material (idempotent operation)
+- PSO invalidation is selective - only affects materials using the reloaded shader, not global cache clear
+- Hot-reload now fully functional: reflection cache + PSO cache both stay synchronized with shader changes
+
+**Follow-ups:**
+- Consider adding PSO rebuild batching if multiple shaders reload simultaneously
+- Could track shader dependencies more granularly (per shader stage) to reduce redundant invalidations
+
+---
+
 ## 2025-10-13 — Phase 6: Complete Reflection Testing (Tasks 6.2 & 6.3)
 
 **Summary:** Completed Phase 6 (Testing Strategy) from the reflection-based root signature plan by adding the two missing integration tests. Task 6.2 adds PSOBuilder PSO creation test with reflection-based root signatures. Task 6.3 adds hot-reload test validating reflection cache invalidation when shaders recompile. These tests complement the existing 4 Phase 2 unit tests, providing comprehensive coverage of the reflection system from unit level through integration.

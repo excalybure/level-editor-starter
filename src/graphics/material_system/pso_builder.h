@@ -63,6 +63,9 @@ public:
 	// Clear the PSO cache (useful for hot-reloading)
 	static void clearCache();
 
+	// Access cache for selective invalidation (used by MaterialSystem during hot-reload)
+	static PipelineCache *getCacheForInvalidation() { return &s_cache; }
+
 private:
 	static PipelineCache s_cache;
 };

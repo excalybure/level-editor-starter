@@ -66,7 +66,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	const RenderPassConfig &passConfig )
 {
 	const std::string &passName = passConfig.name;
-	console::info( "PSOBuilder::build called for material '{}', pass '{}'", material.id, passName );
 
 	if ( !device || !device->get() )
 	{

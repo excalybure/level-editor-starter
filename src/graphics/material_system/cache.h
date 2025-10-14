@@ -38,6 +38,10 @@ public:
 	// Clear all cached PSOs
 	void clear();
 
+	// Invalidate all cached PSOs for a specific material ID
+	// Used during hot-reload to remove PSOs for materials using recompiled shaders
+	void invalidateByMaterial( const std::string &materialId );
+
 private:
 	struct CacheEntry
 	{

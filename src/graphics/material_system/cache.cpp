@@ -111,4 +111,22 @@ void PipelineCache::clear()
 	m_cache.clear();
 }
 
+void PipelineCache::invalidateByMaterial( const std::string &materialId )
+{
+	std::unique_lock<std::shared_mutex> lock( m_mutex );
+
+	// Iterate and remove all entries matching the material ID
+	for ( auto it = m_cache.begin(); it != m_cache.end(); )
+	{
+		if ( it->second.materialId == materialId )
+		{
+			it = m_cache.erase( it );
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+
 } // namespace graphics::material_system

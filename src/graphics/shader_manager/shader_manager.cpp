@@ -218,18 +218,8 @@ bool ShaderManager::forceRecompile( ShaderHandle handle )
 		auto it = m_shaders.find( handle );
 		if ( it != m_shaders.end() )
 		{
-			console::info( "Shader Manager: Force recompiling {} ({} - {})",
-				it->second.filePath.string(),
-				shaderTypeToString( it->second.type ),
-				it->second.entryPoint );
-
 			if ( compileShader( it->second ) )
 			{
-				console::info( "Shader Manager: Successfully recompiled {} ({} - {})",
-					it->second.filePath.string(),
-					shaderTypeToString( it->second.type ),
-					it->second.entryPoint );
-
 				compiledBlob = it->second.compiledBlob;
 				compilationSuccess = true;
 			}

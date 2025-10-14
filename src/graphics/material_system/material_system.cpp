@@ -35,8 +35,21 @@ bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::Sh
 				// Shader recompiled - invalidate cached reflection for this shader
 				m_reflectionCache.Invalidate( handle );
 
-				// TODO: Also invalidate PSO cache for materials using this shader
-				// This would require tracking which materials use which shaders
+				// Invalidate PSO cache for all materials using this shader
+				const auto *shaderInfo = m_shaderManager->getShaderInfo( handle );
+				if ( shaderInfo )
+				{
+					const std::string shaderPath = shaderInfo->filePath.string();
+					const auto it = m_shaderToMaterials.find( shaderPath );
+					if ( it != m_shaderToMaterials.end() )
+					{
+						PipelineCache *psoCache = PSOBuilder::getCacheForInvalidation();
+						for ( const auto &materialId : it->second )
+						{
+							psoCache->invalidateByMaterial( materialId );
+						}
+					}
+				}
 			} );
 	}
 
@@ -178,6 +191,15 @@ bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::Sh
 		// Build index map
 		m_materialIdToIndex[material.id] = static_cast<uint32_t>( i );
 		m_materials.push_back( material );
+
+		// Track shader-to-material relationships for hot-reload PSO invalidation
+		for ( const auto &pass : material.passes )
+		{
+			for ( const auto &shaderRef : pass.shaders )
+			{
+				m_shaderToMaterials[shaderRef.file].push_back( material.id );
+			}
+		}
 	}
 
 	console::info( "MaterialSystem: initialized with {} materials", m_materials.size() );

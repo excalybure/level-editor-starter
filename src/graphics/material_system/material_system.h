@@ -88,6 +88,9 @@ private:
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
 	std::vector<MaterialDefinition> m_materials;
 
+	// Track which materials use which shaders for PSO invalidation on hot-reload
+	std::unordered_map<std::string, std::vector<std::string>> m_shaderToMaterials; // shader file path -> materialIds
+
 	// State block storage
 	std::unordered_map<std::string, RasterizerStateBlock> m_rasterizerStates;
 	std::unordered_map<std::string, DepthStencilStateBlock> m_depthStencilStates;
