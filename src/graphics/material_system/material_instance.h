@@ -61,7 +61,7 @@ public:
 	bool setupCommandList( ID3D12GraphicsCommandList *commandList, const std::string &passName );
 
 private:
-	// Create pipeline state for specific pass using PipelineBuilder
+	// Create pipeline state for specific pass using PSOBuilder
 	// Returns true on success, false on failure
 	bool createPipelineStateForPass( const std::string &passName );
 
@@ -73,7 +73,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 
 	// Per-pass PSO cache (lazy creation)
-	// Note: PipelineBuilder has its own global cache that handles shader hot-reload
+	// Note: PSOBuilder has its own global cache that handles shader hot-reload
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> m_pipelineStates;
 };
 

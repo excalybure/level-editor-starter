@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/pso_builder.h"
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/material_system.h"
 #include "platform/dx12/dx12_device.h"
@@ -12,10 +12,10 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // ============================================================================
-// T303: Multi-Pass PipelineBuilder Tests
+// T303: Multi-Pass PSOBuilder Tests
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Create MaterialSystem with vertex format and material with two passes
 	const auto testDir = std::filesystem::temp_directory_path() / "pipeline_builder_test_T303_1";
@@ -123,7 +123,7 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build PSO for "depth_prepass" pass
-	const auto pso = PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "depth_prepass" );
+	const auto pso = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass" );
 
 	// Assert - PSO should be created using depth_prepass shaders (only vertex, no pixel)
 	REQUIRE( pso != nullptr );
@@ -132,7 +132,7 @@ TEST_CASE( "PipelineBuilder builds PSO from specific pass name", "[pipeline-buil
 	fs::remove_all( testDir );
 }
 
-TEST_CASE( "PipelineBuilder builds different PSOs for different passes", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Create MaterialSystem with vertex format and material with depth_prepass + forward passes
 	const auto testDir = std::filesystem::temp_directory_path() / "pipeline_builder_test_T303_2";
@@ -204,8 +204,8 @@ TEST_CASE( "PipelineBuilder builds different PSOs for different passes", "[pipel
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build PSOs for both passes
-	const auto psoDepth = PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "depth_prepass" );
-	const auto psoForward = PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
+	const auto psoDepth = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "depth_prepass" );
+	const auto psoForward = PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - Different PSOs should be created (different shaders)
 	REQUIRE( psoDepth != nullptr );
@@ -216,7 +216,7 @@ TEST_CASE( "PipelineBuilder builds different PSOs for different passes", "[pipel
 	fs::remove_all( testDir );
 }
 
-TEST_CASE( "PipelineBuilder caches PSOs per pass name", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder caches PSOs per pass name", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Material with forward pass
 	const json materialJson = {
@@ -249,8 +249,8 @@ TEST_CASE( "PipelineBuilder caches PSOs per pass name", "[pipeline-builder][T303
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build same PSO twice
-	const auto pso1 = PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
-	const auto pso2 = PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
+	const auto pso1 = PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	const auto pso2 = PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - Should return same cached PSO
 	REQUIRE( pso1 != nullptr );
@@ -260,7 +260,7 @@ TEST_CASE( "PipelineBuilder caches PSOs per pass name", "[pipeline-builder][T303
 	device.shutdown();
 }
 
-TEST_CASE( "PipelineBuilder returns nullptr when passName empty (no legacy support)", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder returns nullptr when passName empty (no legacy support)", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Material with passes array (new format)
 	const json materialJson = {
@@ -293,7 +293,7 @@ TEST_CASE( "PipelineBuilder returns nullptr when passName empty (no legacy suppo
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build PSO with empty passName (should fail - no legacy support)
-	const auto pso = PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "" );
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "" );
 
 	// Assert - Should return nullptr (legacy format not supported, empty passName not allowed)
 	REQUIRE( pso == nullptr );
@@ -301,7 +301,7 @@ TEST_CASE( "PipelineBuilder returns nullptr when passName empty (no legacy suppo
 	device.shutdown();
 }
 
-TEST_CASE( "PipelineBuilder returns nullptr for invalid pass name", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder returns nullptr for invalid pass name", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Material with only "forward" pass
 	const json materialJson = {
@@ -333,7 +333,7 @@ TEST_CASE( "PipelineBuilder returns nullptr for invalid pass name", "[pipeline-b
 	passConfig.numRenderTargets = 1;
 
 	// Act - Try to build PSO for non-existent "shadow" pass
-	const auto pso = PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "shadow" );
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "shadow" );
 
 	// Assert - Should return nullptr for invalid pass
 	REQUIRE( pso == nullptr );
@@ -341,7 +341,7 @@ TEST_CASE( "PipelineBuilder returns nullptr for invalid pass name", "[pipeline-b
 	device.shutdown();
 }
 
-TEST_CASE( "PipelineBuilder uses pass-specific topology", "[pipeline-builder][T303][integration]" )
+TEST_CASE( "PSOBuilder uses pass-specific topology", "[pipeline-builder][T303][integration]" )
 {
 	// Arrange - Material with wireframe pass using Line topology
 	const json materialJson = {
@@ -374,7 +374,7 @@ TEST_CASE( "PipelineBuilder uses pass-specific topology", "[pipeline-builder][T3
 	passConfig.numRenderTargets = 1;
 
 	// Act - Build PSO with Line topology
-	const auto pso = PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "wireframe" );
+	const auto pso = PSOBuilder::build( &device, material, passConfig, nullptr, "wireframe" );
 
 	// Assert - PSO should be created (validates topology is used correctly)
 	REQUIRE( pso != nullptr );

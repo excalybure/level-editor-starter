@@ -1,5 +1,5 @@
 #include "graphics/material_system/material_instance.h"
-#include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/pso_builder.h"
 
 namespace graphics::material_system
 {
@@ -19,7 +19,7 @@ MaterialInstance::MaterialInstance(
 
 	if ( m_materialDefinition )
 	{
-		m_rootSignature = PipelineBuilder::getRootSignature( m_device, *m_materialDefinition );
+		m_rootSignature = PSOBuilder::getRootSignature( m_device, *m_materialDefinition );
 	}
 }
 
@@ -73,8 +73,8 @@ bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
 	// Query render pass config from MaterialSystem
 	const RenderPassConfig passConfig = m_materialSystem->getRenderPassConfig( passName );
 
-	// PipelineBuilder handles shader recompilation and its own caching
-	auto pso = PipelineBuilder::buildPSO( m_device, *m_materialDefinition, passConfig, m_materialSystem, passName );
+	// PSOBuilder handles shader recompilation and its own caching
+	auto pso = PSOBuilder::build( m_device, *m_materialDefinition, passConfig, m_materialSystem, passName );
 	if ( !pso )
 	{
 		return false;
@@ -93,7 +93,7 @@ ID3D12PipelineState *MaterialInstance::getPipelineState( const std::string &pass
 		return nullptr;
 	}
 
-	// Check if PSO already cached (PipelineBuilder handles shader recompilation internally)
+	// Check if PSO already cached (PSOBuilder handles shader recompilation internally)
 	const auto it = m_pipelineStates.find( passName );
 	if ( it == m_pipelineStates.end() )
 	{

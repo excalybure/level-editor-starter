@@ -7,7 +7,7 @@
 #include "graphics/material_system/shader_compiler.h"
 #include "graphics/material_system/root_signature_builder.h"
 #include "graphics/material_system/root_signature_cache.h"
-#include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/pso_builder.h"
 #include "graphics/material_system/state_blocks.h"
 #include "graphics/material_system/state_parser.h"
 #include "core/console.h"
@@ -1362,11 +1362,11 @@ TEST_CASE( "RootSignatureCache builds empty root signature", "[root-signature][T
 // T215: Use Root Signature from Cache in PSO
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder builds PSO with root signature from material parameters", "[pipeline-builder][T215][integration]" )
+TEST_CASE( "PSOBuilder builds PSO with root signature from material parameters", "[pipeline-builder][T215][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder root sig from params" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder root sig from params" ) )
 		return;
 
 	// Arrange - MaterialSystem with shader info
@@ -1417,17 +1417,17 @@ TEST_CASE( "PipelineBuilder builds PSO with root signature from material paramet
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should use RootSignatureBuilder + RootSignatureCache internally)
-	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem, "forward" );
+	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully with root signature from material parameters
 	REQUIRE( pso != nullptr );
 }
 
-TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterless material", "[pipeline-builder][T215][integration]" )
+TEST_CASE( "PSOBuilder builds PSO with empty root signature for parameterless material", "[pipeline-builder][T215][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder empty root sig" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder empty root sig" ) )
 		return;
 
 	// Arrange - MaterialSystem with shader info
@@ -1475,17 +1475,17 @@ TEST_CASE( "PipelineBuilder builds PSO with empty root signature for parameterle
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should create empty root signature)
-	const auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, &materialSystem, "forward" );
+	const auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully with empty root signature
 	REQUIRE( pso != nullptr );
 }
 
-TEST_CASE( "PipelineBuilder reuses cached root signature for identical material parameters", "[pipeline-builder][T215][integration]" )
+TEST_CASE( "PSOBuilder reuses cached root signature for identical material parameters", "[pipeline-builder][T215][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder cache reuse" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder cache reuse" ) )
 		return;
 
 	// Arrange - MaterialSystem with shader info
@@ -1572,8 +1572,8 @@ TEST_CASE( "PipelineBuilder reuses cached root signature for identical material 
 	passConfig.numRenderTargets = 1;
 
 	// Act - build two PSOs with "forward" pass (identical root signatures)
-	const auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material1, passConfig, &materialSystem, "forward" );
-	const auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material2, passConfig, &materialSystem, "forward" );
+	const auto pso1 = graphics::material_system::PSOBuilder::build( &device, material1, passConfig, &materialSystem, "forward" );
+	const auto pso2 = graphics::material_system::PSOBuilder::build( &device, material2, passConfig, &materialSystem, "forward" );
 
 	// Assert - both PSOs created successfully (cache hit on second)
 	REQUIRE( pso1 != nullptr );
@@ -1756,11 +1756,11 @@ TEST_CASE( "MaterialSystem generates RenderPassConfig from render pass", "[mater
 // T014: PSO Construction & Caching
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-builder][T014][unit]" )
+TEST_CASE( "PSOBuilder creates PSO from MaterialDefinition", "[pipeline-builder][T014][unit]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO creation" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder PSO creation" ) )
 		return;
 
 	// Arrange - minimal MaterialDefinition using multi-pass format
@@ -1801,17 +1801,17 @@ TEST_CASE( "PipelineBuilder creates PSO from MaterialDefinition", "[pipeline-bui
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - PSO handle should be valid (non-null, usable for rendering)
 	REQUIRE( pso != nullptr );
 }
 
-TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pipeline-builder][T014][cache][unit]" )
+TEST_CASE( "PSOBuilder caches and reuses PSO for identical requests", "[pipeline-builder][T014][cache][unit]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder PSO caching" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder PSO caching" ) )
 		return;
 
 	// Arrange - minimal MaterialDefinition using multi-pass format
@@ -1852,8 +1852,8 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO twice with "forward" pass (identical inputs)
-	auto pso1 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
-	auto pso2 = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
+	auto pso1 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
+	auto pso2 = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - both should be valid
 	REQUIRE( pso1 != nullptr );
@@ -1867,11 +1867,11 @@ TEST_CASE( "PipelineBuilder caches and reuses PSO for identical requests", "[pip
 // T203: Update PipelineBuilder to Use Shader Info
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipeline-builder][T203][unit]" )
+TEST_CASE( "PSOBuilder compiles shaders from material shader info", "[pipeline-builder][T203][unit]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder shader info usage" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder shader info usage" ) )
 		return;
 
 	// Arrange - MaterialDefinition using grid.hlsl instead of simple.hlsl (multi-pass format)
@@ -1913,7 +1913,7 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with "forward" pass (should use grid.hlsl shaders, not hardcoded simple.hlsl)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, material, passConfig, nullptr, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, material, passConfig, nullptr, "forward" );
 
 	// Assert - PSO should be created successfully using material shader info
 	REQUIRE( pso != nullptr );
@@ -1923,11 +1923,11 @@ TEST_CASE( "PipelineBuilder compiles shaders from material shader info", "[pipel
 // T207: Update PipelineBuilder to Use State Blocks
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeline-builder][T207][integration]" )
+TEST_CASE( "PSOBuilder uses rasterizer state from MaterialSystem", "[pipeline-builder][T207][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder rasterizer state usage" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder rasterizer state usage" ) )
 		return;
 
 	// Arrange - MaterialSystem with wireframe rasterizer state
@@ -1991,7 +1991,7 @@ TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeli
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use wireframe rasterizer state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2002,11 +2002,11 @@ TEST_CASE( "PipelineBuilder uses rasterizer state from MaterialSystem", "[pipeli
 	fs::remove_all( testDir );
 }
 
-TEST_CASE( "PipelineBuilder uses depth stencil state from MaterialSystem", "[pipeline-builder][T207][integration]" )
+TEST_CASE( "PSOBuilder uses depth stencil state from MaterialSystem", "[pipeline-builder][T207][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder depth stencil state usage" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder depth stencil state usage" ) )
 		return;
 
 	// Arrange - MaterialSystem with depth-read-only state
@@ -2070,7 +2070,7 @@ TEST_CASE( "PipelineBuilder uses depth stencil state from MaterialSystem", "[pip
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use depth-read-only state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2078,11 +2078,11 @@ TEST_CASE( "PipelineBuilder uses depth stencil state from MaterialSystem", "[pip
 	fs::remove_all( testDir );
 }
 
-TEST_CASE( "PipelineBuilder uses blend state from MaterialSystem", "[pipeline-builder][T207][integration]" )
+TEST_CASE( "PSOBuilder uses blend state from MaterialSystem", "[pipeline-builder][T207][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder blend state usage" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder blend state usage" ) )
 		return;
 
 	// Arrange - MaterialSystem with alpha blend state
@@ -2156,7 +2156,7 @@ TEST_CASE( "PipelineBuilder uses blend state from MaterialSystem", "[pipeline-bu
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use alpha blend state)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using state blocks
 	REQUIRE( pso != nullptr );
@@ -2326,7 +2326,7 @@ TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end
 	REQUIRE( material->passes[0].passName == "forward" );
 
 	// Note: PSO building is not tested here as it requires D3D12 device initialization
-	// PSO functionality is validated in PipelineBuilder tests (T013, T014)
+	// PSO functionality is validated in PSOBuilder tests (T013, T014)
 
 	// Cleanup
 	fs::remove_all( tempDir );
@@ -3405,11 +3405,11 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 // T211: Use Vertex Format in PSO Creation Tests
 // ============================================================================
 
-TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builder][T211][integration]" )
+TEST_CASE( "PSOBuilder uses vertex format from material", "[pipeline-builder][T211][integration]" )
 {
 	// Arrange - headless DX12 device
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "PipelineBuilder vertex format usage" ) )
+	if ( !requireHeadlessDevice( device, "PSOBuilder vertex format usage" ) )
 		return;
 
 	// Arrange - MaterialSystem with PositionNormalUV vertex format and material
@@ -3475,7 +3475,7 @@ TEST_CASE( "PipelineBuilder uses vertex format from material", "[pipeline-builde
 	passConfig.numRenderTargets = 1;
 
 	// Act - build PSO with MaterialSystem (should use PositionNormalUV vertex format)
-	auto pso = graphics::material_system::PipelineBuilder::buildPSO( &device, *material, passConfig, &materialSystem, "forward" );
+	auto pso = graphics::material_system::PSOBuilder::build( &device, *material, passConfig, &materialSystem, "forward" );
 
 	// Assert - PSO created successfully using vertex format
 	REQUIRE( pso != nullptr );
@@ -3583,7 +3583,7 @@ TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-s
 // Note: Functionality implemented in T207-AF6 (lines 326-327 of pipeline_builder.cpp)
 // T213 adds explicit test coverage to verify sample desc is correctly extracted from RenderTargetStateBlock
 
-TEST_CASE( "PipelineBuilder uses sample desc from RenderTargetStateBlock", "[pipeline-builder][T213][integration]" )
+TEST_CASE( "PSOBuilder uses sample desc from RenderTargetStateBlock", "[pipeline-builder][T213][integration]" )
 {
 	using namespace graphics::material_system;
 	namespace fs = std::filesystem;

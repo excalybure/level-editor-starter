@@ -420,9 +420,9 @@ TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr",
 	REQUIRE( pso == nullptr );
 }
 
-// Note: Shader hot-reload is handled automatically by PipelineBuilder's global cache
+// Note: Shader hot-reload is handled automatically by PSOBuilder's global cache
 // MaterialInstance doesn't need explicit hot-reload support - PSOs are recreated
-// when PipelineBuilder detects shader file changes via content hashing
+// when PSOBuilder detects shader file changes via content hashing
 
 // T304 Tests: Command List Setup
 
@@ -605,7 +605,7 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 }
 
 // Note: T305 hot-reload tests removed - hot-reload is now handled automatically by
-// PipelineBuilder's global cache. No explicit MaterialInstance callback mechanism needed.
+// PSOBuilder's global cache. No explicit MaterialInstance callback mechanism needed.
 
 TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance", "[material-instance][T306][unit]" )
 {

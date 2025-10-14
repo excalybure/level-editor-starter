@@ -2,7 +2,7 @@
 #include "graphics/material_system/loader.h"
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/state_parser.h"
-#include "graphics/material_system/pipeline_builder.h"
+#include "graphics/material_system/pso_builder.h"
 #include "core/console.h"
 
 namespace graphics::material_system

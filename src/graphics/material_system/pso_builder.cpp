@@ -1,4 +1,4 @@
-#include "pipeline_builder.h"
+#include "pso_builder.h"
 #include "material_system.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/material_system/shader_compiler.h"
@@ -12,16 +12,16 @@ namespace graphics::material_system
 {
 
 // Static cache instances
-PipelineCache PipelineBuilder::s_cache;
+PipelineCache PSOBuilder::s_cache;
 static RootSignatureCache s_rootSignatureCache;
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineBuilder::getRootSignature(
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	dx12::Device *device,
 	const MaterialDefinition &material )
 {
 	if ( !device || !device->get() )
 	{
-		console::error( "PipelineBuilder::getRootSignature: invalid device" );
+		console::error( "PSOBuilder::getRootSignature: invalid device" );
 		return nullptr;
 	}
 
@@ -30,7 +30,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineBuilder::getRootSignature(
 	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 }
 
-Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	dx12::Device *device,
 	const MaterialDefinition &material,
 	const RenderPassConfig &passConfig,
@@ -39,7 +39,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 {
 	if ( !device || !device->get() )
 	{
-		console::error( "PipelineBuilder::buildPSO: invalid device" );
+		console::error( "PSOBuilder::build: invalid device" );
 		return nullptr;
 	}
 
@@ -50,7 +50,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 		materialPass = material.getPass( passName );
 		if ( !materialPass )
 		{
-			console::error( "PipelineBuilder::buildPSO: Material '{}' does not have pass '{}'", material.id, passName );
+			console::error( "PSOBuilder::build: Material '{}' does not have pass '{}'", material.id, passName );
 			return nullptr;
 		}
 	}
@@ -76,7 +76,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	// Get shaders from pass (required in multi-pass architecture)
 	if ( !materialPass )
 	{
-		console::error( "PipelineBuilder: materialPass is required, cannot build PSO for material '{}'", material.id );
+		console::error( "PSOBuilder: materialPass is required, cannot build PSO for material '{}'", material.id );
 		return nullptr;
 	}
 
@@ -382,7 +382,7 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineBuilder::buildPSO(
 	return pso;
 }
 
-void PipelineBuilder::clearCache()
+void PSOBuilder::clearCache()
 {
 	s_cache.clear();
 }

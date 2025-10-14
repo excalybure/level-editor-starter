@@ -28,7 +28,7 @@ struct RenderPassConfig
 };
 
 // Pipeline State Object builder
-class PipelineBuilder
+class PSOBuilder
 {
 public:
 	// Build PSO from material definition and render pass configuration
@@ -36,7 +36,7 @@ public:
 	// Automatically caches PSOs and reuses them for identical requests
 	// MaterialSystem pointer is optional - if provided, state blocks will be queried; if nullptr, uses D3D12 defaults
 	// passName: Specific pass to build PSO for (multi-pass materials); empty string uses legacy format
-	static Microsoft::WRL::ComPtr<ID3D12PipelineState> buildPSO(
+	static Microsoft::WRL::ComPtr<ID3D12PipelineState> build(
 		dx12::Device *device,
 		const MaterialDefinition &material,
 		const RenderPassConfig &passConfig,
