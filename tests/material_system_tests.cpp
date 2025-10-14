@@ -1498,10 +1498,10 @@ TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[
 		&reflectionCache );
 
 	// Assert - spec should contain FrameConstants CBV from shader reflection
-	REQUIRE( !spec.resourceBindings.empty() );
+	REQUIRE( !spec.cbvRootDescriptors.empty() );
 
 	bool foundFrameConstants = false;
-	for ( const auto &binding : spec.resourceBindings )
+	for ( const auto &binding : spec.cbvRootDescriptors )
 	{
 		if ( binding.name == "FrameConstants" )
 		{
@@ -1581,11 +1581,11 @@ TEST_CASE( "RootSignatureBuilder merges bindings from VS and PS shaders", "[root
 	// Assert - spec should contain bindings from both shaders
 	// VS has FrameConstants at b0, PS should have no additional unique bindings
 	// (PS might also reference FrameConstants if it uses interpolated data)
-	REQUIRE( !spec.resourceBindings.empty() );
+	REQUIRE( !spec.cbvRootDescriptors.empty() );
 
 	// Should have FrameConstants from VS (and potentially merged from PS if both use it)
 	bool foundFrameConstants = false;
-	for ( const auto &binding : spec.resourceBindings )
+	for ( const auto &binding : spec.cbvRootDescriptors )
 	{
 		if ( binding.name == "FrameConstants" )
 		{
@@ -1645,7 +1645,7 @@ TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "
 
 	// Assert - FrameConstants should appear exactly once, not duplicated
 	int frameConstantsCount = 0;
-	for ( const auto &binding : spec.resourceBindings )
+	for ( const auto &binding : spec.cbvRootDescriptors )
 	{
 		if ( binding.name == "FrameConstants" )
 		{
@@ -1707,10 +1707,6 @@ TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[
 
 	// Assert - simple.hlsl has no SRVs/UAVs/Samplers, so descriptorTableResources should be empty
 	REQUIRE( spec.descriptorTableResources.empty() );
-
-	// Assert - legacy unified vector should still be populated for backward compatibility
-	REQUIRE( !spec.resourceBindings.empty() );
-	REQUIRE( spec.resourceBindings.size() == 1 );
 }
 
 // ============================================================================
@@ -1893,7 +1889,7 @@ TEST_CASE( "RootSignatureCache builds root signature from spec (cache miss)", "[
 	binding.name = "ViewProjection";
 	binding.type = graphics::material_system::ResourceBindingType::CBV;
 	binding.slot = 0;
-	spec.resourceBindings.push_back( binding );
+	spec.cbvRootDescriptors.push_back( binding );
 
 	// Act - create cache and get root signature (cache miss)
 	graphics::material_system::RootSignatureCache cache;
@@ -1916,7 +1912,7 @@ TEST_CASE( "RootSignatureCache returns cached root signature (cache hit)", "[roo
 	binding.name = "WorldMatrix";
 	binding.type = graphics::material_system::ResourceBindingType::CBV;
 	binding.slot = 0;
-	spec.resourceBindings.push_back( binding );
+	spec.cbvRootDescriptors.push_back( binding );
 
 	// Act - get root signature twice with same spec
 	graphics::material_system::RootSignatureCache cache;

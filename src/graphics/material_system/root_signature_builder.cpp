@@ -14,6 +14,7 @@ RootSignatureSpec RootSignatureBuilder::Build(
 	ShaderReflectionCache *reflectionCache )
 {
 	RootSignatureSpec spec;
+	std::vector<ResourceBinding> allBindings;
 
 	// Validate inputs
 	if ( !shaderManager )
@@ -87,30 +88,20 @@ RootSignatureSpec RootSignatureBuilder::Build(
 			continue;
 		}
 
-		// Add bindings from this shader to the spec
+		// Add bindings from this shader to temporary collection
 		for ( const auto &binding : reflectionResult.bindings )
 		{
-			spec.resourceBindings.push_back( binding );
+			allBindings.push_back( binding );
 		}
 	}
 
 	// Merge and validate bindings (removes duplicates, validates conflicts)
-	const auto merged = MergeAndValidateBindings( spec.resourceBindings );
+	const auto merged = MergeAndValidateBindings( allBindings );
 
 	// Group bindings into CBVs vs descriptor table resources
 	GroupBindingsForRootSignature( merged, spec );
 
-	// Populate legacy unified vector for backward compatibility
-	spec.resourceBindings = merged;
-	SortBindings( spec.resourceBindings );
-
 	return spec;
-}
-
-void RootSignatureBuilder::SortBindings( std::vector<ResourceBinding> &bindings )
-{
-	// Sort by name for deterministic ordering
-	std::sort( bindings.begin(), bindings.end() );
 }
 
 std::vector<ResourceBinding> RootSignatureBuilder::MergeAndValidateBindings(
@@ -190,10 +181,6 @@ void RootSignatureBuilder::GroupBindingsForRootSignature(
 	// Sort both groups for deterministic output
 	std::sort( outSpec.cbvRootDescriptors.begin(), outSpec.cbvRootDescriptors.end() );
 	std::sort( outSpec.descriptorTableResources.begin(), outSpec.descriptorTableResources.end() );
-
-	console::info( "RootSignatureBuilder: Grouped {} CBVs and {} descriptor table resources",
-		outSpec.cbvRootDescriptors.size(),
-		outSpec.descriptorTableResources.size() );
 }
 
 } // namespace graphics::material_system

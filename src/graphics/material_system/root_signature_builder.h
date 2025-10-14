@@ -22,10 +22,6 @@ struct RootSignatureSpec
 	// SRVs, UAVs, and Samplers use descriptor tables (1 DWORD per table)
 	// Will be organized into tables in a future phase
 	std::vector<ResourceBinding> descriptorTableResources;
-
-	// Legacy: unified bindings list (for backward compatibility)
-	// Will be deprecated once all consumers migrate to split vectors
-	std::vector<ResourceBinding> resourceBindings;
 };
 
 // Builds root signatures from material definitions
@@ -44,9 +40,6 @@ public:
 		ShaderReflectionCache *reflectionCache );
 
 private:
-	// Sort bindings for deterministic hashing
-	static void SortBindings( std::vector<ResourceBinding> &bindings );
-
 	// Merge bindings from multiple shaders, removing duplicates
 	// Validates that duplicate names have matching type and slot
 	// @param bindings - Vector of bindings to merge (may contain duplicates)
