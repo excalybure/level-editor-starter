@@ -82,8 +82,7 @@ bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
 		m_device,
 		m_materialSystem,
 		*m_materialDefinition,
-		passConfig,
-		passName );
+		passConfig );
 	if ( !pso )
 	{
 		return false;

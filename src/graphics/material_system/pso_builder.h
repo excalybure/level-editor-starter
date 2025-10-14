@@ -43,14 +43,12 @@ public:
 	// @param device - D3D12 device
 	// @param materialSystem - Material system for querying state blocks and shader manager (required)
 	// @param material - Material definition with passes
-	// @param passConfig - Render pass configuration (formats, sample count)
-	// @param passName - Name of the pass to build PSO for (required for multi-pass materials)
+	// @param passConfig - Render pass configuration (formats, sample count, and pass name)
 	static Microsoft::WRL::ComPtr<ID3D12PipelineState> build(
 		dx12::Device *device,
 		const MaterialSystem *materialSystem,
 		const MaterialDefinition &material,
-		const RenderPassConfig &passConfig,
-		const std::string &passName );
+		const RenderPassConfig &passConfig );
 
 	// Get or create root signature for a material pass using shader reflection
 	// Uses shared cache for efficient reuse across materials
