@@ -199,9 +199,9 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 	// Our C++ matrices are row-major, so transpose before sending to GPU
 	objectConstants.worldMatrix = worldMatrix.transpose();
 	// For normal matrix, we need the inverse transpose of the world matrix
-	// For uniform scaling, we can use the world matrix directly
-	// TODO: Implement proper inverse transpose calculation for non-uniform scaling
-	objectConstants.normalMatrix = objectConstants.worldMatrix;
+	// This is required for correct normal transformation under non-uniform scaling
+	// Normal matrix = transpose(inverse(worldMatrix)) for transforming normals
+	objectConstants.normalMatrix = worldMatrix.inverse().transpose();
 
 	// Bind object constants to register b1 using root constants
 	commandList->SetGraphicsRoot32BitConstants( 1, sizeof( ObjectConstants ) / 4, &objectConstants, 0 );

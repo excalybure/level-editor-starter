@@ -259,3 +259,83 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 
 	systemManager.shutdown( scene );
 }
+
+TEST_CASE( "Normal matrix calculation using inverse transpose for non-uniform scaling", "[mesh_rendering_system][normal_matrix][unit]" )
+{
+	SECTION( "Uniform scaling - inverse transpose equals original" )
+	{
+		// For uniform scaling, inverse transpose should equal the original matrix (modulo scale factor)
+		const math::Mat4f uniformScale = math::Mat4f::scale( 2.0f, 2.0f, 2.0f );
+		const math::Mat4f inverseTranspose = uniformScale.inverse().transpose();
+
+		// The normal matrix should be proportional to the original
+		// For uniform scale S, inverse transpose = (1/S)I
+		REQUIRE( inverseTranspose.m00() == Catch::Approx( 0.5f ).margin( 0.001f ) );
+		REQUIRE( inverseTranspose.m11() == Catch::Approx( 0.5f ).margin( 0.001f ) );
+		REQUIRE( inverseTranspose.m22() == Catch::Approx( 0.5f ).margin( 0.001f ) );
+	}
+
+	SECTION( "Non-uniform scaling - inverse transpose corrects normals" )
+	{
+		// Create a transformation with non-uniform scale
+		const math::Mat4f nonUniformScale = math::Mat4f::scale( 2.0f, 1.0f, 1.0f );
+		const math::Mat4f normalMatrix = nonUniformScale.inverse().transpose();
+
+		// For non-uniform scaling, the normal matrix should compensate
+		// When model is scaled 2x in X, normals should be scaled 0.5x in X
+		REQUIRE( normalMatrix.m00() == Catch::Approx( 0.5f ).margin( 0.001f ) );
+		REQUIRE( normalMatrix.m11() == Catch::Approx( 1.0f ).margin( 0.001f ) );
+		REQUIRE( normalMatrix.m22() == Catch::Approx( 1.0f ).margin( 0.001f ) );
+	}
+
+	SECTION( "Rotation only - inverse transpose equals transpose" )
+	{
+		// For pure rotation matrices, inverse equals transpose
+		const math::Mat4f rotation = math::Mat4f::rotationY( math::pi<float> / 4.0f );
+		const math::Mat4f normalMatrix = rotation.inverse().transpose();
+		const math::Mat4f justTranspose = rotation.transpose();
+
+		// For orthogonal matrices (rotations), inverse(M) = transpose(M)
+		// So inverse(transpose(M)) = transpose(transpose(M)) = M
+		// But we want inverse(M).transpose() = transpose(M).transpose() = M
+		// Actually for rotation: inverse().transpose() should equal the original rotation
+		REQUIRE( normalMatrix.m00() == Catch::Approx( rotation.m00() ).margin( 0.001f ) );
+		REQUIRE( normalMatrix.m11() == Catch::Approx( rotation.m11() ).margin( 0.001f ) );
+		REQUIRE( normalMatrix.m22() == Catch::Approx( rotation.m22() ).margin( 0.001f ) );
+	}
+
+	SECTION( "Combined transform - rotation and non-uniform scale" )
+	{
+		// Create a complex transformation: rotation + non-uniform scale
+		const math::Mat4f scale = math::Mat4f::scale( 2.0f, 3.0f, 1.0f );
+		const math::Mat4f rotation = math::Mat4f::rotationZ( math::pi<float> / 6.0f ); // 30 degrees
+		const math::Mat4f worldMatrix = rotation * scale;
+
+		// Calculate normal matrix
+		const math::Mat4f normalMatrix = worldMatrix.inverse().transpose();
+
+		// The normal matrix should exist and be finite
+		REQUIRE( std::isfinite( normalMatrix.m00() ) );
+		REQUIRE( std::isfinite( normalMatrix.m11() ) );
+		REQUIRE( std::isfinite( normalMatrix.m22() ) );
+
+		// Transform a normal vector (pointing up in Y)
+		const math::Vec3f originalNormal( 0.0f, 1.0f, 0.0f );
+
+		// Apply world matrix to vertex (positions transform with world matrix)
+		// Apply normal matrix to normal (normals transform with inverse transpose)
+		const math::Vec3f transformedNormal(
+			originalNormal.x * normalMatrix.m00() + originalNormal.y * normalMatrix.m10() + originalNormal.z * normalMatrix.m20(),
+			originalNormal.x * normalMatrix.m01() + originalNormal.y * normalMatrix.m11() + originalNormal.z * normalMatrix.m21(),
+			originalNormal.x * normalMatrix.m02() + originalNormal.y * normalMatrix.m12() + originalNormal.z * normalMatrix.m22() );
+
+		// The transformed normal should still be normalized (or close to it)
+		const float length = std::sqrt( transformedNormal.x * transformedNormal.x +
+			transformedNormal.y * transformedNormal.y +
+			transformedNormal.z * transformedNormal.z );
+
+		// Note: inverse transpose doesn't preserve length, but it should be finite and reasonable
+		REQUIRE( std::isfinite( length ) );
+		REQUIRE( length > 0.0f );
+	}
+}
