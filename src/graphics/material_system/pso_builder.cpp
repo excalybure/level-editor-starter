@@ -18,14 +18,22 @@ static RootSignatureCache s_rootSignatureCache;
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	dx12::Device *device,
 	const MaterialDefinition &material,
-	shader_manager::ShaderManager *shaderManager,
-	ShaderReflectionCache *reflectionCache )
+	const MaterialSystem *materialSystem )
 {
 	if ( !device || !device->get() )
 	{
 		console::error( "PSOBuilder::getRootSignature: invalid device" );
 		return nullptr;
 	}
+
+	if ( !materialSystem )
+	{
+		console::error( "PSOBuilder::getRootSignature: MaterialSystem is required" );
+		return nullptr;
+	}
+
+	shader_manager::ShaderManager *shaderManager = materialSystem->getShaderManager();
+	ShaderReflectionCache *reflectionCache = materialSystem->getReflectionCache();
 
 	if ( !shaderManager )
 	{
@@ -56,18 +64,26 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	const MaterialDefinition &material,
 	const RenderPassConfig &passConfig,
 	const MaterialSystem *materialSystem,
-	const std::string &passName,
-	shader_manager::ShaderManager *shaderManager,
-	ShaderReflectionCache *reflectionCache )
+	const std::string &passName )
 {
 	console::info( "PSOBuilder::build called for material '{}', pass '{}'", material.id, passName );
-	console::info( "  shaderManager={}, reflectionCache={}", (void *)shaderManager, (void *)reflectionCache );
 
 	if ( !device || !device->get() )
 	{
 		console::error( "PSOBuilder::build: invalid device" );
 		return nullptr;
 	}
+
+	if ( !materialSystem )
+	{
+		console::error( "PSOBuilder::build: MaterialSystem is required" );
+		return nullptr;
+	}
+
+	shader_manager::ShaderManager *shaderManager = materialSystem->getShaderManager();
+	ShaderReflectionCache *reflectionCache = materialSystem->getReflectionCache();
+
+	console::info( "  shaderManager={}, reflectionCache={}", (void *)shaderManager, (void *)reflectionCache );
 
 	// Query MaterialPass if passName provided (multi-pass material)
 	const MaterialPass *materialPass = nullptr;

@@ -43,7 +43,7 @@ public:
 	shader_manager::ShaderManager *getShaderManager() const { return m_shaderManager; }
 
 	// Access shader reflection cache
-	ShaderReflectionCache *getReflectionCache() { return &m_reflectionCache; }
+	ShaderReflectionCache *getReflectionCache() const { return const_cast<ShaderReflectionCache *>( &m_reflectionCache ); }
 
 	// Query material handle by ID
 	// Returns invalid handle if material not found
