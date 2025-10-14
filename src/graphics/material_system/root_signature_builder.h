@@ -52,6 +52,13 @@ private:
 
 	// Assign slots to bindings
 	static void AssignSlots( std::vector<ResourceBinding> &bindings );
+
+	// Merge bindings from multiple shaders, removing duplicates
+	// Validates that duplicate names have matching type and slot
+	// @param bindings - Vector of bindings to merge (may contain duplicates)
+	// @return Merged bindings with duplicates removed
+	static std::vector<ResourceBinding> MergeAndValidateBindings(
+		const std::vector<ResourceBinding> &bindings );
 };
 
 } // namespace graphics::material_system

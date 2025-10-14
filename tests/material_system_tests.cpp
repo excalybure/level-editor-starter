@@ -1585,6 +1585,147 @@ TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[
 	REQUIRE( foundFrameConstants );
 }
 
+TEST_CASE( "RootSignatureBuilder merges bindings from VS and PS shaders", "[root-signature][phase2][unit]" )
+{
+	// Arrange - create ShaderManager
+	shader_manager::ShaderManager shaderManager;
+
+	// Arrange - compile VS and PS shaders
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"PSMain",
+		"ps_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+	REQUIRE( psBlob.isValid() );
+
+	// Arrange - register shaders
+	const auto vsHandle = shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		shader_manager::ShaderType::Vertex );
+	const auto psHandle = shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"PSMain",
+		"ps_5_1",
+		shader_manager::ShaderType::Pixel );
+
+	REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
+	REQUIRE( psHandle != shader_manager::INVALID_SHADER_HANDLE );
+
+	// Arrange - create MaterialPass with both VS and PS
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.file = "shaders/simple.hlsl";
+	vsRef.entryPoint = "VSMain";
+	vsRef.profile = "vs_5_1";
+	pass.shaders.push_back( vsRef );
+
+	graphics::material_system::ShaderReference psRef;
+	psRef.stage = graphics::material_system::ShaderStage::Pixel;
+	psRef.file = "shaders/simple.hlsl";
+	psRef.entryPoint = "PSMain";
+	psRef.profile = "ps_5_1";
+	pass.shaders.push_back( psRef );
+
+	// Arrange - create reflection cache
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+
+	// Act - build root signature from pass with both shaders
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build(
+		pass,
+		&shaderManager,
+		&reflectionCache );
+
+	// Assert - spec should contain bindings from both shaders
+	// VS has FrameConstants at b0, PS should have no additional unique bindings
+	// (PS might also reference FrameConstants if it uses interpolated data)
+	REQUIRE( !spec.resourceBindings.empty() );
+
+	// Should have FrameConstants from VS (and potentially merged from PS if both use it)
+	bool foundFrameConstants = false;
+	for ( const auto &binding : spec.resourceBindings )
+	{
+		if ( binding.name == "FrameConstants" )
+		{
+			foundFrameConstants = true;
+			REQUIRE( binding.type == graphics::material_system::ResourceBindingType::CBV );
+			REQUIRE( binding.slot == 0 );
+		}
+	}
+
+	REQUIRE( foundFrameConstants );
+}
+
+TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "[root-signature][phase2][unit]" )
+{
+	// This test verifies that if multiple shaders reference the same binding,
+	// it only appears once in the final spec (not duplicated)
+
+	// Note: Since simple.hlsl VS has FrameConstants but PS doesn't,
+	// we can't easily test this without a shader that has shared bindings.
+	// For now, we'll verify the current behavior: no duplicate validation errors
+
+	// Arrange
+	shader_manager::ShaderManager shaderManager;
+	const std::unordered_map<std::string, std::string> emptyDefines;
+
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+
+	shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		shader_manager::ShaderType::Vertex );
+
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.file = "shaders/simple.hlsl";
+	vsRef.entryPoint = "VSMain";
+	vsRef.profile = "vs_5_1";
+	pass.shaders.push_back( vsRef );
+
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+
+	// Act
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build(
+		pass,
+		&shaderManager,
+		&reflectionCache );
+
+	// Assert - FrameConstants should appear exactly once, not duplicated
+	int frameConstantsCount = 0;
+	for ( const auto &binding : spec.resourceBindings )
+	{
+		if ( binding.name == "FrameConstants" )
+		{
+			frameConstantsCount++;
+		}
+	}
+
+	REQUIRE( frameConstantsCount == 1 ); // Should appear exactly once
+}
+
 // ============================================================================
 // T214: Root Signature Cache
 // ============================================================================

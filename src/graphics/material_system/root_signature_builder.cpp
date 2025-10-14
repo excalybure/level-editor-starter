@@ -94,11 +94,10 @@ RootSignatureSpec RootSignatureBuilder::Build(
 		}
 	}
 
-	// TODO: Merge and validate bindings (AF3)
-	// TODO: Group bindings for root signature (AF4)
+	// Merge and validate bindings (removes duplicates, validates conflicts)
+	spec.resourceBindings = MergeAndValidateBindings( spec.resourceBindings );
 
-	// For now, just return the raw collected bindings
-	ValidateBindings( spec.resourceBindings );
+	// Sort bindings for deterministic output
 	SortBindings( spec.resourceBindings );
 
 	return spec;
@@ -223,6 +222,57 @@ void RootSignatureBuilder::AssignSlots( std::vector<ResourceBinding> &bindings )
 
 		binding.slot = nextSlot++;
 	}
+}
+
+std::vector<ResourceBinding> RootSignatureBuilder::MergeAndValidateBindings(
+	const std::vector<ResourceBinding> &bindings )
+{
+	std::vector<ResourceBinding> merged;
+	std::unordered_map<std::string, ResourceBinding> bindingMap;
+
+	for ( const auto &binding : bindings )
+	{
+		const auto it = bindingMap.find( binding.name );
+		if ( it != bindingMap.end() )
+		{
+			// Found duplicate - validate it matches
+			const auto &existing = it->second;
+
+			if ( existing.type != binding.type )
+			{
+				console::errorAndThrow(
+					"Binding '{}' has conflicting types across shaders: {} vs {}",
+					binding.name,
+					static_cast<int>( existing.type ),
+					static_cast<int>( binding.type ) );
+			}
+
+			if ( existing.slot != binding.slot )
+			{
+				console::errorAndThrow(
+					"Binding '{}' has conflicting register slots across shaders: {} vs {}",
+					binding.name,
+					existing.slot,
+					binding.slot );
+			}
+
+			// Duplicate is valid - skip it (already in map)
+		}
+		else
+		{
+			// New binding - add to map
+			bindingMap[binding.name] = binding;
+		}
+	}
+
+	// Convert map to vector
+	merged.reserve( bindingMap.size() );
+	for ( const auto &pair : bindingMap )
+	{
+		merged.push_back( pair.second );
+	}
+
+	return merged;
 }
 
 } // namespace graphics::material_system
