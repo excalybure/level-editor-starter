@@ -11,6 +11,7 @@
 #include "graphics/material_system/shader_reflection.h"
 #include "graphics/material_system/state_blocks.h"
 #include "graphics/material_system/state_parser.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "core/console.h"
 #include "test_dx12_helpers.h"
 #include <filesystem>
@@ -1517,6 +1518,71 @@ TEST_CASE( "ShaderReflectionCache tracks different shaders separately", "[reflec
 	REQUIRE( vsCached.success );
 	REQUIRE( psCached.success );
 	REQUIRE( cache.GetHitCount() == 2 ); // Two hits
+}
+
+// ============================================================================
+// Phase 2: Reflection-Based Root Signature Builder
+// ============================================================================
+
+TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[root-signature][phase2][unit]" )
+{
+	// Arrange - compile simple shaders
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+
+	// Arrange - create ShaderManager and register shader
+	shader_manager::ShaderManager shaderManager;
+	const auto vsHandle = shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		shader_manager::ShaderType::Vertex );
+
+	REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
+	REQUIRE( shaderManager.getShaderBlob( vsHandle ) != nullptr );
+
+	// Arrange - create MaterialPass with shader reference
+	graphics::material_system::MaterialPass pass;
+	pass.passName = "forward";
+
+	graphics::material_system::ShaderReference vsRef;
+	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
+	vsRef.file = "shaders/simple.hlsl";
+	vsRef.entryPoint = "VSMain";
+	vsRef.profile = "vs_5_1";
+	pass.shaders.push_back( vsRef );
+
+	// Arrange - create reflection cache
+	graphics::material_system::ShaderReflectionCache reflectionCache;
+
+	// Act - build root signature using new signature
+	const auto spec = graphics::material_system::RootSignatureBuilder::Build(
+		pass,
+		&shaderManager,
+		&reflectionCache );
+
+	// Assert - spec should contain FrameConstants CBV from shader reflection
+	REQUIRE( !spec.resourceBindings.empty() );
+
+	bool foundFrameConstants = false;
+	for ( const auto &binding : spec.resourceBindings )
+	{
+		if ( binding.name == "FrameConstants" )
+		{
+			foundFrameConstants = true;
+			REQUIRE( binding.type == graphics::material_system::ResourceBindingType::CBV );
+			REQUIRE( binding.slot == 0 );
+			break;
+		}
+	}
+
+	REQUIRE( foundFrameConstants );
 }
 
 // ============================================================================

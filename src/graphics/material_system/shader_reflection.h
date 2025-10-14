@@ -1,7 +1,7 @@
 #pragma once
 
-#include "graphics/material_system/root_signature_builder.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include <string>
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -10,6 +10,29 @@
 
 namespace graphics::material_system
 {
+
+// Resource binding types for root signature
+enum class ResourceBindingType
+{
+	CBV, // Constant Buffer View
+	SRV, // Shader Resource View
+	UAV, // Unordered Access View
+	Sampler
+};
+
+// Individual resource binding in root signature
+struct ResourceBinding
+{
+	std::string name;
+	ResourceBindingType type;
+	int slot;
+
+	bool operator<( const ResourceBinding &other ) const
+	{
+		// Sort by name for deterministic ordering
+		return name < other.name;
+	}
+};
 
 // Result of shader reflection operation
 struct ShaderResourceBindings

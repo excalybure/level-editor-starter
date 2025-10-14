@@ -1,4 +1,5 @@
 #include "graphics/material_system/root_signature_builder.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include "core/console.h"
 #include <algorithm>
 #include <unordered_set>
@@ -6,6 +7,104 @@
 namespace graphics::material_system
 {
 
+// New reflection-based Build() implementation
+RootSignatureSpec RootSignatureBuilder::Build(
+	const MaterialPass &pass,
+	shader_manager::ShaderManager *shaderManager,
+	ShaderReflectionCache *reflectionCache )
+{
+	RootSignatureSpec spec;
+
+	// Validate inputs
+	if ( !shaderManager )
+	{
+		console::error( "RootSignatureBuilder::Build: shaderManager is null" );
+		return spec;
+	}
+
+	if ( !reflectionCache )
+	{
+		console::error( "RootSignatureBuilder::Build: reflectionCache is null" );
+		return spec;
+	}
+
+	// Iterate all shaders in the pass and reflect each one
+	for ( const auto &shaderRef : pass.shaders )
+	{
+		// Convert ShaderStage to ShaderType for ShaderManager
+		shader_manager::ShaderType shaderType;
+		switch ( shaderRef.stage )
+		{
+		case ShaderStage::Vertex:
+			shaderType = shader_manager::ShaderType::Vertex;
+			break;
+		case ShaderStage::Pixel:
+			shaderType = shader_manager::ShaderType::Pixel;
+			break;
+		case ShaderStage::Compute:
+			shaderType = shader_manager::ShaderType::Compute;
+			break;
+		case ShaderStage::Geometry:
+			shaderType = shader_manager::ShaderType::Geometry;
+			break;
+		case ShaderStage::Hull:
+			shaderType = shader_manager::ShaderType::Hull;
+			break;
+		case ShaderStage::Domain:
+			shaderType = shader_manager::ShaderType::Domain;
+			break;
+		default:
+			console::error( "RootSignatureBuilder::Build: unknown shader stage" );
+			continue;
+		}
+
+		// Register shader with ShaderManager to get handle
+		const auto shaderHandle = shaderManager->registerShader(
+			shaderRef.file,
+			shaderRef.entryPoint,
+			shaderRef.profile,
+			shaderType );
+
+		if ( shaderHandle == shader_manager::INVALID_SHADER_HANDLE )
+		{
+			console::error( "RootSignatureBuilder::Build: failed to register shader: {}", shaderRef.file );
+			continue;
+		}
+
+		// Get compiled shader blob
+		const shader_manager::ShaderBlob *blob = shaderManager->getShaderBlob( shaderHandle );
+		if ( !blob || !blob->blob )
+		{
+			console::error( "RootSignatureBuilder::Build: failed to get shader blob for: {}", shaderRef.file );
+			continue;
+		}
+
+		// Reflect shader to extract resource bindings
+		const auto reflectionResult = reflectionCache->GetOrReflect( blob, shaderHandle );
+		if ( !reflectionResult.success )
+		{
+			console::error( "RootSignatureBuilder::Build: shader reflection failed for: {}", shaderRef.file );
+			continue;
+		}
+
+		// Add bindings from this shader to the spec
+		for ( const auto &binding : reflectionResult.bindings )
+		{
+			spec.resourceBindings.push_back( binding );
+		}
+	}
+
+	// TODO: Merge and validate bindings (AF3)
+	// TODO: Group bindings for root signature (AF4)
+
+	// For now, just return the raw collected bindings
+	ValidateBindings( spec.resourceBindings );
+	SortBindings( spec.resourceBindings );
+
+	return spec;
+}
+
+// Legacy Build() implementation - DEPRECATED
 RootSignatureSpec RootSignatureBuilder::Build( const MaterialDefinition &material, bool includeFrameConstants, bool includeObjectConstants, bool includeMaterialConstants )
 {
 	RootSignatureSpec spec;

@@ -1,34 +1,17 @@
 #pragma once
 
 #include "graphics/material_system/parser.h"
+#include "graphics/material_system/shader_reflection.h"
 #include <string>
 #include <vector>
 
+namespace shader_manager
+{
+class ShaderManager;
+}
+
 namespace graphics::material_system
 {
-
-// Resource binding types for root signature
-enum class ResourceBindingType
-{
-	CBV, // Constant Buffer View
-	SRV, // Shader Resource View
-	UAV, // Unordered Access View
-	Sampler
-};
-
-// Individual resource binding in root signature
-struct ResourceBinding
-{
-	std::string name;
-	ResourceBindingType type;
-	int slot;
-
-	bool operator<( const ResourceBinding &other ) const
-	{
-		// Sort by name for deterministic ordering
-		return name < other.name;
-	}
-};
 
 // Root signature specification
 struct RootSignatureSpec
@@ -40,13 +23,19 @@ struct RootSignatureSpec
 class RootSignatureBuilder
 {
 public:
-	// Build root signature spec from material definition
-	// Note: This simplified version infers bindings from parameters only.
-	// Full implementation would use shader reflection (DXIL analysis).
-	// @param material - Material definition to build root signature for
-	// @param includeFrameConstants - If true, adds default FrameConstants CBV at b0 (required for most shaders)
-	// @param includeObjectConstants - If true, adds default ObjectConstants CBV at b1 (world/normal matrices)
-	// @param includeMaterialConstants - If true, adds default MaterialConstants CBV at b2 (material properties)
+	// Build root signature spec from material pass using shader reflection
+	// Uses D3D12 shader reflection to automatically detect CBV/SRV/UAV/Sampler requirements
+	// @param pass - Material pass containing shaders to reflect
+	// @param shaderManager - ShaderManager to retrieve compiled shader blobs
+	// @param reflectionCache - Cache for shader reflection results (avoids redundant D3DReflect calls)
+	// @return RootSignatureSpec with bindings extracted from shaders
+	static RootSignatureSpec Build(
+		const MaterialPass &pass,
+		shader_manager::ShaderManager *shaderManager,
+		ShaderReflectionCache *reflectionCache );
+
+	// Legacy Build() for backward compatibility - DEPRECATED
+	// Will be removed after all call sites are migrated to reflection-based Build()
 	static RootSignatureSpec Build( const MaterialDefinition &material, bool includeFrameConstants = false, bool includeObjectConstants = false, bool includeMaterialConstants = false );
 
 private:
