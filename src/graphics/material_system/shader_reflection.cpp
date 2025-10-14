@@ -3,11 +3,16 @@
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#include <string_view>
 
 using Microsoft::WRL::ComPtr;
 
 namespace graphics::material_system
 {
+
+// ============================================================================
+// ShaderReflection Implementation
+// ============================================================================
 
 ShaderResourceBindings ShaderReflection::Reflect( const shader_manager::ShaderBlob *blob )
 {
@@ -120,6 +125,109 @@ ResourceBindingType ShaderReflection::MapBindingType( D3D_SHADER_INPUT_TYPE d3dT
 		console::error( "ShaderReflection::MapBindingType: Unknown D3D_SHADER_INPUT_TYPE={}", static_cast<int>( d3dType ) );
 		return ResourceBindingType::CBV; // Default fallback
 	}
+}
+
+// ============================================================================
+// ShaderReflectionCache Implementation
+// ============================================================================
+
+ShaderResourceBindings ShaderReflectionCache::GetOrReflect(
+	const shader_manager::ShaderBlob *blob,
+	shader_manager::ShaderHandle handle )
+{
+	// Validate input
+	if ( !blob || !blob->blob || !blob->isValid() )
+	{
+		console::error( "ShaderReflectionCache::GetOrReflect: Invalid shader blob" );
+		++m_missCount;
+		return ShaderResourceBindings{ {}, false };
+	}
+
+	// Compute bytecode hash
+	const size_t hash = HashBytecode( blob );
+	const CacheKey key{ hash };
+
+	// Check cache
+	const auto it = m_cache.find( key );
+	if ( it != m_cache.end() )
+	{
+		// Cache hit
+		++m_hitCount;
+		return it->second;
+	}
+
+	// Cache miss - perform reflection
+	++m_missCount;
+
+	const auto bindings = ShaderReflection::Reflect( blob );
+
+	// Cache the result if successful
+	if ( bindings.success )
+	{
+		m_cache[key] = bindings;
+		m_handleToKey[handle] = key;
+	}
+
+	return bindings;
+}
+
+void ShaderReflectionCache::Invalidate( shader_manager::ShaderHandle handle )
+{
+	// Find the cache key for this handle
+	const auto handleIt = m_handleToKey.find( handle );
+	if ( handleIt == m_handleToKey.end() )
+	{
+		// Handle not tracked (never cached or already invalidated)
+		return;
+	}
+
+	const CacheKey key = handleIt->second;
+
+	// Remove from cache
+	const auto cacheIt = m_cache.find( key );
+	if ( cacheIt != m_cache.end() )
+	{
+		m_cache.erase( cacheIt );
+	}
+
+	// Remove handle tracking
+	m_handleToKey.erase( handleIt );
+}
+
+void ShaderReflectionCache::Clear()
+{
+	const size_t cacheSize = m_cache.size();
+	const size_t handleCount = m_handleToKey.size();
+
+	m_cache.clear();
+	m_handleToKey.clear();
+	m_hitCount = 0;
+	m_missCount = 0;
+}
+
+size_t ShaderReflectionCache::HashBytecode( const shader_manager::ShaderBlob *blob )
+{
+	if ( !blob || !blob->blob )
+	{
+		return 0;
+	}
+
+	const void *data = blob->blob->GetBufferPointer();
+	const size_t size = blob->blob->GetBufferSize();
+
+	if ( !data || size == 0 )
+	{
+		return 0;
+	}
+
+	// Hash the bytecode content using std::hash on string_view
+	// This provides a reasonably fast hash suitable for caching
+	// For production, consider FNV-1a or xxHash for better performance
+	const std::string_view bytecodeView(
+		static_cast<const char *>( data ),
+		size );
+
+	return std::hash<std::string_view>{}( bytecodeView );
 }
 
 } // namespace graphics::material_system

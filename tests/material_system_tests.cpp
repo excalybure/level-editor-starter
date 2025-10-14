@@ -1356,6 +1356,170 @@ TEST_CASE( "ShaderReflection handles invalid shader data", "[reflection][unit]" 
 }
 
 // ============================================================================
+// Shader Reflection Cache Tests
+// ============================================================================
+
+TEST_CASE( "ShaderReflectionCache caches reflection results", "[reflection][cache][unit]" )
+{
+	// Arrange - compile shader
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+
+	graphics::material_system::ShaderReflectionCache cache;
+	const shader_manager::ShaderHandle handle = 1;
+
+	// Act - first call (cache miss)
+	const auto bindings1 = cache.GetOrReflect( &vsBlob, handle );
+
+	// Assert - successful reflection
+	REQUIRE( bindings1.success );
+	REQUIRE( !bindings1.bindings.empty() );
+	REQUIRE( cache.GetCacheSize() == 1 );
+	REQUIRE( cache.GetMissCount() == 1 );
+	REQUIRE( cache.GetHitCount() == 0 );
+
+	// Act - second call with same blob (cache hit)
+	const auto bindings2 = cache.GetOrReflect( &vsBlob, handle );
+
+	// Assert - same result from cache
+	REQUIRE( bindings2.success );
+	REQUIRE( bindings2.bindings.size() == bindings1.bindings.size() );
+	REQUIRE( cache.GetCacheSize() == 1 ); // Still only one entry
+	REQUIRE( cache.GetMissCount() == 1 ); // No new miss
+	REQUIRE( cache.GetHitCount() == 1 );  // One hit
+}
+
+TEST_CASE( "ShaderReflectionCache invalidates specific handle", "[reflection][cache][unit]" )
+{
+	// Arrange - compile shader and cache result
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+
+	graphics::material_system::ShaderReflectionCache cache;
+	const shader_manager::ShaderHandle handle = 1;
+
+	cache.GetOrReflect( &vsBlob, handle );
+	REQUIRE( cache.GetCacheSize() == 1 );
+
+	// Act - invalidate the cache entry
+	cache.Invalidate( handle );
+
+	// Assert - cache should be empty
+	REQUIRE( cache.GetCacheSize() == 0 );
+
+	// Act - reflect again (should be cache miss)
+	cache.GetOrReflect( &vsBlob, handle );
+
+	// Assert - new cache entry created
+	REQUIRE( cache.GetCacheSize() == 1 );
+	REQUIRE( cache.GetMissCount() == 2 ); // Two misses total
+}
+
+TEST_CASE( "ShaderReflectionCache clears all entries", "[reflection][cache][unit]" )
+{
+	// Arrange - cache multiple shaders
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"PSMain",
+		"ps_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+	REQUIRE( psBlob.isValid() );
+
+	graphics::material_system::ShaderReflectionCache cache;
+
+	cache.GetOrReflect( &vsBlob, 1 );
+	cache.GetOrReflect( &psBlob, 2 );
+
+	REQUIRE( cache.GetCacheSize() == 2 );
+
+	// Act - clear cache
+	cache.Clear();
+
+	// Assert - cache empty, statistics reset
+	REQUIRE( cache.GetCacheSize() == 0 );
+	REQUIRE( cache.GetHitCount() == 0 );
+	REQUIRE( cache.GetMissCount() == 0 );
+}
+
+TEST_CASE( "ShaderReflectionCache handles invalid blob gracefully", "[reflection][cache][unit]" )
+{
+	// Arrange - invalid blob
+	graphics::material_system::ShaderReflectionCache cache;
+
+	// Act - try to cache null blob
+	const auto bindings = cache.GetOrReflect( nullptr, 1 );
+
+	// Assert - fails gracefully, cache remains empty
+	REQUIRE_FALSE( bindings.success );
+	REQUIRE( bindings.bindings.empty() );
+	REQUIRE( cache.GetCacheSize() == 0 );
+	REQUIRE( cache.GetMissCount() == 1 );
+}
+
+TEST_CASE( "ShaderReflectionCache tracks different shaders separately", "[reflection][cache][unit]" )
+{
+	// Arrange - compile VS and PS (different shaders, different bindings)
+	const std::unordered_map<std::string, std::string> emptyDefines;
+	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		emptyDefines );
+
+	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
+		"shaders/simple.hlsl",
+		"PSMain",
+		"ps_5_1",
+		emptyDefines );
+
+	REQUIRE( vsBlob.isValid() );
+	REQUIRE( psBlob.isValid() );
+
+	graphics::material_system::ShaderReflectionCache cache;
+
+	// Act - cache both shaders
+	const auto vsBindings = cache.GetOrReflect( &vsBlob, 1 );
+	const auto psBindings = cache.GetOrReflect( &psBlob, 2 );
+
+	// Assert - both cached separately
+	REQUIRE( vsBindings.success );
+	REQUIRE( psBindings.success );
+	REQUIRE( cache.GetCacheSize() == 2 ); // Two separate entries
+	REQUIRE( cache.GetMissCount() == 2 ); // Two misses
+	REQUIRE( cache.GetHitCount() == 0 );  // No hits yet
+
+	// Act - retrieve from cache
+	const auto vsCached = cache.GetOrReflect( &vsBlob, 1 );
+	const auto psCached = cache.GetOrReflect( &psBlob, 2 );
+
+	// Assert - both retrieved from cache
+	REQUIRE( vsCached.success );
+	REQUIRE( psCached.success );
+	REQUIRE( cache.GetHitCount() == 2 ); // Two hits
+}
+
+// ============================================================================
 // T214: Root Signature Cache
 // ============================================================================
 
