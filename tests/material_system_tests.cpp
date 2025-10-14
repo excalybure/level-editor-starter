@@ -1714,6 +1714,174 @@ TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[
 }
 
 // ============================================================================
+// Phase 6: Reflection Integration Tests
+// ============================================================================
+
+TEST_CASE( "PSOBuilder creates PSO with reflection-based root signature", "[pso][phase6][integration]" )
+{
+	// Arrange - headless DX12 device
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "PSOBuilder reflection PSO" ) )
+		return;
+
+	// Arrange - ShaderManager and MaterialSystem with reflection support
+	shader_manager::ShaderManager shaderManager;
+	graphics::material_system::MaterialSystem materialSystem;
+
+	// Create minimal material JSON with forward pass using simple.hlsl
+	const std::string testMaterialJson = R"({
+		"materials": [{
+			"id": "test_reflection_material",
+			"passes": [{
+				"passName": "forward",
+				"shaders": [
+					{
+						"stage": "vertex",
+						"file": "shaders/simple.hlsl",
+						"entryPoint": "VSMain",
+						"profile": "vs_5_1"
+					},
+					{
+						"stage": "pixel",
+						"file": "shaders/simple.hlsl",
+						"entryPoint": "PSMain",
+						"profile": "ps_5_1"
+					}
+				],
+				"topology": "triangle"
+			}]
+		}]
+	})";
+
+	// Write temporary material file
+	const std::string tempPath = "test_reflection_material.json";
+	{
+		std::ofstream ofs( tempPath );
+		ofs << testMaterialJson;
+	}
+
+	// Initialize MaterialSystem with ShaderManager for reflection
+	REQUIRE( materialSystem.initialize( tempPath, &shaderManager ) );
+
+	// Clean up temp file
+	std::filesystem::remove( tempPath );
+
+	// Arrange - get material and pass
+	const auto materialHandle = materialSystem.getMaterialHandle( "test_reflection_material" );
+	REQUIRE( materialHandle.isValid() );
+
+	const auto *material = materialSystem.getMaterial( materialHandle );
+	REQUIRE( material != nullptr );
+
+	const auto *pass = material->getPass( "forward" );
+	REQUIRE( pass != nullptr );
+
+	// Arrange - create render pass config
+	graphics::material_system::RenderPassConfig passConfig;
+	passConfig.name = "forward";
+	passConfig.numRenderTargets = 1;
+	passConfig.rtvFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	passConfig.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+
+	// Act - build PSO using reflection-based root signature
+	const auto pso = graphics::material_system::PSOBuilder::build(
+		&device,
+		*material,
+		passConfig,
+		&materialSystem,
+		"forward",
+		&shaderManager,
+		materialSystem.getReflectionCache() );
+
+	// Assert - PSO created successfully with reflection-based root signature
+	REQUIRE( pso != nullptr );
+}
+
+TEST_CASE( "Reflection cache invalidates on shader hot-reload", "[reflection][phase6][hot-reload]" )
+{
+	// Arrange - ShaderManager
+	shader_manager::ShaderManager shaderManager;
+
+	// Arrange - MaterialSystem with reflection support
+	graphics::material_system::MaterialSystem materialSystem;
+
+	// Create minimal material JSON
+	const std::string testMaterialJson = R"({
+		"materials": [{
+			"id": "test_hotreload_material",
+			"passes": [{
+				"passName": "forward",
+				"shaders": [{
+					"stage": "vertex",
+					"file": "shaders/simple.hlsl",
+					"entryPoint": "VSMain",
+					"profile": "vs_5_1"
+				}]
+			}]
+		}]
+	})";
+
+	const std::string tempPath = "test_hotreload_material.json";
+	{
+		std::ofstream ofs( tempPath );
+		ofs << testMaterialJson;
+	}
+
+	// Initialize MaterialSystem with ShaderManager (registers hot-reload callback)
+	REQUIRE( materialSystem.initialize( tempPath, &shaderManager ) );
+
+	std::filesystem::remove( tempPath );
+
+	// Arrange - register shader and perform initial reflection
+	const auto shaderHandle = shaderManager.registerShader(
+		"shaders/simple.hlsl",
+		"VSMain",
+		"vs_5_1",
+		shader_manager::ShaderType::Vertex );
+
+	REQUIRE( shaderHandle != shader_manager::INVALID_SHADER_HANDLE );
+
+	const auto *blob = shaderManager.getShaderBlob( shaderHandle );
+	REQUIRE( blob != nullptr );
+	REQUIRE( blob->isValid() );
+
+	// Perform initial reflection (populates cache)
+	auto *reflectionCache = materialSystem.getReflectionCache();
+	const auto initialBindings = reflectionCache->GetOrReflect( blob, shaderHandle );
+	REQUIRE( initialBindings.success );
+	REQUIRE( initialBindings.bindings.size() == 1 ); // FrameConstants
+
+	// Get initial cache stats
+	const size_t initialCacheSize = reflectionCache->GetCacheSize();
+	const size_t initialHitCount = reflectionCache->GetHitCount();
+	REQUIRE( initialCacheSize > 0 );
+
+	// Act - simulate shader hot-reload by manually invalidating
+	// (In real scenario, ShaderManager would trigger callback on file change)
+	reflectionCache->Invalidate( shaderHandle );
+
+	// Assert - cache entry should be removed
+	const size_t cacheAfterInvalidate = reflectionCache->GetCacheSize();
+	REQUIRE( cacheAfterInvalidate < initialCacheSize );
+
+	// Act - re-reflect after invalidation (cache miss, re-populates)
+	const auto reflectedBindings = reflectionCache->GetOrReflect( blob, shaderHandle );
+
+	// Assert - reflection still succeeds with same bindings
+	REQUIRE( reflectedBindings.success );
+	REQUIRE( reflectedBindings.bindings.size() == 1 );
+	REQUIRE( reflectedBindings.bindings[0].name == "FrameConstants" );
+
+	// Assert - cache miss occurred (hit count unchanged)
+	const size_t finalHitCount = reflectionCache->GetHitCount();
+	REQUIRE( finalHitCount == initialHitCount ); // No new cache hits, was a miss
+
+	// Assert - cache repopulated
+	const size_t finalCacheSize = reflectionCache->GetCacheSize();
+	REQUIRE( finalCacheSize > cacheAfterInvalidate );
+}
+
+// ============================================================================
 // T214: Root Signature Cache
 // ============================================================================
 

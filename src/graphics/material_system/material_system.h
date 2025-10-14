@@ -2,15 +2,12 @@
 
 #include "parser.h"
 #include "state_blocks.h"
+#include "shader_reflection.h"
+#include "graphics/shader_manager/shader_manager.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
-
-namespace shader_manager
-{
-class ShaderManager;
-}
 
 namespace graphics::material_system
 {
@@ -18,7 +15,6 @@ namespace graphics::material_system
 // Forward declarations
 class JsonLoader;
 struct RenderPassConfig;
-class ShaderReflectionCache;
 
 // Opaque handle for material access
 struct MaterialHandle

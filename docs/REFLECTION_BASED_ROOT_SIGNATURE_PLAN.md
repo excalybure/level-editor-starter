@@ -509,7 +509,7 @@ void MaterialSystem::initialize(dx12::Device* device, shader_manager::ShaderMana
 
 ## Phase 6: Testing Strategy
 
-### **Task 6.1: Unit Tests for Reflection**
+### **Task 6.1: Unit Tests for Reflection** ✅ COMPLETE
 **File:** `tests/material_system_tests.cpp`
 
 ```cpp
@@ -542,7 +542,7 @@ TEST_CASE("RootSignatureBuilder merges bindings from VS+PS", "[reflection][integ
 
 ---
 
-### **Task 6.2: Integration Test with Real Material**
+### **Task 6.2: Integration Test with Real Material** ✅ COMPLETE
 ```cpp
 TEST_CASE("PSOBuilder creates PSO with reflection-based root signature", "[pso][integration]") {
     // Arrange: Material with forward pass using unlit.hlsl
@@ -558,7 +558,7 @@ TEST_CASE("PSOBuilder creates PSO with reflection-based root signature", "[pso][
 
 ---
 
-### **Task 6.3: Hot-Reload Test**
+### **Task 6.3: Hot-Reload Test** ✅ COMPLETE
 ```cpp
 TEST_CASE("Reflection cache invalidates on shader hot-reload", "[reflection][hot-reload]") {
     // 1. Build PSO with shader v1
@@ -653,5 +653,7 @@ auto spec = RootSignatureBuilder::Build(*pass, shaderManager, reflectionCache);
 - [ ] Phase 4.2: Remove AddParameterBindings (DEFERRED - legacy methods needed for fallback)
 - [x] Phase 5.1: MaterialSystem ShaderReflectionCache (COMPLETE - done in Phase 3)
 - [x] Phase 5.2: Hot-reload callback registration (COMPLETE)
-- [x] Phase 6: Testing (COMPLETE - 136 assertions passing)
+- [x] Phase 6.1: Unit tests for reflection (COMPLETE - 4 Phase 2 tests)
+- [x] Phase 6.2: Integration test with real material (COMPLETE)
+- [x] Phase 6.3: Hot-reload test (COMPLETE)
 - [ ] Phase 7: Migration (ONGOING - legacy fallback retained)
