@@ -65,43 +65,125 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::buildRootSignatu
 	dx12::Device *device,
 	const RootSignatureSpec &spec )
 {
-	// Build D3D12_ROOT_PARAMETER array from spec bindings
 	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
-	rootParameters.reserve( spec.resourceBindings.size() );
 
-	for ( const auto &binding : spec.resourceBindings )
+	// Storage for descriptor ranges (must persist until serialization)
+	std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> tableRanges;
+
+	// Add root descriptor CBVs (2 DWORDs each)
+	for ( const auto &binding : spec.cbvRootDescriptors )
 	{
 		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.Descriptor.ShaderRegister = static_cast<UINT>( binding.slot );
+		param.Descriptor.RegisterSpace = 0;
 		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		rootParameters.push_back( param );
+	}
 
-		switch ( binding.type )
+	// Add descriptor table resources (SRVs, UAVs, Samplers)
+	// Group by type for efficient descriptor table layout
+	if ( !spec.descriptorTableResources.empty() )
+	{
+		// Separate resources by type
+		std::vector<ResourceBinding> srvBindings;
+		std::vector<ResourceBinding> uavBindings;
+		std::vector<ResourceBinding> samplerBindings;
+
+		for ( const auto &binding : spec.descriptorTableResources )
 		{
-		case ResourceBindingType::CBV:
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			param.Descriptor.ShaderRegister = static_cast<UINT>( binding.slot );
-			param.Descriptor.RegisterSpace = 0;
-			break;
-
-		case ResourceBindingType::SRV:
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-			param.Descriptor.ShaderRegister = static_cast<UINT>( binding.slot );
-			param.Descriptor.RegisterSpace = 0;
-			break;
-
-		case ResourceBindingType::UAV:
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
-			param.Descriptor.ShaderRegister = static_cast<UINT>( binding.slot );
-			param.Descriptor.RegisterSpace = 0;
-			break;
-
-		case ResourceBindingType::Sampler:
-			// Samplers use descriptor tables, not root descriptors
-			// Simplified: skip samplers for now (would need descriptor table setup)
-			console::error( "RootSignatureCache: Sampler bindings not yet supported" );
-			return nullptr;
+			switch ( binding.type )
+			{
+			case ResourceBindingType::SRV:
+				srvBindings.push_back( binding );
+				break;
+			case ResourceBindingType::UAV:
+				uavBindings.push_back( binding );
+				break;
+			case ResourceBindingType::Sampler:
+				samplerBindings.push_back( binding );
+				break;
+			case ResourceBindingType::CBV:
+				// CBVs should be in cbvRootDescriptors, not descriptorTableResources
+				console::error( "RootSignatureCache: CBV found in descriptorTableResources (should be in cbvRootDescriptors)" );
+				return nullptr;
+			}
 		}
 
-		rootParameters.push_back( param );
+		// Create descriptor table for SRVs if any exist
+		if ( !srvBindings.empty() )
+		{
+			std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
+			for ( const auto &binding : srvBindings )
+			{
+				D3D12_DESCRIPTOR_RANGE range = {};
+				range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				range.NumDescriptors = 1;
+				range.BaseShaderRegister = static_cast<UINT>( binding.slot );
+				range.RegisterSpace = 0;
+				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+				ranges.push_back( range );
+			}
+
+			tableRanges.push_back( ranges );
+
+			D3D12_ROOT_PARAMETER param = {};
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			param.DescriptorTable.NumDescriptorRanges = static_cast<UINT>( ranges.size() );
+			param.DescriptorTable.pDescriptorRanges = tableRanges.back().data();
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			rootParameters.push_back( param );
+		}
+
+		// Create descriptor table for UAVs if any exist
+		if ( !uavBindings.empty() )
+		{
+			std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
+			for ( const auto &binding : uavBindings )
+			{
+				D3D12_DESCRIPTOR_RANGE range = {};
+				range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+				range.NumDescriptors = 1;
+				range.BaseShaderRegister = static_cast<UINT>( binding.slot );
+				range.RegisterSpace = 0;
+				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+				ranges.push_back( range );
+			}
+
+			tableRanges.push_back( ranges );
+
+			D3D12_ROOT_PARAMETER param = {};
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			param.DescriptorTable.NumDescriptorRanges = static_cast<UINT>( ranges.size() );
+			param.DescriptorTable.pDescriptorRanges = tableRanges.back().data();
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			rootParameters.push_back( param );
+		}
+
+		// Create descriptor table for Samplers if any exist
+		if ( !samplerBindings.empty() )
+		{
+			std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
+			for ( const auto &binding : samplerBindings )
+			{
+				D3D12_DESCRIPTOR_RANGE range = {};
+				range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+				range.NumDescriptors = 1;
+				range.BaseShaderRegister = static_cast<UINT>( binding.slot );
+				range.RegisterSpace = 0;
+				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+				ranges.push_back( range );
+			}
+
+			tableRanges.push_back( ranges );
+
+			D3D12_ROOT_PARAMETER param = {};
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			param.DescriptorTable.NumDescriptorRanges = static_cast<UINT>( ranges.size() );
+			param.DescriptorTable.pDescriptorRanges = tableRanges.back().data();
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+			rootParameters.push_back( param );
+		}
 	}
 
 	// Build root signature descriptor
