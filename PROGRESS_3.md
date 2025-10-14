@@ -1,5 +1,40 @@
 # Milestone 3 Progress - Data-Driven Material System
 
+## 2025-10-13 — Task 4.1: Verify PSOBuilder Reflection Integration (ALREADY COMPLETE)
+
+**Summary:** Verified that PSOBuilder already correctly implements Task 4.1 from the reflection-based root signature plan. Both `build()` and `getRootSignature()` methods accept optional ShaderManager and ShaderReflectionCache parameters, use reflection-based root signature generation when available, and fall back to legacy parameter-based generation for backward compatibility. No changes needed - implementation matches plan perfectly.
+
+**Atomic functionalities completed:**
+- AF15: Verify PSOBuilder reflection integration - confirmed both methods use MaterialPass with reflection when ShaderManager provided
+
+**Analysis:**
+- `PSOBuilder::build()` signature already includes optional `shaderManager` and `reflectionCache` parameters (lines 45-51)
+- When both provided, uses `RootSignatureBuilder::Build(*materialPass, shaderManager, reflectionCache)` (line 224 in cpp)
+- Falls back to legacy `RootSignatureBuilder::Build(material, true, true, true)` when not available (line 229)
+- `getRootSignature()` has identical logic (lines 27-33 for reflection, line 36 for legacy)
+- Proper MaterialPass usage: code queries pass from material, validates it exists, then passes to reflection-based builder
+
+**Tests:** All existing tests pass:
+```cmd
+unit_test_runner.exe "[phase2]"
+All tests passed (26 assertions in 4 test cases)
+
+unit_test_runner.exe "[material]"
+All tests passed (110 assertions in 7 test cases)
+```
+
+**Notes:**
+- Task 4.1 was completed in Phase 3 (AF7-AF12) when MaterialSystem integration was implemented
+- This verification confirms no additional work needed
+- Legacy `Build()` method retained for backward compatibility as fallback
+- Implementation is production-ready with proper error handling and validation
+
+**Follow-ups:**
+- Task 4.2: Remove AddParameterBindings (DEFERRED - legacy methods still needed for fallback)
+- Future: Remove legacy Build() entirely once all code paths use ShaderManager
+
+---
+
 ## 2025-10-13 — T307.5: Remove Unnecessary m_materialHandle Member
 
 **Summary:** Removed `m_materialHandle` member variable from MaterialInstance after realizing it was only used once in the constructor. Since we already cache the `MaterialDefinition*` pointer, the handle is unnecessary - we query it once, use it to get the definition, then never need it again. This further simplifies MaterialInstance and reduces memory footprint by 4-8 bytes per instance.

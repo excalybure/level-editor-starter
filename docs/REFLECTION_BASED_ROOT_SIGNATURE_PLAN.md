@@ -411,7 +411,7 @@ size_t computeHash(const RootSignatureSpec& spec)
 
 ## Phase 4: Update PSOBuilder Integration
 
-### **Task 4.1: Change PSOBuilder::build() Call Site**
+### **Task 4.1: Change PSOBuilder::build() Call Site** ✅ COMPLETE
 **File:** `src/graphics/material_system/pso_builder.cpp`
 
 **Before:**
@@ -647,9 +647,10 @@ auto spec = RootSignatureBuilder::Build(*pass, shaderManager, reflectionCache);
 - [x] Plan created
 - [x] Phase 1.1: Reflection helper (COMPLETE)
 - [x] Phase 1.2: Reflection cache (COMPLETE)
-- [ ] Phase 2: Builder refactor
-- [ ] Phase 3: Root signature cache updates
-- [ ] Phase 4: PSO builder integration
-- [ ] Phase 5: Material system integration
-- [ ] Phase 6: Testing
-- [ ] Phase 7: Migration
+- [x] Phase 2: Builder refactor (COMPLETE)
+- [x] Phase 3: Root signature cache updates (COMPLETE)
+- [x] Phase 4.1: PSO builder integration verification (COMPLETE - already done in Phase 3)
+- [ ] Phase 4.2: Remove AddParameterBindings (DEFERRED - legacy methods needed for fallback)
+- [x] Phase 5: Material system integration (COMPLETE - done in Phase 3)
+- [x] Phase 6: Testing (COMPLETE - 136 assertions passing)
+- [ ] Phase 7: Migration (ONGOING - legacy fallback retained)
