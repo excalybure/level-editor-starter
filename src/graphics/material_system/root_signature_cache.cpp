@@ -43,14 +43,25 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::getOrCreate(
 
 uint64_t RootSignatureCache::hashSpec( const RootSignatureSpec &spec ) const
 {
-	// Hash the spec for cache lookup
-	// Use std::hash to combine binding count and each binding's properties
+	// Hash the spec for cache lookup using new Phase 2 structure
 	std::hash<std::string> stringHasher;
 	std::hash<int> intHasher;
 
-	uint64_t hash = spec.resourceBindings.size();
+	// Start with count of root descriptors and descriptor table resources
+	uint64_t hash = spec.cbvRootDescriptors.size();
+	hash ^= ( spec.descriptorTableResources.size() << 16 ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
 
-	for ( const auto &binding : spec.resourceBindings )
+	// Hash root descriptor CBVs
+	for ( const auto &binding : spec.cbvRootDescriptors )
+	{
+		// Combine name, type, and slot into hash
+		hash ^= stringHasher( binding.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		hash ^= intHasher( static_cast<int>( binding.type ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		hash ^= intHasher( binding.slot ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	}
+
+	// Hash descriptor table resources
+	for ( const auto &binding : spec.descriptorTableResources )
 	{
 		// Combine name, type, and slot into hash
 		hash ^= stringHasher( binding.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
