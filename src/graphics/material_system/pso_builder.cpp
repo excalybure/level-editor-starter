@@ -17,8 +17,8 @@ static RootSignatureCache s_rootSignatureCache;
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	dx12::Device *device,
-	const MaterialDefinition &material,
-	const MaterialSystem *materialSystem )
+	const MaterialSystem *materialSystem,
+	const MaterialDefinition &material )
 {
 	if ( !device || !device->get() )
 	{
@@ -61,9 +61,9 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	dx12::Device *device,
+	const MaterialSystem *materialSystem,
 	const MaterialDefinition &material,
 	const RenderPassConfig &passConfig,
-	const MaterialSystem *materialSystem,
 	const std::string &passName )
 {
 	console::info( "PSOBuilder::build called for material '{}', pass '{}'", material.id, passName );

@@ -21,8 +21,8 @@ MaterialInstance::MaterialInstance(
 	{
 		m_rootSignature = PSOBuilder::getRootSignature(
 			m_device,
-			*m_materialDefinition,
-			m_materialSystem );
+			m_materialSystem,
+			*m_materialDefinition );
 	}
 }
 
@@ -80,9 +80,9 @@ bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
 	// Pass MaterialSystem which provides ShaderManager and ReflectionCache
 	auto pso = PSOBuilder::build(
 		m_device,
+		m_materialSystem,
 		*m_materialDefinition,
 		passConfig,
-		m_materialSystem,
 		passName );
 	if ( !pso )
 	{
