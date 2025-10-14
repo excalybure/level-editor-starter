@@ -74,7 +74,15 @@ bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
 	const RenderPassConfig passConfig = m_materialSystem->getRenderPassConfig( passName );
 
 	// PSOBuilder handles shader recompilation and its own caching
-	auto pso = PSOBuilder::build( m_device, *m_materialDefinition, passConfig, m_materialSystem, passName );
+	// Pass ShaderManager and ReflectionCache for reflection-based root signatures
+	auto pso = PSOBuilder::build(
+		m_device,
+		*m_materialDefinition,
+		passConfig,
+		m_materialSystem,
+		passName,
+		m_materialSystem->getShaderManager(),
+		m_materialSystem->getReflectionCache() );
 	if ( !pso )
 	{
 		return false;

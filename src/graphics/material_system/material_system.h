@@ -7,12 +7,18 @@
 #include <vector>
 #include <cstdint>
 
+namespace shader_manager
+{
+class ShaderManager;
+}
+
 namespace graphics::material_system
 {
 
 // Forward declarations
 class JsonLoader;
 struct RenderPassConfig;
+class ShaderReflectionCache;
 
 // Opaque handle for material access
 struct MaterialHandle
@@ -31,6 +37,16 @@ public:
 	// Initialize system from JSON file
 	// Returns true on success, false if file not found or validation fails
 	bool initialize( const std::string &jsonPath );
+
+	// Initialize system from JSON file with ShaderManager for reflection-based root signatures
+	// Returns true on success, false if file not found or validation fails
+	bool initialize( const std::string &jsonPath, shader_manager::ShaderManager *shaderManager );
+
+	// Access shader manager (may be nullptr if not provided during init)
+	shader_manager::ShaderManager *getShaderManager() const { return m_shaderManager; }
+
+	// Access shader reflection cache
+	ShaderReflectionCache *getReflectionCache() { return &m_reflectionCache; }
 
 	// Query material handle by ID
 	// Returns invalid handle if material not found
@@ -67,6 +83,10 @@ public:
 	RenderPassConfig getRenderPassConfig( const std::string &passName ) const;
 
 private:
+	// Shader reflection support (optional, may be nullptr)
+	shader_manager::ShaderManager *m_shaderManager = nullptr;
+	ShaderReflectionCache m_reflectionCache;
+
 	std::unordered_map<std::string, uint32_t> m_materialIdToIndex;
 	std::vector<MaterialDefinition> m_materials;
 

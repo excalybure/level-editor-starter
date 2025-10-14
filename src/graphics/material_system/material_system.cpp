@@ -3,6 +3,7 @@
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/state_parser.h"
 #include "graphics/material_system/pso_builder.h"
+#include "graphics/material_system/shader_reflection.h"
 #include "core/console.h"
 
 namespace graphics::material_system
@@ -10,6 +11,12 @@ namespace graphics::material_system
 
 bool MaterialSystem::initialize( const std::string &jsonPath )
 {
+	return initialize( jsonPath, nullptr );
+}
+
+bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::ShaderManager *shaderManager )
+{
+	m_shaderManager = shaderManager;
 	// Load and merge JSON documents
 	::material_system::JsonLoader loader;
 	if ( !loader.load( jsonPath ) )

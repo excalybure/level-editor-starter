@@ -17,7 +17,9 @@ static RootSignatureCache s_rootSignatureCache;
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	dx12::Device *device,
-	const MaterialDefinition &material )
+	const MaterialDefinition &material,
+	shader_manager::ShaderManager *shaderManager,
+	ShaderReflectionCache *reflectionCache )
 {
 	if ( !device || !device->get() )
 	{
@@ -25,7 +27,16 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 		return nullptr;
 	}
 
-	// Include standard constant buffers for 3D rendering
+	// Use reflection-based root signature generation if ShaderManager provided
+	if ( shaderManager && reflectionCache && !material.passes.empty() )
+	{
+		// Use first pass for root signature (all passes should have compatible bindings)
+		const MaterialPass &pass = material.passes[0];
+		const auto rootSigSpec = RootSignatureBuilder::Build( pass, shaderManager, reflectionCache );
+		return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	}
+
+	// Fallback to legacy parameter-based generation
 	const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
 	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
 }
@@ -35,7 +46,9 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	const MaterialDefinition &material,
 	const RenderPassConfig &passConfig,
 	const MaterialSystem *materialSystem,
-	const std::string &passName )
+	const std::string &passName,
+	shader_manager::ShaderManager *shaderManager,
+	ShaderReflectionCache *reflectionCache )
 {
 	if ( !device || !device->get() )
 	{
@@ -191,10 +204,21 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 	psoDesc.InputLayout = { inputLayout.data(), static_cast<UINT>( inputLayout.size() ) };
 
 	// Root signature - use RootSignatureBuilder + RootSignatureCache (T215)
-	// Include standard constant buffers: FrameConstants (b0), ObjectConstants (b1), MaterialConstants (b2)
-	// These are required by most 3D shaders (e.g., unlit.hlsl)
-	const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
-	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	// Use reflection-based generation if ShaderManager available, otherwise fall back to legacy
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
+	if ( shaderManager && reflectionCache && materialPass )
+	{
+		// Reflection-based: derive root signature from pass shaders
+		const auto rootSigSpec = RootSignatureBuilder::Build( *materialPass, shaderManager, reflectionCache );
+		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	}
+	else
+	{
+		// Legacy: use parameter-based generation
+		const auto rootSigSpec = RootSignatureBuilder::Build( material, true, true, true );
+		rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	}
+
 	if ( !rootSignature )
 	{
 		console::errorAndThrow( "Failed to create root signature for material: {}", material.id );
