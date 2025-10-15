@@ -86,7 +86,7 @@ private:
 	std::unique_ptr<graphics::material_system::MaterialInstance> m_outlineMaterialInstance;
 	std::unique_ptr<graphics::material_system::MaterialInstance> m_rectMaterialInstance;
 
-	// Constant buffer for rect rendering (outline uses root constants via MaterialInstance)
+	// Constant buffer for both outline and rect rendering
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
 	void *m_constantBufferData = nullptr;
 

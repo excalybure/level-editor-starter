@@ -240,21 +240,25 @@ void SelectionRenderer::renderEntityOutline( ecs::Entity entity,
 	const math::Mat4<> worldMatrix = getEntityWorldMatrix( entity, scene );
 	const math::Mat4<> worldViewProj = projMatrix * viewMatrix * worldMatrix;
 
-	// Set per-entity constants using root constants
+	// Set per-entity constants using constant buffer
 	// This ensures each draw call has its own unique matrix and color data
+	if ( !m_constantBuffer || !m_constantBufferData )
+	{
+		console::error( "SelectionRenderer: Constant buffer not available for outline rendering" );
+		return;
+	}
+
 	{
 		OutlineConstants constants;
 		constants.worldViewProj = worldViewProj;
 		constants.outlineColor = color;
 		constants.screenParams = math::Vec4<>{ viewportSize.x, viewportSize.y, m_style.outlineWidth, getAnimationTime() };
 
-		// Set root constants (24 DWORD values = 16 matrix + 4 color + 4 screen params)
-		commandList->SetGraphicsRoot32BitConstants(
-			0,			// Root parameter index
-			24,			// Number of 32-bit values
-			&constants, // Source data
-			0			// Destination offset in constants
-		);
+		// Copy to constant buffer
+		memcpy( m_constantBufferData, &constants, sizeof( constants ) );
+
+		// Set constant buffer view (root parameter index 0 for the CBV at register b0)
+		commandList->SetGraphicsRootConstantBufferView( 0, m_constantBuffer->GetGPUVirtualAddress() );
 	}
 
 	// Render the mesh with outline effect
@@ -325,8 +329,11 @@ void SelectionRenderer::createConstantBuffer()
 {
 	if ( m_device.isValid() )
 	{
-		// Create constant buffer for rectangle constants (256-byte aligned)
-		const UINT constantBufferSize = ( sizeof( math::Vec4<> ) * 4 + 255 ) & ~255; // 4 Vec4s + alignment
+		// Create constant buffer large enough for both outline and rectangle constants
+		// OutlineConstants is larger: Mat4 (16 floats) + 3 Vec4s (12 floats) = 28 floats = 112 bytes
+		// RectConstants: 4 Vec4s = 16 floats = 64 bytes
+		// Use OutlineConstants size (256-byte aligned)
+		const UINT constantBufferSize = ( sizeof( OutlineConstants ) + 255 ) & ~255;
 
 		D3D12_HEAP_PROPERTIES heapProps = {};
 		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
