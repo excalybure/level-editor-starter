@@ -68,11 +68,12 @@ struct RenderPassDefinition
 // Material pass structure (single rendering pass within a material)
 struct MaterialPass
 {
-	std::string passName;															 // Pass identifier (e.g., "forward", "depth_prepass")
-	std::vector<ShaderReference> shaders;											 // Shaders specific to this pass
-	StateReferences states;															 // State blocks for this pass
-	std::vector<Parameter> parameters;												 // Pass-specific parameters
+	std::string passName;																					 // Pass identifier (e.g., "forward", "depth_prepass")
+	std::vector<ShaderReference> shaders;																	 // Shaders specific to this pass
+	StateReferences states;																					 // State blocks for this pass
+	std::vector<Parameter> parameters;																		 // Pass-specific parameters
 	D3D12_PRIMITIVE_TOPOLOGY_TYPE topology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // Topology for this pass
+	std::string vertexFormat;																				 // Optional vertex format reference (overrides material-level format)
 };
 
 // Material definition structure

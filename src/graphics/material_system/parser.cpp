@@ -195,6 +195,12 @@ MaterialPass MaterialParser::parseMaterialPass( const nlohmann::json &jsonPass, 
 		pass.topology = parseTopology( jsonPass["primitiveTopology"].get<std::string>() );
 	}
 
+	// Parse optional vertexFormat
+	if ( jsonPass.contains( "vertexFormat" ) && jsonPass["vertexFormat"].is_string() )
+	{
+		pass.vertexFormat = jsonPass["vertexFormat"].get<std::string>();
+	}
+
 	return pass;
 }
 

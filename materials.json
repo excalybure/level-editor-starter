@@ -316,7 +316,7 @@
 							"profile": "ps_5_1"
 						}
 					},
-					"vertexFormat": "PositionNormalUVTangentColor",
+					"vertexFormat": "PositionNormal",
 					"states": {
 						"rasterizer": "solid_back",
 						"depthStencil": "disabled",
@@ -367,6 +367,14 @@
 				{ "semantic": "TEXCOORD", "format": "R32G32_FLOAT", "offset": 24 },
 				{ "semantic": "TANGENT", "format": "R32G32B32A32_FLOAT", "offset": 32 },
 				{ "semantic": "COLOR", "format": "R32G32B32A32_FLOAT", "offset": 48 }
+			]
+		},
+		{
+			"id": "PositionNormal",
+			"stride": 24,
+			"elements": [
+				{ "semantic": "POSITION", "format": "R32G32B32_FLOAT", "offset": 0 },
+				{ "semantic": "NORMAL", "format": "R32G32B32_FLOAT", "offset": 12 }
 			]
 		}
 	],
@@ -428,6 +436,26 @@
 				"renderTarget": "MainColor",
 				"depthStencil": "depth_read_only",
 				"rasterizer": "wireframe_none",
+				"blend": "alpha_blend"
+			}
+		},
+		{
+			"name": "outline",
+			"queue": "Overlay",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "disabled",
+				"rasterizer": "solid_back",
+				"blend": "alpha_blend"
+			}
+		},
+		{
+			"name": "rect",
+			"queue": "Overlay",
+			"states": {
+				"renderTarget": "MainColor",
+				"depthStencil": "disabled",
+				"rasterizer": "solid_none",
 				"blend": "alpha_blend"
 			}
 		}

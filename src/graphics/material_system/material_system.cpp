@@ -131,22 +131,27 @@ bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::Sh
 				m_renderTargetStates[id] = state;
 			}
 		}
+	}
 
-		// Parse vertex formats
-		if ( statesSection.contains( "vertexFormats" ) && statesSection["vertexFormats"].is_object() )
+	// Parse vertex formats array (at root level, not in states)
+	if ( mergedDoc.contains( "vertexFormats" ) && mergedDoc["vertexFormats"].is_array() )
+	{
+		for ( const auto &formatJson : mergedDoc["vertexFormats"] )
 		{
-			for ( const auto &[id, formatJson] : statesSection["vertexFormats"].items() )
+			auto format = StateBlockParser::parseVertexFormat( formatJson );
+
+			if ( format.id.empty() )
 			{
-				auto format = StateBlockParser::parseVertexFormat( formatJson );
-				format.id = id;
-
-				if ( m_vertexFormats.find( id ) != m_vertexFormats.end() )
-				{
-					console::errorAndThrow( "Duplicate vertex format ID: '{}'", id );
-				}
-
-				m_vertexFormats[id] = format;
+				console::error( "Vertex format missing 'id' field - skipping" );
+				continue;
 			}
+
+			if ( m_vertexFormats.find( format.id ) != m_vertexFormats.end() )
+			{
+				console::errorAndThrow( "Duplicate vertex format ID: '{}'", format.id );
+			}
+
+			m_vertexFormats[format.id] = format;
 		}
 	}
 

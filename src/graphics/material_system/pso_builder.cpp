@@ -199,11 +199,12 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 		psoDesc.GS = { gsBlob->GetBufferPointer(), gsBlob->GetBufferSize() };
 	}
 
-	// Input layout - use vertex format from material if specified
+	// Input layout - use vertex format from pass or material if specified
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
-	if ( !material.vertexFormat.empty() && materialSystem )
+	const std::string &vertexFormatId = !materialPass->vertexFormat.empty() ? materialPass->vertexFormat : material.vertexFormat;
+	if ( !vertexFormatId.empty() && materialSystem )
 	{
-		const auto *vertexFormat = materialSystem->getVertexFormat( material.vertexFormat );
+		const auto *vertexFormat = materialSystem->getVertexFormat( vertexFormatId );
 		if ( vertexFormat )
 		{
 			inputLayout.reserve( vertexFormat->elements.size() );
@@ -217,6 +218,10 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(
 					elem.inputSlotClass,
 					elem.instanceDataStepRate } );
 			}
+		}
+		else
+		{
+			console::error( "PSOBuilder: Vertex format '{}' not found in MaterialSystem", vertexFormatId );
 		}
 	}
 
