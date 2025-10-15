@@ -11,7 +11,7 @@ mode: agent
 ---
 
 ## 0) Scope & environment
-- Language: **C++23** (use modern features: modules, concepts, `std::expected`, ranges, `constexpr`/`consteval`, `std::string_view`, `std::span`, etc.).
+- Language: **C++23** (use modern features: concepts, `std::expected`, ranges, `constexpr`/`consteval`, `std::string_view`, `std::span`, etc.).
 - Unit tests: **Catch2** (already scaffolded).
 - Test runner (Windows):
   ```cmd
@@ -41,12 +41,11 @@ mode: agent
    - Functions and methods that do not mutate observable state **must be `const`**.
    - **Local variables** must be `const` if they are not mutated; prefer `constexpr` where viable.
    - Prefer **value/`string_view`/`span`** over raw pointers for ownership clarity.
-5. **C++23 features** are encouraged when they simplify or clarify code (concepts, ranges, modules). Use them pragmatically; don’t over‑engineer.
+5. **C++23 features** are encouraged when they simplify or clarify code (concepts, ranges). Use them pragmatically; don’t over‑engineer.
 6. **Logging noise**: test output may include `[INFO]`, `[WARNING]`, `[ERROR]/[ERRPR]` messages that are expected; **judge success solely by Catch2’s test results**.
-7. **Circular dependencies**: when facing circular dependencies due to inline function, when possible (i.e non templated), move inline function in cpp and import or include correct module or header
-8. **Linter errors**: They are to be ignored as they are due to not properly supporting c++23 modules
-9. **Undefined symbols**: When using functionality from another module/library, make sure CMakelists.txt properly reference that module/library in target_link_libraries
-10. **do not use throw**: Instead, prefer console::error to log an error and return an empty object, if applicable. When the error is non recoverable, use console::fatal. Note that runtime.console module may have to be specified to target_link_libraries
+7. **Circular dependencies**: when facing circular dependencies due to inline function, when possible (i.e non templated), move inline function in cpp and import or include correct header
+9. **Undefined symbols**: When using functionality from another library, make sure CMakelists.txt properly reference that library in target_link_libraries
+10. **do not use throw**: Instead, prefer console::error to log an error and return an empty object, if applicable. When the error is non recoverable, use console::fatal. Note that console library may have to be specified to target_link_libraries
 11. **const**: local read-only variables must be const
 
 ---
@@ -89,7 +88,7 @@ For every **task** (often spanning multiple functions and files):
 3. **Make the smallest code change** to pass the test:
    - Modify only the files/functions necessary.
    - Maintain **const correctness**, exception‑safety, RAII.
-   - If a module/header boundary exists, add the minimal interface surface.
+   - If a header boundary exists, add the minimal interface surface.
 
 4. **Rebuild & run just that test** until green:
    ```cmd
@@ -97,7 +96,7 @@ For every **task** (often spanning multiple functions and files):
    ```
 
 5. **Refactor** (with all tests green):
-   - Remove duplication, improve names, enforce invariants, apply concepts/constraints, tidy includes/module imports.
+   - Remove duplication, improve names, enforce invariants, apply concepts/constraints, tidy includes.
    - Keep behavior identical. Re‑run the AF test and suitable neighbors.
 
 6. **Add more tests** for corner cases until AF feels fully specified.
@@ -129,14 +128,6 @@ For every **task** (often spanning multiple functions and files):
 ---
 
 ## 5) Coding standards (C++23)
-- **Modules**: Prefer adding **new** code as modules when feasible; keep module interfaces minimal. Example CMake pattern:
-  ```cmake
-  target_sources(my_target PRIVATE
-    FILE_SET CXX_MODULES FILES
-      src/math/math.ixx
-      src/math/detail/add_impl.ixx
-  )
-  ```
 - **Concepts**: Constrain templates for clarity (e.g., `std::integral`, `std::ranges::range`).
 - **Ranges/algorithms**: Prefer `<ranges>` pipelines over raw loops when clearer.
 - **Error handling**: Prefer `std::expected<T,E>` or status enums over exceptions for predictable flows; use exceptions for truly exceptional failures.
@@ -202,16 +193,16 @@ namespace dx12 {}    // DirectX 12 abstractions
 namespace editor {}  // Editor-specific code
 ```
 
-### 📁 Files & Modules: **lowercase + underscores**
+### 📁 Files: **lowercase + underscores**
 ```cpp
-// Module names
-export module engine.math;
-export module runtime.ecs;
-export module platform.win32.window;
+// Include names
+#include "math.h"
+#include "ecs.h"
+#include "window.h"
 
 // File names
 math_tests.cpp
-win32_window.ixx
+win32_window.cpp
 dx12_device.cpp
 ```
 
@@ -227,7 +218,7 @@ Generate a concise message that explains **what changed and why** without verbos
 <area>: implement <feature> via TDD; add tests
 
 - Add tests: <files/tags>
-- Implement: <key functions/modules>
+- Implement: <key functions/headers>
 - Refactor: <high‑level, if any>
 - Result: <behavior now guaranteed>
 
@@ -239,7 +230,7 @@ Refs: M<N>-P<X>-T<Y>
 geometry: add triangle normal calc (TDD) and tests
 
 - Tests: [geometry][unit] triangle normal cases incl degenerate
-- Impl: add module geometry.normals; use concepts + ranges
+- Impl: add implement geometry.normals; use concepts + ranges
 - Refactor: clarify vector types; mark funcs const/noexcept
 - Result: callers get robust normal or expected<error>
 
