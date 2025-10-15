@@ -2356,7 +2356,7 @@ TEST_CASE( "MaterialSystem stores and retrieves render passes", "[material-syste
 
 	// Act - load material system
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+	const bool initSuccess = materialSystem.initialize( jsonPath.string(), nullptr );
 
 	// Assert - initialization succeeded
 	REQUIRE( initSuccess );
@@ -2431,7 +2431,7 @@ TEST_CASE( "MaterialSystem generates RenderPassConfig from render pass", "[mater
 
 	// Act - load material system
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+	const bool initSuccess = materialSystem.initialize( jsonPath.string(), nullptr );
 	REQUIRE( initSuccess );
 
 	// Act - generate RenderPassConfig for lit_opaque
@@ -2939,7 +2939,7 @@ TEST_CASE( "MaterialSystem provides handle-based API for renderer queries", "[ma
 
 	// Act - initialize material system with JSON
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( materialsJson.string() );
+	const bool initialized = materialSystem.initialize( materialsJson.string(), nullptr );
 
 	// Assert - initialization should succeed
 	REQUIRE( initialized );
@@ -2970,7 +2970,7 @@ TEST_CASE( "MaterialSystem returns invalid handle for undefined material", "[mat
 	}
 
 	graphics::material_system::MaterialSystem materialSystem;
-	materialSystem.initialize( materialsJson.string() );
+	materialSystem.initialize( materialsJson.string(), nullptr );
 
 	// Act - query non-existent material
 	const auto handle = materialSystem.getMaterialHandle( "nonexistent_material" );
@@ -3032,7 +3032,7 @@ TEST_CASE( "MaterialSystem integration - load JSON, query material, validate end
 
 	// Act - Initialize MaterialSystem from JSON file (simulates app startup)
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( materialsJson.string() );
+	const bool initialized = materialSystem.initialize( materialsJson.string(), nullptr );
 
 	// Assert - Material system should initialize successfully
 	REQUIRE( initialized );
@@ -3779,7 +3779,7 @@ TEST_CASE( "MaterialSystem loads and queries rasterizer states", "[material-syst
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool success = materialSystem.initialize( jsonPath.string() );
+	const bool success = materialSystem.initialize( jsonPath.string(), nullptr );
 
 	REQUIRE( success );
 
@@ -3834,7 +3834,7 @@ TEST_CASE( "MaterialSystem loads and queries depth stencil states", "[material-s
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto *defaultState = materialSystem.getDepthStencilState( "Default" );
 	REQUIRE( defaultState != nullptr );
@@ -3885,7 +3885,7 @@ TEST_CASE( "MaterialSystem loads and queries blend states", "[material-system][T
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto *opaqueState = materialSystem.getBlendState( "Opaque" );
 	REQUIRE( opaqueState != nullptr );
@@ -3925,7 +3925,7 @@ TEST_CASE( "MaterialSystem loads and queries render target states", "[material-s
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto *mainColorState = materialSystem.getRenderTargetState( "MainColor" );
 	REQUIRE( mainColorState != nullptr );
@@ -3973,7 +3973,7 @@ TEST_CASE( "MaterialSystem loads and queries vertex formats", "[material-system]
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool success = materialSystem.initialize( jsonPath.string() );
+	const bool success = materialSystem.initialize( jsonPath.string(), nullptr );
 
 	REQUIRE( success );
 
@@ -4111,7 +4111,7 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 	outFile.close();
 
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool success = materialSystem.initialize( jsonPath.string() );
+	const bool success = materialSystem.initialize( jsonPath.string(), nullptr );
 
 	REQUIRE( success );
 
@@ -4296,7 +4296,7 @@ TEST_CASE( "MaterialSystem loads material with primitive topology", "[material-s
 
 	// Act - Create MaterialSystem
 	MaterialSystem materialSystem;
-	const bool initSuccess = materialSystem.initialize( materialsPath.string().c_str() );
+	const bool initSuccess = materialSystem.initialize( materialsPath.string().c_str(), nullptr );
 
 	// Assert
 	REQUIRE( initSuccess );
@@ -4367,7 +4367,7 @@ TEST_CASE( "PSOBuilder uses sample desc from RenderTargetStateBlock", "[pipeline
 
 	// Act - Create MaterialSystem and verify RT state loaded
 	MaterialSystem materialSystem;
-	const bool initSuccess = materialSystem.initialize( jsonPath.string() );
+	const bool initSuccess = materialSystem.initialize( jsonPath.string(), nullptr );
 
 	REQUIRE( initSuccess );
 
@@ -4399,9 +4399,7 @@ TEST_CASE( "Production materials.json loads without errors", "[material-system][
 
 	// Act - Load production materials.json
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool initSuccess = materialSystem.initialize( materialsPath.string() );
-
-	// Assert - MaterialSystem initialized successfully
+	const bool initSuccess = materialSystem.initialize( materialsPath.string(), nullptr ); // Assert - MaterialSystem initialized successfully
 	REQUIRE( initSuccess );
 
 	// Verify expected materials are present

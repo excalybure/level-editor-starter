@@ -125,9 +125,7 @@ TEST_CASE( "GridRenderer Initialization", "[grid][renderer][initialization]" )
 
 		grid::GridRenderer renderer;
 		graphics::material_system::MaterialSystem materialSystem;
-		materialSystem.initialize( "materials.json" );
-
-		// Initialize should succeed with valid device and material system
+		materialSystem.initialize( "materials.json", nullptr ); // Initialize should succeed with valid device and material system
 		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Should be able to shutdown cleanly
@@ -211,7 +209,7 @@ TEST_CASE( "Grid Adaptive Spacing", "[grid][adaptive][spacing]" )
 
 		grid::GridRenderer renderer;
 		graphics::material_system::MaterialSystem materialSystem;
-		materialSystem.initialize( "materials.json" );
+		materialSystem.initialize( "materials.json", nullptr );
 		REQUIRE( renderer.initialize( &device, &materialSystem ) );
 
 		// Create camera at different distances
@@ -477,10 +475,8 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		// Arrange - Initialize MaterialSystem with materials.json
 		graphics::material_system::MaterialSystem materialSystem;
-		const bool materialSystemInitialized = materialSystem.initialize( "materials.json" );
-		REQUIRE( materialSystemInitialized );
-
-		// Act - Initialize GridRenderer with MaterialSystem pointer
+		const bool materialSystemInitialized = materialSystem.initialize( "materials.json", nullptr );
+		REQUIRE( materialSystemInitialized ); // Act - Initialize GridRenderer with MaterialSystem pointer
 		grid::GridRenderer renderer;
 		const bool rendererInitialized = renderer.initialize( &device, &materialSystem );
 
@@ -502,7 +498,7 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		// Arrange - Initialize MaterialSystem with materials.json containing grid_material
 		graphics::material_system::MaterialSystem materialSystem;
-		const bool materialSystemInitialized = materialSystem.initialize( "materials.json" );
+		const bool materialSystemInitialized = materialSystem.initialize( "materials.json", nullptr );
 		REQUIRE( materialSystemInitialized );
 
 		// Act - Initialize GridRenderer with MaterialSystem
@@ -612,7 +608,7 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 
 		// Act - Initialize MaterialSystem with multi-pass material
 		graphics::material_system::MaterialSystem materialSystem;
-		const bool materialSystemInitialized = materialSystem.initialize( jsonPath.string() );
+		const bool materialSystemInitialized = materialSystem.initialize( jsonPath.string(), nullptr );
 		REQUIRE( materialSystemInitialized );
 
 		// Initialize GridRenderer with multi-pass material
@@ -647,7 +643,8 @@ TEST_CASE( "GridRenderer uses MaterialInstance for PSO management", "[grid][mate
 
 	// Arrange - Initialize MaterialSystem with grid_material
 	graphics::material_system::MaterialSystem materialSystem;
-	const bool materialSystemInitialized = materialSystem.initialize( "materials.json" );
+	const std::string materialsPath = std::filesystem::exists( "materials.json" ) ? "materials.json" : "../materials.json";
+	const bool materialSystemInitialized = materialSystem.initialize( materialsPath, nullptr );
 	REQUIRE( materialSystemInitialized );
 
 	// Act - Initialize GridRenderer

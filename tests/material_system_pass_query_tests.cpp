@@ -55,7 +55,7 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns MaterialPass for valid mater
 	}
 
 	MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto handle = materialSystem.getMaterialHandle( "multipass_material" );
 	REQUIRE( handle.isValid() );
@@ -106,7 +106,7 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns nullptr for invalid pass nam
 	}
 
 	MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto handle = materialSystem.getMaterialHandle( "single_pass_material" );
 	REQUIRE( handle.isValid() );
@@ -138,7 +138,7 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns nullptr for invalid handle",
 	}
 
 	MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	// Create invalid handle
 	MaterialHandle invalidHandle;
@@ -194,7 +194,7 @@ TEST_CASE( "MaterialSystem::hasMaterialPass checks pass existence", "[material-s
 	}
 
 	MaterialSystem materialSystem;
-	REQUIRE( materialSystem.initialize( jsonPath.string() ) );
+	REQUIRE( materialSystem.initialize( jsonPath.string(), nullptr ) );
 
 	const auto handle = materialSystem.getMaterialHandle( "test_material" );
 	REQUIRE( handle.isValid() );

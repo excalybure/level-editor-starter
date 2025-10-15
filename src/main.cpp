@@ -104,7 +104,7 @@ int main()
 
 	// Initialize material system for data-driven materials
 	graphics::material_system::MaterialSystem materialSystem;
-	if ( !materialSystem.initialize( "materials.json" ) )
+	if ( !materialSystem.initialize( "materials.json", shaderManager.get() ) )
 	{
 		console::error( "Failed to initialize material system from materials.json" );
 		console::info( "Application will continue without data-driven materials" );

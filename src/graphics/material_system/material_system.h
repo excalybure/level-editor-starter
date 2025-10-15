@@ -31,11 +31,8 @@ public:
 	MaterialSystem() = default;
 	~MaterialSystem();
 
-	// Initialize system from JSON file
-	// Returns true on success, false if file not found or validation fails
-	bool initialize( const std::string &jsonPath );
-
 	// Initialize system from JSON file with ShaderManager for reflection-based root signatures
+	// Pass nullptr for shaderManager if reflection-based features are not needed
 	// Returns true on success, false if file not found or validation fails
 	bool initialize( const std::string &jsonPath, shader_manager::ShaderManager *shaderManager );
 

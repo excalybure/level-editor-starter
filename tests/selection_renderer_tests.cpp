@@ -1,4 +1,4 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "editor/selection_renderer.h"
 #include "runtime/ecs.h"
@@ -75,7 +75,7 @@ TEST_CASE( "SelectionRenderer - Construction", "[selection-renderer][constructio
 {
 	MockDevice device;
 	graphics::material_system::MaterialSystem materialSystem;
-	materialSystem.initialize( "materials.json" );
+	materialSystem.initialize( "materials.json", nullptr );
 	MockShaderManager shaderManager;
 
 	SECTION( "Basic construction succeeds" )
@@ -103,7 +103,7 @@ TEST_CASE( "SelectionRenderer - Render methods", "[selection-renderer][render]" 
 {
 	MockDevice device;
 	graphics::material_system::MaterialSystem materialSystem;
-	materialSystem.initialize( "materials.json" );
+	materialSystem.initialize( "materials.json", nullptr );
 	MockShaderManager shaderManager;
 	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
@@ -138,7 +138,7 @@ TEST_CASE( "SelectionRenderer - Selected entity rendering", "[selection-renderer
 {
 	MockDevice device;
 	graphics::material_system::MaterialSystem materialSystem;
-	materialSystem.initialize( "materials.json" );
+	materialSystem.initialize( "materials.json", nullptr );
 	MockShaderManager shaderManager;
 	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 
@@ -178,7 +178,7 @@ TEST_CASE( "SelectionRenderer - Animation support", "[selection-renderer][animat
 {
 	MockDevice device;
 	graphics::material_system::MaterialSystem materialSystem;
-	materialSystem.initialize( "materials.json" );
+	materialSystem.initialize( "materials.json", nullptr );
 	MockShaderManager shaderManager;
 	editor::SelectionRenderer renderer{ device, &materialSystem, shaderManager };
 

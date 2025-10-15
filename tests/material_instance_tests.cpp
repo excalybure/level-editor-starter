@@ -12,7 +12,12 @@ namespace fs = std::filesystem;
 // Test helper: Get path to test materials JSON
 static std::string getTestMaterialsPath()
 {
-	return "materials.json";
+	// Try both locations - materials.json (from workspace root) or ../materials.json (from tests/ dir)
+	if ( std::filesystem::exists( "materials.json" ) )
+	{
+		return "materials.json";
+	}
+	return "../materials.json";
 }
 
 TEST_CASE( "MaterialInstance constructor stores device and material system", "[material-instance-T301][unit]" )
@@ -25,10 +30,8 @@ TEST_CASE( "MaterialInstance constructor stores device and material system", "[m
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
-	REQUIRE( initialized );
-
-	// Act - just create the instance
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
+	REQUIRE( initialized ); // Act - just create the instance
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
 
 	// Assert - check that material was found and is valid (indicates MaterialSystem integration)
@@ -67,7 +70,7 @@ TEST_CASE( "MaterialInstance with invalid material ID is invalid", "[material-in
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	// Act
@@ -87,13 +90,11 @@ TEST_CASE( "MaterialInstance hasPass returns true for existing pass", "[material
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
-	REQUIRE( instance.isValid() );
-
-	// Act & Assert
+	REQUIRE( instance.isValid() ); // Act & Assert
 	REQUIRE( instance.hasPass( "grid" ) );
 }
 
@@ -108,7 +109,7 @@ TEST_CASE( "MaterialInstance hasPass returns false for non-existing pass", "[mat
 
 	MaterialSystem materialSystem;
 
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -129,7 +130,7 @@ TEST_CASE( "MaterialInstance getPass returns correct pass definition", "[materia
 
 	MaterialSystem materialSystem;
 
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -154,7 +155,7 @@ TEST_CASE( "MaterialInstance getPass returns nullptr for invalid pass", "[materi
 
 	MaterialSystem materialSystem;
 
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -178,7 +179,7 @@ TEST_CASE( "MaterialInstance getMaterial returns correct material definition", "
 
 	MaterialSystem materialSystem;
 
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -250,7 +251,7 @@ TEST_CASE( "MaterialInstance with invalid material has no root signature", "[mat
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	// Act
@@ -381,8 +382,9 @@ TEST_CASE( "MaterialInstance getPipelineState for different passes creates separ
 	})";
 	file.close();
 
+	shader_manager::ShaderManager shaderManager;
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( jsonPath.string() );
+	const bool initialized = materialSystem.initialize( jsonPath.string(), &shaderManager );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "multipass_material" );
@@ -390,13 +392,14 @@ TEST_CASE( "MaterialInstance getPipelineState for different passes creates separ
 	REQUIRE( instance.hasPass( "forward" ) );
 	REQUIRE( instance.hasPass( "shadow" ) );
 
-	// Skip actual PSO creation for now - shader compilation in test environment is unreliable
-	// TODO: Add integration test in full application context
-	// ID3D12PipelineState *forwardPSO = instance.getPipelineState( "forward" );
-	// ID3D12PipelineState *shadowPSO = instance.getPipelineState( "shadow" );
-	// REQUIRE( forwardPSO != nullptr );
-	// REQUIRE( shadowPSO != nullptr );
-	// REQUIRE( forwardPSO != shadowPSO );
+	// Act - get PSOs for different passes
+	ID3D12PipelineState *forwardPSO = instance.getPipelineState( "forward" );
+	ID3D12PipelineState *shadowPSO = instance.getPipelineState( "shadow" );
+
+	// Assert - both PSOs should be created and different
+	REQUIRE( forwardPSO != nullptr );
+	REQUIRE( shadowPSO != nullptr );
+	REQUIRE( forwardPSO != shadowPSO );
 
 	// Cleanup
 	fs::remove_all( tempDir );
@@ -412,7 +415,7 @@ TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr",
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -503,7 +506,7 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for nullptr command 
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );
@@ -625,7 +628,7 @@ TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance",
 	}
 
 	MaterialSystem materialSystem;
-	const bool initialized = materialSystem.initialize( getTestMaterialsPath() );
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
 	MaterialInstance instance( &device, &materialSystem, "grid_material" );

@@ -18,11 +18,6 @@ MaterialSystem::~MaterialSystem()
 	}
 }
 
-bool MaterialSystem::initialize( const std::string &jsonPath )
-{
-	return initialize( jsonPath, nullptr );
-}
-
 bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::ShaderManager *shaderManager )
 {
 	m_shaderManager = shaderManager;
