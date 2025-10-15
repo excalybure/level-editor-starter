@@ -263,20 +263,6 @@ void Viewport::render( dx12::Device *device )
 	{
 		pix::SetMarker( commandList, pix::MarkerColor::Orange, m_showGrid ? "Grid Renderer Missing" : "Grid Disabled" );
 	}
-
-	// Render selection outlines and highlights if available
-	if ( m_selectionRenderer && m_scene )
-	{
-		pix::ScopedEvent pixSelection( commandList, pix::MarkerColor::Purple, "Selection Rendering" );
-
-		// Get camera matrices
-		const auto viewMatrix = m_camera->getViewMatrix();
-		const auto projMatrix = m_camera->getProjectionMatrix( getAspectRatio() );
-		const math::Vec2<> viewportSize{ static_cast<float>( m_size.x ), static_cast<float>( m_size.y ) };
-
-		// Render selection visual feedback
-		m_selectionRenderer->render( *m_scene, commandList, viewMatrix, projMatrix, viewportSize );
-	}
 }
 
 void Viewport::setupInputHandler( editor::SelectionManager *selectionManager, picking::PickingSystem *pickingSystem, systems::SystemManager *systemManager )
@@ -296,6 +282,14 @@ void Viewport::setupSelectionRenderer( dx12::Device *device, graphics::material_
 	else
 	{
 		console::warning( "Cannot setup selection renderer: missing device, material system, or shader manager" );
+	}
+}
+
+void Viewport::renderSelection( ecs::Scene &scene, ID3D12GraphicsCommandList *commandList, const math::Mat4<> &viewMatrix, const math::Mat4<> &projMatrix, const math::Vec2<> &viewportSize )
+{
+	if ( m_selectionRenderer )
+	{
+		m_selectionRenderer->render( scene, commandList, viewMatrix, projMatrix, viewportSize );
 	}
 }
 
@@ -1017,6 +1011,21 @@ void ViewportManager::render()
 					// Render scene - pass frame constants buffer so it can be bound after material setup
 					meshRenderingSystem->render( *m_scene, *viewport->getCamera() );
 				}
+			}
+
+			// Render selection outlines and highlights AFTER mesh rendering so they're visible
+			if ( viewport->hasSelectionRenderer() && m_scene )
+			{
+				pix::ScopedEvent pixSelection( commandList, pix::MarkerColor::Purple, "Selection Rendering" );
+
+				// Get camera matrices
+				const auto viewMatrix = viewport->getCamera()->getViewMatrix();
+				const auto projMatrix = viewport->getCamera()->getProjectionMatrix( viewport->getAspectRatio() );
+				const auto viewportSize = viewport->getSize();
+				const math::Vec2<> viewportSizeFloat{ static_cast<float>( viewportSize.x ), static_cast<float>( viewportSize.y ) };
+
+				// Render selection visual feedback
+				viewport->renderSelection( *m_scene, commandList, viewMatrix, projMatrix, viewportSizeFloat );
 			}
 		}
 	}

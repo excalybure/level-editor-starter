@@ -167,6 +167,13 @@ public:
 
 	// Setup selection renderer for visual feedback
 	void setupSelectionRenderer( dx12::Device *device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager = nullptr );
+
+	// Check if selection renderer is available
+	bool hasSelectionRenderer() const noexcept { return m_selectionRenderer != nullptr; }
+
+	// Render selection visuals (called by ViewportManager after mesh rendering)
+	void renderSelection( ecs::Scene &scene, ID3D12GraphicsCommandList *commandList, const math::Mat4<> &viewMatrix, const math::Mat4<> &projMatrix, const math::Vec2<> &viewportSize );
+
 	void handleInput( const ViewportInputEvent &event );
 
 	// 3D picking operations
