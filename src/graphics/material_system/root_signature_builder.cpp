@@ -178,9 +178,10 @@ void RootSignatureBuilder::GroupBindingsForRootSignature(
 		}
 	}
 
-	// Sort both groups for deterministic output
-	std::sort( outSpec.cbvRootDescriptors.begin(), outSpec.cbvRootDescriptors.end() );
-	std::sort( outSpec.descriptorTableResources.begin(), outSpec.descriptorTableResources.end() );
+	// Sort both groups by slot for deterministic output matching shader register order
+	// This ensures root parameter indices match shader register numbers (b0→param0, b1→param1, b2→param2)
+	std::sort( outSpec.cbvRootDescriptors.begin(), outSpec.cbvRootDescriptors.end(), []( const ResourceBinding &a, const ResourceBinding &b ) { return a.slot < b.slot; } );
+	std::sort( outSpec.descriptorTableResources.begin(), outSpec.descriptorTableResources.end(), []( const ResourceBinding &a, const ResourceBinding &b ) { return a.slot < b.slot; } );
 }
 
 } // namespace graphics::material_system
