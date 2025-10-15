@@ -2,6 +2,7 @@
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <format>
 #include <vector>
 #include <wrl.h>
 #ifdef _DEBUG
@@ -12,11 +13,11 @@
 #ifdef _DEBUG
 // Debug message callback for real-time message processing
 static void CALLBACK DebugMessageCallback(
-	D3D12_MESSAGE_CATEGORY Category,
+	[[maybe_unused]] D3D12_MESSAGE_CATEGORY Category,
 	D3D12_MESSAGE_SEVERITY Severity,
-	D3D12_MESSAGE_ID ID,
+	[[maybe_unused]] D3D12_MESSAGE_ID ID,
 	LPCSTR pDescription,
-	void *pContext )
+	[[maybe_unused]] void *pContext )
 {
 	// Format and route to console based on severity
 	const std::string message = std::format( "[D3D12] {}", pDescription );
@@ -52,14 +53,11 @@ void throwIfFailed( HRESULT hr, ID3D12Device *device )
 		if ( hr == DXGI_ERROR_DEVICE_REMOVED && device )
 		{
 			const HRESULT removedReason = device->GetDeviceRemovedReason();
-			console::fatal( "D3D12 DEVICE REMOVED! HRESULT: {:#x}, Removal Reason: {:#x}",
-				static_cast<unsigned int>( hr ),
-				static_cast<unsigned int>( removedReason ) );
+			throw std::runtime_error( std::format( "D3D12 DEVICE REMOVED! HRESULT: {:#x}, Removal Reason: {:#x}", static_cast<unsigned int>( hr ), static_cast<unsigned int>( removedReason ) ) );
 		}
 		else
 		{
-			console::fatal( "D3D12 operation failed with HRESULT: {:#x}",
-				static_cast<unsigned int>( hr ) );
+			throw std::runtime_error( std::format( "D3D12 operation failed with HRESULT: {:#x}", static_cast<unsigned int>( hr ) ) );
 		}
 	}
 }
@@ -116,6 +114,14 @@ bool Device::initialize( HWND windowHandle )
 		{
 			return false; // already initialized
 		}
+
+		// Validate window handle is not null
+		if ( !windowHandle )
+		{
+			console::error( "Device::initialize: Invalid window handle (null)" );
+			return false;
+		}
+
 		m_hwnd = windowHandle;
 
 #ifdef _DEBUG
@@ -271,6 +277,11 @@ void Device::endFrame()
 		m_commandContext->close();
 		ID3D12CommandList *ppCommandLists[] = { m_commandContext->get() };
 		m_commandQueue->executeCommandLists( _countof( ppCommandLists ), ppCommandLists );
+
+		// Wait for GPU to complete work before allowing next frame
+		// (In windowed mode, this happens in present())
+		waitForPreviousFrame();
+
 		m_inFrame = false;
 		return;
 	}

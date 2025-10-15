@@ -39,11 +39,11 @@ TEST_CASE( "Device Initialization Methods", "[dx12][device][initialization]" )
 	{
 		dx12::Device device;
 
-		bool result1 = device.initializeHeadless();
-		if ( result1 )
+		const bool result = device.initializeHeadless();
+		if ( result )
 		{
 			// Second initialization - behavior may vary (re-init or fail)
-			bool result2 = device.initializeHeadless();
+			device.initializeHeadless();
 
 			// dx12::Device should remain functional regardless
 			REQUIRE( device.get() != nullptr );
@@ -242,16 +242,16 @@ TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
 	SECTION( "throwIfFailed with success" )
 	{
 		// Should not throw for S_OK
-		REQUIRE_NOTHROW( throwIfFailed( S_OK ) );
-		REQUIRE_NOTHROW( throwIfFailed( S_FALSE ) );
+		REQUIRE_NOTHROW( dx12::throwIfFailed( S_OK ) );
+		REQUIRE_NOTHROW( dx12::throwIfFailed( S_FALSE ) );
 	}
 
 	SECTION( "throwIfFailed with failure" )
 	{
 		// Should throw for failure codes
-		REQUIRE_THROWS( throwIfFailed( E_FAIL ) );
-		REQUIRE_THROWS( throwIfFailed( E_INVALIDARG ) );
-		REQUIRE_THROWS( throwIfFailed( E_OUTOFMEMORY ) );
+		REQUIRE_THROWS( dx12::throwIfFailed( E_FAIL ) );
+		REQUIRE_THROWS( dx12::throwIfFailed( E_INVALIDARG ) );
+		REQUIRE_THROWS( dx12::throwIfFailed( E_OUTOFMEMORY ) );
 	}
 
 	SECTION( "throwIfFailed with device context" )
@@ -260,10 +260,10 @@ TEST_CASE( "Device Helper Functions", "[dx12][device][helpers]" )
 		if ( device.initializeHeadless() )
 		{
 			// Should not throw for success with device context
-			REQUIRE_NOTHROW( throwIfFailed( S_OK, device.get() ) );
+			REQUIRE_NOTHROW( dx12::throwIfFailed( S_OK, device.get() ) );
 
 			// Should throw for failure with device context
-			REQUIRE_THROWS( throwIfFailed( E_FAIL, device.get() ) );
+			REQUIRE_THROWS( dx12::throwIfFailed( E_FAIL, device.get() ) );
 		}
 	}
 }
