@@ -109,10 +109,6 @@ int main()
 		console::error( "Failed to initialize material system from materials.json" );
 		console::info( "Application will continue without data-driven materials" );
 	}
-	else
-	{
-		console::info( "Material system initialized successfully" );
-	}
 
 	// Create ECS Scene for runtime entities
 	ecs::Scene scene;

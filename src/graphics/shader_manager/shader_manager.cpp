@@ -47,11 +47,7 @@ ShaderHandle ShaderManager::registerShader(
 	shaderInfo.isValid = false;
 
 	// Try to compile the shader initially
-	if ( compileShader( shaderInfo ) )
-	{
-		console::info( "Shader Manager: Successfully compiled shader {} ({})", filePath.string(), shaderTypeToString( type ) );
-	}
-	else
+	if ( !compileShader( shaderInfo ) )
 	{
 		console::error( "Shader Manager: Failed to compile shader {} ({})", filePath.string(), shaderTypeToString( type ) );
 	}
@@ -70,8 +66,6 @@ void ShaderManager::unregisterShader( ShaderHandle handle )
 	auto it = m_shaders.find( handle );
 	if ( it != m_shaders.end() )
 	{
-		console::info( "Shader Manager: Unregistering shader {}", it->second.filePath.string() );
-
 		// Remove from hash map
 		size_t shaderHash = computeShaderHash( it->second.filePath, it->second.entryPoint, it->second.target, it->second.type );
 		m_shaderHashMap.erase( shaderHash );

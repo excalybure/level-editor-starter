@@ -103,70 +103,74 @@
 	"materials": [
 		{
 			"id": "standard_opaque",
-			"pass": "forward",
-			"shaders": {
-				"vertex": {
-					"file": "shaders/simple.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_5_1"
+			"passes": [{
+				"name": "forward",
+				"shaders": {
+					"vertex": {
+						"file": "shaders/simple.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_5_1"
+					},
+					"pixel": {
+						"file": "shaders/simple.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_5_1"
+					}
 				},
-				"pixel": {
-					"file": "shaders/simple.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_5_1"
-				}
-			},
-			"states": {
-				"rasterizer": "solid_back",
-				"depthStencil": "depth_test_write",
-				"blend": "opaque"
-			},
-			"parameters": [
-				{
-					"name": "baseColor",
-					"type": "float4",
-					"defaultValue": [1.0, 1.0, 1.0, 1.0]
+				"states": {
+					"rasterizer": "solid_back",
+					"depthStencil": "depth_test_write",
+					"blend": "opaque"
 				},
-				{
-					"name": "roughness",
-					"type": "float",
-					"defaultValue": 0.5
-				},
-				{
-					"name": "metallic",
-					"type": "float",
-					"defaultValue": 0.0
-				}
-			],
+				"parameters": [
+					{
+						"name": "baseColor",
+						"type": "float4",
+						"defaultValue": [1.0, 1.0, 1.0, 1.0]
+					},
+					{
+						"name": "roughness",
+						"type": "float",
+						"defaultValue": 0.5
+					},
+					{
+						"name": "metallic",
+						"type": "float",
+						"defaultValue": 0.0
+					}
+				]
+			}],
 			"enabled": true
 		},
 		{
 			"id": "unlit_opaque",
-			"pass": "forward",
-			"shaders": {
-				"vertex": {
-					"file": "shaders/unlit.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_5_1"
+			"passes": [{
+				"name": "forward",
+				"shaders": {
+					"vertex": {
+						"file": "shaders/unlit.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_5_1"
+					},
+					"pixel": {
+						"file": "shaders/unlit.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_5_1"
+					}
 				},
-				"pixel": {
-					"file": "shaders/unlit.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_5_1"
-				}
-			},
-			"states": {
-				"rasterizer": "solid_back",
-				"depthStencil": "depth_test_write",
-				"blend": "opaque"
-			},
-			"parameters": [
-				{
-					"name": "color",
-					"type": "float4",
-					"defaultValue": [1.0, 1.0, 1.0, 1.0]
-				}
-			],
+				"states": {
+					"rasterizer": "solid_back",
+					"depthStencil": "depth_test_write",
+					"blend": "opaque"
+				},
+				"parameters": [
+					{
+						"name": "color",
+						"type": "float4",
+						"defaultValue": [1.0, 1.0, 1.0, 1.0]
+					}
+				]
+			}],
 			"enabled": true
 		},
 		{
@@ -212,53 +216,58 @@
 		},
 		{
 			"id": "wireframe",
-			"pass": "forward",
-			"shaders": {
-				"vertex": {
-					"file": "shaders/unlit.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_5_1"
+			"passes": [{
+				"name": "forward",
+				"shaders": {
+					"vertex": {
+						"file": "shaders/unlit.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_5_1"
+					},
+					"pixel": {
+						"file": "shaders/unlit.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_5_1"
+					}
 				},
-				"pixel": {
-					"file": "shaders/unlit.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_5_1"
-				}
-			},
-			"states": {
-				"rasterizer": "wireframe_none",
-				"depthStencil": "depth_read_only",
-				"blend": "alpha_blend"
-			},
-			"parameters": [
-				{
-					"name": "color",
-					"type": "float4",
-					"defaultValue": [1.0, 1.0, 0.0, 0.5]
-				}
-			],
+				"states": {
+					"rasterizer": "wireframe_none",
+					"depthStencil": "depth_read_only",
+					"blend": "alpha_blend"
+				},
+				"parameters": [
+					{
+						"name": "color",
+						"type": "float4",
+						"defaultValue": [1.0, 1.0, 0.0, 0.5]
+					}
+				]
+			}],
 			"enabled": true
 		},
 		{
 			"id": "debug_normals",
-			"pass": "forward",
-			"shaders": {
-				"vertex": {
-					"file": "shaders/simple.hlsl",
-					"entry": "VSMain",
-					"profile": "vs_5_1"
+			"passes": [{
+				"name": "forward",
+				"shaders": {
+					"vertex": {
+						"file": "shaders/simple.hlsl",
+						"entry": "VSMain",
+						"profile": "vs_5_1"
+					},
+					"pixel": {
+						"file": "shaders/simple.hlsl",
+						"entry": "PSMain",
+						"profile": "ps_5_1"
+					}
 				},
-				"pixel": {
-					"file": "shaders/simple.hlsl",
-					"entry": "PSMain",
-					"profile": "ps_5_1"
-				}
-			},
-			"states": {
-				"rasterizer": "solid_back",
-				"depthStencil": "depth_test_write",
-				"blend": "opaque"
-			},
+				"states": {
+					"rasterizer": "solid_back",
+					"depthStencil": "depth_test_write",
+					"blend": "opaque"
+				},
+				"parameters": []
+			}],
 			"enabled": true
 		},
 		{
@@ -285,23 +294,7 @@
 						"blend": "opaque"
 					},
 					"primitiveTopology": "Triangle",
-					"parameters": [
-						{
-							"name": "FrameConstants",
-							"binding": "b0",
-							"type": "cbv"
-						},
-						{
-							"name": "ObjectConstants",
-							"binding": "b1",
-							"type": "cbv"
-						},
-						{
-							"name": "MaterialConstants",
-							"binding": "b2",
-							"type": "cbv"
-						}
-					]
+					"parameters": []
 				}
 			],
 			"enabled": true
@@ -330,14 +323,7 @@
 						"blend": "alpha_blend"
 					},
 					"primitiveTopology": "Triangle",
-					"parameters": [
-						{
-							"name": "OutlineConstants",
-							"binding": "b0",
-							"type": "root_constants",
-							"size": 96
-						}
-					]
+					"parameters": []
 				}
 			],
 			"enabled": true
@@ -365,13 +351,7 @@
 						"blend": "alpha_blend"
 					},
 					"primitiveTopology": "Triangle",
-					"parameters": [
-						{
-							"name": "RectConstants",
-							"binding": "b1",
-							"type": "cbv"
-						}
-					]
+					"parameters": []
 				}
 			],
 			"enabled": true

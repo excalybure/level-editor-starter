@@ -4391,4 +4391,44 @@ TEST_CASE( "PSOBuilder uses sample desc from RenderTargetStateBlock", "[pipeline
 	fs::remove_all( testDir );
 }
 
+TEST_CASE( "Production materials.json loads without errors", "[material-system][production]" )
+{
+	// Arrange - Verify production materials.json exists
+	const fs::path materialsPath = "materials.json";
+	REQUIRE( fs::exists( materialsPath ) );
+
+	// Act - Load production materials.json
+	graphics::material_system::MaterialSystem materialSystem;
+	const bool initSuccess = materialSystem.initialize( materialsPath.string() );
+
+	// Assert - MaterialSystem initialized successfully
+	REQUIRE( initSuccess );
+
+	// Verify expected materials are present
+	const std::vector<std::string> expectedMaterials = {
+		"standard_opaque",
+		"unlit_opaque",
+		"grid_material",
+		"wireframe",
+		"debug_normals",
+		"mesh_unlit",
+		"selection_outline",
+		"selection_rect"
+	};
+
+	for ( const auto &materialId : expectedMaterials )
+	{
+		const auto handle = materialSystem.getMaterialHandle( materialId );
+		REQUIRE( handle.isValid() );
+
+		const auto *material = materialSystem.getMaterial( handle );
+		REQUIRE( material != nullptr );
+		REQUIRE( !material->passes.empty() );
+	}
+
+	// Verify all materials use multi-pass format (no legacy single-pass)
+	// This is implicitly validated by successful initialization,
+	// as parser rejects legacy format
+}
+
 // ============================================================================

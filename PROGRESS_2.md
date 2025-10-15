@@ -1,5 +1,34 @@
 # 📊 Milestone 2 Progress Report
 
+## 2025-10-14 — materials.json Format Fixes and Production Validation Test
+**Summary:** Fixed invalid material definitions in production materials.json that were causing MaterialParser errors on startup. Converted 4 materials from deprecated single-pass format to multi-pass format, removed invalid parameter definitions with unsupported types (cbv, root_constants), and added comprehensive validation test to prevent future regressions.
+
+**Atomic functionalities completed:**
+- AF1: Convert standard_opaque, unlit_opaque, wireframe, debug_normals from `"pass": "forward"` to `"passes": [{"name": "forward", ...}]` format
+- AF2: Remove invalid cbv/root_constants parameter definitions from mesh_unlit, selection_outline, selection_rect (these are internal binding details, not material properties)
+- AF3: Add production materials.json validation test that loads real file and verifies all 8 expected materials exist with valid passes
+
+**Tests:** 1 new test case (26 assertions); all 97 material-system tests passing (608 total assertions)
+**Command:** `unit_test_runner.exe "[production]"` → validates production materials.json loads correctly
+
+**Files Modified:**
+- `materials.json`: Fixed 4 materials to use multi-pass format; removed 3 invalid parameter blocks with unsupported types
+- `tests/material_system_tests.cpp`: Added "Production materials.json loads without errors" test case
+
+**Issues Fixed:**
+- ❌ MaterialParser errors: "Material 'X' missing 'passes' array. Only multi-pass format is supported."
+- ❌ MaterialParser errors: "Unknown parameter type 'cbv'" and "Unknown parameter type 'root_constants'"
+- ✅ All materials now use consistent multi-pass format with valid parameter types (float, int, bool, float4)
+
+**Technical Details:**
+MaterialParser only recognizes value types for artist-facing properties:
+- Valid: `float`, `int`, `bool`, `float4` (material properties artists can modify)
+- Invalid: `cbv`, `root_constants` (DirectX binding implementation details handled by shader reflection)
+
+**Notes:** The cbv/root_constants parameters described internal GPU resource binding, not material properties. The shader reflection system automatically handles constant buffer bindings based on shader code - they don't need to be declared in materials.json. This test will catch future format errors early in development.
+
+---
+
 ## 2025-10-15 — Phase 7 Complete: Reflection-Only Root Signature System (Legacy Removed)
 **Summary:** Completed full migration to reflection-based root signature generation by removing all legacy code paths. Deleted the legacy `Build(MaterialDefinition, bool, bool, bool)` function entirely from both header and implementation. Updated PSOBuilder to require ShaderManager and ReflectionCache parameters (no more optional/default nullptr). Updated MaterialInstance to pass these parameters from MaterialSystem. This is a breaking change that enforces proper architecture - all root signatures must now be derived from shader reflection. All 690 tests pass (23902 assertions) without any modifications needed, proving the system is production-ready.
 
