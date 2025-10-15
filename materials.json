@@ -287,14 +287,14 @@
 							"profile": "ps_5_0"
 						}
 					},
-					"vertexFormat": "PositionNormalUVTangentColor",
-					"states": {
-						"rasterizer": "solid_back",
-						"depthStencil": "depth_read_only",
-						"blend": "opaque"
-					},
-					"primitiveTopology": "Triangle",
-					"parameters": []
+				"vertexFormat": "PositionNormalUVTangentColor",
+				"states": {
+					"rasterizer": "solid_back",
+					"depthStencil": "depth_read_only",
+					"blend": "opaque"
+				},
+				"primitiveTopology": "Triangle",
+				"parameters": []
 				}
 			],
 			"enabled": true

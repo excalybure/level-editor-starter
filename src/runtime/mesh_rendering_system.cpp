@@ -85,6 +85,9 @@ void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
 
 void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera )
 {
+	// Clear previous frame's constant buffers
+	clearFrameResources();
+
 	// Get command context for binding
 	auto *commandContext = m_renderer.getCommandContext();
 	if ( !commandContext )
@@ -203,8 +206,55 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 	// Normal matrix = transpose(inverse(worldMatrix)) for transforming normals
 	objectConstants.normalMatrix = worldMatrix.inverse().transpose();
 
-	// Bind object constants to register b1 using root constants
-	commandList->SetGraphicsRoot32BitConstants( 1, sizeof( ObjectConstants ) / 4, &objectConstants, 0 );
+	// Create temporary upload buffer for object constants
+	// Note: This is a workaround for the root signature mismatch
+	// The shader declares b1 as cbuffer (CBV) but code was using root constants
+	// TODO: Optimize with a ring buffer or per-frame constant buffer pool
+	const UINT constantBufferSize = ( sizeof( ObjectConstants ) + 255 ) & ~255; // Align to 256 bytes
+
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	D3D12_RESOURCE_DESC bufferDesc = {};
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Width = constantBufferSize;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
+	HRESULT hr = m_renderer.getDevice().get()->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS( &constantBuffer ) );
+
+	if ( FAILED( hr ) )
+	{
+		console::error( "MeshRenderingSystem: Failed to create object constants buffer" );
+		return;
+	}
+
+	// Map and copy data
+	void *mappedData = nullptr;
+	D3D12_RANGE readRange = { 0, 0 };
+	hr = constantBuffer->Map( 0, &readRange, &mappedData );
+	if ( SUCCEEDED( hr ) )
+	{
+		memcpy( mappedData, &objectConstants, sizeof( ObjectConstants ) );
+		constantBuffer->Unmap( 0, nullptr );
+	}
+
+	// Store constant buffer for this frame to keep it alive until GPU execution
+	m_frameConstantBuffers.push_back( constantBuffer );
+
+	// Bind object constants to register b1 using CBV (not root constants)
+	commandList->SetGraphicsRootConstantBufferView( 1, constantBuffer->GetGPUVirtualAddress() );
 
 	const auto &gpuMesh = *meshRenderer->gpuMesh;
 	if ( !gpuMesh.isValid() )
@@ -256,6 +306,13 @@ math::Mat4f MeshRenderingSystem::calculateMVPMatrix(
 
 	// Calculate MVP matrix: Projection * View * Model
 	return projectionMatrix * viewMatrix * modelMatrix;
+}
+
+void MeshRenderingSystem::clearFrameResources()
+{
+	// Clear constant buffers from previous frame
+	// This is safe because the GPU has finished with the previous frame's command list
+	m_frameConstantBuffers.clear();
 }
 
 } // namespace systems

@@ -70,6 +70,12 @@ private:
 
 	// Default material instance for mesh rendering
 	std::unique_ptr<graphics::material_system::MaterialInstance> m_defaultMaterialInstance;
+
+	// Per-frame storage for object constant buffers to keep them alive until GPU execution
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> m_frameConstantBuffers;
+
+	// Clear per-frame resources (called at start of render)
+	void clearFrameResources();
 };
 
 } // namespace systems
