@@ -6,7 +6,7 @@ mode: agent
 ---
 # How LLMs should perform coding tasks
 
-> **TL;DR**: Use strict **TDD (Red → Green → Refactor)** per **atomic functionality**. Build & run tests from the CLI. Verify a failing test first, then make the **smallest** change to pass, repeat until the whole task is complete. When finished, update the **milestone progress file** and provide a concise **commit message**.
+> **TL;DR**: Use strict **TDD (Red → Green → Refactor)** per **atomic functionality**. Build & run tests from the CLI. Verify a failing test first, then make the **smallest** change to pass, repeat until the whole task is complete. When finished, provide a concise **commit message**.
 
 ---
 
@@ -26,7 +26,7 @@ mode: agent
   ```cmd
   cmake --preset vs2022-x64
   ```
-- Milestone progress files: **`PROGRESS_<N>.md`** (e.g., milestone 2 ⇒ `PROGRESS_2.md`).
+
 
 ---
 
@@ -56,7 +56,6 @@ For every **task** (often spanning multiple functions and files):
 
 1) Read the task description and identify **atomic functionalities** (AF1, AF2, ...). Each AF should be implementable with one small test.
 2) For each AF, follow the TDD loop below. Keep a running list of completed AFs.
-3) When all AFs are done, run the **full test suite**, update `PROGRESS_<N>.md`, and generate a **commit message**.
 
 ---
 
@@ -220,28 +219,6 @@ dx12_device.cpp
 
 ---
 
-## 7) Progress updates — `PROGRESS_<N>.md`
-After the task (all AFs) is complete:
-
-Append a dated entry at the top of the current milestone’s progress file (`PROGRESS_<N>.md`). Use the milestone number (e.g., `2` → `PROGRESS_2.md`).
-Update the file name `M<X>_P<Y>.md` where <X> refers to the milestone number and <Y> refers to the phase with the completed tasks
-
-**Template**:
-```markdown
-## YYYY‑MM‑DD — <Task title>
-**Summary:** one‑paragraph outcome.
-**Atomic functionalities completed:**
-- AF1: <one line>
-- AF2: <one line>
-- ...
-**Tests:** <N> new/updated; filtered commands used.
-**Notes:** decisions, trade‑offs, follow‑ups.
-```
-
-> If the milestone number is not provided in the prompt, infer it from the working folder (e.g., `docs/milestones/M2-...`) or ask once.
-
----
-
 ## 8) Commit message
 Generate a concise message that explains **what changed and why** without verbosity. Aim for ~72‑char subject; short bullet body. Reference milestone/phase/task IDs if available. Do not commit the change as it will have to be reviewed and approved beforehand, buit write the commit message in the chat window
 
@@ -282,7 +259,7 @@ Refs: M2-P1-T03
 - **Know when NOT to write unit tests**:
   - **UI code requiring external contexts** (ImGui, DirectX, OpenGL): Writing unit tests for code that calls `ImGui::DragFloat()`, `ImGui::Button()`, etc., is **not productive** without a fully initialized ImGui context. Such tests either crash (SIGSEGV), or only validate API signatures without testing actual behavior.
   - **Instead**: For UI widgets and rendering code, rely on **integration tests** that run in the full application context, or validate behavior through manual testing in the running editor.
-  - **Red flag**: If a test file cannot meaningfully call the functions it's supposed to test (e.g., stubbing out all ImGui calls), **do not create the test file**. Note in `PROGRESS_<N>.md` that the code will be validated via integration testing.
+  - **Red flag**: If a test file cannot meaningfully call the functions it's supposed to test (e.g., stubbing out all ImGui calls), **do not create the test file**.
   - **Exception**: You CAN test UI **logic** (e.g., state management, input validation, command generation) separately from rendering, by extracting testable functions that don't call ImGui directly.
 - **Ensure all read-only locals are const** Local variables that are not mutated have to be const
 - **Use semantic_search** for common utilities (conversions, constants, helpers) before implementing
@@ -337,4 +314,4 @@ Length: 60
 ```
 
 ### End
-Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `PROGRESS_<N>.md`** and **update `M<X>_P<Y>.md`** and **emit a commit message** using the template above.
+Follow this document mechanically. For each atomic functionality: **Red → Green → Refactor**. Keep diffs small, tests focused, and code idiomatic C++23 with const correctness. After finishing the task, **update `M<X>_P<Y>.md`** and **emit a commit message** using the template above.
