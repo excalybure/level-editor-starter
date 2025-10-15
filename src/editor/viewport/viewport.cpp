@@ -1008,13 +1008,13 @@ void ViewportManager::render()
 				// Get the MeshRenderingSystem and call its render method
 				if ( auto *meshRenderingSystem = m_systemManager->getSystem<systems::MeshRenderingSystem>() )
 				{
-					// Update and bind frame constants for this viewport
-					{
-						pix::ScopedEvent pixFrameConstants( commandList, pix::MarkerColor::Blue, "Frame Constants" );
-						viewport->updateFrameConstants();
-						viewport->bindFrameConstants( commandList );
-					}
+					pix::ScopedEvent pixMeshRender( commandList, pix::MarkerColor::Green, "Mesh Rendering" );
 
+					// Update and bind frame constants for this viewport
+					viewport->updateFrameConstants();
+					viewport->bindFrameConstants( commandList );
+
+					// Render scene - pass frame constants buffer so it can be bound after material setup
 					meshRenderingSystem->render( *m_scene, *viewport->getCamera() );
 				}
 			}
