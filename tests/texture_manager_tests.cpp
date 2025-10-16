@@ -4,6 +4,9 @@
 #include "test_dx12_helpers.h"
 
 #include "platform/dx12/dx12_device.h"
+#include "engine/assets/assets.h"
+#include "engine/gltf_loader/gltf_loader.h"
+#include "graphics/texture/scene_texture_loader.h"
 
 using Catch::Matchers::WithinAbs;
 
@@ -208,5 +211,64 @@ TEST_CASE( "TextureManager Constants and Limits", "[dx12][texture][constants]" )
 		// Should have created at least some textures
 		REQUIRE( textures.size() > 0 );
 		REQUIRE( textures.size() <= TextureManager::kMaxTextures );
+	}
+}
+
+TEST_CASE( "TextureManager Scene Texture Loading", "[dx12][texture][scene][integration]" )
+{
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "dx12::TextureManager scene texture loading" ) )
+		return;
+
+	dx12::TextureManager *manager = device.getTextureManager();
+	REQUIRE( manager->initialize( &device ) );
+
+	SECTION( "Load textures for scene materials - missing textures" )
+	{
+		// Create a simple scene with materials that have texture paths
+		auto scene = std::make_shared<assets::Scene>();
+		auto material = std::make_shared<assets::Material>();
+		auto &pbr = material->getPBRMaterial();
+
+		// Set up texture paths (these don't need to exist for structure test)
+		pbr.baseColorTexture = "textures/albedo.png";
+		pbr.metallicRoughnessTexture = "textures/metal_rough.png";
+
+		scene->addMaterial( material );
+		scene->setBasePath( "assets/test" );
+
+		// Initially handles should be invalid
+		REQUIRE( pbr.baseColorTextureHandle == 0 );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == 0 );
+
+		// Call utility function to load textures
+		const int texturesLoaded = graphics::texture::loadSceneTextures( scene, manager );
+
+		// Textures don't exist, so expect warnings but graceful handling
+		REQUIRE( texturesLoaded == 0 );				// No textures loaded (files don't exist)
+		REQUIRE( pbr.baseColorTextureHandle == 0 ); // Should remain invalid
+		REQUIRE( pbr.metallicRoughnessTextureHandle == 0 );
+	}
+
+	SECTION( "Load textures from real glTF file with valid texture" )
+	{
+		// Load glTF that references test_red_2x2.png
+		const gltf_loader::GLTFLoader loader;
+		auto scene = loader.loadScene( "assets/test/triangle_with_texture.gltf" );
+		REQUIRE( scene );
+
+		// Verify scene has materials and texture paths
+		REQUIRE( scene->getMaterials().size() == 1 );
+		auto &pbr = scene->getMaterials()[0]->getPBRMaterial();
+		REQUIRE( !pbr.baseColorTexture.empty() );
+		REQUIRE( pbr.baseColorTextureHandle == 0 ); // Not loaded yet
+
+		// Load textures
+		const int texturesLoaded = graphics::texture::loadSceneTextures( scene, manager );
+
+		// Should have loaded the base color texture
+		REQUIRE( texturesLoaded == 1 );
+		REQUIRE( pbr.baseColorTextureHandle != 0 ); // Valid handle
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
 	}
 }

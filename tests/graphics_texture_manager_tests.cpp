@@ -2,7 +2,10 @@
 #include <graphics/texture/texture_manager.h>
 #include <graphics/texture/bindless_texture_heap.h>
 #include <graphics/texture/texture_loader.h>
+#include <graphics/texture/scene_texture_loader.h>
 #include <platform/dx12/dx12_device.h>
+#include <engine/assets/assets.h>
+#include <engine/gltf_loader/gltf_loader.h>
 #include <filesystem>
 
 TEST_CASE( "graphics::TextureManager initializes with device and max textures", "[texture][manager][unit]" )
@@ -230,6 +233,62 @@ TEST_CASE( "graphics::TextureManager normalizes paths with different case", "[te
 	REQUIRE( handle1 == handle2 );
 	REQUIRE( handle1 == handle3 );
 #endif
+
+	manager.shutdown();
+	device.shutdown();
+}
+
+TEST_CASE( "graphics::TextureManager loads scene textures", "[texture][manager][scene][integration]" )
+{
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	graphics::texture::TextureManager manager;
+	REQUIRE( manager.initialize( &device, 100 ) );
+
+	SECTION( "Load textures for scene with valid and missing files" )
+	{
+		auto scene = std::make_shared<assets::Scene>();
+		auto material = std::make_shared<assets::Material>();
+		auto &pbr = material->getPBRMaterial();
+
+		pbr.baseColorTexture = "test_red_2x2.png";			   // Valid texture
+		pbr.metallicRoughnessTexture = "textures/missing.png"; // Missing texture
+
+		scene->addMaterial( material );
+		scene->setBasePath( "assets/test" );
+
+		REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == graphics::texture::kInvalidTextureHandle );
+
+		const int loaded = graphics::texture::loadSceneTextures( scene, &manager );
+
+		REQUIRE( loaded == 1 );															   // One texture loaded successfully
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle ); // Valid texture loaded
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == graphics::texture::kInvalidTextureHandle ); // Missing texture remains invalid
+	}
+
+	SECTION( "Load textures from real glTF with existing texture" )
+	{
+		const gltf_loader::GLTFLoader loader;
+		auto sceneUniquePtr = loader.loadScene( "assets/test/triangle_with_texture.gltf" );
+		REQUIRE( sceneUniquePtr );
+
+		// Convert unique_ptr to shared_ptr
+		auto scene = std::shared_ptr<assets::Scene>( std::move( sceneUniquePtr ) );
+		REQUIRE( scene->getMaterials().size() == 1 );
+
+		auto &pbr = scene->getMaterials()[0]->getPBRMaterial();
+		REQUIRE( !pbr.baseColorTexture.empty() );
+		REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+
+		const int loaded = graphics::texture::loadSceneTextures( scene, &manager );
+
+		REQUIRE( loaded == 1 );
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
+	}
 
 	manager.shutdown();
 	device.shutdown();

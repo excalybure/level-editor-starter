@@ -77,6 +77,7 @@ add_library(graphics STATIC
   src/graphics/texture/texture_loader.cpp
   src/graphics/texture/bindless_texture_heap.cpp
   src/graphics/texture/texture_manager.cpp
+  src/graphics/texture/scene_texture_loader.cpp
 )
 
 target_include_directories(graphics PUBLIC 

@@ -7,6 +7,11 @@
 #include "math/vec.h"
 
 // Forward declarations
+namespace graphics::texture
+{
+using TextureHandle = uint32_t;
+}
+
 namespace assets
 {
 
@@ -86,6 +91,13 @@ public:
 		std::string metallicRoughnessTexture;
 		std::string normalTexture;
 		std::string emissiveTexture;
+
+		// GPU texture handles (populated after texture loading)
+		// Default to 0 (kInvalidTextureHandle) which means no texture loaded
+		graphics::texture::TextureHandle baseColorTextureHandle = 0;
+		graphics::texture::TextureHandle metallicRoughnessTextureHandle = 0;
+		graphics::texture::TextureHandle normalTextureHandle = 0;
+		graphics::texture::TextureHandle emissiveTextureHandle = 0;
 	};
 
 	const PBRMaterial &getPBRMaterial() const { return m_pbrMaterial; }

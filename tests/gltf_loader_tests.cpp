@@ -9,6 +9,7 @@
 #include "engine/assets/assets.h"
 #include "engine/assets/asset_manager.h"
 #include "engine/gltf_loader/gltf_loader.h"
+#include "graphics/texture/texture_manager.h"
 
 using Catch::Approx;
 
@@ -2187,10 +2188,10 @@ TEST_CASE( "GLTFLoader Base Path Extraction", "[gltf][loader][basepath]" )
 	{
 		// Test with real file in assets/test directory
 		const std::string filePath = "assets/test/triangle_yellow.gltf";
-		
+
 		const auto scene = loader.loadScene( filePath );
 		REQUIRE( scene != nullptr );
-		
+
 		// Scene should store the base path (directory containing the glTF file)
 		const std::string expectedBasePath = "assets/test";
 		REQUIRE( scene->getBasePath() == expectedBasePath );
@@ -2199,10 +2200,10 @@ TEST_CASE( "GLTFLoader Base Path Extraction", "[gltf][loader][basepath]" )
 	SECTION( "Extract base path from glTF file with forward slashes" )
 	{
 		const std::string filePath = "assets/test/cube.gltf";
-		
+
 		const auto scene = loader.loadScene( filePath );
 		REQUIRE( scene != nullptr );
-		
+
 		REQUIRE( scene->getBasePath() == "assets/test" );
 	}
 
@@ -2210,12 +2211,89 @@ TEST_CASE( "GLTFLoader Base Path Extraction", "[gltf][loader][basepath]" )
 	{
 		// Use glTF Sample Assets if available
 		const std::string filePath = "assets/glTF-Sample-Assets/Models/Box/glTF/Box.gltf";
-		
+
 		const auto scene = loader.loadScene( filePath );
 		// Only test if file exists
 		if ( scene != nullptr )
 		{
 			REQUIRE( scene->getBasePath() == "assets/glTF-Sample-Assets/Models/Box/glTF" );
+		}
+	}
+}
+
+TEST_CASE( "PBRMaterial Texture Handle Storage", "[gltf][material][texture-handles]" )
+{
+	SECTION( "PBRMaterial has texture handle fields" )
+	{
+		assets::Material::PBRMaterial pbr;
+
+		// Verify texture handle fields exist and are initialized to invalid handle
+		REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.normalTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.emissiveTextureHandle == graphics::texture::kInvalidTextureHandle );
+	}
+
+	SECTION( "PBRMaterial texture handles can be set" )
+	{
+		assets::Material::PBRMaterial pbr;
+
+		// Set texture handles to some values
+		pbr.baseColorTextureHandle = 1;
+		pbr.metallicRoughnessTextureHandle = 2;
+		pbr.normalTextureHandle = 3;
+		pbr.emissiveTextureHandle = 4;
+
+		// Verify values were stored
+		REQUIRE( pbr.baseColorTextureHandle == 1 );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == 2 );
+		REQUIRE( pbr.normalTextureHandle == 3 );
+		REQUIRE( pbr.emissiveTextureHandle == 4 );
+	}
+
+	SECTION( "Material with texture paths has invalid handles by default" )
+	{
+		auto material = std::make_shared<assets::Material>();
+		auto &pbr = material->getPBRMaterial();
+
+		// Set texture paths
+		pbr.baseColorTexture = "textures/albedo.png";
+		pbr.metallicRoughnessTexture = "textures/metal_rough.png";
+
+		// Handles should still be invalid until textures are loaded
+		REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.metallicRoughnessTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.normalTextureHandle == graphics::texture::kInvalidTextureHandle );
+		REQUIRE( pbr.emissiveTextureHandle == graphics::texture::kInvalidTextureHandle );
+	}
+}
+
+TEST_CASE( "Scene Texture Loading Integration", "[gltf][texture][integration]" )
+{
+	SECTION( "Load textures for scene materials using TextureManager" )
+	{
+		// This test requires TextureManager which needs dx12::Device
+		// For now, we verify the structure is in place
+		// Full integration will be tested when TextureManager is available
+
+		const gltf_loader::GLTFLoader loader;
+		const auto scene = loader.loadScene( "assets/test/triangle_yellow.gltf" );
+		REQUIRE( scene != nullptr );
+
+		// Scene should have materials
+		REQUIRE( scene->getMaterialCount() > 0 );
+
+		// Materials should have texture paths (if present in glTF)
+		// and texture handles should be invalid until loaded
+		for ( const auto &material : scene->getMaterials() )
+		{
+			const auto &pbr = material->getPBRMaterial();
+
+			// All handles should be invalid initially
+			REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+			REQUIRE( pbr.metallicRoughnessTextureHandle == graphics::texture::kInvalidTextureHandle );
+			REQUIRE( pbr.normalTextureHandle == graphics::texture::kInvalidTextureHandle );
+			REQUIRE( pbr.emissiveTextureHandle == graphics::texture::kInvalidTextureHandle );
 		}
 	}
 }
