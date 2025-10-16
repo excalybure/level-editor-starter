@@ -1,5 +1,6 @@
 #include "root_signature_cache.h"
 #include "core/console.h"
+#include "core/hash_utils.h"
 #include <d3d12.h>
 #include <functional>
 
@@ -44,29 +45,27 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::getOrCreate(
 uint64_t RootSignatureCache::hashSpec( const RootSignatureSpec &spec ) const
 {
 	// Hash the spec for cache lookup using new Phase 2 structure
-	std::hash<std::string> stringHasher;
-	std::hash<int> intHasher;
 
 	// Start with count of root descriptors and descriptor table resources
 	uint64_t hash = spec.cbvRootDescriptors.size();
-	hash ^= ( spec.descriptorTableResources.size() << 16 ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, spec.descriptorTableResources.size() << 16 );
 
 	// Hash root descriptor CBVs
 	for ( const auto &binding : spec.cbvRootDescriptors )
 	{
 		// Combine name, type, and slot into hash
-		hash ^= stringHasher( binding.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= intHasher( static_cast<int>( binding.type ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= intHasher( binding.slot ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		core::hash_combine( hash, binding.name );
+		core::hash_combine( hash, static_cast<int>( binding.type ) );
+		core::hash_combine( hash, binding.slot );
 	}
 
 	// Hash descriptor table resources
 	for ( const auto &binding : spec.descriptorTableResources )
 	{
 		// Combine name, type, and slot into hash
-		hash ^= stringHasher( binding.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= intHasher( static_cast<int>( binding.type ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= intHasher( binding.slot ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		core::hash_combine( hash, binding.name );
+		core::hash_combine( hash, static_cast<int>( binding.type ) );
+		core::hash_combine( hash, binding.slot );
 	}
 
 	return hash;

@@ -2,6 +2,7 @@
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/pso_builder.h"
 #include "core/console.h"
+#include "core/hash_utils.h"
 #include <functional>
 
 namespace graphics::material_system
@@ -19,11 +20,11 @@ PSOHash computePSOHash( const MaterialDefinition &material, const std::string &p
 	// Combine with pass name (multi-pass materials need different PSOs per pass)
 	if ( !passName.empty() )
 	{
-		hash ^= hasher( passName ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		core::hash_combine( hash, passName );
 	}
 
 	// Combine with render pass config name
-	hash ^= hasher( passConfig.name ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, passConfig.name );
 
 	// Query pass-specific data
 	const MaterialPass *materialPass = nullptr;
@@ -51,15 +52,15 @@ PSOHash computePSOHash( const MaterialDefinition &material, const std::string &p
 	const auto &shadersToHash = materialPass->shaders;
 	for ( const auto &shaderRef : shadersToHash )
 	{
-		hash ^= hasher( shaderStageToString( shaderRef.stage ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-		hash ^= hasher( shaderRef.shaderId ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+		core::hash_combine( hash, shaderStageToString( shaderRef.stage ) );
+		core::hash_combine( hash, shaderRef.shaderId );
 	}
 
 	// Combine state block ids from pass
 	const StateReferences &statesToHash = materialPass->states;
-	hash ^= hasher( statesToHash.rasterizer ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-	hash ^= hasher( statesToHash.depthStencil ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
-	hash ^= hasher( statesToHash.blend ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, statesToHash.rasterizer );
+	core::hash_combine( hash, statesToHash.depthStencil );
+	core::hash_combine( hash, statesToHash.blend );
 
 	return hash;
 }

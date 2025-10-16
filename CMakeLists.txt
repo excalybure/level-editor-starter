@@ -244,6 +244,7 @@ endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
+    tests/hash_utils_tests.cpp
     tests/string_util_tests.cpp
     tests/vec_tests.cpp
     tests/matrix_tests.cpp

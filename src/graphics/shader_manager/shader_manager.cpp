@@ -5,6 +5,7 @@
 
 #include "shader_compiler.h"
 #include "core/console.h"
+#include "core/hash_utils.h"
 
 namespace shader_manager
 {
@@ -410,22 +411,19 @@ size_t ShaderManager::computeShaderHash( const std::filesystem::path &filePath,
 	ShaderType type ) const
 {
 	// Combine hashes of all shader parameters
-	std::hash<std::string> stringHasher;
-	std::hash<int> intHasher;
-
 	size_t hash = 0;
 
 	// Hash the file path (as string for consistency)
-	hash ^= stringHasher( filePath.string() ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, filePath.string() );
 
 	// Hash the entry point
-	hash ^= stringHasher( entryPoint ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, entryPoint );
 
 	// Hash the target
-	hash ^= stringHasher( target ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, target );
 
 	// Hash the shader type
-	hash ^= intHasher( static_cast<int>( type ) ) + 0x9e3779b9 + ( hash << 6 ) + ( hash >> 2 );
+	core::hash_combine( hash, static_cast<int>( type ) );
 
 	return hash;
 }
