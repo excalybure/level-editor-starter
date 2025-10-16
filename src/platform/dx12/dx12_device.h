@@ -6,6 +6,11 @@
 #include <wrl.h>
 #include "math/color.h"
 
+namespace graphics::texture
+{
+struct ImageData;
+}
+
 namespace dx12
 {
 
@@ -38,6 +43,19 @@ public:
 	// Create shader resource view for ImGui integration
 	bool createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle );
 
+	// NEW: Create texture from CPU image data
+	bool createFromImageData(
+		Device *device,
+		const graphics::texture::ImageData &imageData,
+		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE );
+
+	// NEW: Upload texture data using staging buffer
+	bool uploadTextureData(
+		ID3D12GraphicsCommandList *commandList,
+		const uint8_t *data,
+		uint32_t rowPitch,
+		uint32_t slicePitch );
+
 	// Resize the texture (recreates the resource)
 	bool resize( Device *device, UINT width, UINT height );
 
@@ -63,6 +81,7 @@ public:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_resource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_uploadBuffer; // Staging buffer for texture uploads
 	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvCpuHandle = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE m_srvGpuHandle = {};

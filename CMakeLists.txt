@@ -157,6 +157,7 @@ target_link_libraries(platform PUBLIC
   Microsoft::WinPixEventRuntime
   d3d12
   dxgi
+  dxguid
   d3dcompiler
 )
 
@@ -248,6 +249,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
     tests/stb_image_integration_test.cpp
     tests/texture_loader_tests.cpp
+    tests/dx12_texture_loading_tests.cpp
     tests/hash_utils_tests.cpp
     tests/string_util_tests.cpp
     tests/vec_tests.cpp

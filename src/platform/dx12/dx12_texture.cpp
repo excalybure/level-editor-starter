@@ -1,6 +1,7 @@
 #include "dx12_device.h"
 
 #include <d3d12.h>
+#include <directx/d3dx12.h>
 #include <wrl.h>
 #include <cassert>
 
@@ -10,6 +11,7 @@
 
 #include "core/console.h"
 #include "platform/pix/pix.h"
+#include "graphics/texture/texture_loader.h"
 
 namespace dx12
 {
@@ -191,6 +193,165 @@ bool Texture::clearRenderTarget( Device *device, const float clearColor[4] )
 	// Clear the render target
 	pix::SetMarker( commandList, pix::MarkerColor::LightRed, "Clear RTV" );
 	commandList->ClearRenderTargetView( m_rtvHandle, clearColor, 0, nullptr );
+
+	return true;
+}
+
+bool Texture::createFromImageData(
+	Device *device,
+	const graphics::texture::ImageData &imageData,
+	D3D12_RESOURCE_FLAGS flags )
+{
+	if ( !device )
+	{
+		console::error( "Texture::createFromImageData: Device is null" );
+		return false;
+	}
+
+	if ( imageData.width == 0 || imageData.height == 0 )
+	{
+		console::error( "Texture::createFromImageData: Invalid dimensions {}x{}", imageData.width, imageData.height );
+		return false;
+	}
+
+	if ( imageData.pixels.empty() )
+	{
+		console::error( "Texture::createFromImageData: Empty pixel data" );
+		return false;
+	}
+
+	m_device = device;
+	m_width = imageData.width;
+	m_height = imageData.height;
+	m_format = imageData.format;
+
+	// Create texture resource description
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	textureDesc.Alignment = 0;
+	textureDesc.Width = imageData.width;
+	textureDesc.Height = imageData.height;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = imageData.format;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	textureDesc.Flags = flags;
+
+	// Create heap properties for GPU-only memory
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapProps.CreationNodeMask = 1;
+	heapProps.VisibleNodeMask = 1;
+
+	try
+	{
+		throwIfFailed( device->get()->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&textureDesc,
+			D3D12_RESOURCE_STATE_COPY_DEST, // Initial state for upload
+			nullptr,						// No clear value for textures
+			IID_PPV_ARGS( &m_resource ) ) );
+
+		m_currentState = D3D12_RESOURCE_STATE_COPY_DEST;
+		return true;
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "Texture::createFromImageData: Failed to create resource ({})", e.what() );
+		return false;
+	}
+}
+
+bool Texture::uploadTextureData(
+	ID3D12GraphicsCommandList *commandList,
+	const uint8_t *data,
+	uint32_t rowPitch,
+	uint32_t slicePitch )
+{
+	if ( !commandList )
+	{
+		console::error( "Texture::uploadTextureData: Command list is null" );
+		return false;
+	}
+
+	if ( !m_resource || !m_device )
+	{
+		console::error( "Texture::uploadTextureData: Resource or device is null" );
+		return false;
+	}
+
+	if ( !data )
+	{
+		console::error( "Texture::uploadTextureData: Data is null" );
+		return false;
+	}
+
+	// Get required size for upload buffer
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize( m_resource.Get(), 0, 1 );
+
+	// Create upload heap for staging buffer
+	D3D12_HEAP_PROPERTIES uploadHeapProps = {};
+	uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	uploadHeapProps.CreationNodeMask = 1;
+	uploadHeapProps.VisibleNodeMask = 1;
+
+	D3D12_RESOURCE_DESC bufferDesc = {};
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Alignment = 0;
+	bufferDesc.Width = uploadBufferSize;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.SampleDesc.Quality = 0;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
+	try
+	{
+		throwIfFailed( m_device->get()->CreateCommittedResource(
+			&uploadHeapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&bufferDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &uploadBuffer ) ) );
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "Texture::uploadTextureData: Failed to create upload buffer ({})", e.what() );
+		return false;
+	}
+
+	// Prepare subresource data
+	D3D12_SUBRESOURCE_DATA textureData = {};
+	textureData.pData = data;
+	textureData.RowPitch = rowPitch;
+	textureData.SlicePitch = slicePitch;
+
+	// Copy data to upload buffer and schedule copy to texture
+	const UINT64 result = UpdateSubresources( commandList, m_resource.Get(), uploadBuffer.Get(), 0, 0, 1, &textureData );
+	if ( result == 0 )
+	{
+		console::error( "Texture::uploadTextureData: UpdateSubresources failed" );
+		return false;
+	}
+
+	// Transition texture to pixel shader resource state
+	transitionTo( commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+
+	// Store upload buffer to keep it alive until GPU is done
+	// It will be released when the texture is destroyed or when a new upload happens
+	m_uploadBuffer = uploadBuffer;
 
 	return true;
 }
