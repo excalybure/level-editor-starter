@@ -96,8 +96,14 @@ For every **task** (often spanning multiple functions and files):
    ```
 
 5. **Refactor** (with all tests green):
-   - Remove duplication, improve names, enforce invariants, apply concepts/constraints, tidy includes.
-   - Keep behavior identical. Re‑run the AF test and suitable neighbors.
+   - **Actively look for duplication** - if two functions share >50% similar code, extract to helper method
+   - Common duplication patterns to extract:
+     * Resource allocation + cleanup logic
+     * Validation sequences
+     * Data structure population
+     * Error handling patterns
+   - Remove duplication, improve names, enforce invariants, apply concepts/constraints, tidy includes
+   - Keep behavior identical. Re‑run the AF test and suitable neighbors
 
 6. **Add more tests** for corner cases until AF feels fully specified.
 
@@ -241,7 +247,64 @@ Refs: M2-P1-T03
 
 ---
 
-## 9) Guardrails for LLMs
+## 9) DRY Principle (Don't Repeat Yourself)
+**Critical**: Actively identify and eliminate code duplication during the Refactor phase.
+
+### When to Extract Common Code:
+- **Two or more functions** share >50% similar implementation
+- **Identical sequences** appear in multiple places (validation, error handling, resource setup)
+- **Copy-paste coding** - if you copied code, extract it instead
+
+### Common Duplication Patterns:
+1. **Resource lifecycle**: allocation + initialization + cleanup
+2. **Validation logic**: parameter checks, state verification
+3. **Data transformation**: structure population, conversions
+4. **Error handling**: logging + cleanup + return patterns
+5. **API call sequences**: setup + call + teardown
+
+### How to Refactor:
+1. **Identify common logic** - look for repeated blocks across functions
+2. **Extract to helper method** - private helper if single-class, free function if reusable
+3. **Preserve behavior** - tests must still pass
+4. **Improve clarity** - helper should have clear, single responsibility
+
+### Example:
+```cpp
+// BEFORE (duplication):
+void loadFromFile() {
+    validate();
+    allocate();
+    createGPUResource();
+    setupDescriptor();
+}
+void loadFromMemory() {
+    validate();
+    allocate();
+    createGPUResource();  // Same 3 steps!
+    setupDescriptor();
+}
+
+// AFTER (extracted):
+void loadFromFile() {
+    validate();
+    createTextureResource(imageData);
+}
+void loadFromMemory() {
+    validate();
+    createTextureResource(imageData);
+}
+TextureHandle createTextureResource(ImageData) {
+    allocate();
+    createGPUResource();
+    setupDescriptor();
+}
+```
+
+**Remember**: Refactoring is NOT optional. It's a mandatory step in TDD after tests pass.
+
+---
+
+## 10) Guardrails for LLMs
 - **Stay in scope.** Only touch files relevant to the current AF or explicit refactors.
 - **Small steps.** Prefer many tiny edits over sweeping rewrites.
 - **Re-run tests frequently.** After each Green/Refactor step.
@@ -259,7 +322,7 @@ Refs: M2-P1-T03
 
 ---
 
-## 10) Catch2 quick reference (subset)
+## 11) Catch2 quick reference (subset)
 - Create test: `TEST_CASE("name", "[tags]")`.
 - Assertions: `REQUIRE(expr)`, `CHECK(expr)`, `REQUIRE_THROWS`, `REQUIRE_THROWS_AS`, etc.
 - Sections: `SECTION("variant A") { ... }` to share setup across variants.
@@ -275,11 +338,11 @@ Refs: M2-P1-T03
 
 ---
 
-## 11) Built-in runner help (for convenience)
+## 12) Built-in runner help (for convenience)
 The runner supports flags such as `--list-tests`, `--list-tags`, `--reporter`, `--durations`, `--abort`, `--abortx`, `--order`, `--rng-seed`, `--colour-mode`, and sharding options. Use these to target and speed up local test runs. Ignore incidental `[INFO]/[WARNING]/[ERROR]` lines unless the test itself fails.
 
 ---
-## 12) Base 64 encoding
+## 13) Base 64 encoding
 If you need to produce a base64 encoded string, generate a python script that will do the encoding for you. The script should look like this:
 ```
 python -c "
