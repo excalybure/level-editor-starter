@@ -56,14 +56,13 @@ cbuffer MaterialConstants : register(b2)
 };
 
 // Texture resources
-// Texture2D baseColorTexture : register(t0);     // Base color/albedo texture
-// Texture2D normalTexture : register(t1);        // Normal map texture
-// Texture2D metallicRoughnessTexture : register(t2); // Metallic (B) + Roughness (G) texture
-// Texture2D emissiveTexture : register(t3);      // Emissive texture
+Texture2D baseColorTexture : register(t0);     // Base color/albedo texture
+Texture2D normalTexture : register(t1);        // Normal map texture
+Texture2D metallicRoughnessTexture : register(t2); // Metallic (B) + Roughness (G) texture
+Texture2D emissiveTexture : register(t3);      // Emissive texture
 
 // Samplers
-// SamplerState linearSampler : register(s0);
-// SamplerState pointSampler : register(s1);
+SamplerState linearSampler : register(s0);
 
 // Texture flag constants (must match MaterialConstants in C++)
 #define TEXTURE_FLAG_BASE_COLOR        (1u << 0)
@@ -107,8 +106,8 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     // Apply base color texture if available
     if (textureFlags & TEXTURE_FLAG_BASE_COLOR)
     {
-        // const float4 texColor = baseColorTexture.Sample(linearSampler, input.texcoord);
-        // baseColor *= texColor;
+        const float4 texColor = baseColorTexture.Sample(linearSampler, input.texcoord);
+        baseColor *= texColor;
     }
     
     // Simple unlit shading - just return the base color
@@ -121,8 +120,8 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     float3 emissive = emissiveFactor;
     if (textureFlags & TEXTURE_FLAG_EMISSIVE)
     {
-        // float3 emissiveTex = emissiveTexture.Sample(linearSampler, input.texcoord).rgb;
-        // emissive *= emissiveTex;
+        float3 emissiveTex = emissiveTexture.Sample(linearSampler, input.texcoord).rgb;
+        emissive *= emissiveTex;
     }
     
     // Combine base color with emissive
