@@ -796,4 +796,333 @@ Before marking this feature complete:
 
 ---
 
+## 📚 Appendix A: Bindless Texture Implementation Options
+
+This appendix documents the two main approaches to texture binding in D3D12. The main plan uses **Option 2 (Traditional)** for simplicity, but this information is preserved for future optimization to **Option 1 (True Bindless)**.
+
+### **Option 1: True Bindless - Texture Indices in Root Constants**
+
+This is the high-performance approach used by modern engines for minimal material-switching overhead.
+
+**Root Signature:**
+```cpp
+// In MeshRenderingSystem::MeshRenderingSystem()
+[0] CBV: Frame constants (b0)
+[1] ROOT_CONSTANTS: Object constants (b1, 16 DWORDs)
+[2] ROOT_CONSTANTS: Material texture indices (b2, 4 DWORDs) ← NEW
+[3] DESCRIPTOR_TABLE: All textures (t0-t4095, space0) ← Set once per frame
+[4] STATIC_SAMPLER: Linear wrap sampler (s0)
+
+D3D12_DESCRIPTOR_RANGE srvRange = {};
+srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+srvRange.NumDescriptors = 4096; // ENTIRE texture heap
+srvRange.BaseShaderRegister = 0;
+srvRange.RegisterSpace = 0;
+srvRange.OffsetInDescriptorsFromTableStart = 0;
+
+D3D12_ROOT_PARAMETER srvParameter = {};
+srvParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+srvParameter.DescriptorTable.NumDescriptorRanges = 1;
+srvParameter.DescriptorTable.pDescriptorRanges = &srvRange;
+srvParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+D3D12_ROOT_PARAMETER indicesParameter = {};
+indicesParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+indicesParameter.Constants.ShaderRegister = 2;
+indicesParameter.Constants.RegisterSpace = 0;
+indicesParameter.Constants.Num32BitValues = 4; // 4 texture indices
+indicesParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+```
+
+**Shader Code:**
+```hlsl
+// Unbounded texture array (SM 5.1+)
+Texture2D textures[] : register(t0, space0);
+SamplerState textureSampler : register(s0);
+
+// Material texture indices passed as root constants
+cbuffer MaterialTextureIndices : register(b2) {
+    uint g_BaseColorIndex;
+    uint g_NormalIndex;
+    uint g_MetallicRoughnessIndex;
+    uint g_EmissiveIndex;
+};
+
+// Pixel shader samples by dynamic index
+PSOutput main(VSOutput input) {
+    PSOutput output;
+    
+    // Sample textures using material-specific indices
+    float4 baseColor = textures[g_BaseColorIndex].Sample(textureSampler, input.texCoord);
+    baseColor *= g_MaterialConstants.baseColorFactor;
+    baseColor *= input.color;
+    
+    output.color = baseColor;
+    return output;
+}
+```
+
+**Material Binding (Fast Path):**
+```cpp
+class MaterialGPU {
+public:
+    void bindTextures(ID3D12GraphicsCommandList* commandList) {
+        // Just update root constants - NO descriptor table binding!
+        uint32_t textureIndices[4] = {
+            m_textureManager->getSrvIndex(m_baseColorTexture),
+            m_textureManager->getSrvIndex(m_normalTexture),
+            m_textureManager->getSrvIndex(m_metallicRoughnessTexture),
+            m_textureManager->getSrvIndex(m_emissiveTexture)
+        };
+        
+        commandList->SetGraphicsRoot32BitConstants(2, 4, textureIndices, 0);
+    }
+};
+```
+
+**Frame Setup (Once):**
+```cpp
+void MeshRenderingSystem::render(...) {
+    // Set descriptor heap ONCE for entire frame
+    ID3D12DescriptorHeap* heaps[] = { m_textureManager->getSrvHeap() };
+    commandList->SetDescriptorHeaps(1, heaps);
+    
+    // Bind entire texture array ONCE
+    D3D12_GPU_DESCRIPTOR_HANDLE heapStart = 
+        m_textureManager->getSrvHeap()->GetGPUDescriptorHandleForHeapStart();
+    commandList->SetGraphicsRootDescriptorTable(3, heapStart);
+    
+    // Render all entities (materials just update root constants)
+    for (auto entity : entities) {
+        materialGPU->bindTextures(commandList); // Fast: just 4 integers
+        // ... draw
+    }
+}
+```
+
+**Advantages:**
+- ✅ **Zero overhead** for material switching (~10 CPU cycles vs ~100)
+- ✅ Descriptor table set **once per frame**, not per material
+- ✅ Scales to thousands of unique textures efficiently
+- ✅ Matches modern engine architectures (Unreal 5, Unity HDRP)
+
+**Disadvantages:**
+- ❌ Requires **Shader Model 5.1+** and **Resource Binding Tier 2**
+- ❌ More complex to implement and debug
+- ❌ Invalid texture indices cause silent failures (need validation)
+- ❌ Validation layer slower due to unbounded array tracking
+
+**Hardware Requirements Check:**
+```cpp
+// Check for bindless support
+D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
+device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
+
+if (options.ResourceBindingTier >= D3D12_RESOURCE_BINDING_TIER_2) {
+    // Can use unbounded arrays
+    console::info("Bindless textures supported (Tier 2+)");
+} else {
+    // Fall back to Option 2
+    console::warning("Bindless textures not supported, using descriptor tables per material");
+}
+```
+
+---
+
+### **Option 2: Traditional - Descriptor Table Per Material (Current Plan)**
+
+This is the simpler approach used in the main implementation plan.
+
+**Root Signature:**
+```cpp
+[0] CBV: Frame constants (b0)
+[1] ROOT_CONSTANTS: Object constants (b1, 16 DWORDs)
+[2] DESCRIPTOR_TABLE: This material's 4 textures (t0-t3, space0) ← Per material
+[3] STATIC_SAMPLER: Linear wrap sampler (s0)
+
+D3D12_DESCRIPTOR_RANGE srvRange = {};
+srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+srvRange.NumDescriptors = 4; // Just this material's textures
+srvRange.BaseShaderRegister = 0;
+srvRange.RegisterSpace = 0;
+srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+```
+
+**Shader Code:**
+```hlsl
+// Fixed texture slots (traditional)
+Texture2D baseColorTexture : register(t0);
+Texture2D normalTexture : register(t1);
+Texture2D metallicRoughnessTexture : register(t2);
+Texture2D emissiveTexture : register(t3);
+SamplerState textureSampler : register(s0);
+
+PSOutput main(VSOutput input) {
+    PSOutput output;
+    
+    // Direct texture sampling
+    float4 baseColor = baseColorTexture.Sample(textureSampler, input.texCoord);
+    baseColor *= g_MaterialConstants.baseColorFactor;
+    
+    output.color = baseColor;
+    return output;
+}
+```
+
+**Material Binding:**
+```cpp
+void MaterialGPU::bindTextures(ID3D12GraphicsCommandList* commandList) {
+    // Set descriptor heap
+    ID3D12DescriptorHeap* heaps[] = { m_textureManager->getSrvHeap() };
+    commandList->SetDescriptorHeaps(1, heaps);
+    
+    // Get GPU handle for this material's textures
+    uint32_t srvIndex = m_textureManager->getSrvIndex(m_baseColorTexture);
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = 
+        m_textureManager->getSrvHeap()->GetGPUDescriptorHandleForHeapStart();
+    gpuHandle.ptr += srvIndex * m_descriptorSize;
+    
+    // Bind descriptor table (one call per material)
+    commandList->SetGraphicsRootDescriptorTable(2, gpuHandle);
+}
+```
+
+**Advantages:**
+- ✅ **Simple to implement** and debug
+- ✅ Works on **all D3D12 hardware** (no tier requirements)
+- ✅ Easier to reason about resource lifetimes
+- ✅ Better for tools like PIX (descriptor tables are explicit)
+- ✅ Validated by D3D12 debug layer more thoroughly
+
+**Disadvantages:**
+- ❌ `SetGraphicsRootDescriptorTable()` overhead per material
+- ❌ Descriptor heap may need to be set multiple times
+- ❌ Limited to small descriptor ranges (typically 4-16 textures per material)
+- ❌ Requires contiguous descriptor allocation per material
+
+---
+
+### **Performance Comparison**
+
+| Metric | Option 1 (Bindless) | Option 2 (Per-Material) |
+|--------|---------------------|-------------------------|
+| Material switch cost | ~10 CPU cycles | ~100 CPU cycles |
+| Descriptor table bindings | 1 per frame | 1 per material |
+| Heap bindings | 1 per frame | 1+ per frame |
+| Texture limit per material | 4096 | 4-16 (practical) |
+| Hardware requirement | Tier 2+ (2016+) | Tier 1 (all D3D12) |
+| Implementation complexity | High | Low |
+| Debug/validation speed | Slower | Faster |
+
+**When to use each:**
+- **Option 1** if you have 100+ materials per frame and need maximum performance
+- **Option 2** if you're starting out, have <50 materials, or need broad hardware support
+
+---
+
+### **Migration Path: Option 2 → Option 1**
+
+The document's implementation plan uses Option 2 initially. To migrate to Option 1 later:
+
+**Phase 1: Infrastructure (Option 2)**
+1. Implement TextureLoader ✓
+2. Implement TextureManager ✓
+3. Implement BindlessTextureHeap ✓
+4. Implement MaterialGPU texture binding ✓
+
+**Phase 2: Runtime Check (Option 2 + Fallback)**
+5. Add hardware tier detection
+6. Select binding strategy at runtime
+7. Add validation for texture indices
+
+**Phase 3: Bindless Optimization (Option 1)**
+8. Add texture indices to MaterialConstants cbuffer
+9. Update root signature to use unbounded array + root constants
+10. Modify shaders to use dynamic indexing
+11. Update MaterialGPU::bindTextures() to use SetGraphicsRoot32BitConstants()
+12. Remove per-material descriptor table bindings
+13. Add single descriptor table binding in frame setup
+
+**Estimated effort:** 1-2 days if Option 2 is already working
+
+---
+
+### **Code Examples: Full Implementation**
+
+**Option 1 - Complete Material Binding:**
+```cpp
+// MaterialGPU.h
+class MaterialGPU {
+public:
+    void bindTextures(ID3D12GraphicsCommandList* commandList) {
+        uint32_t indices[4] = {
+            m_textureManager->getSrvIndex(m_baseColorTexture),
+            m_textureManager->getSrvIndex(m_normalTexture),
+            m_textureManager->getSrvIndex(m_metallicRoughnessTexture),
+            m_textureManager->getSrvIndex(m_emissiveTexture)
+        };
+        commandList->SetGraphicsRoot32BitConstants(2, 4, indices, 0);
+    }
+};
+
+// MeshRenderingSystem.cpp - Frame setup
+void MeshRenderingSystem::render(...) {
+    // ONCE per frame
+    ID3D12DescriptorHeap* heaps[] = { m_textureManager->getSrvHeap() };
+    commandList->SetDescriptorHeaps(1, heaps);
+    commandList->SetGraphicsRootDescriptorTable(3, 
+        m_textureManager->getSrvHeap()->GetGPUDescriptorHandleForHeapStart());
+    
+    // Per entity - just constants
+    for (auto entity : entities) {
+        materialGPU->bindTextures(commandList); // Fast!
+        primitiveGPU->draw(commandList);
+    }
+}
+```
+
+**Option 2 - Complete Material Binding (Current Plan):**
+```cpp
+// MaterialGPU.h
+class MaterialGPU {
+public:
+    void bindTextures(ID3D12GraphicsCommandList* commandList) {
+        ID3D12DescriptorHeap* heaps[] = { m_textureManager->getSrvHeap() };
+        commandList->SetDescriptorHeaps(1, heaps);
+        
+        uint32_t baseIndex = m_textureManager->getSrvIndex(m_baseColorTexture);
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = 
+            m_textureManager->getSrvHeap()->GetGPUDescriptorHandleForHeapStart();
+        handle.ptr += baseIndex * m_descriptorSize;
+        
+        commandList->SetGraphicsRootDescriptorTable(2, handle);
+    }
+};
+
+// MeshRenderingSystem.cpp - Per entity
+void MeshRenderingSystem::renderEntity(...) {
+    materialGPU->bindTextures(commandList); // Per material overhead
+    primitiveGPU->draw(commandList);
+}
+```
+
+---
+
+### **Recommendation**
+
+**Start with Option 2** (current plan) because:
+1. Get textures working quickly with minimal complexity
+2. Works on all hardware without feature checks
+3. Easy to debug and validate
+4. Proven pattern in many production engines
+
+**Migrate to Option 1** in Milestone 4 if you observe:
+- Material switching is a bottleneck (profile with PIX)
+- Need to support 1000+ unique materials per frame
+- Target hardware supports Tier 2+ (post-2016 GPUs)
+
+The infrastructure (TextureManager, BindlessTextureHeap) supports both approaches equally well.
+
+---
+
 **End of Plan**
