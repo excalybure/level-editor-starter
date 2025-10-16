@@ -78,6 +78,7 @@ add_library(graphics STATIC
 
 target_include_directories(graphics PUBLIC 
   src
+  externals/stb
 )
 target_link_libraries(graphics PUBLIC
   core
@@ -244,6 +245,7 @@ endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
+    tests/stb_image_integration_test.cpp
     tests/hash_utils_tests.cpp
     tests/string_util_tests.cpp
     tests/vec_tests.cpp
