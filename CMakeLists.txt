@@ -75,6 +75,7 @@ add_library(graphics STATIC
   src/graphics/material_system/material_instance.cpp
   src/graphics/material_system/shader_reflection.cpp
   src/graphics/texture/texture_loader.cpp
+  src/graphics/texture/bindless_texture_heap.cpp
 )
 
 target_include_directories(graphics PUBLIC 
@@ -250,6 +251,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/stb_image_integration_test.cpp
     tests/texture_loader_tests.cpp
     tests/dx12_texture_loading_tests.cpp
+    tests/bindless_texture_heap_tests.cpp
     tests/hash_utils_tests.cpp
     tests/string_util_tests.cpp
     tests/vec_tests.cpp
