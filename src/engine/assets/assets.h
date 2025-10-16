@@ -319,6 +319,10 @@ class Scene : public Asset
 public:
 	AssetType getType() const override { return AssetType::Scene; }
 
+	// Base path for resolving relative texture and resource paths
+	const std::string &getBasePath() const { return m_basePath; }
+	void setBasePath( const std::string &basePath ) { m_basePath = basePath; }
+
 	// Root-level resource collections (matching glTF structure)
 	const std::vector<std::shared_ptr<Material>> &getMaterials() const { return m_materials; }
 	const std::vector<std::shared_ptr<Mesh>> &getMeshes() const { return m_meshes; }
@@ -392,6 +396,9 @@ public:
 	}
 
 private:
+	// Base path for resolving relative texture paths (e.g., directory containing the glTF file)
+	std::string m_basePath;
+
 	// Root-level resource collections (matching glTF structure)
 	std::vector<std::shared_ptr<Material>> m_materials;
 	std::vector<std::shared_ptr<Mesh>> m_meshes;

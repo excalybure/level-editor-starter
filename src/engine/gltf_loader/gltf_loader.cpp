@@ -277,8 +277,17 @@ std::unique_ptr<assets::Scene> GLTFLoader::loadScene( const std::string &filePat
 	// Extract base filename from path (remove directory and extension)
 	const std::string baseFilename = strings::getBaseFilename( filePath );
 
+	// Extract directory path for resolving relative texture paths
+	const std::string basePath = strings::getDirectoryPath( filePath );
+
 	// Process the parsed glTF data into a scene
 	auto scene = processSceneData( data, baseFilename );
+
+	// Store the base path for texture loading
+	if ( scene )
+	{
+		scene->setBasePath( basePath );
+	}
 
 	cgltf_free( data );
 	return scene;

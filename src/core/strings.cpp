@@ -29,4 +29,24 @@ std::string getBaseFilename( const std::string &filePath )
 	return filePath.substr( start, lastDot - start );
 }
 
+std::string getDirectoryPath( const std::string &filePath )
+{
+	if ( filePath.empty() )
+	{
+		return "";
+	}
+
+	// Find the last directory separator (forward or backward slash)
+	const size_t lastSlash = filePath.find_last_of( "/\\" );
+
+	// If no separator found, there's no directory path
+	if ( lastSlash == std::string::npos )
+	{
+		return "";
+	}
+
+	// Return the substring up to (but not including) the last slash
+	return filePath.substr( 0, lastSlash );
+}
+
 } // namespace strings

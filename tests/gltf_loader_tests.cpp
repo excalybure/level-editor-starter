@@ -2178,3 +2178,44 @@ TEST_CASE( "GLTFLoader Transform Extraction", "[gltf][loader][transform]" )
 		REQUIRE( transform.scale.z == 1.0f );
 	}
 }
+
+TEST_CASE( "GLTFLoader Base Path Extraction", "[gltf][loader][basepath]" )
+{
+	const gltf_loader::GLTFLoader loader;
+
+	SECTION( "Extract base path from glTF file in subdirectory" )
+	{
+		// Test with real file in assets/test directory
+		const std::string filePath = "assets/test/triangle_yellow.gltf";
+		
+		const auto scene = loader.loadScene( filePath );
+		REQUIRE( scene != nullptr );
+		
+		// Scene should store the base path (directory containing the glTF file)
+		const std::string expectedBasePath = "assets/test";
+		REQUIRE( scene->getBasePath() == expectedBasePath );
+	}
+
+	SECTION( "Extract base path from glTF file with forward slashes" )
+	{
+		const std::string filePath = "assets/test/cube.gltf";
+		
+		const auto scene = loader.loadScene( filePath );
+		REQUIRE( scene != nullptr );
+		
+		REQUIRE( scene->getBasePath() == "assets/test" );
+	}
+
+	SECTION( "Extract base path from glTF file with nested directories" )
+	{
+		// Use glTF Sample Assets if available
+		const std::string filePath = "assets/glTF-Sample-Assets/Models/Box/glTF/Box.gltf";
+		
+		const auto scene = loader.loadScene( filePath );
+		// Only test if file exists
+		if ( scene != nullptr )
+		{
+			REQUIRE( scene->getBasePath() == "assets/glTF-Sample-Assets/Models/Box/glTF" );
+		}
+	}
+}

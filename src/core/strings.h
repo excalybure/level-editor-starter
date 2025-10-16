@@ -22,4 +22,21 @@ namespace strings
  */
 std::string getBaseFilename( const std::string &filePath );
 
+/**
+ * @brief Extract the directory path from a file path.
+ * 
+ * Returns the directory portion of a file path, excluding the filename.
+ * 
+ * Examples:
+ *   - "assets/scenes/test.gltf" -> "assets/scenes"
+ *   - "C:\\Users\\test\\model.gltf" -> "C:\\Users\\test"
+ *   - "simple.gltf" -> ""
+ *   - "assets/scenes/" -> "assets/scenes"
+ *   - "" -> ""
+ * 
+ * @param filePath The full file path to process
+ * @return The directory path without the filename
+ */
+std::string getDirectoryPath( const std::string &filePath );
+
 } // namespace strings
