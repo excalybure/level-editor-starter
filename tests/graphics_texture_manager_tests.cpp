@@ -290,6 +290,32 @@ TEST_CASE( "graphics::TextureManager loads scene textures", "[texture][manager][
 		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
 	}
 
+	SECTION( "Load texture from triangle_textured_red.gltf" )
+	{
+		const gltf_loader::GLTFLoader loader;
+		auto sceneUniquePtr = loader.loadScene( "assets/test/triangle_textured_red.gltf" );
+		REQUIRE( sceneUniquePtr );
+
+		auto scene = std::shared_ptr<assets::Scene>( std::move( sceneUniquePtr ) );
+		REQUIRE( scene->getMaterials().size() == 1 );
+
+		auto &pbr = scene->getMaterials()[0]->getPBRMaterial();
+		REQUIRE( pbr.baseColorTexture == "test_red_2x2.png" );
+		REQUIRE( pbr.baseColorTextureHandle == graphics::texture::kInvalidTextureHandle );
+
+		const int loaded = graphics::texture::loadSceneTextures( scene, &manager );
+
+		REQUIRE( loaded == 1 );
+		REQUIRE( pbr.baseColorTextureHandle != graphics::texture::kInvalidTextureHandle );
+
+		// Verify texture info
+		const graphics::texture::TextureInfo *info = manager.getTextureInfo( pbr.baseColorTextureHandle );
+		REQUIRE( info != nullptr );
+		REQUIRE( info->width == 2 );
+		REQUIRE( info->height == 2 );
+		REQUIRE( info->format == DXGI_FORMAT_R8G8B8A8_UNORM );
+	}
+
 	manager.shutdown();
 	device.shutdown();
 }
