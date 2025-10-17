@@ -150,12 +150,12 @@
 					"vertex": {
 						"file": "shaders/unlit.hlsl",
 						"entry": "VSMain",
-						"profile": "vs_5_1"
+						"profile": "vs_6_6"
 					},
 					"pixel": {
 						"file": "shaders/unlit.hlsl",
 						"entry": "PSMain",
-						"profile": "ps_5_1"
+						"profile": "ps_6_6"
 					}
 				},
 				"states": {

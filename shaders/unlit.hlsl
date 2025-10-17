@@ -56,20 +56,25 @@ cbuffer MaterialConstants : register(b2)
     uint3 padding4;             // Padding for 16-byte alignment
 };
 
-// Texture resources
-Texture2D baseColorTexture : register(t0);     // Base color/albedo texture
-Texture2D normalTexture : register(t1);        // Normal map texture
-Texture2D metallicRoughnessTexture : register(t2); // Metallic (B) + Roughness (G) texture
-Texture2D emissiveTexture : register(t3);      // Emissive texture
+// Bindless texture array - accessed via indices stored in MaterialConstants.textureIndices
+// Note: SM 5.1 has limited array size, real bindless requires SM 6.6+ with DXC compiler
+// For now we use a fixed-size array as a transition step
+Texture2D g_textures[4] : register(t0);  // Array of up to 4 textures per material
 
 // Samplers
 SamplerState linearSampler : register(s0);
 
-// Texture flag constants (must match MaterialConstants in C++)
-#define TEXTURE_FLAG_BASE_COLOR        (1u << 0)
-#define TEXTURE_FLAG_METALLIC_ROUGHNESS (1u << 1)
-#define TEXTURE_FLAG_NORMAL            (1u << 2)
-#define TEXTURE_FLAG_EMISSIVE          (1u << 3)
+// Texture index constants for accessing textureIndices array
+#define TEXTURE_FLAG_BASE_COLOR         0
+#define TEXTURE_FLAG_METALLIC_ROUGHNESS 1
+#define TEXTURE_FLAG_NORMAL             2
+#define TEXTURE_FLAG_EMISSIVE           3
+
+// Texture flag bit masks (must match MaterialConstants in C++)
+#define TEXTURE_FLAG_BASE_COLOR_MASK         (1u << TEXTURE_FLAG_BASE_COLOR)
+#define TEXTURE_FLAG_METALLIC_ROUGHNESS_MASK (1u << TEXTURE_FLAG_METALLIC_ROUGHNESS)
+#define TEXTURE_FLAG_NORMAL_MASK             (1u << TEXTURE_FLAG_NORMAL)
+#define TEXTURE_FLAG_EMISSIVE_MASK           (1u << TEXTURE_FLAG_EMISSIVE)
 
 // Vertex Shader
 VertexOutput VSMain(VertexInput input)
@@ -104,10 +109,11 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     // Sample base color and multiply with vertex color
     float4 baseColor = baseColorFactor * input.color;
     
-    // Apply base color texture if available
-    if (textureFlags & TEXTURE_FLAG_BASE_COLOR)
+    // Apply base color texture if available (using bindless texture indexing)
+    if (textureFlags & TEXTURE_FLAG_BASE_COLOR_MASK)
     {
-        const float4 texColor = baseColorTexture.Sample(linearSampler, input.texcoord);
+        const uint texIndex = textureIndices[TEXTURE_FLAG_BASE_COLOR];
+        const float4 texColor = g_textures[texIndex].Sample(linearSampler, input.texcoord);
         baseColor *= texColor;
     }
     
@@ -119,10 +125,11 @@ float4 PSMain(VertexOutput input) : SV_TARGET
     
     // Apply emissive factor
     float3 emissive = emissiveFactor;
-    if (textureFlags & TEXTURE_FLAG_EMISSIVE)
+    if (textureFlags & TEXTURE_FLAG_EMISSIVE_MASK)
     {
-        float3 emissiveTex = emissiveTexture.Sample(linearSampler, input.texcoord).rgb;
-        emissive *= emissiveTex;
+        const uint texIndex = textureIndices[TEXTURE_FLAG_EMISSIVE];
+        const float3 emissiveSample = g_textures[texIndex].Sample(linearSampler, input.texcoord).rgb;
+        emissive *= emissiveSample;
     }
     
     // Combine base color with emissive

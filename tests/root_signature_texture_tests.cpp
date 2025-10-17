@@ -81,9 +81,9 @@ TEST_CASE( "Root signature includes SRV descriptor table for textures", "[root-s
 	REQUIRE( rootSignature != nullptr );
 }
 
-TEST_CASE( "Shader reflection detects texture bindings from unlit shader", "[root-signature][texture][T4.1][integration]" )
+TEST_CASE( "Shader reflection detects texture array and sampler from unlit shader", "[root-signature][texture][bindless][T4.1][integration]" )
 {
-	// Arrange - Register and compile unlit shader with textures
+	// Arrange - Register and compile unlit shader with texture array (bindless-style)
 	shader_manager::ShaderManager shaderManager;
 
 	const auto psHandle = shaderManager.registerShader(
@@ -104,31 +104,27 @@ TEST_CASE( "Shader reflection detects texture bindings from unlit shader", "[roo
 	// Assert - Reflection succeeded
 	REQUIRE( psResult.success );
 
-	// Assert - Pixel shader should have texture SRVs and sampler
-	// Note: Shader reflection only detects resources that are actually USED in the shader
-	// Currently unlit.hlsl only samples baseColorTexture and emissiveTexture
-	bool foundBaseColor = false;
-	bool foundEmissive = false;
+	// Assert - Pixel shader should have texture array and sampler
+	// With texture arrays, shader reflection shows individual array elements or a single array binding
+	bool foundTextureArray = false;
 	bool foundSampler = false;
 
 	for ( const auto &binding : psResult.bindings )
 	{
-		if ( binding.name == "baseColorTexture" && binding.type == ResourceBindingType::SRV && binding.slot == 0 )
+		console::info( "Found binding: {} type={} slot={}", binding.name, static_cast<int>( binding.type ), binding.slot );
+
+		// Look for g_textures array binding
+		if ( binding.name == "g_textures" && binding.type == ResourceBindingType::SRV )
 		{
-			foundBaseColor = true;
+			foundTextureArray = true;
 		}
-		else if ( binding.name == "emissiveTexture" && binding.type == ResourceBindingType::SRV && binding.slot == 3 )
-		{
-			foundEmissive = true;
-		}
-		else if ( binding.name == "linearSampler" && binding.type == ResourceBindingType::Sampler && binding.slot == 0 )
+		if ( binding.name == "linearSampler" && binding.type == ResourceBindingType::Sampler && binding.slot == 0 )
 		{
 			foundSampler = true;
 		}
 	}
 
-	// Check texture bindings that are actually used were found
-	REQUIRE( foundBaseColor );
-	REQUIRE( foundEmissive );
+	// Check that texture array and sampler were found
+	REQUIRE( foundTextureArray );
 	REQUIRE( foundSampler );
 }
