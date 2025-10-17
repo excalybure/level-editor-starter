@@ -92,6 +92,25 @@ void SamplerManager::shutdown()
 	m_descriptorSize = 0;
 }
 
+void SamplerManager::beginFrame( ID3D12GraphicsCommandList *commandList )
+{
+	if ( !commandList || !m_heap )
+	{
+		console::error( "SamplerManager::beginFrame: invalid command list or heap not initialized" );
+		return;
+	}
+
+	// Set the sampler descriptor heap on the command list
+	ID3D12DescriptorHeap *const ppHeaps[] = { m_heap.Get() };
+	commandList->SetDescriptorHeaps( 1, ppHeaps );
+}
+
+void SamplerManager::endFrame()
+{
+	// No cleanup needed per-frame for samplers
+	// This is a placeholder for symmetry with beginFrame
+}
+
 D3D12_GPU_DESCRIPTOR_HANDLE SamplerManager::getGpuHandle( SamplerType type ) const
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_heap->GetGPUDescriptorHandleForHeapStart();

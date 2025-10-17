@@ -34,6 +34,10 @@ public:
 	// Cleanup resources
 	void shutdown();
 
+	// Frame lifecycle - set descriptor heap on command list
+	void beginFrame( ID3D12GraphicsCommandList *commandList );
+	void endFrame();
+
 	// Get the sampler descriptor heap (for binding to command list)
 	ID3D12DescriptorHeap *getHeap() const { return m_heap.Get(); }
 

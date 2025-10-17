@@ -94,16 +94,6 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 		return;
 	}
 
-	// Bind sampler descriptor heap for texture sampling
-	// Note: This sets the sampler heap globally for all subsequent draw calls
-	// The shader will access samplers via register slots (s0, s1, etc.)
-	ID3D12DescriptorHeap *const samplerHeap = m_samplerManager.getHeap();
-	if ( samplerHeap )
-	{
-		ID3D12DescriptorHeap *const ppHeaps[] = { samplerHeap };
-		commandList->SetDescriptorHeaps( 1, ppHeaps );
-	}
-
 	// Phase 3: Setup material for rendering using MaterialInstance
 	if ( !m_defaultMaterialInstance || !m_defaultMaterialInstance->isValid() )
 	{

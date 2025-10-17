@@ -20,7 +20,7 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with Transform, MeshRenderer, and Visible components
@@ -60,7 +60,7 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 	camera::PerspectiveCamera camera;
 
 	// Act & Assert - Should not crash; entities with visible=false should be skipped
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 
 	// The test verifies that:
 	// 1. Entities with visible=true are processed (visibleEntity)
@@ -79,7 +79,7 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity without Visible component (should still render)
@@ -93,7 +93,7 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 	camera::PerspectiveCamera camera;
 
 	// Act & Assert - Should not crash; entity without Visible component should be processed
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][integration]" )
@@ -106,7 +106,7 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with castShadows=false
@@ -127,7 +127,7 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 
 	// Act & Assert - Should not crash
 	// Note: This test documents intended behavior for future shadow system integration
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarchical][visibility][integration]" )
@@ -140,7 +140,7 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=false
@@ -171,7 +171,7 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 	// Act & Assert
 	// Child should NOT render because parent is invisible
 	// This test verifies hierarchical visibility propagation
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 
 	// Note: Actual validation would require render interception
 	// For now, we verify no crashes and document expected behavior:
@@ -188,7 +188,7 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -218,7 +218,7 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 
 	// Act & Assert
 	// Both should render (parent visible, child visible)
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "Hierarchical visibility: visible parent respects invisible children", "[hierarchical][visibility][integration]" )
@@ -231,7 +231,7 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -261,7 +261,7 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 
 	// Act & Assert
 	// Parent should render, child should NOT (child has visible=false)
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[hierarchical][visibility][integration]" )
@@ -274,7 +274,7 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create grandparent (visible=false)
@@ -315,5 +315,5 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 
 	// Act & Assert
 	// None should render: grandparent invisible makes entire subtree invisible
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }

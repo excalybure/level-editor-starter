@@ -199,6 +199,9 @@ int main()
 
 			ID3D12GraphicsCommandList *commandList = device.getCommandList();
 
+			// Set sampler descriptor heap for the frame
+			samplerManager.beginFrame( commandList );
+
 			// All command list PIX events must be between beginFrame() and endFrame()
 			{
 				pix::ScopedEvent pixFrame( commandList, pix::MarkerColor::White, std::format( "Frame {}", frameCount ) );
@@ -241,6 +244,9 @@ int main()
 					ui.renderDrawData( static_cast<void *>( commandList ) );
 				}
 			} // Frame PIX event ends here, before endFrame() closes the command list
+
+			// End sampler manager frame
+			samplerManager.endFrame();
 
 			// End renderer frame - this cleans up renderer state
 			renderer.endFrame();

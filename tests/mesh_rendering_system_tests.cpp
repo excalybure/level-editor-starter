@@ -23,7 +23,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Act & Assert - should compile and create without error
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 }
 
 TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
@@ -36,7 +36,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
@@ -54,7 +54,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create an entity with both Transform and MeshRenderer components
@@ -66,7 +66,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	camera::PerspectiveCamera camera;
 
 	// Act & Assert - should not throw or crash, and should handle entities correctly
-	system.render( scene, camera );
+	system.render( scene, camera, device.getCommandList() );
 }
 
 TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for identity transform", "[mesh_rendering_system][unit]" )
@@ -79,7 +79,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 
 	components::Transform transform;  // Default: identity transform
 	camera::PerspectiveCamera camera; // Default camera
@@ -106,7 +106,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with empty mesh renderer (no GPU mesh)
@@ -117,7 +117,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	camera::PerspectiveCamera camera;
 
 	// Act & Assert - Should not crash with empty mesh renderer
-	REQUIRE_NOTHROW( system.renderEntity( scene, entity, camera ) );
+	REQUIRE_NOTHROW( system.renderEntity( scene, entity, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "MeshRenderingSystem complete render system processes entities correctly", "[mesh_rendering_system][integration][unit]" )
@@ -130,7 +130,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create multiple entities with different component combinations
@@ -148,7 +148,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	camera::PerspectiveCamera camera;
 
 	// Act & Assert - Should handle all entity types without crashing
-	REQUIRE_NOTHROW( system.render( scene, camera ) );
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
 }
 
 TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GPU mesh present", "[mesh_rendering_system][unit]" )
@@ -161,7 +161,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
 	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with non-identity transform and empty mesh renderer
@@ -179,7 +179,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	const auto initialMatrix = renderer.getViewProjectionMatrix();
 
 	// Act
-	system.renderEntity( scene, entity, camera );
+	system.renderEntity( scene, entity, camera, device.getCommandList() );
 
 	// Assert - Matrix should remain unchanged when gpuMesh is null
 	const auto finalMatrix = renderer.getViewProjectionMatrix();
