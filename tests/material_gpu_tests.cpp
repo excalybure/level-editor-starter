@@ -15,7 +15,7 @@ TEST_CASE( "MaterialGPU can be created from Material", "[MaterialGPU][unit]" )
 	material->setLoaded( true );
 
 	// Act
-	engine::gpu::MaterialGPU materialGPU{ material };
+	graphics::gpu::MaterialGPU materialGPU{ material };
 
 	// Assert
 	REQUIRE( materialGPU.isValid() );
@@ -44,7 +44,7 @@ TEST_CASE( "MaterialGPU with device creates valid constant buffer", "[MaterialGP
 	material->setLoaded( true );
 
 	// Act
-	engine::gpu::MaterialGPU materialGPU{ material, device };
+	graphics::gpu::MaterialGPU materialGPU{ material, device };
 
 	// Assert
 	REQUIRE( materialGPU.isValid() );
@@ -71,23 +71,23 @@ TEST_CASE( "MaterialGPU sets texture flags correctly based on material textures"
 	material->setLoaded( true );
 
 	// Act
-	engine::gpu::MaterialGPU materialGPU{ material };
+	graphics::gpu::MaterialGPU materialGPU{ material };
 
 	// Assert
 	REQUIRE( materialGPU.isValid() );
 	const auto &constants = materialGPU.getMaterialConstants();
 
 	// Check that only base color and normal texture bits are set
-	REQUIRE( ( constants.textureFlags & engine::gpu::MaterialConstants::kBaseColorTextureBit ) != 0 );
-	REQUIRE( ( constants.textureFlags & engine::gpu::MaterialConstants::kNormalTextureBit ) != 0 );
-	REQUIRE( ( constants.textureFlags & engine::gpu::MaterialConstants::kMetallicRoughnessTextureBit ) == 0 );
-	REQUIRE( ( constants.textureFlags & engine::gpu::MaterialConstants::kEmissiveTextureBit ) == 0 );
+	REQUIRE( ( constants.textureFlags & graphics::gpu::MaterialConstants::kBaseColorTextureBit ) != 0 );
+	REQUIRE( ( constants.textureFlags & graphics::gpu::MaterialConstants::kNormalTextureBit ) != 0 );
+	REQUIRE( ( constants.textureFlags & graphics::gpu::MaterialConstants::kMetallicRoughnessTextureBit ) == 0 );
+	REQUIRE( ( constants.textureFlags & graphics::gpu::MaterialConstants::kEmissiveTextureBit ) == 0 );
 }
 
 TEST_CASE( "MaterialGPU handles null material gracefully", "[MaterialGPU][unit]" )
 {
 	// Arrange & Act
-	engine::gpu::MaterialGPU materialGPU{ nullptr };
+	graphics::gpu::MaterialGPU materialGPU{ nullptr };
 
 	// Assert
 	REQUIRE_FALSE( materialGPU.isValid() );
@@ -100,7 +100,7 @@ TEST_CASE( "MaterialGPU bindToCommandList handles null command list gracefully",
 	auto material = std::make_shared<assets::Material>();
 	material->setPath( "test_material" );
 	material->setLoaded( true );
-	engine::gpu::MaterialGPU materialGPU{ material };
+	graphics::gpu::MaterialGPU materialGPU{ material };
 
 	// Act & Assert - should not crash
 	REQUIRE_NOTHROW( materialGPU.bindToCommandList( nullptr ) );
@@ -114,11 +114,11 @@ TEST_CASE( "MaterialGPU supports move semantics", "[MaterialGPU][unit]" )
 	material->setPath( "movable_material" );
 	material->setLoaded( true );
 
-	engine::gpu::MaterialGPU original{ material };
+	graphics::gpu::MaterialGPU original{ material };
 	REQUIRE( original.isValid() );
 
 	// Act - Move constructor
-	engine::gpu::MaterialGPU moved{ std::move( original ) };
+	graphics::gpu::MaterialGPU moved{ std::move( original ) };
 
 	// Assert
 	REQUIRE( moved.isValid() );

@@ -17,7 +17,7 @@ This layer abstracts DirectX 12 complexity and provides high-level rendering uti
 
 #### `gpu/gpu_resource_manager.h/cpp`
 Central GPU resource allocator and descriptor heap manager.
-- **Key class**: `engine::gpu::GpuResourceManager`
+- **Key class**: `graphics::GPUResourceManager`
 - **Responsibilities**: Buffer/texture allocation, descriptor heaps, staging resources
 - **Features**: Automatic descriptor allocation, resource lifetime tracking
 - **Usage**: All GPU resources should go through this manager
@@ -116,19 +116,12 @@ graphics/
 ```cpp
 #include "graphics/gpu/gpu_resource_manager.h"
 
-auto& gpuMgr = engine::gpu::GpuResourceManager::instance();
+// GPUResourceManager is typically instantiated at application level
+// and passed to systems that need GPU resource management
 
-// Create vertex buffer
-auto vbHandle = gpuMgr.createBuffer(
-    vertices.data(), 
-    vertices.size() * sizeof(Vertex),
-    sizeof(Vertex),
-    BufferType::Vertex
-);
-
-// Create constant buffer
-auto cbHandle = gpuMgr.createConstantBuffer(sizeof(Constants));
-gpuMgr.updateConstantBuffer(cbHandle, &constants);
+// Example usage (mesh and material caching):
+auto meshGPU = gpuResourceManager.getMeshGPU(meshAsset);
+auto materialGPU = gpuResourceManager.getMaterialGPU(materialAsset);
 ```
 
 ### Material System

@@ -480,7 +480,7 @@ std::expected<void, SerializationErrorInfo> SceneSerializer::validateSceneFile(
 int SceneSerializer::resolveSceneAssets(
 	ecs::Scene &scene,
 	assets::AssetManager &assetManager,
-	engine::GPUResourceManager &gpuManager )
+	graphics::GPUResourceManager &gpuManager )
 {
 	int resolvedCount = 0;
 	const auto entities = scene.getAllEntities();

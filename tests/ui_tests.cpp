@@ -25,10 +25,10 @@ using Catch::Approx;
 TEST_CASE( "UI clearScene clears selection", "[ui][clearScene][selection]" )
 {
 	// Mock GPUResourceManager for testing
-	class MockGPUResourceManager : public engine::GPUResourceManager
+	class MockGPUResourceManager : public graphics::GPUResourceManager
 	{
 	public:
-		MockGPUResourceManager() : engine::GPUResourceManager( getMockDevice() ) {}
+		MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice() ) {}
 
 	private:
 		static dx12::Device &getMockDevice()

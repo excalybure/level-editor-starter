@@ -24,7 +24,7 @@ TEST_CASE( "PrimitiveGPU creates vertex buffer from primitive", "[gpu][primitive
 	primitive.addIndex( 2 );
 
 	// This should compile and create GPU buffers
-	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
+	graphics::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	// Verify the buffer was created successfully
 	REQUIRE( gpuBuffer.isValid() );
@@ -49,7 +49,7 @@ TEST_CASE( "PrimitiveGPU provides valid D3D12 buffer views", "[gpu][primitive][u
 	primitive.addIndex( 2 );
 
 	// This should provide valid buffer views for rendering
-	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
+	graphics::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	const auto vertexView = gpuBuffer.getVertexBufferView();
 	const auto indexView = gpuBuffer.getIndexBufferView();
@@ -96,7 +96,7 @@ TEST_CASE( "Mesh maintains per-primitive GPU buffers", "[gpu][mesh][primitive][u
 	mesh.addPrimitive( std::move( primitive2 ) );
 
 	// This should create GPU buffers for each primitive independently
-	engine::gpu::MeshGPU meshBuffers( device, mesh );
+	graphics::gpu::MeshGPU meshBuffers( device, mesh );
 
 	REQUIRE( meshBuffers.getPrimitiveCount() == 2 );
 
@@ -120,9 +120,9 @@ TEST_CASE( "PrimitiveGPU handles empty primitive gracefully", "[gpu][primitive][
 	REQUIRE( emptyPrimitive.getIndexCount() == 0 );
 
 	// Creating GPU buffers for empty primitive should fail gracefully
-	engine::gpu::PrimitiveGPU gpuBuffer( device, emptyPrimitive );
+	graphics::gpu::PrimitiveGPU gpuBuffer( device, emptyPrimitive );
 
-	// engine::gpu::engine::gpu::Buffer should be invalid for empty primitive
+	// graphics::gpu::Buffer should be invalid for empty primitive
 	REQUIRE_FALSE( gpuBuffer.isValid() );
 	REQUIRE( gpuBuffer.getVertexCount() == 0 );
 	REQUIRE( gpuBuffer.getIndexCount() == 0 );
@@ -155,7 +155,7 @@ TEST_CASE( "MeshGPU handles mesh with empty primitives", "[gpu][mesh][error][uni
 	// assets::Mesh should have 2 primitives but only 1 should have valid GPU buffers
 	REQUIRE( mesh.getPrimitiveCount() == 2 );
 
-	engine::gpu::MeshGPU meshBuffers( device, mesh );
+	graphics::gpu::MeshGPU meshBuffers( device, mesh );
 
 	// Should have failed to create buffers for the empty primitive
 	// The implementation should skip empty primitives
@@ -191,7 +191,7 @@ TEST_CASE( "GPU buffers support large vertex counts", "[gpu][primitive][performa
 	}
 
 	// Should handle large buffers successfully
-	engine::gpu::PrimitiveGPU gpuBuffer( device, largePrimitive );
+	graphics::gpu::PrimitiveGPU gpuBuffer( device, largePrimitive );
 
 	REQUIRE( gpuBuffer.isValid() );
 	REQUIRE( gpuBuffer.getVertexCount() == vertexCount );
@@ -229,10 +229,10 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	material->setRoughnessFactor( 0.3f );
 
 	// Create MaterialGPU
-	std::shared_ptr<engine::gpu::MaterialGPU> materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material );
+	std::shared_ptr<graphics::gpu::MaterialGPU> materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material );
 
 	// Create primitive GPU buffer and set material
-	engine::gpu::PrimitiveGPU primGPU( device, primitive );
+	graphics::gpu::PrimitiveGPU primGPU( device, primitive );
 	primGPU.setMaterial( materialGPU );
 
 	// Verify the buffer was created successfully
@@ -259,7 +259,7 @@ TEST_CASE( "PrimitiveGPU constructor without MaterialGPU has no material", "[gpu
 	primitive.addIndex( 2 );
 
 	// Create primitive GPU buffer without material
-	engine::gpu::PrimitiveGPU gpuBuffer( device, primitive );
+	graphics::gpu::PrimitiveGPU gpuBuffer( device, primitive );
 
 	// Verify the buffer was created successfully but has no material
 	REQUIRE( gpuBuffer.isValid() );
@@ -283,7 +283,7 @@ TEST_CASE( "PrimitiveGPU bindForRendering sets vertex and index buffers", "[gpu]
 	primitive.addIndex( 2 );
 
 	// Create primitive GPU buffer
-	engine::gpu::PrimitiveGPU primGPU( device, primitive );
+	graphics::gpu::PrimitiveGPU primGPU( device, primitive );
 	REQUIRE( primGPU.isValid() );
 
 	// Create command list for testing (note: this is a stub test - actual command list binding would require more setup)
@@ -300,7 +300,7 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	REQUIRE( device.initializeHeadless() );
 
 	// Create GPU resource manager
-	engine::GPUResourceManager resourceManager( device );
+	graphics::GPUResourceManager resourceManager( device );
 	REQUIRE( resourceManager.isValid() );
 
 	// Create a test material
@@ -340,7 +340,7 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	mesh.addPrimitive( std::move( primitive2 ) );
 
 	// Create MeshGPU first (without materials)
-	engine::gpu::MeshGPU gpuMesh( device, mesh );
+	graphics::gpu::MeshGPU gpuMesh( device, mesh );
 	REQUIRE( gpuMesh.isValid() );
 	REQUIRE( gpuMesh.getPrimitiveCount() == 2 );
 

@@ -108,7 +108,7 @@ struct UI::Impl
 	ecs::Scene *scene = nullptr;
 	systems::SystemManager *systemManager = nullptr;
 	assets::AssetManager *assetManager = nullptr;
-	engine::GPUResourceManager *gpuManager = nullptr;
+	graphics::GPUResourceManager *gpuManager = nullptr;
 
 	// Gizmo system for object manipulation
 	std::unique_ptr<GizmoSystem> gizmoSystem;
@@ -1983,7 +1983,7 @@ void UI::updateViewports( const float deltaTime )
 void UI::initializeSceneOperations( ecs::Scene &scene,
 	systems::SystemManager &systemManager,
 	assets::AssetManager &assetManager,
-	engine::GPUResourceManager &gpuManager,
+	graphics::GPUResourceManager &gpuManager,
 	editor::SelectionManager &selectionManager )
 {
 	m_impl->scene = &scene;

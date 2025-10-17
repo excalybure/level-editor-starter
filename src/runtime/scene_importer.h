@@ -8,7 +8,7 @@ namespace ecs
 class Scene;
 }
 
-namespace engine
+namespace graphics
 {
 class GPUResourceManager;
 }
@@ -32,7 +32,7 @@ public:
 	/// @param targetScene The ECS scene with imported entities
 	/// @param gpuResourceManager GPU resource manager for creating GPU resources
 	/// @return true if GPU resource creation was successful
-	static bool createGPUResources( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, engine::GPUResourceManager &gpuResourceManager );
+	static bool createGPUResources( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, graphics::GPUResourceManager &gpuResourceManager );
 
 private:
 	/// @brief Recursively import a scene node and its children

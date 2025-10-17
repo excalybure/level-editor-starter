@@ -6,7 +6,7 @@
 #include <wrl.h>
 #include "graphics/gpu/mesh_gpu.h"
 
-namespace engine
+namespace graphics
 {
 
 // GPU resource manager with caching support
@@ -26,11 +26,11 @@ public:
 	GPUResourceManager &operator=( GPUResourceManager && ) = delete;
 
 	// Mesh resource caching
-	std::shared_ptr<engine::gpu::MeshGPU> getMeshGPU( std::shared_ptr<assets::Mesh> mesh );
+	std::shared_ptr<graphics::gpu::MeshGPU> getMeshGPU( std::shared_ptr<assets::Mesh> mesh );
 
 	// Material resource caching
-	std::shared_ptr<engine::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) override;
-	std::shared_ptr<engine::gpu::MaterialGPU> getDefaultMaterialGPU() override;
+	std::shared_ptr<graphics::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) override;
+	std::shared_ptr<graphics::gpu::MaterialGPU> getDefaultMaterialGPU() override;
 
 	// Cache management
 	void clearCache();
@@ -41,8 +41,8 @@ public:
 	void processPendingDeletes();
 
 	// Queue resources for deferred deletion
-	void queueForDeletion( std::shared_ptr<engine::gpu::MeshGPU> meshGPU );
-	void queueForDeletion( std::shared_ptr<engine::gpu::MaterialGPU> materialGPU );
+	void queueForDeletion( std::shared_ptr<graphics::gpu::MeshGPU> meshGPU );
+	void queueForDeletion( std::shared_ptr<graphics::gpu::MaterialGPU> materialGPU );
 
 	// Statistics and monitoring
 	struct Statistics
@@ -64,21 +64,21 @@ private:
 	dx12::Device *m_device = nullptr;
 
 	// Default material for primitives without materials
-	std::shared_ptr<engine::gpu::MaterialGPU> m_defaultMaterialGPU;
+	std::shared_ptr<graphics::gpu::MaterialGPU> m_defaultMaterialGPU;
 
 	// Cache maps using weak_ptr for automatic cleanup
-	std::unordered_map<assets::Mesh *, std::weak_ptr<engine::gpu::MeshGPU>> m_meshCache;
-	std::unordered_map<assets::Material *, std::weak_ptr<engine::gpu::MaterialGPU>> m_materialCache;
+	std::unordered_map<assets::Mesh *, std::weak_ptr<graphics::gpu::MeshGPU>> m_meshCache;
+	std::unordered_map<assets::Material *, std::weak_ptr<graphics::gpu::MaterialGPU>> m_materialCache;
 
 	// Statistics tracking
 	mutable Statistics m_statistics;
 
 	// Deferred deletion queues
-	std::vector<std::shared_ptr<engine::gpu::MeshGPU>> m_pendingMeshDeletions;
-	std::vector<std::shared_ptr<engine::gpu::MaterialGPU>> m_pendingMaterialDeletions;
+	std::vector<std::shared_ptr<graphics::gpu::MeshGPU>> m_pendingMeshDeletions;
+	std::vector<std::shared_ptr<graphics::gpu::MaterialGPU>> m_pendingMaterialDeletions;
 
 	// Helper methods for statistics
 	void updateStatistics() const;
 };
 
-} // namespace engine
+} // namespace graphics

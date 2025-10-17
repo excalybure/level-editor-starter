@@ -17,7 +17,7 @@ namespace dx12
 class Device;
 } // namespace dx12
 
-namespace engine::gpu
+namespace graphics::gpu
 {
 
 // MaterialConstants struct matching shader expectations for PBR materials
@@ -95,4 +95,4 @@ private:
 	void loadTextures();
 };
 
-} // namespace engine::gpu
+} // namespace graphics::gpu

@@ -21,7 +21,7 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 
 		// Act - create managers
 		assets::AssetManager assetManager;
-		engine::GPUResourceManager gpuResourceManager( device );
+		graphics::GPUResourceManager gpuResourceManager( device );
 
 		// Assert - basic instantiation successful
 		REQUIRE( true ); // If we get here, instantiation worked
@@ -34,7 +34,7 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
-		engine::GPUResourceManager gpuResourceManager( device );
+		graphics::GPUResourceManager gpuResourceManager( device );
 		editor::SelectionManager selectionManager( scene, systemManager );
 		editor::UI ui;
 

@@ -121,7 +121,7 @@ int main()
 	engine::integration::initializeAssetGLTFIntegration();
 
 	// Create GPU resource manager for GPU resource creation and management
-	engine::GPUResourceManager gpuResourceManager( device );
+	graphics::GPUResourceManager gpuResourceManager( device );
 
 	// Create sampler manager for texture sampling
 	graphics::SamplerManager samplerManager;

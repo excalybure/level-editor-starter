@@ -21,7 +21,7 @@ SceneHierarchyPanel::SceneHierarchyPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
 	CommandHistory &commandHistory,
 	assets::AssetManager *assetManager,
-	engine::GPUResourceManager *gpuManager )
+	graphics::GPUResourceManager *gpuManager )
 	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_visible( true )
 {
 }

@@ -25,7 +25,7 @@ bool SceneImporter::importScene( std::shared_ptr<assets::Scene> assetScene, ecs:
 	return true;
 }
 
-bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, engine::GPUResourceManager &gpuResourceManager )
+bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScene, ecs::Scene &targetScene, graphics::GPUResourceManager &gpuResourceManager )
 {
 	if ( !assetScene || !assetScene->isLoaded() )
 	{

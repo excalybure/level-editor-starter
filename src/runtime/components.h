@@ -9,7 +9,7 @@
 #include "math/bounding_box_3d.h"
 #include "core/time.h"
 
-namespace engine::gpu
+namespace graphics::gpu
 {
 class MeshGPU;
 }
@@ -84,7 +84,7 @@ struct MeshRenderer
 {
 	assets::MeshHandle meshHandle = 0; // Handle to the source mesh asset
 	std::string meshPath;			   // Path to source asset file (relative to working directory)
-	std::shared_ptr<engine::gpu::MeshGPU> gpuMesh;
+	std::shared_ptr<graphics::gpu::MeshGPU> gpuMesh;
 	math::BoundingBox3Df bounds; // Local space bounding box
 	float lodBias = 0.0f;		 // Level of detail bias for rendering
 

@@ -11,7 +11,7 @@ namespace assets
 class AssetManager;
 }
 
-namespace engine
+namespace graphics
 {
 class GPUResourceManager;
 }
@@ -79,7 +79,7 @@ public:
 	static int resolveSceneAssets(
 		ecs::Scene &scene,
 		assets::AssetManager &assetManager,
-		engine::GPUResourceManager &gpuManager );
+		graphics::GPUResourceManager &gpuManager );
 
 private:
 	SceneSerializer() = delete; // Static class only

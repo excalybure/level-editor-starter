@@ -66,7 +66,7 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	// Create a dummy device and manager for stubbed test
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager resourceManager( device );
+	graphics::GPUResourceManager resourceManager( device );
 	const bool result = runtime::SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
@@ -100,7 +100,7 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 	// Create a DX12 device and GPU resource manager
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager resourceManager( device );
+	graphics::GPUResourceManager resourceManager( device );
 
 	// Create a scene with a mesh node
 	auto scene = std::make_shared<assets::Scene>();
@@ -206,7 +206,7 @@ TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scen
 	// Step 2: Create GPU resources separately
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager resourceManager( device );
+	graphics::GPUResourceManager resourceManager( device );
 	const bool gpuResult = runtime::SceneImporter::createGPUResources( scene, targetScene, resourceManager );
 	REQUIRE( gpuResult );
 

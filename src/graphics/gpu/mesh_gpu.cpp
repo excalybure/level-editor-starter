@@ -7,7 +7,7 @@
 #include "graphics/gpu/material_gpu.h"
 #include "core/console.h"
 
-namespace engine::gpu
+namespace graphics::gpu
 {
 
 PrimitiveGPU::PrimitiveGPU( dx12::Device &device, const assets::Primitive &primitive )
@@ -216,7 +216,7 @@ void MeshGPU::configureMaterials( MaterialProvider &materialProvider, const asse
 			continue;
 		}
 
-		std::shared_ptr<engine::gpu::MaterialGPU> materialToAssign;
+		std::shared_ptr<graphics::gpu::MaterialGPU> materialToAssign;
 
 		// Check if primitive has a material assigned
 		if ( srcPrimitive.hasMaterial() )
@@ -283,4 +283,4 @@ bool MeshGPU::isValid() const noexcept
 		std::all_of( m_primitives.begin(), m_primitives.end(), []( const auto &buffer ) { return buffer && buffer->isValid(); } );
 }
 
-} // namespace engine::gpu
+} // namespace graphics::gpu

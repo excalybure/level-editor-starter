@@ -14,7 +14,7 @@ namespace assets
 class AssetManager;
 }
 
-namespace engine
+namespace graphics
 {
 class GPUResourceManager;
 }
@@ -54,7 +54,7 @@ public:
 		SelectionManager &selectionManager,
 		CommandHistory &commandHistory,
 		assets::AssetManager *assetManager = nullptr,
-		engine::GPUResourceManager *gpuManager = nullptr );
+		graphics::GPUResourceManager *gpuManager = nullptr );
 
 	/**
 	 * @brief Render the hierarchy panel UI
@@ -98,8 +98,8 @@ private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
-	assets::AssetManager *m_assetManager = nullptr;		// Optional: for asset drag-drop
-	engine::GPUResourceManager *m_gpuManager = nullptr; // Optional: for mesh uploading
+	assets::AssetManager *m_assetManager = nullptr;		  // Optional: for asset drag-drop
+	graphics::GPUResourceManager *m_gpuManager = nullptr; // Optional: for mesh uploading
 	bool m_visible = true;
 	ecs::Entity m_contextMenuEntity{}; // Entity for which context menu is open
 

@@ -14,7 +14,7 @@ TEST_CASE( "GPUResourceManager can be instantiated", "[gpu_resource_manager][uni
 	REQUIRE( device.initializeHeadless() );
 
 	// Act - create GPUResourceManager
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Assert - manager should be created successfully
 	REQUIRE( manager.isValid() );
@@ -25,7 +25,7 @@ TEST_CASE( "GPUResourceManager caches mesh GPU buffers from shared_ptr", "[gpu_r
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create a test mesh with actual data
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -59,7 +59,7 @@ TEST_CASE( "GPUResourceManager caches material GPU resources from shared_ptr", "
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create a test material
 	auto material = std::make_shared<assets::Material>();
@@ -80,7 +80,7 @@ TEST_CASE( "GPUResourceManager clears cache properly", "[gpu_resource_manager][u
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create test assets
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -120,7 +120,7 @@ TEST_CASE( "GPUResourceManager tracks cache statistics", "[gpu_resource_manager]
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create test assets
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -154,7 +154,7 @@ TEST_CASE( "Extract and validate PBR factor values", "[gpu_resource_manager][uni
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create a material with specific PBR factor values
 	auto material = std::make_shared<assets::Material>();
@@ -201,7 +201,7 @@ TEST_CASE( "configureMaterials properly setup materials", "[gpu_resource_manager
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create a test material
 	const auto material = std::make_shared<assets::Material>();
@@ -253,7 +253,7 @@ TEST_CASE( "configureMaterials assigns default material when primitive has no ma
 {
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	engine::GPUResourceManager manager( device );
+	graphics::GPUResourceManager manager( device );
 
 	// Create a simple mesh with a primitive that has NO material assigned
 	auto mesh = std::make_shared<assets::Mesh>();

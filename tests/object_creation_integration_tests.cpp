@@ -19,10 +19,10 @@ using Catch::Matchers::WithinAbs;
 namespace fs = std::filesystem;
 
 // Mock GPUResourceManager for testing (CPU-only tests don't need actual GPU resources)
-class MockGPUResourceManager : public engine::GPUResourceManager
+class MockGPUResourceManager : public graphics::GPUResourceManager
 {
 public:
-	MockGPUResourceManager() : engine::GPUResourceManager( getMockDevice() ) {}
+	MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice() ) {}
 
 private:
 	static dx12::Device &getMockDevice()

@@ -131,6 +131,23 @@ bool MaterialSystem::initialize( const std::string &jsonPath, shader_manager::Sh
 				m_renderTargetStates[id] = state;
 			}
 		}
+
+		// Parse vertex formats
+		if ( statesSection.contains( "vertexFormats" ) && statesSection["vertexFormats"].is_object() )
+		{
+			for ( const auto &[id, formatJson] : statesSection["vertexFormats"].items() )
+			{
+				auto format = StateBlockParser::parseVertexFormat( formatJson );
+				format.id = id;
+
+				if ( m_vertexFormats.find( format.id ) != m_vertexFormats.end() )
+				{
+					console::errorAndThrow( "Duplicate vertex format ID: '{}'", format.id );
+				}
+
+				m_vertexFormats[format.id] = format;
+			}
+		}
 	}
 
 	// Parse vertex formats array (at root level, not in states)

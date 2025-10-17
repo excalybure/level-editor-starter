@@ -10,7 +10,7 @@
 #include "platform/dx12/dx12_device.h"
 #include "core/console.h"
 
-namespace engine::gpu
+namespace graphics::gpu
 {
 
 // ObjectConstants definition to match MeshRenderingSystem's root signature
@@ -233,4 +233,4 @@ void MaterialGPU::loadTextures()
 	}
 }
 
-} // namespace engine::gpu
+} // namespace graphics::gpu

@@ -10,7 +10,7 @@ namespace assets
 {
 class AssetManager;
 }
-namespace engine
+namespace graphics
 {
 class GPUResourceManager;
 }
@@ -123,7 +123,7 @@ public:
 	void initializeSceneOperations( ecs::Scene &scene,
 		systems::SystemManager &systemManager,
 		assets::AssetManager &assetManager,
-		engine::GPUResourceManager &gpuManager,
+		graphics::GPUResourceManager &gpuManager,
 		editor::SelectionManager &selectionManager );
 
 	// File operations

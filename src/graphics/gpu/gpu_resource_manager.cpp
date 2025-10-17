@@ -4,7 +4,7 @@
 #include "graphics/gpu/material_gpu.h"
 #include "core/console.h"
 
-namespace engine
+namespace graphics
 {
 
 GPUResourceManager::GPUResourceManager( dx12::Device &device )
@@ -20,7 +20,7 @@ GPUResourceManager::GPUResourceManager( dx12::Device &device )
 	console::info( "GPUResourceManager initialized successfully" );
 }
 
-std::shared_ptr<engine::gpu::MeshGPU> GPUResourceManager::getMeshGPU( std::shared_ptr<assets::Mesh> mesh )
+std::shared_ptr<graphics::gpu::MeshGPU> GPUResourceManager::getMeshGPU( std::shared_ptr<assets::Mesh> mesh )
 {
 	if ( !mesh )
 	{
@@ -43,7 +43,7 @@ std::shared_ptr<engine::gpu::MeshGPU> GPUResourceManager::getMeshGPU( std::share
 
 	// Cache miss - create new GPU buffers
 	++m_statistics.cacheMisses;
-	const auto gpuBuffers = std::make_shared<engine::gpu::MeshGPU>( *m_device, *mesh );
+	const auto gpuBuffers = std::make_shared<graphics::gpu::MeshGPU>( *m_device, *mesh );
 	if ( !gpuBuffers->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create GPU buffers for mesh" );
@@ -57,7 +57,7 @@ std::shared_ptr<engine::gpu::MeshGPU> GPUResourceManager::getMeshGPU( std::share
 }
 
 
-std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr<assets::Material> material )
+std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr<assets::Material> material )
 {
 	if ( !material )
 	{
@@ -80,7 +80,7 @@ std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( st
 
 	// Cache miss - create new MaterialGPU
 	++m_statistics.cacheMisses;
-	const auto materialGPU = std::make_shared<engine::gpu::MaterialGPU>( material, *m_device );
+	const auto materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device );
 	if ( !materialGPU->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create MaterialGPU" );
@@ -93,7 +93,7 @@ std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( st
 	return materialGPU;
 }
 
-std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getDefaultMaterialGPU()
+std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getDefaultMaterialGPU()
 {
 	// Create default material if not cached
 	if ( !m_defaultMaterialGPU )
@@ -105,7 +105,7 @@ std::shared_ptr<engine::gpu::MaterialGPU> GPUResourceManager::getDefaultMaterial
 		defaultMaterial->setMetallicFactor( 0.0f );
 		defaultMaterial->setRoughnessFactor( 1.0f );
 
-		m_defaultMaterialGPU = std::make_shared<engine::gpu::MaterialGPU>( defaultMaterial, *m_device );
+		m_defaultMaterialGPU = std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device );
 		if ( !m_defaultMaterialGPU->isValid() )
 		{
 			console::error( "GPUResourceManager: failed to create default MaterialGPU" );
@@ -206,7 +206,7 @@ void GPUResourceManager::processPendingDeletes()
 	m_pendingMaterialDeletions.clear();
 }
 
-void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::MeshGPU> meshGPU )
+void GPUResourceManager::queueForDeletion( std::shared_ptr<graphics::gpu::MeshGPU> meshGPU )
 {
 	if ( meshGPU )
 	{
@@ -214,7 +214,7 @@ void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::MeshGPU>
 	}
 }
 
-void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::MaterialGPU> materialGPU )
+void GPUResourceManager::queueForDeletion( std::shared_ptr<graphics::gpu::MaterialGPU> materialGPU )
 {
 	if ( materialGPU )
 	{
@@ -222,4 +222,4 @@ void GPUResourceManager::queueForDeletion( std::shared_ptr<engine::gpu::Material
 	}
 }
 
-} // namespace engine
+} // namespace graphics

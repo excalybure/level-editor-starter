@@ -16,12 +16,12 @@ class Mesh;
 class Primitive;
 class Scene;
 } // namespace assets
-namespace engine::gpu
+namespace graphics::gpu
 {
 class MaterialGPU;
 }
 
-namespace engine::gpu
+namespace graphics::gpu
 {
 
 // Interface for providing MaterialGPU objects from MaterialHandles
@@ -119,4 +119,4 @@ private:
 	dx12::Device &m_device;
 };
 
-} // namespace engine::gpu
+} // namespace graphics::gpu
