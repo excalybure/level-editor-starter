@@ -48,10 +48,7 @@ MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx1
 		return;
 	}
 
-	updateMaterialConstants();
-	createConstantBuffer();
-	loadTextures();
-	m_isValid = true;
+	initializeGPUResources();
 }
 
 MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager *textureManager )
@@ -63,10 +60,7 @@ MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx1
 		return;
 	}
 
-	updateMaterialConstants();
-	createConstantBuffer();
-	loadTextures();
-	m_isValid = true;
+	initializeGPUResources();
 }
 
 MaterialGPU::MaterialGPU( MaterialGPU &&other ) noexcept
@@ -264,6 +258,16 @@ void MaterialGPU::updateMaterialConstants()
 	{
 		m_materialConstants.textureFlags |= MaterialConstants::kEmissiveTextureBit;
 	}
+
+	// Populate texture indices from TextureManager if available
+	// This must be called after loadTextures() to have valid texture handles
+	if ( m_textureManager )
+	{
+		m_materialConstants.textureIndices[0] = m_textureManager->getSrvIndex( m_baseColorTexture );
+		m_materialConstants.textureIndices[1] = m_textureManager->getSrvIndex( m_normalTexture );
+		m_materialConstants.textureIndices[2] = m_textureManager->getSrvIndex( m_metallicRoughnessTexture );
+		m_materialConstants.textureIndices[3] = m_textureManager->getSrvIndex( m_emissiveTexture );
+	}
 }
 
 void MaterialGPU::loadTextures()
@@ -343,6 +347,14 @@ void MaterialGPU::loadTextures()
 			console::error( "MaterialGPU: Failed to load emissive texture: " + pbr.emissiveTexture );
 		}
 	}
+}
+
+void MaterialGPU::initializeGPUResources()
+{
+	loadTextures();
+	updateMaterialConstants();
+	createConstantBuffer();
+	m_isValid = true;
 }
 
 } // namespace graphics::gpu

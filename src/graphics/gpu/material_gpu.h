@@ -120,6 +120,7 @@ private:
 	void createConstantBuffer();
 	void updateMaterialConstants();
 	void loadTextures();
+	void initializeGPUResources(); // Initialize GPU resources (called by constructors)
 };
 
 } // namespace graphics::gpu

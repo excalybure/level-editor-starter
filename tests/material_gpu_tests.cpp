@@ -2,6 +2,7 @@
 
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "engine/assets/assets.h"
 #include "platform/dx12/dx12_device.h"
 
@@ -164,6 +165,54 @@ TEST_CASE( "MaterialConstants has textureIndices array for bindless texture acce
 	const size_t actualSize = sizeof( constants );
 	REQUIRE( actualSize == 80 ); // 5 float4 blocks
 	REQUIRE( actualSize % 16 == 0 );
+}
+
+TEST_CASE( "MaterialGPU populates textureIndices from TextureManager SRV indices", "[MaterialGPU][bindless][integration]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	graphics::texture::TextureManager textureManager;
+	REQUIRE( textureManager.initialize( &device, 100 ) );
+
+	auto material = std::make_shared<assets::Material>();
+	auto &pbr = material->getPBRMaterial();
+	pbr.baseColorTexture = "assets/test/test_red_2x2.png";
+	pbr.emissiveTexture = "assets/test/test_red_2x2.png"; // Use same texture for simplicity
+	// Leave normal and metallic-roughness empty
+	material->setPath( "test_material_with_textures" );
+	material->setLoaded( true );
+
+	// Act
+	graphics::gpu::MaterialGPU materialGPU{ material, device, &textureManager };
+
+	// Assert
+	REQUIRE( materialGPU.isValid() );
+	const auto &constants = materialGPU.getMaterialConstants();
+
+	// Base color texture should have valid SRV index
+	const uint32_t baseColorIndex = constants.textureIndices[0];
+	REQUIRE( baseColorIndex != UINT32_MAX );
+	REQUIRE( baseColorIndex < 100 ); // Within heap size
+
+	// Emissive texture should have valid SRV index
+	const uint32_t emissiveIndex = constants.textureIndices[3];
+	REQUIRE( emissiveIndex != UINT32_MAX );
+	REQUIRE( emissiveIndex < 100 );
+
+	// Normal and metallic-roughness should be invalid
+	REQUIRE( constants.textureIndices[1] == UINT32_MAX ); // normal
+	REQUIRE( constants.textureIndices[2] == UINT32_MAX ); // metallic-roughness
+
+	// Verify indices match TextureManager's SRV indices
+	const uint32_t expectedBaseColorIndex = textureManager.getSrvIndex( materialGPU.getBaseColorTextureHandle() );
+	const uint32_t expectedEmissiveIndex = textureManager.getSrvIndex( materialGPU.getEmissiveTextureHandle() );
+	REQUIRE( baseColorIndex == expectedBaseColorIndex );
+	REQUIRE( emissiveIndex == expectedEmissiveIndex );
+
+	textureManager.shutdown();
+	device.shutdown();
 }
 
 // Note: Full integration test with TextureManager would require actual texture files
