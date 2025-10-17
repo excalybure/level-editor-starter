@@ -3,7 +3,7 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"

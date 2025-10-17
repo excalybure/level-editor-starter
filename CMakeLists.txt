@@ -59,7 +59,7 @@ add_library(graphics STATIC
   src/graphics/gpu/material_gpu.cpp
   src/graphics/gpu/mesh_gpu.cpp
   src/graphics/grid/grid.cpp
-  src/graphics/renderer/immediate_renderer.cpp
+  src/graphics/immediate_renderer/immediate_renderer.cpp
   src/graphics/shader_manager/shader_compiler.cpp
   src/graphics/shader_manager/shader_manager.cpp
   src/graphics/material_system/material_system.cpp

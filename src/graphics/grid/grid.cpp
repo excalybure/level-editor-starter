@@ -12,7 +12,7 @@
 #include "math/color.h"
 #include "math/matrix.h"
 #include "math/vec.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/material_system/pso_builder.h"
 #include "core/console.h"
 

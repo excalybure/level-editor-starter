@@ -64,7 +64,7 @@ Shader compilation, caching, and hot-reloading.
 
 ### Rendering Utilities
 
-#### `renderer/immediate_renderer.h/cpp`
+#### `immediate_renderer/immediate_renderer.h/cpp`
 Immediate mode rendering for debug shapes and UI overlays.
 - **Key class**: `graphics::ImmediateRenderer`
 - **Features**: Lines, boxes, spheres, text (2D/3D)
@@ -103,7 +103,7 @@ graphics/
 ├── shader_manager/               # Shader compilation
 │   ├── shader_manager.h/cpp
 │   └── shader_reflection.h/cpp
-├── renderer/                     # Rendering utilities
+├── immediate_renderer/           # Immediate mode rendering
 │   └── immediate_renderer.h/cpp
 └── grid/                         # Grid rendering
     └── grid_renderer.h/cpp
@@ -167,7 +167,7 @@ console::info("Inputs: {}", reflection.inputs.size());
 ### Immediate Rendering
 
 ```cpp
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 
 auto& renderer = graphics::ImmediateRenderer::instance();
 

@@ -5,7 +5,7 @@
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/camera/camera.h"
 #include "platform/dx12/dx12_device.h"

@@ -5,7 +5,7 @@
 #include "test_dx12_helpers.h"
 
 #include "graphics/shader_manager/shader_manager.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 #include "core/console.h"
 
 using shader_manager::INVALID_SHADER_HANDLE;

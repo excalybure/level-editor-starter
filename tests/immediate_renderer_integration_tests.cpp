@@ -3,7 +3,7 @@
 
 #include "platform/win32/win32_window.h"
 #include "platform/dx12/dx12_device.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/shader_manager/shader_compiler.h"
 
 #include "shader_test_utils.h"
