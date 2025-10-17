@@ -11,11 +11,6 @@
 #include "graphics/material_system/material_instance.h"
 #include "systems.h"
 
-namespace renderer
-{
-class ImmediateRenderer;
-}
-
 namespace camera
 {
 class Camera;
@@ -33,7 +28,8 @@ class MaterialSystem;
 namespace graphics
 {
 class SamplerManager;
-}
+class ImmediateRenderer;
+} // namespace graphics
 
 namespace systems
 {
@@ -52,7 +48,7 @@ class MeshRenderingSystem : public System
 public:
 	// Constructor with MaterialSystem, ShaderManager, SamplerManager and optional SystemManager for world transform support
 	// Pass nullptr for systemManager in tests that don't need hierarchy support
-	MeshRenderingSystem( renderer::ImmediateRenderer &renderer,
+	MeshRenderingSystem( graphics::ImmediateRenderer &renderer,
 		graphics::material_system::MaterialSystem *materialSystem,
 		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
 		graphics::SamplerManager &samplerManager,
@@ -69,7 +65,7 @@ public:
 	void renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera );
 
 private:
-	renderer::ImmediateRenderer &m_renderer;
+	graphics::ImmediateRenderer &m_renderer;
 	graphics::material_system::MaterialSystem *m_materialSystem;
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 	graphics::SamplerManager &m_samplerManager;

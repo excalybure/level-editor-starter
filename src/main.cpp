@@ -132,7 +132,7 @@ int main()
 	}
 
 	// Create renderer for 3D graphics
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Create system manager and add systems
 	systems::SystemManager systemManager;

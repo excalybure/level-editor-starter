@@ -27,7 +27,7 @@ TEST_CASE( "Renderer Vertex Format", "[renderer]" )
 		const math::Vec3<> position{ 1.0f, 2.0f, 3.0f };
 		const math::Color color{ 1.0f, 0.5f, 0.0f, 1.0f };
 
-		const renderer::Vertex vertex( position, color );
+		const graphics::Vertex vertex( position, color );
 
 		REQUIRE( vertex.position.x == 1.0f );
 		REQUIRE( vertex.position.y == 2.0f );
@@ -92,7 +92,7 @@ TEST_CASE( "Render State", "[renderer]" )
 {
 	SECTION( "Default render state" )
 	{
-		const renderer::RenderState state;
+		const graphics::RenderState state;
 
 		const auto depthDesc = state.getDepthStencilDesc();
 		REQUIRE( depthDesc.DepthEnable == TRUE );
@@ -108,7 +108,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 	SECTION( "Wireframe state" )
 	{
-		renderer::RenderState state;
+		graphics::RenderState state;
 		state.setWireframe( true );
 
 		const auto rasterizerDesc = state.getRasterizerDesc();
@@ -117,7 +117,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 	SECTION( "Depth state modifications" )
 	{
-		renderer::RenderState state;
+		graphics::RenderState state;
 		state.setDepthTest( false );
 		state.setDepthWrite( false );
 
@@ -129,7 +129,7 @@ TEST_CASE( "Render State", "[renderer]" )
 
 TEST_CASE( "Render State permutations", "[renderer]" )
 {
-	renderer::RenderState state;
+	graphics::RenderState state;
 	SECTION( "Disable depth test & write, enable blend wireframe front cull" )
 	{
 		state.setDepthTest( false );
@@ -239,12 +239,12 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 		return;
 
 	// Start with 3 vertices
-	std::vector<renderer::Vertex> verts = {
+	std::vector<graphics::Vertex> verts = {
 		{ { 0, 0, 0 }, math::Color::red() },
 		{ { 1, 0, 0 }, math::Color::green() },
 		{ { 0, 1, 0 }, math::Color::blue() }
 	};
-	renderer::VertexBuffer vb( device, verts );
+	graphics::VertexBuffer vb( device, verts );
 	REQUIRE( vb.getVertexCount() == 3 );
 
 	// Same size update -> count unchanged
@@ -259,7 +259,7 @@ TEST_CASE( "Buffer update behavior", "[renderer][buffers]" )
 
 	// Index buffer similar path
 	std::vector<uint16_t> idx = { 0, 1, 2 };
-	renderer::IndexBuffer ib( device, idx );
+	graphics::IndexBuffer ib( device, idx );
 	REQUIRE( ib.getIndexCount() == 3 );
 	idx.push_back( 2 );
 	ib.update( idx );
@@ -274,7 +274,7 @@ TEST_CASE( "Empty buffer creation rejected", "[renderer][buffers][error]" )
 	bool threwV = false, threwI = false;
 	try
 	{
-		renderer::VertexBuffer vb( device, {} );
+		graphics::VertexBuffer vb( device, {} );
 	}
 	catch ( const std::runtime_error & )
 	{
@@ -282,7 +282,7 @@ TEST_CASE( "Empty buffer creation rejected", "[renderer][buffers][error]" )
 	}
 	try
 	{
-		renderer::IndexBuffer ib( device, {} );
+		graphics::IndexBuffer ib( device, {} );
 	}
 	catch ( const std::runtime_error & )
 	{
@@ -298,7 +298,7 @@ TEST_CASE( "ViewProjection accessor", "[renderer]" )
 	if ( !requireHeadlessDevice( device, "viewProj" ) )
 		return;
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 	math::Mat4<> custom = math::Mat4<>::identity();
 	custom.row0.x = 2.0f; // mutate something
 	renderer.setViewProjectionMatrix( custom );
@@ -317,18 +317,18 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 				if ( !requireHeadlessDevice( device, "VertexBuffer" ) )
 					return; // Skip if unsupported
 
-				const std::vector<renderer::Vertex> vertices = {
+				const std::vector<graphics::Vertex> vertices = {
 					{ math::Vec3<>{ 0.0f, 1.0f, 0.0f }, math::Color{ 1.0f, 0.0f, 0.0f, 1.0f } },
 					{ math::Vec3<>{ -1.0f, -1.0f, 0.0f }, math::Color{ 0.0f, 1.0f, 0.0f, 1.0f } },
 					{ math::Vec3<>{ 1.0f, -1.0f, 0.0f }, math::Color{ 0.0f, 0.0f, 1.0f, 1.0f } }
 				};
 
-				const renderer::VertexBuffer vb( device, vertices );
+				const graphics::VertexBuffer vb( device, vertices );
 				REQUIRE( vb.getVertexCount() == 3 );
 
 				const auto view = vb.getView();
-				REQUIRE( view.SizeInBytes == vertices.size() * sizeof( renderer::Vertex ) );
-				REQUIRE( view.StrideInBytes == sizeof( renderer::Vertex ) );
+				REQUIRE( view.SizeInBytes == vertices.size() * sizeof( graphics::Vertex ) );
+				REQUIRE( view.StrideInBytes == sizeof( graphics::Vertex ) );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -348,7 +348,7 @@ TEST_CASE( "Vertex and Index Buffers", "[renderer]" )
 
 				const std::vector<uint16_t> indices = { 0, 1, 2 };
 
-				const renderer::IndexBuffer ib( device, indices );
+				const graphics::IndexBuffer ib( device, indices );
 				REQUIRE( ib.getIndexCount() == 3 );
 
 				const auto view = ib.getView();
@@ -371,15 +371,15 @@ TEST_CASE( "Renderer Creation", "[renderer]" )
 			try
 			{
 				dx12::Device device;
-				if ( !requireHeadlessDevice( device, "renderer::ImmediateRenderer creation" ) )
+				if ( !requireHeadlessDevice( device, "graphics::ImmediateRenderer creation" ) )
 					return;
 				shader_manager::ShaderManager shaderManager;
-				const renderer::ImmediateRenderer renderer( device, shaderManager );
+				const graphics::ImmediateRenderer renderer( device, shaderManager );
 				// Just test that it constructs without throwing
 			}
 			catch ( const std::runtime_error &e )
 			{
-				WARN( "renderer::ImmediateRenderer creation failed (D3D12 may not be available): " << e.what() );
+				WARN( "graphics::ImmediateRenderer creation failed (D3D12 may not be available): " << e.what() );
 			}
 		}() );
 	}
@@ -433,12 +433,12 @@ TEST_CASE( "Dynamic buffer reuse vs growth", "[renderer][buffers]" )
 	REQUIRE( requireDevice( window, device, "dynamic reuse" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 
 	device.beginFrame();
 	renderer.beginFrame();
 
-	std::vector<renderer::Vertex> tri = {
+	std::vector<graphics::Vertex> tri = {
 		{ { 0, 0, 0 }, math::Color::red() },
 		{ { 1, 0, 0 }, math::Color::green() },
 		{ { 0, 1, 0 }, math::Color::blue() }
@@ -466,7 +466,7 @@ TEST_CASE( "Immediate line draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 	device.beginFrame();
 	renderer.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::white() );
@@ -484,7 +484,7 @@ TEST_CASE( "Immediate cube draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawWireframeCube( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::red() );
@@ -502,7 +502,7 @@ TEST_CASE( "Immediate line and cube draw", "[renderer][immediate]" )
 	REQUIRE( requireDevice( window, device, "immediate" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 	renderer.beginFrame();
 	device.beginFrame();
 	renderer.drawLine( { 0, 0, 0 }, { 1, 1, 1 }, math::Color::white() );
@@ -521,11 +521,11 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	REQUIRE( requireDevice( window, device, "pso cache" ) );
 
 	shader_manager::ShaderManager shaderManager;
-	renderer::ImmediateRenderer r( device, shaderManager );
+	graphics::ImmediateRenderer r( device, shaderManager );
 	device.beginFrame();
 	r.beginFrame();
 
-	std::vector<renderer::Vertex> tri = { { { 0, 0, 0 }, math::Color::red() }, { { 1, 0, 0 }, math::Color::green() }, { { 0, 1, 0 }, math::Color::blue() } };
+	std::vector<graphics::Vertex> tri = { { { 0, 0, 0 }, math::Color::red() }, { { 1, 0, 0 }, math::Color::green() }, { { 0, 1, 0 }, math::Color::blue() } };
 	r.drawVertices( tri );
 	REQUIRE( r.getPipelineStateCacheSize() == 1 );
 
@@ -533,7 +533,7 @@ TEST_CASE( "Pipeline state object cache", "[renderer][pso]" )
 	r.drawVertices( tri );
 	REQUIRE( r.getPipelineStateCacheSize() == 1 );
 
-	renderer::RenderState s;
+	graphics::RenderState s;
 	s.setWireframe( true );
 	r.setRenderState( s );
 	r.drawVertices( tri );

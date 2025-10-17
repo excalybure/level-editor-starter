@@ -19,7 +19,7 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -78,7 +78,7 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -105,7 +105,7 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -139,7 +139,7 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -187,7 +187,7 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -230,7 +230,7 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -273,7 +273,7 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 

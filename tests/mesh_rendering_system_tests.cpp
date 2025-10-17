@@ -20,7 +20,7 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Act & Assert - should compile and create without error
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
@@ -35,7 +35,7 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
@@ -53,7 +53,7 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -78,7 +78,7 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 
 	components::Transform transform;  // Default: identity transform
@@ -105,7 +105,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -129,7 +129,7 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -160,7 +160,7 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
@@ -198,7 +198,7 @@ TEST_CASE( "Renderer getCommandContext provides access to command context during
 	shader_manager::ShaderManager shaderManager;
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, shaderManager );
+	graphics::ImmediateRenderer renderer( device, shaderManager );
 
 	// Act & Assert - No active frame, should return nullptr
 	REQUIRE( renderer.getCommandContext() == nullptr );
@@ -224,7 +224,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	renderer::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 	ecs::Scene scene;
 	systems::SystemManager systemManager;

@@ -54,7 +54,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		renderer::ImmediateRenderer renderer( device, *shaderManager );
+		graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 		// Act - create MeshRenderingSystem
 		graphics::SamplerManager samplerManager;
@@ -71,7 +71,7 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		renderer::ImmediateRenderer renderer( device, *shaderManager );
+		graphics::ImmediateRenderer renderer( device, *shaderManager );
 		systems::SystemManager systemManager;
 		ecs::Scene scene;
 

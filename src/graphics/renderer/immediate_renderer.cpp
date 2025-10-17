@@ -7,7 +7,7 @@
 #include "graphics/shader_manager/shader_manager.h"
 #include "graphics/shader_manager/shader_compiler.h"
 
-namespace renderer
+namespace graphics
 {
 
 // RenderState implementation
@@ -673,4 +673,4 @@ void ImmediateRenderer::waitForGPU() noexcept
 	// For now, this is a placeholder - actual implementation would need fence synchronization
 }
 
-} // namespace renderer
+} // namespace graphics

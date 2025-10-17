@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <d3d12.h>
 #include <functional>
@@ -18,7 +18,7 @@ class ShaderManager;
 struct ShaderBlob;
 } // namespace shader_manager
 
-namespace renderer
+namespace graphics
 {
 
 // Simple vertex format for basic rendering
@@ -279,4 +279,4 @@ public:
 	size_t getPipelineStateCacheSize() const noexcept { return m_psoCache.size(); }
 };
 
-} // namespace renderer
+} // namespace graphics

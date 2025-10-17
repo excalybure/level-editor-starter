@@ -43,7 +43,7 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
+MeshRenderingSystem::MeshRenderingSystem( graphics::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
 	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available
