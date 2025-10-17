@@ -8,6 +8,7 @@
 #include "engine/picking.h"
 #include "graphics/renderer/immediate_renderer.h"
 #include "graphics/shader_manager/shader_manager.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/pix/pix.h"
 #include "platform/win32/win32_window.h"
@@ -123,6 +124,14 @@ int main()
 	// Create GPU resource manager for GPU resource creation and management
 	engine::GPUResourceManager gpuResourceManager( device );
 
+	// Create sampler manager for texture sampling
+	graphics::SamplerManager samplerManager;
+	if ( !samplerManager.initialize( &device ) )
+	{
+		std::cerr << "Failed to initialize sampler manager\n";
+		return 1;
+	}
+
 	// Create renderer for 3D graphics
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
@@ -133,7 +142,7 @@ int main()
 	systemManager.addSystem<systems::TransformSystem>();
 
 	// Add MeshRenderingSystem to handle 3D mesh rendering with hierarchy support
-	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, &materialSystem, shaderManager, &systemManager );
+	systemManager.addSystem<systems::MeshRenderingSystem>( renderer, &materialSystem, shaderManager, samplerManager, &systemManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );

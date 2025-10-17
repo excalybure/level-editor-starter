@@ -1,4 +1,4 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
 #include "platform/win32/win32_window.h"

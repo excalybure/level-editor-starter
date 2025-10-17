@@ -6,6 +6,7 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "graphics/renderer/immediate_renderer.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "engine/camera/camera.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/shader_manager/shader_manager.h"
@@ -17,10 +18,12 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 	// Act & Assert - should compile and create without error
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 }
 
 TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
@@ -30,8 +33,10 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
@@ -46,8 +51,10 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create an entity with both Transform and MeshRenderer components
@@ -69,8 +76,10 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 
 	components::Transform transform;  // Default: identity transform
 	camera::PerspectiveCamera camera; // Default camera
@@ -94,8 +103,10 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with empty mesh renderer (no GPU mesh)
@@ -116,8 +127,10 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create multiple entities with different component combinations
@@ -145,8 +158,10 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, nullptr );
+	systems::MeshRenderingSystem system( renderer, nullptr, shaderManager, samplerManager, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with non-identity transform and empty mesh renderer
@@ -181,6 +196,8 @@ TEST_CASE( "Renderer getCommandContext provides access to command context during
 	REQUIRE( device.initializeHeadless() );
 
 	shader_manager::ShaderManager shaderManager;
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, shaderManager );
 
 	// Act & Assert - No active frame, should return nullptr
@@ -205,6 +222,8 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	REQUIRE( device.initializeHeadless() );
 
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
 	renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 	ecs::Scene scene;
@@ -212,7 +231,7 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 
 	// Create MeshRenderingSystem with SystemManager access for hierarchy support
-	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, &systemManager );
+	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, &systemManager );
 	systemManager.initialize( scene );
 
 	// Create parent and child entities

@@ -10,6 +10,7 @@
 #include "shader_test_utils.h"
 
 #include "graphics/renderer/immediate_renderer.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "graphics/shader_manager/shader_compiler.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "platform/dx12/dx12_device.h"

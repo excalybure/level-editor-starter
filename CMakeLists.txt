@@ -78,6 +78,7 @@ add_library(graphics STATIC
   src/graphics/texture/bindless_texture_heap.cpp
   src/graphics/texture/texture_manager.cpp
   src/graphics/texture/scene_texture_loader.cpp
+  src/graphics/sampler/sampler_manager.cpp
 )
 
 target_include_directories(graphics PUBLIC 
@@ -341,6 +342,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_system_pass_query_tests.cpp
     tests/material_instance_tests.cpp
     tests/root_signature_texture_tests.cpp
+    tests/sampler_manager_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
     editor

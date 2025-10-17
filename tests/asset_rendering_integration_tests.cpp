@@ -4,6 +4,7 @@
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
 #include "graphics/renderer/immediate_renderer.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
 #include "editor/ui.h"
@@ -56,9 +57,9 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		renderer::ImmediateRenderer renderer( device, *shaderManager );
 
 		// Act - create MeshRenderingSystem
-		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, nullptr );
-
-		// Assert
+		graphics::SamplerManager samplerManager;
+		samplerManager.initialize( &device );
+		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 	}
 
@@ -75,9 +76,9 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		ecs::Scene scene;
 
 		// Act - add system to manager
-		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, nullptr );
-
-		// Assert
+		graphics::SamplerManager samplerManager;
+		samplerManager.initialize( &device );
+		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 
 		// Act - initialize systems

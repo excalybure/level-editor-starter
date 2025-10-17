@@ -30,6 +30,11 @@ namespace graphics::material_system
 class MaterialSystem;
 }
 
+namespace graphics
+{
+class SamplerManager;
+}
+
 namespace systems
 {
 
@@ -45,11 +50,12 @@ struct ObjectConstants
 class MeshRenderingSystem : public System
 {
 public:
-	// Constructor with MaterialSystem, ShaderManager and optional SystemManager for world transform support
+	// Constructor with MaterialSystem, ShaderManager, SamplerManager and optional SystemManager for world transform support
 	// Pass nullptr for systemManager in tests that don't need hierarchy support
 	MeshRenderingSystem( renderer::ImmediateRenderer &renderer,
 		graphics::material_system::MaterialSystem *materialSystem,
 		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
+		graphics::SamplerManager &samplerManager,
 		systems::SystemManager *systemManager );
 	void update( ecs::Scene &scene, float deltaTime ) override;
 	void render( ecs::Scene &scene, const camera::Camera &camera );
@@ -66,7 +72,8 @@ private:
 	renderer::ImmediateRenderer &m_renderer;
 	graphics::material_system::MaterialSystem *m_materialSystem;
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
-	systems::SystemManager *m_systemManager = nullptr;
+	graphics::SamplerManager &m_samplerManager;
+	systems::SystemManager *m_systemManager;
 
 	// Default material instance for mesh rendering
 	std::unique_ptr<graphics::material_system::MaterialInstance> m_defaultMaterialInstance;

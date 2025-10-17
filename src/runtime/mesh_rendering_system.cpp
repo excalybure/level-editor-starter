@@ -2,6 +2,7 @@
 #include "graphics/renderer/immediate_renderer.h"
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/material_system/material_instance.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
@@ -42,8 +43,8 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( renderer::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, systems::SystemManager *systemManager )
-	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_systemManager( systemManager )
+MeshRenderingSystem::MeshRenderingSystem( renderer::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
+	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available
 	if ( m_materialSystem )
@@ -99,6 +100,16 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 	if ( !commandList )
 	{
 		return;
+	}
+
+	// Bind sampler descriptor heap for texture sampling
+	// Note: This sets the sampler heap globally for all subsequent draw calls
+	// The shader will access samplers via register slots (s0, s1, etc.)
+	ID3D12DescriptorHeap *const samplerHeap = m_samplerManager.getHeap();
+	if ( samplerHeap )
+	{
+		ID3D12DescriptorHeap *const ppHeaps[] = { samplerHeap };
+		commandList->SetDescriptorHeaps( 1, ppHeaps );
 	}
 
 	// Phase 3: Setup material for rendering using MaterialInstance
