@@ -18,7 +18,6 @@
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/systems.h"
 
-#include <iostream>
 #include <filesystem>
 #include <chrono>
 
@@ -128,7 +127,7 @@ int main()
 	graphics::SamplerManager samplerManager;
 	if ( !samplerManager.initialize( &device ) )
 	{
-		std::cerr << "Failed to initialize sampler manager\n";
+		console::error( "Failed to initialize sampler manager" );
 		return 1;
 	}
 
@@ -161,7 +160,7 @@ int main()
 			 shaderManager,
 			 &materialSystem ) )
 	{
-		std::cerr << "Failed to initialize UI system\n";
+		console::error( "Failed to initialize UI system" );
 		return 1;
 	}
 
@@ -177,7 +176,7 @@ int main()
 	// Create application
 	app::App app;
 
-	std::cout << "Starting Level Editor with ImGui Docking...\n";
+	console::info( "Starting Level Editor with ImGui Docking..." );
 
 	// Main loop with exception handling
 	int frameCount = 0;
@@ -265,8 +264,8 @@ int main()
 	}
 	catch ( const std::exception &e )
 	{
-		std::cerr << "Exception caught in main loop: " << e.what() << std::endl;
-		std::cerr << "Application will exit with error code 1" << std::endl;
+		console::error( "Exception caught in main loop: {}", e.what() );
+		console::error( "Application will exit with error code 1" );
 
 		// Cleanup before exit
 		ui.shutdown();
@@ -275,8 +274,8 @@ int main()
 	}
 	catch ( ... )
 	{
-		std::cerr << "Unknown exception caught in main loop" << std::endl;
-		std::cerr << "Application will exit with error code 1" << std::endl;
+		console::error( "Unknown exception caught in main loop" );
+		console::error( "Application will exit with error code 1" );
 
 		// Cleanup before exit
 		ui.shutdown();
