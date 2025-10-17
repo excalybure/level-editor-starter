@@ -28,8 +28,12 @@ class MaterialSystem;
 namespace graphics
 {
 class SamplerManager;
-class ImmediateRenderer;
 } // namespace graphics
+
+namespace dx12
+{
+class Device;
+} // namespace dx12
 
 namespace systems
 {
@@ -48,13 +52,13 @@ class MeshRenderingSystem : public System
 public:
 	// Constructor with MaterialSystem, ShaderManager, SamplerManager and optional SystemManager for world transform support
 	// Pass nullptr for systemManager in tests that don't need hierarchy support
-	MeshRenderingSystem( graphics::ImmediateRenderer &renderer,
+	MeshRenderingSystem( dx12::Device &device,
 		graphics::material_system::MaterialSystem *materialSystem,
 		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
 		graphics::SamplerManager &samplerManager,
 		systems::SystemManager *systemManager );
 	void update( ecs::Scene &scene, float deltaTime ) override;
-	void render( ecs::Scene &scene, const camera::Camera &camera );
+	void render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList );
 
 	// Public for testing
 	math::Mat4f calculateMVPMatrix(
@@ -62,10 +66,10 @@ public:
 		const camera::Camera &camera );
 
 	// Render entity using world transform from TransformSystem (supports hierarchy)
-	void renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera );
+	void renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList );
 
 private:
-	graphics::ImmediateRenderer &m_renderer;
+	dx12::Device &m_device;
 	graphics::material_system::MaterialSystem *m_materialSystem;
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 	graphics::SamplerManager &m_samplerManager;

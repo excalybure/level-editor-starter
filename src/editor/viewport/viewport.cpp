@@ -1008,8 +1008,8 @@ void ViewportManager::render()
 					viewport->updateFrameConstants();
 					viewport->bindFrameConstants( commandList );
 
-					// Render scene - pass frame constants buffer so it can be bound after material setup
-					meshRenderingSystem->render( *m_scene, *viewport->getCamera() );
+					// Render scene - pass command list directly
+					meshRenderingSystem->render( *m_scene, *viewport->getCamera(), commandList );
 				}
 			}
 

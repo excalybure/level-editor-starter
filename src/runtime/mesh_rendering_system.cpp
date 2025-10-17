@@ -1,5 +1,5 @@
 #include "runtime/mesh_rendering_system.h"
-#include "graphics/renderer/immediate_renderer.h"
+#include "platform/dx12/dx12_device.h"
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/material_system/material_instance.h"
 #include "graphics/sampler/sampler_manager.h"
@@ -43,14 +43,14 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( graphics::ImmediateRenderer &renderer, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
-	: m_renderer( renderer ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager )
+MeshRenderingSystem::MeshRenderingSystem( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
+	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available
 	if ( m_materialSystem )
 	{
 		m_defaultMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
-			&renderer.getDevice(),
+			&m_device,
 			m_materialSystem,
 			"mesh_unlit" );
 
@@ -84,19 +84,11 @@ void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
 	// Rendering happens in the render() method
 }
 
-void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera )
+void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList )
 {
 	// Clear previous frame's constant buffers
 	clearFrameResources();
 
-	// Get command context for binding
-	auto *commandContext = m_renderer.getCommandContext();
-	if ( !commandContext )
-	{
-		return;
-	}
-
-	auto *commandList = commandContext->get();
 	if ( !commandList )
 	{
 		return;
@@ -148,12 +140,12 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 			}
 
 			// Use the new hierarchy-aware renderEntity method
-			renderEntity( scene, entity, camera );
+			renderEntity( scene, entity, camera, commandList );
 		}
 	}
 }
 
-void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera )
+void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList )
 {
 	// Get components
 	const auto *meshRenderer = scene.getComponent<components::MeshRenderer>( entity );
@@ -169,17 +161,9 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 		return;
 	}
 
-	// Get command context for direct GPU commands
-	auto *commandContext = m_renderer.getCommandContext();
-	if ( !commandContext )
-	{
-		// No active command context (e.g., during headless tests)
-		return;
-	}
-
-	auto *commandList = commandContext->get();
 	if ( !commandList )
 	{
+		// No active command list (e.g., during headless tests)
 		return;
 	}
 
@@ -237,7 +221,7 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
-	HRESULT hr = m_renderer.getDevice().get()->CreateCommittedResource(
+	HRESULT hr = m_device.get()->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&bufferDesc,

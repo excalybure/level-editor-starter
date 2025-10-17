@@ -54,12 +54,11 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 		// Act - create MeshRenderingSystem
 		graphics::SamplerManager samplerManager;
 		samplerManager.initialize( &device );
-		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, nullptr ); // Assert
+		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 	}
 
@@ -71,14 +70,13 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 		REQUIRE( device.initializeHeadless() );
 
 		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-		graphics::ImmediateRenderer renderer( device, *shaderManager );
 		systems::SystemManager systemManager;
 		ecs::Scene scene;
 
 		// Act - add system to manager
 		graphics::SamplerManager samplerManager;
 		samplerManager.initialize( &device );
-		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, nullptr ); // Assert
+		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 
 		// Act - initialize systems

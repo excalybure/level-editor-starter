@@ -224,14 +224,13 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
 	graphics::SamplerManager samplerManager;
 	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
 
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
 	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 
 	// Create MeshRenderingSystem with SystemManager access for hierarchy support
-	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( renderer, nullptr, shaderManager, samplerManager, &systemManager );
+	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, &systemManager );
 	systemManager.initialize( scene );
 
 	// Create parent and child entities
@@ -266,9 +265,10 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	// Act: Call the new renderEntity that uses world transforms
 	camera::PerspectiveCamera camera;
 
-	// The new renderEntity(scene, entity, camera) method should use world transforms
+	// The new renderEntity(scene, entity, camera, commandList) method should use world transforms
 	// This call should internally get worldTransform from TransformSystem
-	REQUIRE_NOTHROW( meshRenderingSystem->renderEntity( scene, child, camera ) );
+	// Pass nullptr for command list since we're only testing the transform logic, not actual rendering
+	REQUIRE_NOTHROW( meshRenderingSystem->renderEntity( scene, child, camera, nullptr ) );
 
 	// Verify that local matrix is different from world matrix
 	const auto *childTransformComp = scene.getComponent<components::Transform>( child );
