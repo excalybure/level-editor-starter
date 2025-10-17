@@ -149,5 +149,22 @@ TEST_CASE( "MaterialGPU stores texture handles when TextureManager is provided",
 	REQUIRE( materialGPU.getEmissiveTextureHandle() == graphics::texture::kInvalidTextureHandle );
 }
 
+TEST_CASE( "MaterialConstants has textureIndices array for bindless texture access", "[MaterialGPU][bindless][unit]" )
+{
+	// Arrange & Act
+	graphics::gpu::MaterialConstants constants;
+
+	// Assert - textureIndices should be initialized to UINT32_MAX (invalid)
+	REQUIRE( constants.textureIndices[0] == UINT32_MAX );
+	REQUIRE( constants.textureIndices[1] == UINT32_MAX );
+	REQUIRE( constants.textureIndices[2] == UINT32_MAX );
+	REQUIRE( constants.textureIndices[3] == UINT32_MAX );
+
+	// Assert - Size check for shader alignment (must be multiple of 16 bytes)
+	const size_t actualSize = sizeof( constants );
+	REQUIRE( actualSize == 80 ); // 5 float4 blocks
+	REQUIRE( actualSize % 16 == 0 );
+}
+
 // Note: Full integration test with TextureManager would require actual texture files
 // and is better suited for integration tests rather than unit tests

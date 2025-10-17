@@ -51,8 +51,9 @@ cbuffer MaterialConstants : register(b2)
     float padding2;
     float3 emissiveFactor;      // Emissive color (RGB)
     float padding3;
+    uint4 textureIndices;       // Bindless texture indices: [0]=baseColor, [1]=normal, [2]=metallicRoughness, [3]=emissive (UINT_MAX=invalid)
     uint textureFlags;          // Bitfield for texture availability
-    uint3 padding4;
+    uint3 padding4;             // Padding for 16-byte alignment
 };
 
 // Texture resources

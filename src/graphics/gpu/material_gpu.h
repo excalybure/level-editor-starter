@@ -36,9 +36,12 @@ struct MaterialConstants
 	math::Vec3f emissiveFactor;
 	float padding3 = 0.0f;
 
-	// Texture binding flags - used to indicate which textures are bound
-	uint32_t textureFlags = 0; // Bitfield for texture availability
-	uint32_t padding4[3] = { 0, 0, 0 };
+	// Bindless texture indices - SRV indices into global descriptor heap
+	uint32_t textureIndices[4] = { UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX }; // [0]=baseColor, [1]=normal, [2]=metallicRoughness, [3]=emissive
+
+	// Texture binding flags - used to indicate which textures are valid
+	uint32_t textureFlags = 0;			// Bitfield for texture availability
+	uint32_t padding4[3] = { 0, 0, 0 }; // Padding for 16-byte alignment
 
 	// Constructor to initialize Vec4f and Vec3f
 	MaterialConstants()
