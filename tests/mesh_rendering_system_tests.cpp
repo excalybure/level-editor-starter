@@ -358,3 +358,33 @@ TEST_CASE( "Normal matrix calculation using inverse transpose for non-uniform sc
 		REQUIRE( length > 0.0f );
 	}
 }
+
+TEST_CASE( "MeshRenderingSystem integrates texture binding during rendering", "[mesh_rendering_system][integration][texture]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+	graphics::SamplerManager samplerManager;
+	samplerManager.initialize( &device );
+	graphics::ImmediateRenderer renderer( device, *shaderManager );
+	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	ecs::Scene scene;
+
+	// Create entity with mesh renderer
+	const auto entity = scene.createEntity( "TexturedEntity" );
+	scene.addComponent( entity, components::Transform{} );
+	scene.addComponent( entity, components::MeshRenderer{} );
+
+	camera::PerspectiveCamera camera;
+
+	// Act - Render the scene
+	// The texture binding should be called internally via:
+	// renderEntity -> primitive.bindForRendering -> material.bindToCommandList -> bindTextures
+	REQUIRE_NOTHROW( system.render( scene, camera, device.getCommandList() ) );
+
+	// Assert - Test passes if no crash occurs
+	// The actual texture binding is tested in material_gpu_tests.cpp
+	// This test verifies the integration path exists and doesn't crash
+}
