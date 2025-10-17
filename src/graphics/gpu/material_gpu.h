@@ -16,6 +16,11 @@ namespace dx12
 {
 class Device;
 } // namespace dx12
+namespace graphics::texture
+{
+class TextureManager;
+using TextureHandle = uint32_t;
+} // namespace graphics::texture
 
 namespace graphics::gpu
 {
@@ -55,6 +60,9 @@ public:
 	// Constructor taking assets::Material and device for GPU resource creation
 	MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device );
 
+	// Constructor taking assets::Material, device, and texture manager for full GPU resource creation
+	MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager *textureManager );
+
 	// Move constructor and assignment
 	MaterialGPU( MaterialGPU &&other ) noexcept;
 	MaterialGPU &operator=( MaterialGPU &&other ) noexcept;
@@ -69,8 +77,17 @@ public:
 	// Bind all GPU resources to command list for rendering
 	void bindToCommandList( ID3D12GraphicsCommandList *commandList ) const;
 
+	// Bind texture descriptors to command list (separate from constant buffer binding)
+	void bindTextures( ID3D12GraphicsCommandList *commandList ) const;
+
 	// Resource accessor methods
 	const MaterialConstants &getMaterialConstants() const { return m_materialConstants; }
+
+	// Texture handle accessors
+	graphics::texture::TextureHandle getBaseColorTextureHandle() const { return m_baseColorTexture; }
+	graphics::texture::TextureHandle getMetallicRoughnessTextureHandle() const { return m_metallicRoughnessTexture; }
+	graphics::texture::TextureHandle getNormalTextureHandle() const { return m_normalTexture; }
+	graphics::texture::TextureHandle getEmissiveTextureHandle() const { return m_emissiveTexture; }
 
 	// Validation methods
 	bool isValid() const { return m_isValid; }
@@ -81,10 +98,17 @@ public:
 private:
 	std::shared_ptr<assets::Material> m_material;
 	MaterialConstants m_materialConstants;
-	dx12::Device *m_device = nullptr; // Optional device for GPU resource creation
+	dx12::Device *m_device = nullptr;							   // Optional device for GPU resource creation
+	graphics::texture::TextureManager *m_textureManager = nullptr; // Optional texture manager
 
 	// D3D12 GPU resources
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;
+
+	// Texture handles
+	graphics::texture::TextureHandle m_baseColorTexture = 0;
+	graphics::texture::TextureHandle m_metallicRoughnessTexture = 0;
+	graphics::texture::TextureHandle m_normalTexture = 0;
+	graphics::texture::TextureHandle m_emissiveTexture = 0;
 
 	// Resource state
 	bool m_isValid = false;

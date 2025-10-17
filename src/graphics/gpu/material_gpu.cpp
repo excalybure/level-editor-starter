@@ -3,12 +3,14 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstring>
+#include <filesystem>
 
 #include "engine/assets/assets.h"
 #include "math/matrix.h"
 #include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
 #include "core/console.h"
+#include "graphics/texture/texture_manager.h"
 
 namespace graphics::gpu
 {
@@ -52,11 +54,31 @@ MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx1
 	m_isValid = true;
 }
 
+MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager *textureManager )
+	: m_material( material ), m_device( &device ), m_textureManager( textureManager )
+{
+	if ( !material )
+	{
+		console::error( "MaterialGPU: Cannot create from null material" );
+		return;
+	}
+
+	updateMaterialConstants();
+	createConstantBuffer();
+	loadTextures();
+	m_isValid = true;
+}
+
 MaterialGPU::MaterialGPU( MaterialGPU &&other ) noexcept
-	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_isValid( other.m_isValid )
+	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_textureManager( other.m_textureManager ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_baseColorTexture( other.m_baseColorTexture ), m_metallicRoughnessTexture( other.m_metallicRoughnessTexture ), m_normalTexture( other.m_normalTexture ), m_emissiveTexture( other.m_emissiveTexture ), m_isValid( other.m_isValid )
 {
 	other.m_isValid = false;
 	other.m_device = nullptr;
+	other.m_textureManager = nullptr;
+	other.m_baseColorTexture = graphics::texture::kInvalidTextureHandle;
+	other.m_metallicRoughnessTexture = graphics::texture::kInvalidTextureHandle;
+	other.m_normalTexture = graphics::texture::kInvalidTextureHandle;
+	other.m_emissiveTexture = graphics::texture::kInvalidTextureHandle;
 }
 
 MaterialGPU &MaterialGPU::operator=( MaterialGPU &&other ) noexcept
@@ -66,11 +88,21 @@ MaterialGPU &MaterialGPU::operator=( MaterialGPU &&other ) noexcept
 		m_material = std::move( other.m_material );
 		m_materialConstants = other.m_materialConstants;
 		m_device = other.m_device;
+		m_textureManager = other.m_textureManager;
 		m_constantBuffer = std::move( other.m_constantBuffer );
+		m_baseColorTexture = other.m_baseColorTexture;
+		m_metallicRoughnessTexture = other.m_metallicRoughnessTexture;
+		m_normalTexture = other.m_normalTexture;
+		m_emissiveTexture = other.m_emissiveTexture;
 		m_isValid = other.m_isValid;
 
 		other.m_isValid = false;
 		other.m_device = nullptr;
+		other.m_textureManager = nullptr;
+		other.m_baseColorTexture = graphics::texture::kInvalidTextureHandle;
+		other.m_metallicRoughnessTexture = graphics::texture::kInvalidTextureHandle;
+		other.m_normalTexture = graphics::texture::kInvalidTextureHandle;
+		other.m_emissiveTexture = graphics::texture::kInvalidTextureHandle;
 	}
 	return *this;
 }
@@ -98,8 +130,51 @@ void MaterialGPU::bindToCommandList( ID3D12GraphicsCommandList *commandList ) co
 		commandList->SetGraphicsRootConstantBufferView( 2, cbvAddress );
 	}
 
-	// TODO: Bind textures when texture loading is implemented
-	// This would involve setting descriptor tables or root descriptors for textures
+	// Bind textures if texture manager is available
+	bindTextures( commandList );
+}
+
+void MaterialGPU::bindTextures( ID3D12GraphicsCommandList *commandList ) const
+{
+	if ( !commandList )
+	{
+		console::error( "MaterialGPU::bindTextures: Null command list" );
+		return;
+	}
+
+	if ( !m_textureManager )
+	{
+		// No texture manager - textures not supported yet
+		return;
+	}
+
+	// Set descriptor heap
+	ID3D12DescriptorHeap *heaps[] = { m_textureManager->getSrvHeap() };
+	if ( !heaps[0] )
+	{
+		console::error( "MaterialGPU::bindTextures: Texture manager has null SRV heap" );
+		return;
+	}
+
+	commandList->SetDescriptorHeaps( 1, heaps );
+
+	// Get SRV index for base color texture (or use first valid texture handle)
+	// For now, we'll use the base color texture as the starting point
+	const uint32_t baseIndex = m_textureManager->getSrvIndex( m_baseColorTexture );
+	if ( baseIndex == UINT32_MAX )
+	{
+		// No valid textures to bind
+		return;
+	}
+
+	// Get GPU handle for this material's textures
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = heaps[0]->GetGPUDescriptorHandleForHeapStart();
+	const UINT descriptorSize = m_textureManager->getDevice()->get()->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	gpuHandle.ptr += baseIndex * descriptorSize;
+
+	// Bind descriptor table to root parameter 2 (will be changed based on actual root signature)
+	// TODO: Update this to use correct root parameter index once root signature is finalized
+	commandList->SetGraphicsRootDescriptorTable( 2, gpuHandle );
 }
 
 void MaterialGPU::createConstantBuffer()
@@ -207,29 +282,66 @@ void MaterialGPU::loadTextures()
 
 	const auto &pbr = m_material->getPBRMaterial();
 
-	// Log which textures need to be loaded
+	// If no texture manager, just log what would be loaded
+	if ( !m_textureManager )
+	{
+		if ( !pbr.baseColorTexture.empty() )
+		{
+			console::info( "MaterialGPU: Loading base color texture: " + pbr.baseColorTexture );
+		}
+		if ( !pbr.metallicRoughnessTexture.empty() )
+		{
+			console::info( "MaterialGPU: Loading metallic roughness texture: " + pbr.metallicRoughnessTexture );
+		}
+		if ( !pbr.normalTexture.empty() )
+		{
+			console::info( "MaterialGPU: Loading normal texture: " + pbr.normalTexture );
+		}
+		if ( !pbr.emissiveTexture.empty() )
+		{
+			console::info( "MaterialGPU: Loading emissive texture: " + pbr.emissiveTexture );
+		}
+		return;
+	}
+
+	// Load textures using texture manager
+	// Get base path from material if available
+	const std::string basePath = m_material->getPath().empty() ? "" : std::filesystem::path( m_material->getPath() ).parent_path().string();
+
 	if ( !pbr.baseColorTexture.empty() )
 	{
-		console::info( "MaterialGPU: Loading base color texture: " + pbr.baseColorTexture );
-		// TODO: Implement actual texture loading using texture manager
+		m_baseColorTexture = m_textureManager->loadTexture( pbr.baseColorTexture, basePath );
+		if ( m_baseColorTexture == graphics::texture::kInvalidTextureHandle )
+		{
+			console::error( "MaterialGPU: Failed to load base color texture: " + pbr.baseColorTexture );
+		}
 	}
 
 	if ( !pbr.metallicRoughnessTexture.empty() )
 	{
-		console::info( "MaterialGPU: Loading metallic roughness texture: " + pbr.metallicRoughnessTexture );
-		// TODO: Implement actual texture loading
+		m_metallicRoughnessTexture = m_textureManager->loadTexture( pbr.metallicRoughnessTexture, basePath );
+		if ( m_metallicRoughnessTexture == graphics::texture::kInvalidTextureHandle )
+		{
+			console::error( "MaterialGPU: Failed to load metallic roughness texture: " + pbr.metallicRoughnessTexture );
+		}
 	}
 
 	if ( !pbr.normalTexture.empty() )
 	{
-		console::info( "MaterialGPU: Loading normal texture: " + pbr.normalTexture );
-		// TODO: Implement actual texture loading
+		m_normalTexture = m_textureManager->loadTexture( pbr.normalTexture, basePath );
+		if ( m_normalTexture == graphics::texture::kInvalidTextureHandle )
+		{
+			console::error( "MaterialGPU: Failed to load normal texture: " + pbr.normalTexture );
+		}
 	}
 
 	if ( !pbr.emissiveTexture.empty() )
 	{
-		console::info( "MaterialGPU: Loading emissive texture: " + pbr.emissiveTexture );
-		// TODO: Implement actual texture loading
+		m_emissiveTexture = m_textureManager->loadTexture( pbr.emissiveTexture, basePath );
+		if ( m_emissiveTexture == graphics::texture::kInvalidTextureHandle )
+		{
+			console::error( "MaterialGPU: Failed to load emissive texture: " + pbr.emissiveTexture );
+		}
 	}
 }
 

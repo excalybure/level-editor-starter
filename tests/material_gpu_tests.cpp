@@ -1,6 +1,7 @@
 ﻿#include <catch2/catch_test_macros.hpp>
 
 #include "graphics/gpu/material_gpu.h"
+#include "graphics/texture/texture_manager.h"
 #include "engine/assets/assets.h"
 #include "platform/dx12/dx12_device.h"
 
@@ -126,3 +127,27 @@ TEST_CASE( "MaterialGPU supports move semantics", "[MaterialGPU][unit]" )
 	REQUIRE( moved.getMaterialConstants().metallicFactor == 0.7f );
 	REQUIRE_FALSE( original.isValid() ); // Original should be invalidated
 }
+
+TEST_CASE( "MaterialGPU stores texture handles when TextureManager is provided", "[MaterialGPU][texture][unit]" )
+{
+	// Arrange
+	auto material = std::make_shared<assets::Material>();
+	auto &pbr = material->getPBRMaterial();
+	pbr.baseColorTexture = "base_color.png";
+	pbr.metallicRoughnessTexture = "metallic_roughness.png";
+	material->setPath( "textured_material" );
+	material->setLoaded( true );
+
+	// Act - Create MaterialGPU without TextureManager (should store invalid handles)
+	graphics::gpu::MaterialGPU materialGPU{ material };
+
+	// Assert - MaterialGPU should be valid but have no texture handles loaded yet
+	REQUIRE( materialGPU.isValid() );
+	REQUIRE( materialGPU.getBaseColorTextureHandle() == graphics::texture::kInvalidTextureHandle );
+	REQUIRE( materialGPU.getMetallicRoughnessTextureHandle() == graphics::texture::kInvalidTextureHandle );
+	REQUIRE( materialGPU.getNormalTextureHandle() == graphics::texture::kInvalidTextureHandle );
+	REQUIRE( materialGPU.getEmissiveTextureHandle() == graphics::texture::kInvalidTextureHandle );
+}
+
+// Note: Full integration test with TextureManager would require actual texture files
+// and is better suited for integration tests rather than unit tests
