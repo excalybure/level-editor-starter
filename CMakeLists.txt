@@ -55,6 +55,7 @@ endif()
 
 # Graphics library - rendering, GPU resources, shader management
 add_library(graphics STATIC
+  src/graphics/graphics_context.cpp
   src/graphics/gpu/gpu_resource_manager.cpp
   src/graphics/gpu/material_gpu.cpp
   src/graphics/gpu/mesh_gpu.cpp
@@ -251,6 +252,7 @@ endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
+    tests/graphics_context_tests.cpp
     tests/stb_image_integration_test.cpp
     tests/texture_loader_tests.cpp
     tests/dx12_texture_loading_tests.cpp

@@ -2,13 +2,12 @@
 #include "editor/selection.h"
 #include "editor/config/EditorConfig.h"
 #include "engine/assets/asset_manager.h"
+#include "graphics/graphics_context.h"
+#include "graphics/immediate_renderer/immediate_renderer.h"
+#include "graphics/sampler/sampler_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
-#include "graphics/material_system/material_system.h"
 #include "engine/integration/asset_gltf_integration.h"
 #include "engine/picking.h"
-#include "graphics/immediate_renderer/immediate_renderer.h"
-#include "graphics/shader_manager/shader_manager.h"
-#include "graphics/sampler/sampler_manager.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/pix/pix.h"
 #include "platform/win32/win32_window.h"
@@ -99,16 +98,8 @@ int main()
 		return 1;
 	}
 
-	// Create shader manager for automatic shader reloading
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-
-	// Initialize material system for data-driven materials
-	graphics::material_system::MaterialSystem materialSystem;
-	if ( !materialSystem.initialize( "materials.json", shaderManager.get() ) )
-	{
-		console::error( "Failed to initialize material system from materials.json" );
-		console::info( "Application will continue without data-driven materials" );
-	}
+	// Create graphics context with all core graphics systems
+	graphics::GraphicsContext graphicsContext( &device, "materials.json" );
 
 	// Create ECS Scene for runtime entities
 	ecs::Scene scene;
@@ -120,20 +111,6 @@ int main()
 	// This enables AssetManager::loadScene to delegate to GLTFLoader for glTF files
 	engine::integration::initializeAssetGLTFIntegration();
 
-	// Create GPU resource manager for GPU resource creation and management
-	graphics::GPUResourceManager gpuResourceManager( device );
-
-	// Create sampler manager for texture sampling
-	graphics::SamplerManager samplerManager;
-	if ( !samplerManager.initialize( &device ) )
-	{
-		console::error( "Failed to initialize sampler manager" );
-		return 1;
-	}
-
-	// Create renderer for 3D graphics
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-
 	// Create system manager and add systems
 	systems::SystemManager systemManager;
 
@@ -141,7 +118,7 @@ int main()
 	systemManager.addSystem<systems::TransformSystem>();
 
 	// Add MeshRenderingSystem to handle 3D mesh rendering with hierarchy support
-	systemManager.addSystem<systems::MeshRenderingSystem>( device, &materialSystem, shaderManager, samplerManager, &systemManager );
+	systemManager.addSystem<systems::MeshRenderingSystem>( device, graphicsContext.getMaterialSystem(), graphicsContext.getShaderManager(), *graphicsContext.getSamplerManager(), &systemManager );
 
 	// Initialize all systems with the scene
 	systemManager.initialize( scene );
@@ -157,15 +134,15 @@ int main()
 	if ( !ui.initialize(
 			 static_cast<void *>( window.getHandle() ),
 			 &device,
-			 shaderManager,
-			 &materialSystem ) )
+			 graphicsContext.getShaderManagerShared(),
+			 graphicsContext.getMaterialSystem() ) )
 	{
 		console::error( "Failed to initialize UI system" );
 		return 1;
 	}
 
 	// Initialize Scene Operations with required managers
-	ui.initializeSceneOperations( scene, systemManager, assetManager, gpuResourceManager, selectionManager );
+	ui.initializeSceneOperations( scene, systemManager, assetManager, *graphicsContext.getGPUResourceManager(), selectionManager );
 
 	// Connect scene and systems to viewport manager for 3D rendering
 	ui.getViewportManager().setSceneAndSystems( &scene, &systemManager, &selectionManager, &pickingSystem, ui.getGizmoSystem() );
@@ -195,12 +172,12 @@ int main()
 			device.beginFrame();
 
 			// Begin renderer frame - this gets command context from device
-			renderer.beginFrame();
+			graphicsContext.getImmediateRenderer()->beginFrame();
 
 			ID3D12GraphicsCommandList *commandList = device.getCommandList();
 
 			// Set sampler descriptor heap for the frame
-			samplerManager.beginFrame( commandList );
+			graphicsContext.getSamplerManager()->beginFrame( commandList );
 
 			// All command list PIX events must be between beginFrame() and endFrame()
 			{
@@ -209,7 +186,7 @@ int main()
 				// Update shader manager (check for shader file changes and hot-reload)
 				{
 					pix::ScopedEvent pixShaderUpdate( commandList, pix::MarkerColor::Red, "Shader Manager Update" );
-					shaderManager->update();
+					graphicsContext.getShaderManager()->update();
 				}
 
 				// Update systems (including MeshRenderingSystem)
@@ -246,10 +223,10 @@ int main()
 			} // Frame PIX event ends here, before endFrame() closes the command list
 
 			// End sampler manager frame
-			samplerManager.endFrame();
+			graphicsContext.getSamplerManager()->endFrame();
 
 			// End renderer frame - this cleans up renderer state
-			renderer.endFrame();
+			graphicsContext.getImmediateRenderer()->endFrame();
 
 			// End D3D12 frame - this closes the command list
 			device.endFrame();
@@ -258,7 +235,7 @@ int main()
 			device.present();
 
 			// End GPU resource manager frame - this cleans up deferred deletions
-			gpuResourceManager.processPendingDeletes();
+			graphicsContext.getGPUResourceManager()->processPendingDeletes();
 
 			// App tick
 			app.tick();
