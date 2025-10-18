@@ -25,6 +25,7 @@ struct ResourceBinding
 	std::string name;
 	ResourceBindingType type;
 	int slot;
+	int arraySize = 1; // Number of descriptors (for texture arrays, etc.)
 
 	bool operator<( const ResourceBinding &other ) const
 	{

@@ -95,12 +95,14 @@ ShaderResourceBindings ShaderReflection::Reflect( const shader_manager::ShaderBl
 		binding.name = bindDesc.Name;
 		binding.type = MapBindingType( bindDesc.Type );
 		binding.slot = static_cast<int>( bindDesc.BindPoint );
+		binding.arraySize = static_cast<int>( bindDesc.BindCount );
 
 		// Log the binding for debugging
-		console::info( "ShaderReflection: Found binding '{}' type={} slot={}",
+		console::info( "ShaderReflection: Found binding '{}' type={} slot={} arraySize={}",
 			binding.name,
 			static_cast<int>( binding.type ),
-			binding.slot );
+			binding.slot,
+			binding.arraySize );
 
 		result.bindings.push_back( binding );
 	}
