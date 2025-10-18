@@ -26,7 +26,7 @@ TEST_CASE( "Texture creates from ImageData", "[dx12][texture][loading]" )
 	REQUIRE( result );
 	REQUIRE( texture.getWidth() == 2 );
 	REQUIRE( texture.getHeight() == 2 );
-	REQUIRE( texture.getFormat() == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( texture.getFormat() == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB ); // sRGB format for loaded images
 	REQUIRE( texture.getResource() != nullptr );
 
 	device.shutdown();

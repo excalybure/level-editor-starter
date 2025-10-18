@@ -214,6 +214,32 @@ TextureHandle TextureManager::createTextureFromImageData( const ImageData &image
 		return kInvalidTextureHandle;
 	}
 
+	// Upload texture data to GPU (requires command list to be open)
+	const bool needsFrameScope = !m_device->isInFrame();
+	if ( needsFrameScope )
+	{
+		m_device->beginFrame();
+	}
+
+	ID3D12GraphicsCommandList *commandList = m_device->getCommandList();
+	const uint32_t rowPitch = imageData.width * 4; // RGBA = 4 bytes per pixel
+	const uint32_t slicePitch = rowPitch * imageData.height;
+	if ( !texture->uploadTextureData( commandList, imageData.pixels.data(), rowPitch, slicePitch ) )
+	{
+		console::error( "TextureManager: Failed to upload texture data" );
+		if ( needsFrameScope )
+		{
+			m_device->endFrame();
+		}
+		m_bindlessHeap->deallocate( srvIndex.value() );
+		return kInvalidTextureHandle;
+	}
+
+	if ( needsFrameScope )
+	{
+		m_device->endFrame();
+	}
+
 	// Create SRV in bindless heap
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = imageData.format;

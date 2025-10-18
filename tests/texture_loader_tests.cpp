@@ -20,8 +20,8 @@ TEST_CASE( "TextureLoader loads valid PNG file", "[texture][unit]" )
 	REQUIRE( imageData.width == 2 );
 	REQUIRE( imageData.height == 2 );
 	REQUIRE( imageData.channels == 4 );
-	REQUIRE( imageData.format == DXGI_FORMAT_R8G8B8A8_UNORM );
-	REQUIRE( imageData.pixels.size() == 2 * 2 * 4 ); // 2x2 RGBA
+	REQUIRE( imageData.format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB ); // sRGB format for loaded images
+	REQUIRE( imageData.pixels.size() == 2 * 2 * 4 );				// 2x2 RGBA
 
 	// First pixel should be red (255, 0, 0, 255)
 	REQUIRE( imageData.pixels[0] == 255 ); // R

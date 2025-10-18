@@ -53,7 +53,7 @@ TEST_CASE( "graphics::TextureManager loads texture from file", "[texture][manage
 	REQUIRE( info != nullptr );
 	REQUIRE( info->width == 2 );
 	REQUIRE( info->height == 2 );
-	REQUIRE( info->format == DXGI_FORMAT_R8G8B8A8_UNORM );
+	REQUIRE( info->format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB ); // sRGB format for loaded images
 
 	manager.shutdown();
 	device.shutdown();
@@ -313,7 +313,7 @@ TEST_CASE( "graphics::TextureManager loads scene textures", "[texture][manager][
 		REQUIRE( info != nullptr );
 		REQUIRE( info->width == 2 );
 		REQUIRE( info->height == 2 );
-		REQUIRE( info->format == DXGI_FORMAT_R8G8B8A8_UNORM );
+		REQUIRE( info->format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB ); // sRGB format for loaded images
 	}
 
 	manager.shutdown();

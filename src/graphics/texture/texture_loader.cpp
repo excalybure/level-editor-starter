@@ -27,7 +27,7 @@ std::optional<ImageData> TextureLoader::loadFromFile( const std::string &path )
 	imageData.width = static_cast<uint32_t>( width );
 	imageData.height = static_cast<uint32_t>( height );
 	imageData.channels = 4;
-	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // sRGB format for proper color space
 
 	const size_t dataSize = width * height * 4;
 	imageData.pixels.resize( dataSize );
@@ -61,7 +61,7 @@ std::optional<ImageData> TextureLoader::loadFromMemory( const uint8_t *data, siz
 	imageData.width = static_cast<uint32_t>( width );
 	imageData.height = static_cast<uint32_t>( height );
 	imageData.channels = 4;
-	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // sRGB format for proper color space
 
 	const size_t dataSize = width * height * 4;
 	imageData.pixels.resize( dataSize );
