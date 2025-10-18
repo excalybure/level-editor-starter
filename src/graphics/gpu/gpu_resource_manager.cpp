@@ -2,19 +2,25 @@
 
 #include "engine/assets/assets.h"
 #include "graphics/gpu/material_gpu.h"
+#include "graphics/texture/texture_manager.h"
 #include "core/console.h"
 
 namespace graphics
 {
 
-GPUResourceManager::GPUResourceManager( dx12::Device &device )
-	: m_device( &device )
+GPUResourceManager::GPUResourceManager( dx12::Device &device, texture::TextureManager *textureManager )
+	: m_device( &device ), m_textureManager( textureManager )
 {
 	// Basic validation
 	if ( !m_device )
 	{
 		console::error( "GPUResourceManager: null device provided" );
 		return;
+	}
+
+	if ( !m_textureManager )
+	{
+		console::warning( "GPUResourceManager: No TextureManager provided - materials will not have texture support" );
 	}
 
 	console::info( "GPUResourceManager initialized successfully" );
@@ -78,9 +84,9 @@ std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( 
 		m_materialCache.erase( it );
 	}
 
-	// Cache miss - create new MaterialGPU
+	// Cache miss - create new MaterialGPU with TextureManager if available
 	++m_statistics.cacheMisses;
-	const auto materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device );
+	const auto materialGPU = m_textureManager ? std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device, m_textureManager ) : std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device );
 	if ( !materialGPU->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create MaterialGPU" );
@@ -105,7 +111,7 @@ std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getDefaultMateri
 		defaultMaterial->setMetallicFactor( 0.0f );
 		defaultMaterial->setRoughnessFactor( 1.0f );
 
-		m_defaultMaterialGPU = std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device );
+		m_defaultMaterialGPU = m_textureManager ? std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device, m_textureManager ) : std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device );
 		if ( !m_defaultMaterialGPU->isValid() )
 		{
 			console::error( "GPUResourceManager: failed to create default MaterialGPU" );

@@ -3,7 +3,6 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstring>
-#include <filesystem>
 
 #include "engine/assets/assets.h"
 #include "math/matrix.h"
@@ -214,6 +213,7 @@ void MaterialGPU::updateMaterialConstants()
 
 	// Populate texture indices from TextureManager if available
 	// This must be called after loadTextures() to have valid texture handles
+	// If no TextureManager, indices remain UINT32_MAX (invalid)
 	if ( m_textureManager )
 	{
 		m_materialConstants.textureIndices[0] = m_textureManager->getSrvIndex( m_baseColorTexture );
@@ -225,12 +225,6 @@ void MaterialGPU::updateMaterialConstants()
 
 void MaterialGPU::loadTextures()
 {
-	if ( !m_device )
-	{
-		console::info( "MaterialGPU: Loading textures (stub - no device)" );
-		return;
-	}
-
 	if ( !m_material )
 	{
 		console::error( "MaterialGPU: Cannot load textures without material" );
@@ -239,67 +233,13 @@ void MaterialGPU::loadTextures()
 
 	const auto &pbr = m_material->getPBRMaterial();
 
-	// If no texture manager, just log what would be loaded
-	if ( !m_textureManager )
-	{
-		if ( !pbr.baseColorTexture.empty() )
-		{
-			console::info( "MaterialGPU: Loading base color texture: " + pbr.baseColorTexture );
-		}
-		if ( !pbr.metallicRoughnessTexture.empty() )
-		{
-			console::info( "MaterialGPU: Loading metallic roughness texture: " + pbr.metallicRoughnessTexture );
-		}
-		if ( !pbr.normalTexture.empty() )
-		{
-			console::info( "MaterialGPU: Loading normal texture: " + pbr.normalTexture );
-		}
-		if ( !pbr.emissiveTexture.empty() )
-		{
-			console::info( "MaterialGPU: Loading emissive texture: " + pbr.emissiveTexture );
-		}
-		return;
-	}
-
-	// Load textures using texture manager
-	// Get base path from material if available
-	const std::string basePath = m_material->getPath().empty() ? "" : std::filesystem::path( m_material->getPath() ).parent_path().string();
-
-	if ( !pbr.baseColorTexture.empty() )
-	{
-		m_baseColorTexture = m_textureManager->loadTexture( pbr.baseColorTexture, basePath );
-		if ( m_baseColorTexture == graphics::texture::kInvalidTextureHandle )
-		{
-			console::error( "MaterialGPU: Failed to load base color texture: " + pbr.baseColorTexture );
-		}
-	}
-
-	if ( !pbr.metallicRoughnessTexture.empty() )
-	{
-		m_metallicRoughnessTexture = m_textureManager->loadTexture( pbr.metallicRoughnessTexture, basePath );
-		if ( m_metallicRoughnessTexture == graphics::texture::kInvalidTextureHandle )
-		{
-			console::error( "MaterialGPU: Failed to load metallic roughness texture: " + pbr.metallicRoughnessTexture );
-		}
-	}
-
-	if ( !pbr.normalTexture.empty() )
-	{
-		m_normalTexture = m_textureManager->loadTexture( pbr.normalTexture, basePath );
-		if ( m_normalTexture == graphics::texture::kInvalidTextureHandle )
-		{
-			console::error( "MaterialGPU: Failed to load normal texture: " + pbr.normalTexture );
-		}
-	}
-
-	if ( !pbr.emissiveTexture.empty() )
-	{
-		m_emissiveTexture = m_textureManager->loadTexture( pbr.emissiveTexture, basePath );
-		if ( m_emissiveTexture == graphics::texture::kInvalidTextureHandle )
-		{
-			console::error( "MaterialGPU: Failed to load emissive texture: " + pbr.emissiveTexture );
-		}
-	}
+	// Use pre-loaded texture handles from Material
+	// These are populated by loadSceneTextures() after loading the scene
+	// and resolve the actual texture paths using the scene's base path
+	m_baseColorTexture = pbr.baseColorTextureHandle;
+	m_metallicRoughnessTexture = pbr.metallicRoughnessTextureHandle;
+	m_normalTexture = pbr.normalTextureHandle;
+	m_emissiveTexture = pbr.emissiveTextureHandle;
 }
 
 void MaterialGPU::initializeGPUResources()

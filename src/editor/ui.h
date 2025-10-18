@@ -18,6 +18,10 @@ namespace graphics::material_system
 {
 class MaterialSystem;
 }
+namespace graphics::texture
+{
+class TextureManager;
+}
 namespace platform
 {
 class Win32Window;
@@ -124,7 +128,8 @@ public:
 		systems::SystemManager &systemManager,
 		assets::AssetManager &assetManager,
 		graphics::GPUResourceManager &gpuManager,
-		editor::SelectionManager &selectionManager );
+		editor::SelectionManager &selectionManager,
+		graphics::texture::TextureManager *textureManager = nullptr );
 
 	// File operations
 	void newScene();

@@ -23,6 +23,7 @@
 #include "runtime/systems.h"
 #include "runtime/scene_importer.h"
 #include "runtime/scene_serialization/SceneSerializer.h"
+#include "graphics/texture/scene_texture_loader.h"
 #include "core/console.h"
 #include "platform/dx12/dx12_device.h"
 #include "platform/win32/win32_window.h"
@@ -109,6 +110,7 @@ struct UI::Impl
 	systems::SystemManager *systemManager = nullptr;
 	assets::AssetManager *assetManager = nullptr;
 	graphics::GPUResourceManager *gpuManager = nullptr;
+	graphics::texture::TextureManager *textureManager = nullptr;
 
 	// Gizmo system for object manipulation
 	std::unique_ptr<GizmoSystem> gizmoSystem;
@@ -1984,13 +1986,15 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 	systems::SystemManager &systemManager,
 	assets::AssetManager &assetManager,
 	graphics::GPUResourceManager &gpuManager,
-	editor::SelectionManager &selectionManager )
+	editor::SelectionManager &selectionManager,
+	graphics::texture::TextureManager *textureManager )
 {
 	m_impl->scene = &scene;
 	m_impl->systemManager = &systemManager;
 	m_impl->assetManager = &assetManager;
 	m_impl->gpuManager = &gpuManager;
 	m_impl->selectionManager = &selectionManager;
+	m_impl->textureManager = textureManager;
 
 	// Create GizmoSystem with SelectionManager, Scene, SystemManager, and CommandHistory
 	m_impl->gizmoSystem = std::make_unique<GizmoSystem>( selectionManager, scene, systemManager, m_impl->commandHistory.get() );

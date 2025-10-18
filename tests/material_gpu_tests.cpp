@@ -180,9 +180,13 @@ TEST_CASE( "MaterialGPU populates textureIndices from TextureManager SRV indices
 	auto &pbr = material->getPBRMaterial();
 	pbr.baseColorTexture = "assets/test/test_red_2x2.png";
 	pbr.emissiveTexture = "assets/test/test_red_2x2.png"; // Use same texture for simplicity
-	// Leave normal and metallic-roughness empty
 	material->setPath( "test_material_with_textures" );
 	material->setLoaded( true );
+
+	// Pre-load textures using TextureManager (simulating scene loading)
+	pbr.baseColorTextureHandle = textureManager.loadTexture( pbr.baseColorTexture );
+	pbr.emissiveTextureHandle = textureManager.loadTexture( pbr.emissiveTexture );
+	// Leave normal and metallic-roughness handles as invalid (default 0)
 
 	// Act
 	graphics::gpu::MaterialGPU materialGPU{ material, device, &textureManager };

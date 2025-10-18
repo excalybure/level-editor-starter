@@ -9,12 +9,18 @@
 namespace graphics
 {
 
+// Forward declarations
+namespace texture
+{
+class TextureManager;
+}
+
 // GPU resource manager with caching support
 class GPUResourceManager : public gpu::MaterialProvider
 {
 public:
 	// Constructor
-	explicit GPUResourceManager( dx12::Device &device );
+	explicit GPUResourceManager( dx12::Device &device, texture::TextureManager *textureManager = nullptr );
 
 	// Destructor
 	~GPUResourceManager() = default;
@@ -60,8 +66,12 @@ public:
 	// Validation
 	bool isValid() const noexcept { return m_device != nullptr; }
 
+	// Texture manager access for texture loading in scenes
+	texture::TextureManager *getTextureManager() const noexcept { return m_textureManager; }
+
 private:
 	dx12::Device *m_device = nullptr;
+	texture::TextureManager *m_textureManager = nullptr;
 
 	// Default material for primitives without materials
 	std::shared_ptr<graphics::gpu::MaterialGPU> m_defaultMaterialGPU;

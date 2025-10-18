@@ -5,6 +5,8 @@
 #include "engine/assets/assets.h"
 #include "graphics/gpu/mesh_gpu.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/scene_texture_loader.h"
+#include "core/console.h"
 
 using namespace runtime;
 using namespace ecs;
@@ -30,6 +32,17 @@ bool SceneImporter::createGPUResources( std::shared_ptr<assets::Scene> assetScen
 	if ( !assetScene || !assetScene->isLoaded() )
 	{
 		return false;
+	}
+
+	// Load textures for all materials in the asset scene
+	// This populates Material texture handle fields which MaterialGPU uses
+	if ( const auto textureManager = gpuResourceManager.getTextureManager() )
+	{
+		const int texturesLoaded = graphics::texture::loadSceneTextures( assetScene, textureManager );
+		if ( texturesLoaded > 0 )
+		{
+			console::info( "SceneImporter: Loaded {} texture(s) for asset scene", texturesLoaded );
+		}
 	}
 
 	// Traverse all entities and populate GPU resources for MeshRenderer components that don't have them

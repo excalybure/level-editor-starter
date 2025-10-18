@@ -7,7 +7,9 @@
 #include "runtime/components.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/scene_texture_loader.h"
 #include "runtime/scene_importer.h"
+#include "core/console.h"
 
 using json = nlohmann::json;
 
@@ -505,6 +507,17 @@ int SceneSerializer::resolveSceneAssets(
 		{
 			// Asset load failed - leave unresolved
 			continue;
+		}
+
+		// Load textures for all materials in the asset scene
+		// This populates Material texture handle fields which MaterialGPU uses
+		if ( const auto textureManager = gpuManager.getTextureManager() )
+		{
+			const int texturesLoaded = graphics::texture::loadSceneTextures( assetScene, textureManager );
+			if ( texturesLoaded > 0 )
+			{
+				console::info( "Loaded {} texture(s) for asset scene", texturesLoaded );
+			}
 		}
 
 		// Asset loaded - get the first mesh (consistent with SceneImporter behavior)

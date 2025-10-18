@@ -41,9 +41,6 @@ GraphicsContext::GraphicsContext( dx12::Device *device, const std::string &mater
 		m_materialSystem->initialize( "", m_shaderManager.get() );
 	}
 
-	// Create GPU resource manager for GPU resource creation and management
-	m_gpuResourceManager = std::make_unique<GPUResourceManager>( *m_device );
-
 	// Create sampler manager for texture sampling
 	m_samplerManager = std::make_unique<SamplerManager>();
 	if ( !m_samplerManager->initialize( m_device ) )
@@ -59,6 +56,10 @@ GraphicsContext::GraphicsContext( dx12::Device *device, const std::string &mater
 		console::error( "GraphicsContext: Failed to initialize texture manager" );
 		// Note: We don't throw here as the application can continue without textures
 	}
+
+	// Create GPU resource manager for GPU resource creation and management
+	// Pass texture manager so MaterialGPU can load and bind textures
+	m_gpuResourceManager = std::make_unique<GPUResourceManager>( *m_device, m_textureManager.get() );
 
 	// Create immediate renderer for debug shapes and UI overlays
 	m_immediateRenderer = std::make_unique<ImmediateRenderer>( *m_device, *m_shaderManager );
