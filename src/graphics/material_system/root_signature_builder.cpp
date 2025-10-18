@@ -155,6 +155,40 @@ std::vector<ResourceBinding> RootSignatureBuilder::MergeAndValidateBindings(
 	return merged;
 }
 
+bool RootSignatureBuilder::IsStaticSamplerName( const std::string &name )
+{
+	// Common sampler names that should be static (defined in root signature)
+	// These samplers don't change per draw call, so static definition is efficient
+	static const std::unordered_set<std::string> staticSamplerNames = {
+		"linearSampler",
+		"pointSampler",
+		"anisotropicSampler",
+		"comparisonSampler"
+	};
+
+	return staticSamplerNames.find( name ) != staticSamplerNames.end();
+}
+
+D3D12_FILTER RootSignatureBuilder::GetFilterForSamplerName( const std::string &name )
+{
+	// Map sampler names to D3D12 filter types
+	if ( name == "pointSampler" )
+	{
+		return D3D12_FILTER_MIN_MAG_MIP_POINT;
+	}
+	else if ( name == "anisotropicSampler" )
+	{
+		return D3D12_FILTER_ANISOTROPIC;
+	}
+	else if ( name == "comparisonSampler" )
+	{
+		return D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	}
+
+	// Default to linear for linearSampler and unknown names
+	return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+}
+
 void RootSignatureBuilder::GroupBindingsForRootSignature(
 	const std::vector<ResourceBinding> &merged,
 	RootSignatureSpec &outSpec )
@@ -162,6 +196,7 @@ void RootSignatureBuilder::GroupBindingsForRootSignature(
 	// Clear output vectors
 	outSpec.cbvRootDescriptors.clear();
 	outSpec.descriptorTableResources.clear();
+	outSpec.staticSamplers.clear();
 
 	// Separate bindings by type
 	for ( const auto &binding : merged )
@@ -171,17 +206,27 @@ void RootSignatureBuilder::GroupBindingsForRootSignature(
 			// CBVs use root descriptors (2 DWORDs per CBV)
 			outSpec.cbvRootDescriptors.push_back( binding );
 		}
+		else if ( binding.type == ResourceBindingType::Sampler && IsStaticSamplerName( binding.name ) )
+		{
+			// Known static samplers - add to static sampler list
+			StaticSamplerBinding staticSampler;
+			staticSampler.name = binding.name;
+			staticSampler.slot = binding.slot;
+			staticSampler.filter = GetFilterForSamplerName( binding.name );
+			staticSampler.addressMode = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			outSpec.staticSamplers.push_back( staticSampler );
+		}
 		else
 		{
-			// SRVs, UAVs, Samplers use descriptor tables (1 DWORD per table)
+			// SRVs, UAVs, and unknown Samplers use descriptor tables (1 DWORD per table)
 			outSpec.descriptorTableResources.push_back( binding );
 		}
 	}
 
-	// Sort both groups by slot for deterministic output matching shader register order
-	// This ensures root parameter indices match shader register numbers (b0→param0, b1→param1, b2→param2)
+	// Sort all groups by slot for deterministic output matching shader register order
 	std::sort( outSpec.cbvRootDescriptors.begin(), outSpec.cbvRootDescriptors.end(), []( const ResourceBinding &a, const ResourceBinding &b ) { return a.slot < b.slot; } );
 	std::sort( outSpec.descriptorTableResources.begin(), outSpec.descriptorTableResources.end(), []( const ResourceBinding &a, const ResourceBinding &b ) { return a.slot < b.slot; } );
+	std::sort( outSpec.staticSamplers.begin(), outSpec.staticSamplers.end(), []( const StaticSamplerBinding &a, const StaticSamplerBinding &b ) { return a.slot < b.slot; } );
 }
 
 } // namespace graphics::material_system

@@ -46,9 +46,10 @@ uint64_t RootSignatureCache::hashSpec( const RootSignatureSpec &spec ) const
 {
 	// Hash the spec for cache lookup using new Phase 2 structure
 
-	// Start with count of root descriptors and descriptor table resources
+	// Start with count of root descriptors, descriptor table resources, and static samplers
 	uint64_t hash = spec.cbvRootDescriptors.size();
 	core::hash_combine( hash, spec.descriptorTableResources.size() << 16 );
+	core::hash_combine( hash, spec.staticSamplers.size() << 32 );
 
 	// Hash root descriptor CBVs
 	for ( const auto &binding : spec.cbvRootDescriptors )
@@ -66,6 +67,16 @@ uint64_t RootSignatureCache::hashSpec( const RootSignatureSpec &spec ) const
 		core::hash_combine( hash, binding.name );
 		core::hash_combine( hash, static_cast<int>( binding.type ) );
 		core::hash_combine( hash, binding.slot );
+	}
+
+	// Hash static samplers
+	for ( const auto &sampler : spec.staticSamplers )
+	{
+		// Combine name, filter, address mode, and slot into hash
+		core::hash_combine( hash, sampler.name );
+		core::hash_combine( hash, static_cast<int>( sampler.filter ) );
+		core::hash_combine( hash, static_cast<int>( sampler.addressMode ) );
+		core::hash_combine( hash, sampler.slot );
 	}
 
 	return hash;
@@ -200,8 +211,30 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::buildRootSignatu
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.NumParameters = static_cast<UINT>( rootParameters.size() );
 	rootSignatureDesc.pParameters = rootParameters.empty() ? nullptr : rootParameters.data();
-	rootSignatureDesc.NumStaticSamplers = 0;
-	rootSignatureDesc.pStaticSamplers = nullptr;
+
+	// Configure static samplers
+	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
+	for ( const auto &sampler : spec.staticSamplers )
+	{
+		D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+		samplerDesc.Filter = sampler.filter;
+		samplerDesc.AddressU = sampler.addressMode;
+		samplerDesc.AddressV = sampler.addressMode;
+		samplerDesc.AddressW = sampler.addressMode;
+		samplerDesc.MipLODBias = 0.0f;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		samplerDesc.MinLOD = 0.0f;
+		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+		samplerDesc.ShaderRegister = static_cast<UINT>( sampler.slot );
+		samplerDesc.RegisterSpace = 0;
+		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		staticSamplers.push_back( samplerDesc );
+	}
+
+	rootSignatureDesc.NumStaticSamplers = static_cast<UINT>( staticSamplers.size() );
+	rootSignatureDesc.pStaticSamplers = staticSamplers.empty() ? nullptr : staticSamplers.data();
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// Serialize root signature
