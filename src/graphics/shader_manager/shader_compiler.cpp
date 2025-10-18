@@ -127,6 +127,12 @@ void ShaderCompiler::InitializeDxc()
 	}
 }
 
+// Get DXC utils instance for use by other components (like shader reflection)
+IDxcUtils *ShaderCompiler::GetDxcUtils()
+{
+	return s_dxcUtils.Get();
+}
+
 // Build DXC compilation arguments
 std::vector<std::wstring> ShaderCompiler::BuildCompilationArguments(
 	const std::string &entryPoint,

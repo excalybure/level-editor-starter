@@ -243,7 +243,7 @@ TEST_CASE( "ShaderManager Shader Registration", "[shader_manager][registration]"
 		const auto handle2 = manager.registerShader( shaderPath, "PSMain", "ps_6_6", shader_manager::ShaderType::Pixel );
 
 		// Register shaders with same file and entry point but different targets
-		const auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_4_0", shader_manager::ShaderType::Vertex );
+		const auto handle3 = manager.registerShader( shaderPath, "VSMain", "vs_6_0", shader_manager::ShaderType::Vertex );
 
 		// All handles should be different
 		REQUIRE( handle1 != INVALID_SHADER_HANDLE );
@@ -558,10 +558,10 @@ TEST_CASE( "ShaderManager Shader Type Utilities", "[shader_manager][types]" )
 		std::vector<std::pair<ShaderType, std::string>> shaderTypes = {
 			{ shader_manager::ShaderType::Vertex, "vs_6_6" },
 			{ shader_manager::ShaderType::Pixel, "ps_6_6" },
-			{ shader_manager::ShaderType::Compute, "cs_5_0" },
-			{ shader_manager::ShaderType::Geometry, "gs_5_0" },
-			{ shader_manager::ShaderType::Hull, "hs_5_0" },
-			{ shader_manager::ShaderType::Domain, "ds_5_0" }
+			{ shader_manager::ShaderType::Compute, "cs_6_6" },
+			{ shader_manager::ShaderType::Geometry, "gs_6_6" },
+			{ shader_manager::ShaderType::Hull, "hs_6_6" },
+			{ shader_manager::ShaderType::Domain, "ds_6_6" }
 		};
 
 		for ( const auto &shaderTypePair : shaderTypes )

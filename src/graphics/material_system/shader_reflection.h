@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <functional>
 #include <d3d12.h>
-#include <d3dcommon.h>
 
 namespace graphics::material_system
 {

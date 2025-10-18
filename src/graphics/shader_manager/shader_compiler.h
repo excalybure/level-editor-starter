@@ -38,6 +38,10 @@ public:
 	// Get DXC compiler version for diagnostics
 	static std::string GetCompilerVersion();
 
+	// Get DXC utils instance for shader reflection and other operations
+	// (Internal use - call InitializeDxc first)
+	static IDxcUtils *GetDxcUtils();
+
 private:
 	// Build DXC compilation arguments
 	static std::vector<std::wstring> BuildCompilationArguments(

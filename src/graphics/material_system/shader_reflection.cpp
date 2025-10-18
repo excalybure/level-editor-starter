@@ -1,7 +1,9 @@
 #include "shader_reflection.h"
 #include "core/console.h"
+#include "graphics/shader_manager/shader_compiler.h"
 #include <d3d12.h>
-#include <d3dcompiler.h>
+#include <d3d12shader.h>
+#include <dxcapi.h>
 #include <wrl/client.h>
 #include <string_view>
 
@@ -42,16 +44,28 @@ ShaderResourceBindings ShaderReflection::Reflect( const shader_manager::ShaderBl
 		return result;
 	}
 
-	// Create reflection interface
+	// Get DXC utils for reflection
+	IDxcUtils *dxcUtils = shader_manager::ShaderCompiler::GetDxcUtils();
+	if ( !dxcUtils )
+	{
+		console::error( "ShaderReflection::Reflect: DXC utils not initialized. Call ShaderCompiler::InitializeDxc() at startup." );
+		return result;
+	}
+
+	// Create DXC container reflection from DXIL bytecode
+	// DXC produces container-based bytecode with DXIR part
 	ComPtr<ID3D12ShaderReflection> reflection;
-	const HRESULT hr = D3DReflect(
-		bytecodeData,
-		bytecodeSize,
-		IID_PPV_ARGS( &reflection ) );
+	
+	// Create a DxcBuffer wrapper for the bytecode
+	DxcBuffer dxcBuffer{};
+	dxcBuffer.Ptr = bytecodeData;
+	dxcBuffer.Size = bytecodeSize;
+	
+	HRESULT hr = dxcUtils->CreateReflection( &dxcBuffer, __uuidof( ID3D12ShaderReflection ), reinterpret_cast<void**>( reflection.GetAddressOf() ) );
 
 	if ( FAILED( hr ) )
 	{
-		console::error( "ShaderReflection::Reflect: D3DReflect failed with HRESULT={:#x}",
+		console::error( "ShaderReflection::Reflect: IDxcUtils::CreateReflection failed with HRESULT={:#x}",
 			static_cast<unsigned int>( hr ) );
 		return result;
 	}
