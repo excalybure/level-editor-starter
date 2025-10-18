@@ -260,13 +260,13 @@ void ImmediateRenderer::compileDefaultShaders()
 		m_vertexShaderHandle = m_shaderManager.registerShader(
 			"shaders/simple.hlsl",
 			"VSMain",
-			"vs_5_0",
+			"vs_6_6",
 			shader_manager::ShaderType::Vertex );
 
 		m_pixelShaderHandle = m_shaderManager.registerShader(
 			"shaders/simple.hlsl",
 			"PSMain",
-			"ps_5_0",
+			"ps_6_6",
 			shader_manager::ShaderType::Pixel );
 
 		// Get shader blobs from ShaderManager

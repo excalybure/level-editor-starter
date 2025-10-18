@@ -55,13 +55,13 @@ ShaderResourceBindings ShaderReflection::Reflect( const shader_manager::ShaderBl
 	// Create DXC container reflection from DXIL bytecode
 	// DXC produces container-based bytecode with DXIR part
 	ComPtr<ID3D12ShaderReflection> reflection;
-	
+
 	// Create a DxcBuffer wrapper for the bytecode
 	DxcBuffer dxcBuffer{};
 	dxcBuffer.Ptr = bytecodeData;
 	dxcBuffer.Size = bytecodeSize;
-	
-	HRESULT hr = dxcUtils->CreateReflection( &dxcBuffer, __uuidof( ID3D12ShaderReflection ), reinterpret_cast<void**>( reflection.GetAddressOf() ) );
+
+	HRESULT hr = dxcUtils->CreateReflection( &dxcBuffer, __uuidof( ID3D12ShaderReflection ), reinterpret_cast<void **>( reflection.GetAddressOf() ) );
 
 	if ( FAILED( hr ) )
 	{

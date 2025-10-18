@@ -43,7 +43,7 @@ TEST_CASE( "Renderer windowed integration begin/end", "[renderer][integration]" 
 // Negative shader compile scenario using ShaderCompiler::CompileFromFile with intentional error.
 TEST_CASE( "Renderer shader compile failure path", "[renderer][shader][error]" )
 {
-	const test::shader::TempShaderFile shaderFile( R"(float4 main(float3 pos : POSITION) : SV_POSITION { return float4(pos, 1.0f) )" ); // missing semicolon & brace
+	const test::shader::TempShaderFile shaderFile( R"(float4 main(float3 pos : POSITION) : SV_POSITION { return float4(pos, 1.0f); })" ); // missing semicolon & brace
 	bool threw = false;
 	try
 	{
