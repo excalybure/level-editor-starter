@@ -3,6 +3,7 @@
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/material_system/material_instance.h"
 #include "graphics/sampler/sampler_manager.h"
+#include "graphics/texture/texture_manager.h"
 #include "core/console.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
@@ -43,8 +44,8 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager )
-	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager )
+MeshRenderingSystem::MeshRenderingSystem( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager, graphics::texture::TextureManager *textureManager )
+	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager ), m_textureManager( textureManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available
 	if ( m_materialSystem )
@@ -105,6 +106,15 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 	{
 		console::warning( "MeshRenderingSystem: Failed to setup MaterialInstance for rendering" );
 		return;
+	}
+
+	// AF5: Bind bindless texture descriptor heap once per frame (if available)
+	// This allows all materials to access textures via indices without per-material binding
+	if ( m_textureManager )
+	{
+		// TextureManager encapsulates the binding logic
+		// Root parameter index 2 is for texture descriptor table (SRVs)
+		m_textureManager->bindTextures( commandList, 2 );
 	}
 
 	// Iterate through all entities to find those with both MeshRenderer and Transform components

@@ -28,6 +28,11 @@ class MaterialSystem;
 namespace graphics
 {
 class SamplerManager;
+
+namespace texture
+{
+class TextureManager;
+}
 } // namespace graphics
 
 namespace dx12
@@ -52,11 +57,13 @@ class MeshRenderingSystem : public System
 public:
 	// Constructor with MaterialSystem, ShaderManager, SamplerManager and optional SystemManager for world transform support
 	// Pass nullptr for systemManager in tests that don't need hierarchy support
+	// Pass nullptr for textureManager if bindless textures not needed
 	MeshRenderingSystem( dx12::Device &device,
 		graphics::material_system::MaterialSystem *materialSystem,
 		std::shared_ptr<shader_manager::ShaderManager> shaderManager,
 		graphics::SamplerManager &samplerManager,
-		systems::SystemManager *systemManager );
+		systems::SystemManager *systemManager,
+		graphics::texture::TextureManager *textureManager = nullptr );
 	void update( ecs::Scene &scene, float deltaTime ) override;
 	void render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList );
 
@@ -74,6 +81,7 @@ private:
 	std::shared_ptr<shader_manager::ShaderManager> m_shaderManager;
 	graphics::SamplerManager &m_samplerManager;
 	systems::SystemManager *m_systemManager;
+	graphics::texture::TextureManager *m_textureManager;
 
 	// Default material instance for mesh rendering
 	std::unique_ptr<graphics::material_system::MaterialInstance> m_defaultMaterialInstance;

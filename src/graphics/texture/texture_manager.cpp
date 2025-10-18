@@ -251,4 +251,35 @@ TextureHandle TextureManager::createTextureFromImageData( const ImageData &image
 	return handle;
 }
 
+void TextureManager::bindTextures( ID3D12GraphicsCommandList *commandList, uint32_t rootParameterIndex ) const
+{
+	if ( !commandList )
+	{
+		console::error( "TextureManager::bindTextures: Null command list" );
+		return;
+	}
+
+	if ( !m_bindlessHeap )
+	{
+		// No bindless heap initialized
+		return;
+	}
+
+	ID3D12DescriptorHeap *srvHeap = m_bindlessHeap->getHeap();
+	if ( !srvHeap )
+	{
+		console::error( "TextureManager::bindTextures: Bindless heap is null" );
+		return;
+	}
+
+	// Set descriptor heap once for the entire frame
+	ID3D12DescriptorHeap *heaps[] = { srvHeap };
+	commandList->SetDescriptorHeaps( 1, heaps );
+
+	// Bind descriptor table pointing to start of bindless heap
+	// This makes all textures available via their indices
+	const D3D12_GPU_DESCRIPTOR_HANDLE heapStart = srvHeap->GetGPUDescriptorHandleForHeapStart();
+	commandList->SetGraphicsRootDescriptorTable( rootParameterIndex, heapStart );
+}
+
 } // namespace graphics::texture

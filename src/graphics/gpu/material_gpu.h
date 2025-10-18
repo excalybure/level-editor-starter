@@ -80,9 +80,6 @@ public:
 	// Bind all GPU resources to command list for rendering
 	void bindToCommandList( ID3D12GraphicsCommandList *commandList ) const;
 
-	// Bind texture descriptors to command list (separate from constant buffer binding)
-	void bindTextures( ID3D12GraphicsCommandList *commandList ) const;
-
 	// Resource accessor methods
 	const MaterialConstants &getMaterialConstants() const { return m_materialConstants; }
 

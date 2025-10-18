@@ -63,6 +63,11 @@ public:
 	// Get bindless heap (for binding to command list)
 	ID3D12DescriptorHeap *getSrvHeap() const;
 
+	// Bind all textures to command list (bindless descriptor heap)
+	// Call once per frame to make all textures available via indices
+	// rootParameterIndex: Root parameter slot for SRV descriptor table (typically 2)
+	void bindTextures( ID3D12GraphicsCommandList *commandList, uint32_t rootParameterIndex = 2 ) const;
+
 	// Get device
 	dx12::Device *getDevice() const { return m_device; }
 

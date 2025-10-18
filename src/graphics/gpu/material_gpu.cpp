@@ -123,54 +123,7 @@ void MaterialGPU::bindToCommandList( ID3D12GraphicsCommandList *commandList ) co
 		D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = m_constantBuffer->GetGPUVirtualAddress();
 		commandList->SetGraphicsRootConstantBufferView( 2, cbvAddress );
 	}
-
-	// Bind textures if texture manager is available
-	bindTextures( commandList );
 }
-
-void MaterialGPU::bindTextures( ID3D12GraphicsCommandList *commandList ) const
-{
-	if ( !commandList )
-	{
-		console::error( "MaterialGPU::bindTextures: Null command list" );
-		return;
-	}
-
-	if ( !m_textureManager )
-	{
-		// No texture manager - textures not supported yet
-		return;
-	}
-
-	// Set descriptor heap
-	ID3D12DescriptorHeap *heaps[] = { m_textureManager->getSrvHeap() };
-	if ( !heaps[0] )
-	{
-		console::error( "MaterialGPU::bindTextures: Texture manager has null SRV heap" );
-		return;
-	}
-
-	commandList->SetDescriptorHeaps( 1, heaps );
-
-	// Get SRV index for base color texture (or use first valid texture handle)
-	// For now, we'll use the base color texture as the starting point
-	const uint32_t baseIndex = m_textureManager->getSrvIndex( m_baseColorTexture );
-	if ( baseIndex == UINT32_MAX )
-	{
-		// No valid textures to bind
-		return;
-	}
-
-	// Get GPU handle for this material's textures
-	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = heaps[0]->GetGPUDescriptorHandleForHeapStart();
-	const UINT descriptorSize = m_textureManager->getDevice()->get()->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	gpuHandle.ptr += baseIndex * descriptorSize;
-
-	// Bind descriptor table to root parameter 2 (will be changed based on actual root signature)
-	// TODO: Update this to use correct root parameter index once root signature is finalized
-	commandList->SetGraphicsRootDescriptorTable( 2, gpuHandle );
-}
-
 void MaterialGPU::createConstantBuffer()
 {
 	if ( !m_device )
