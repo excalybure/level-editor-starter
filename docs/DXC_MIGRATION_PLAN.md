@@ -163,16 +163,16 @@ result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
 shaderBlob.As(&result.blob);
 ```
 
-### Step 4: Update Shader Profiles
+### Step 4: Update Shader Profiles ✅
 Update all shader compilation call sites to use SM 6.x profiles:
 - `vs_5_1` → `vs_6_6`
 - `ps_5_1` → `ps_6_6`
 - `cs_5_1` → `cs_6_6`
 
-Files to check:
-- [ ] `materials.json` - Shader profile specifications
-- [ ] `shader_manager.cpp` - Hardcoded profiles
-- [ ] Test files - Shader compilation tests
+Files updated:
+- [X] `materials.json` - All material shader profile specifications
+- [X] `immediate_renderer.cpp` - Hardcoded profiles
+- [X] All test files - Shader compilation tests (bulk replacement via PowerShell)
 
 ### Step 5: String Encoding Helpers
 DXC uses wide strings extensively. Add utility functions:
@@ -277,7 +277,7 @@ If migration fails or causes critical issues:
 - [X] Step 1: CMakeLists.txt updated
 - [X] Step 2: shader_compiler.h updated
 - [X] Step 3: shader_compiler.cpp rewritten for DXC
-- [ ] Step 4: Update shader profiles to SM 6.x
+- [X] Step 4: Updated shader profiles to SM 6.x
 - [ ] Initial tests passing
 - [ ] All shaders migrated
 - [ ] Integration tests passing

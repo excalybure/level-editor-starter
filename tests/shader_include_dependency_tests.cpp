@@ -1,4 +1,4 @@
-﻿#include "catch2/catch_all.hpp"
+#include "catch2/catch_all.hpp"
 #include <fstream>
 
 #include "graphics/shader_manager/shader_manager.h"
@@ -71,7 +71,7 @@ TEST_CASE_METHOD( IncludeDependencyTestFixture, "Shader Include Dependency Track
 	SECTION( "Shader with includes compiles and tracks dependencies" )
 	{
 		// Compile the main shader that includes common.hlsl
-		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_6_6", shader_manager::ShaderType::Vertex );
 
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
@@ -98,7 +98,7 @@ TEST_CASE_METHOD( IncludeDependencyTestFixture, "Shader Include Dependency Track
 	SECTION( "Modifying included file triggers recompilation" )
 	{
 		// First, compile the shader
-		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( main_shader_file.string(), "VSMain", "vs_6_6", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		// Get initial modification times
@@ -190,7 +190,7 @@ PSInput VSMain(VSInput input) {
 		multi_stream.close();
 
 		// Compile the shader
-		const auto handle = shader_manager.registerShader( multi_include_shader.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( multi_include_shader.string(), "VSMain", "vs_6_6", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		const auto *shader_info = shader_manager.getShaderInfo( handle );
@@ -270,7 +270,7 @@ PSInput VSMain(VSInput input) {
 		rel_stream.close();
 
 		// Compile the shader
-		const auto handle = shader_manager.registerShader( relative_shader.string(), "VSMain", "vs_5_0", shader_manager::ShaderType::Vertex );
+		const auto handle = shader_manager.registerShader( relative_shader.string(), "VSMain", "vs_6_6", shader_manager::ShaderType::Vertex );
 		REQUIRE( handle != INVALID_SHADER_HANDLE );
 
 		const auto *shader_info = shader_manager.getShaderInfo( handle );

@@ -53,10 +53,10 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
 					}
 				)" );
 
-				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_6_6" );
 				REQUIRE( blob.isValid() );
 				REQUIRE( blob.entryPoint == "main" );
-				REQUIRE( blob.profile == "vs_5_0" );
+				REQUIRE( blob.profile == "vs_6_6" );
 			}
 			catch ( const std::runtime_error &e )
 			{
@@ -77,7 +77,7 @@ TEST_CASE( "Shader Compiler", "[renderer]" )
 					}
 				)" );
 
-				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "ps_5_0" );
+				const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "ps_6_6" );
 				REQUIRE( blob.isValid() );
 			}
 			catch ( const std::runtime_error &e )
@@ -168,7 +168,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 				#endif
 				float4 main(float3 pos:POSITION):SV_POSITION { return float4(pos,1); }
 			)" );
-			REQUIRE_NOTHROW( shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0", { "MY_FLAG" } ) );
+			REQUIRE_NOTHROW( shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_6_6", { "MY_FLAG" } ) );
 		}
 		catch ( const std::runtime_error &e )
 		{
@@ -192,7 +192,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 			)";
 			const test::shader::TempShaderFile shaderFile( mainShaderContent );
 
-			const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
+			const auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_6_6" );
 			REQUIRE( blob.isValid() );
 			REQUIRE_FALSE( blob.includedFiles.empty() );
 			const auto canonicalInclude = std::filesystem::canonical( includeFile.path() );
@@ -222,7 +222,7 @@ TEST_CASE( "ShaderCompiler edge cases", "[renderer][shader]" )
 		bool threw = false;
 		try
 		{
-			shader_manager::ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_5_0" );
+			shader_manager::ShaderCompiler::CompileFromFile( "this_does_not_exist.hlsl", "main", "vs_6_6" );
 		}
 		catch ( const std::runtime_error & )
 		{
@@ -403,13 +403,13 @@ TEST_CASE( "Simple shaders can be loaded from file", "[renderer][shaders]" )
 		const auto vsHandle = shaderManager.registerShader(
 			"shaders/simple.hlsl",
 			"VSMain",
-			"vs_5_0",
+			"vs_6_6",
 			shader_manager::ShaderType::Vertex );
 
 		const auto psHandle = shaderManager.registerShader(
 			"shaders/simple.hlsl",
 			"PSMain",
-			"ps_5_0",
+			"ps_6_6",
 			shader_manager::ShaderType::Pixel );
 
 		REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );

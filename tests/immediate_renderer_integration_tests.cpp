@@ -47,7 +47,7 @@ TEST_CASE( "Renderer shader compile failure path", "[renderer][shader][error]" )
 	bool threw = false;
 	try
 	{
-		auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_5_0" );
+		auto blob = shader_manager::ShaderCompiler::CompileFromFile( shaderFile.path(), "main", "vs_6_6" );
 		(void)blob;
 	}
 	catch ( const std::runtime_error & )

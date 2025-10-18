@@ -18,7 +18,7 @@ TEST_CASE( "MaterialPass has required fields", "[material-pass][T301][unit]" )
 	vsShader.stage = ShaderStage::Vertex;
 	vsShader.file = "shaders/test.hlsl";
 	vsShader.entryPoint = "VSMain";
-	vsShader.profile = "vs_5_1";
+	vsShader.profile = "vs_6_6";
 	pass.shaders.push_back( vsShader );
 
 	// Add states
@@ -51,7 +51,7 @@ TEST_CASE( "MaterialDefinition supports multiple passes", "[material-pass][T301]
 	depthVS.stage = ShaderStage::Vertex;
 	depthVS.file = "shaders/depth.hlsl";
 	depthVS.entryPoint = "VSMain";
-	depthVS.profile = "vs_5_1";
+	depthVS.profile = "vs_6_6";
 	depthPass.shaders.push_back( depthVS );
 	depthPass.states.depthStencil = "depth_write";
 	material.passes.push_back( depthPass );
@@ -63,7 +63,7 @@ TEST_CASE( "MaterialDefinition supports multiple passes", "[material-pass][T301]
 	forwardVS.stage = ShaderStage::Vertex;
 	forwardVS.file = "shaders/pbr.hlsl";
 	forwardVS.entryPoint = "VSMain";
-	forwardVS.profile = "vs_5_1";
+	forwardVS.profile = "vs_6_6";
 	forwardPass.shaders.push_back( forwardVS );
 	forwardPass.states.depthStencil = "depth_test";
 	material.passes.push_back( forwardPass );

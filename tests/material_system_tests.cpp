@@ -865,12 +865,12 @@ TEST_CASE( "ReferenceValidator detects undefined pass reference", "[reference-va
                 "vertex": {
                     "file": "shaders/simple.hlsl",
                     "entry": "VSMain",
-                    "profile": "vs_5_1"
+                    "profile": "vs_6_6"
                 },
                 "pixel": {
                     "file": "shaders/simple.hlsl",
                     "entry": "PSMain",
-                    "profile": "ps_5_1"
+                    "profile": "ps_6_6"
                 }
             }
         }]
@@ -910,12 +910,12 @@ TEST_CASE( "ReferenceValidator detects undefined state reference", "[reference-v
                 "vertex": {
                     "file": "shaders/simple.hlsl",
                     "entry": "VSMain",
-                    "profile": "vs_5_1"
+                    "profile": "vs_6_6"
                 },
                 "pixel": {
                     "file": "shaders/simple.hlsl",
                     "entry": "PSMain",
-                    "profile": "ps_5_1"
+                    "profile": "ps_6_6"
                 }
             },
             "states": {
@@ -961,12 +961,12 @@ TEST_CASE( "ReferenceValidator detects undefined shader reference", "[reference-
                 "vertex": {
                     "file": "shaders/missing.hlsl",
                     "entry": "VSMain",
-                    "profile": "vs_5_1"
+                    "profile": "vs_6_6"
                 },
                 "pixel": {
                     "file": "shaders/simple.hlsl",
                     "entry": "PSMain",
-                    "profile": "ps_5_1"
+                    "profile": "ps_6_6"
                 }
             }
         }]
@@ -986,12 +986,12 @@ TEST_CASE( "ReferenceValidator accepts valid references", "[reference-validator]
             "vertex": {
                 "file": "shaders/simple.hlsl",
                 "entry": "VSMain",
-                "profile": "vs_5_1"
+                "profile": "vs_6_6"
             },
             "pixel": {
                 "file": "shaders/simple.hlsl",
                 "entry": "PSMain",
-                "profile": "ps_5_1"
+                "profile": "ps_6_6"
             }
         },
         "states": {
@@ -1150,7 +1150,7 @@ TEST_CASE( "MaterialShaderCompiler compiles shader with merged hierarchical defi
 
 	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
 	const std::string entryPoint = "VSMain";
-	const std::string profile = "vs_5_1";
+	const std::string profile = "vs_6_6";
 
 	// Act - compile shader with material defines (this will fail until MaterialShaderCompiler exists)
 	const auto shaderBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
@@ -1171,7 +1171,7 @@ TEST_CASE( "MaterialShaderCompiler compiles shader with empty defines", "[shader
 
 	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
 	const std::string entryPoint = "VSMain";
-	const std::string profile = "vs_5_1";
+	const std::string profile = "vs_6_6";
 
 	// Act - compile should still succeed without defines
 	const auto shaderBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
@@ -1193,7 +1193,7 @@ TEST_CASE( "MaterialShaderCompiler handles multiple defines with consistent orde
 
 	const std::filesystem::path shaderPath = "shaders/test_material_defines.hlsl";
 	const std::string entryPoint = "PSMain";
-	const std::string profile = "ps_5_1";
+	const std::string profile = "ps_6_6";
 
 	// Act - compile with multiple defines
 	const auto blob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
@@ -1216,7 +1216,7 @@ TEST_CASE( "MaterialShaderCompiler fails gracefully for missing shader file", "[
 
 	// Act & Assert - should throw/log error for missing file
 	REQUIRE_THROWS( graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
-		shaderPath, "VSMain", "vs_5_1", defines ) );
+		shaderPath, "VSMain", "vs_6_6", defines ) );
 }
 
 // ============================================================================
@@ -1230,7 +1230,7 @@ TEST_CASE( "ShaderReflection extracts CBV binding from simple shader", "[reflect
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1297,7 +1297,7 @@ TEST_CASE( "ShaderReflectionCache caches reflection results", "[reflection][cach
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1333,7 +1333,7 @@ TEST_CASE( "ShaderReflectionCache invalidates specific handle", "[reflection][ca
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1365,13 +1365,13 @@ TEST_CASE( "ShaderReflectionCache clears all entries", "[reflection][cache][unit
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"PSMain",
-		"ps_5_1",
+		"ps_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1415,13 +1415,13 @@ TEST_CASE( "ShaderReflectionCache tracks different shaders separately", "[reflec
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"PSMain",
-		"ps_5_1",
+		"ps_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1461,7 +1461,7 @@ TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1471,7 +1471,7 @@ TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[
 	const auto vsHandle = shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 
 	REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
@@ -1485,7 +1485,7 @@ TEST_CASE( "RootSignatureBuilder uses shader reflection to extract bindings", "[
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_1";
+	vsRef.profile = "vs_6_6";
 	pass.shaders.push_back( vsRef );
 
 	// Arrange - create reflection cache
@@ -1525,12 +1525,12 @@ TEST_CASE( "RootSignatureBuilder merges bindings from VS and PS shaders", "[root
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 	const auto psBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"PSMain",
-		"ps_5_1",
+		"ps_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1540,12 +1540,12 @@ TEST_CASE( "RootSignatureBuilder merges bindings from VS and PS shaders", "[root
 	const auto vsHandle = shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 	const auto psHandle = shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"PSMain",
-		"ps_5_1",
+		"ps_6_6",
 		shader_manager::ShaderType::Pixel );
 
 	REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
@@ -1559,14 +1559,14 @@ TEST_CASE( "RootSignatureBuilder merges bindings from VS and PS shaders", "[root
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_1";
+	vsRef.profile = "vs_6_6";
 	pass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_5_1";
+	psRef.profile = "ps_6_6";
 	pass.shaders.push_back( psRef );
 
 	// Arrange - create reflection cache
@@ -1614,7 +1614,7 @@ TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1622,7 +1622,7 @@ TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "
 	shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 
 	graphics::material_system::MaterialPass pass;
@@ -1632,7 +1632,7 @@ TEST_CASE( "RootSignatureBuilder deduplicates bindings shared across shaders", "
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_1";
+	vsRef.profile = "vs_6_6";
 	pass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReflectionCache reflectionCache;
@@ -1669,7 +1669,7 @@ TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[
 	const auto vsBlob = graphics::material_system::MaterialShaderCompiler::CompileWithDefines(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		emptyDefines );
 
 	REQUIRE( vsBlob.isValid() );
@@ -1677,7 +1677,7 @@ TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[
 	shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 
 	graphics::material_system::MaterialPass pass;
@@ -1687,7 +1687,7 @@ TEST_CASE( "RootSignatureBuilder groups CBVs and descriptor table resources", "[
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_1";
+	vsRef.profile = "vs_6_6";
 	pass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReflectionCache reflectionCache;
@@ -1734,12 +1734,12 @@ TEST_CASE( "PSOBuilder creates PSO with reflection-based root signature", "[pso]
 					"vertex": {
 						"file": "shaders/simple.hlsl",
 						"entry": "VSMain",
-						"profile": "vs_5_1"
+						"profile": "vs_6_6"
 					},
 					"pixel": {
 						"file": "shaders/simple.hlsl",
 						"entry": "PSMain",
-						"profile": "ps_5_1"
+						"profile": "ps_6_6"
 					}
 				},
 				"topology": "triangle"
@@ -1806,7 +1806,7 @@ TEST_CASE( "Reflection cache invalidates on shader hot-reload", "[reflection][ph
 					"stage": "vertex",
 					"file": "shaders/simple.hlsl",
 					"entryPoint": "VSMain",
-					"profile": "vs_5_1"
+					"profile": "vs_6_6"
 				}]
 			}]
 		}]
@@ -1827,7 +1827,7 @@ TEST_CASE( "Reflection cache invalidates on shader hot-reload", "[reflection][ph
 	const auto shaderHandle = shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 
 	REQUIRE( shaderHandle != shader_manager::INVALID_SHADER_HANDLE );
@@ -1895,12 +1895,12 @@ TEST_CASE( "PSO cache invalidates for materials using reloaded shader", "[pso][h
 						"vertex": {
 							"file": "shaders/simple.hlsl",
 							"entry": "VSMain",
-							"profile": "vs_5_1"
+							"profile": "vs_6_6"
 						},
 						"pixel": {
 							"file": "shaders/simple.hlsl",
 							"entry": "PSMain",
-							"profile": "ps_5_1"
+							"profile": "ps_6_6"
 						}
 					},
 					"topology": "triangle"
@@ -1914,12 +1914,12 @@ TEST_CASE( "PSO cache invalidates for materials using reloaded shader", "[pso][h
 						"vertex": {
 							"file": "shaders/simple.hlsl",
 							"entry": "VSMain",
-							"profile": "vs_5_1"
+							"profile": "vs_6_6"
 						},
 						"pixel": {
 							"file": "shaders/simple.hlsl",
 							"entry": "PSMain",
-							"profile": "ps_5_1"
+							"profile": "ps_6_6"
 						}
 					},
 					"topology": "triangle"
@@ -1966,7 +1966,7 @@ TEST_CASE( "PSO cache invalidates for materials using reloaded shader", "[pso][h
 	const auto vsHandle = shaderManager.registerShader(
 		"shaders/simple.hlsl",
 		"VSMain",
-		"vs_5_1",
+		"vs_6_6",
 		shader_manager::ShaderType::Vertex );
 	REQUIRE( vsHandle != shader_manager::INVALID_SHADER_HANDLE );
 
@@ -2084,7 +2084,7 @@ TEST_CASE( "PSOBuilder builds PSO with root signature from material parameters",
 	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
-	vsShader.profile = "vs_5_1";
+	vsShader.profile = "vs_6_6";
 	forwardPass.shaders.push_back( vsShader );
 
 	// Add pixel shader
@@ -2092,7 +2092,7 @@ TEST_CASE( "PSOBuilder builds PSO with root signature from material parameters",
 	psShader.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
-	psShader.profile = "ps_5_1";
+	psShader.profile = "ps_6_6";
 	forwardPass.shaders.push_back( psShader );
 
 	// Add parameter
@@ -2147,7 +2147,7 @@ TEST_CASE( "PSOBuilder builds PSO with empty root signature for parameterless ma
 	vsShader.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader.file = "shaders/simple.hlsl";
 	vsShader.entryPoint = "VSMain";
-	vsShader.profile = "vs_5_1";
+	vsShader.profile = "vs_6_6";
 	forwardPass.shaders.push_back( vsShader );
 
 	// Add pixel shader
@@ -2155,7 +2155,7 @@ TEST_CASE( "PSOBuilder builds PSO with empty root signature for parameterless ma
 	psShader.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader.file = "shaders/simple.hlsl";
 	psShader.entryPoint = "PSMain";
-	psShader.profile = "ps_5_1";
+	psShader.profile = "ps_6_6";
 	forwardPass.shaders.push_back( psShader );
 
 	// No parameters
@@ -2207,7 +2207,7 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	vsShader1.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader1.file = "shaders/simple.hlsl";
 	vsShader1.entryPoint = "VSMain";
-	vsShader1.profile = "vs_5_1";
+	vsShader1.profile = "vs_6_6";
 	forwardPass1.shaders.push_back( vsShader1 );
 
 	// Add pixel shader
@@ -2215,7 +2215,7 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	psShader1.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader1.file = "shaders/simple.hlsl";
 	psShader1.entryPoint = "PSMain";
-	psShader1.profile = "ps_5_1";
+	psShader1.profile = "ps_6_6";
 	forwardPass1.shaders.push_back( psShader1 );
 
 	// Add parameter
@@ -2243,7 +2243,7 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	vsShader2.stage = graphics::material_system::ShaderStage::Vertex;
 	vsShader2.file = "shaders/simple.hlsl";
 	vsShader2.entryPoint = "VSMain";
-	vsShader2.profile = "vs_5_1";
+	vsShader2.profile = "vs_6_6";
 	forwardPass2.shaders.push_back( vsShader2 );
 
 	// Add pixel shader
@@ -2251,7 +2251,7 @@ TEST_CASE( "PSOBuilder reuses cached root signature for identical material param
 	psShader2.stage = graphics::material_system::ShaderStage::Pixel;
 	psShader2.file = "shaders/simple.hlsl";
 	psShader2.entryPoint = "PSMain";
-	psShader2.profile = "ps_5_1";
+	psShader2.profile = "ps_6_6";
 	forwardPass2.shaders.push_back( psShader2 );
 
 	// Add parameter - same name and type as material1
@@ -2479,14 +2479,14 @@ TEST_CASE( "PSOBuilder creates PSO from MaterialDefinition", "[pipeline-builder]
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_0";
+	vsRef.profile = "vs_6_6";
 	forwardPass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_5_0";
+	psRef.profile = "ps_6_6";
 	forwardPass.shaders.push_back( psRef );
 
 	forwardPass.states.rasterizer = "default_raster";
@@ -2534,14 +2534,14 @@ TEST_CASE( "PSOBuilder caches and reuses PSO for identical requests", "[pipeline
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/simple.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_0";
+	vsRef.profile = "vs_6_6";
 	forwardPass.shaders.push_back( vsRef );
 
 	graphics::material_system::ShaderReference psRef;
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/simple.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_5_0";
+	psRef.profile = "ps_6_6";
 	forwardPass.shaders.push_back( psRef );
 
 	forwardPass.states.rasterizer = "default_raster";
@@ -2598,7 +2598,7 @@ TEST_CASE( "PSOBuilder compiles shaders from material shader info", "[pipeline-b
 	vsRef.stage = graphics::material_system::ShaderStage::Vertex;
 	vsRef.file = "shaders/grid.hlsl";
 	vsRef.entryPoint = "VSMain";
-	vsRef.profile = "vs_5_0";
+	vsRef.profile = "vs_6_6";
 	forwardPass.shaders.push_back( vsRef );
 
 	// Pixel shader from grid.hlsl
@@ -2606,7 +2606,7 @@ TEST_CASE( "PSOBuilder compiles shaders from material shader info", "[pipeline-b
 	psRef.stage = graphics::material_system::ShaderStage::Pixel;
 	psRef.file = "shaders/grid.hlsl";
 	psRef.entryPoint = "PSMain";
-	psRef.profile = "ps_5_0";
+	psRef.profile = "ps_6_6";
 	forwardPass.shaders.push_back( psRef );
 
 	forwardPass.states.rasterizer = "default_raster";
@@ -2671,12 +2671,12 @@ TEST_CASE( "PSOBuilder uses rasterizer state from MaterialSystem", "[pipeline-bu
 						"vertex": {
 							"file": "shaders/simple.hlsl",
 							"entry": "VSMain",
-							"profile": "vs_5_0"
+							"profile": "vs_6_6"
 						},
 						"pixel": {
 							"file": "shaders/simple.hlsl",
 							"entry": "PSMain",
-								"profile": "ps_5_0"
+								"profile": "ps_6_6"
 							}
 						},
 						"states": {
@@ -2751,12 +2751,12 @@ TEST_CASE( "PSOBuilder uses depth stencil state from MaterialSystem", "[pipeline
 							"vertex": {
 								"file": "shaders/simple.hlsl",
 								"entry": "VSMain",
-								"profile": "vs_5_0"
+								"profile": "vs_6_6"
 							},
 							"pixel": {
 								"file": "shaders/simple.hlsl",
 								"entry": "PSMain",
-								"profile": "ps_5_0"
+								"profile": "ps_6_6"
 							}
 						},
 						"states": {
@@ -2852,12 +2852,12 @@ TEST_CASE( "PSOBuilder uses blend state from MaterialSystem", "[pipeline-builder
 							"vertex": {
 								"file": "shaders/simple.hlsl",
 								"entry": "VSMain",
-								"profile": "vs_5_0"
+								"profile": "vs_6_6"
 							},
 							"pixel": {
 								"file": "shaders/simple.hlsl",
 								"entry": "PSMain",
-								"profile": "ps_5_0"
+								"profile": "ps_6_6"
 							}
 						},
 						"states": {
@@ -3138,7 +3138,7 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 			"shaders": {
 				"vs": {
 					"file": "shaders/simple.hlsl",
-					"profile": "vs_5_0"
+					"profile": "vs_6_6"
 				}
 			}
 		}]
@@ -3154,7 +3154,7 @@ TEST_CASE( "MaterialParser parses shader with missing optional fields and applie
 
 	// Required fields should be present
 	REQUIRE( vsShader.file == "shaders/simple.hlsl" );
-	REQUIRE( vsShader.profile == "vs_5_0" );
+	REQUIRE( vsShader.profile == "vs_6_6" );
 
 	// Optional field entryPoint should default to "main"
 	REQUIRE( vsShader.entryPoint == "main" );
@@ -3189,12 +3189,12 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 				"vs": {
 					"file": "shaders/simple.hlsl",
 					"entry": "VSMain",
-					"profile": "vs_5_0"
+					"profile": "vs_6_6"
 				},
 				"ps": {
 					"file": "shaders/simple.hlsl",
 					"entry": "PSMain",
-					"profile": "ps_5_0"
+					"profile": "ps_6_6"
 				}
 			}
 		}]
@@ -3223,12 +3223,12 @@ TEST_CASE( "MaterialParser accepts valid inline shader definitions", "[material-
 	REQUIRE( vsShader != nullptr );
 	REQUIRE( vsShader->file == "shaders/simple.hlsl" );
 	REQUIRE( vsShader->entryPoint == "VSMain" );
-	REQUIRE( vsShader->profile == "vs_5_0" );
+	REQUIRE( vsShader->profile == "vs_6_6" );
 
 	REQUIRE( psShader != nullptr );
 	REQUIRE( psShader->file == "shaders/simple.hlsl" );
 	REQUIRE( psShader->entryPoint == "PSMain" );
-	REQUIRE( psShader->profile == "ps_5_0" );
+	REQUIRE( psShader->profile == "ps_6_6" );
 }
 
 // ============================================================================
@@ -4036,7 +4036,7 @@ TEST_CASE( "MaterialParser extracts vertexFormat from JSON", "[vertex-format][T2
 		"passes": [{
 			"name": "forward",
 			"shaders": {
-				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_6_6" }
 			}
 		}]
 	})";
@@ -4058,7 +4058,7 @@ TEST_CASE( "MaterialParser defaults vertexFormat to empty string if absent", "[v
 		"passes": [{
 			"name": "forward",
 			"shaders": {
-				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_5_0" }
+				"vertex": { "file": "shaders/simple.hlsl", "entry": "VSMain", "profile": "vs_6_6" }
 			}
 		}]
 	})";
@@ -4098,8 +4098,8 @@ TEST_CASE( "MaterialSystem loads material with vertexFormat reference", "[materi
 			"passes": [{
 				"name": "forward",
 				"shaders": {
-					"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_0" },
-					"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_0" }
+					"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_6_6" },
+					"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_6_6" }
 				}
 			}]
 		}],
@@ -4175,12 +4175,12 @@ TEST_CASE( "PSOBuilder uses vertex format from material", "[pipeline-builder][T2
 							"vertex": {
 								"file": "shaders/grid.hlsl",
 								"entry": "VSMain",
-								"profile": "vs_5_0"
+								"profile": "vs_6_6"
 							},
 							"pixel": {
 								"file": "shaders/grid.hlsl",
 								"entry": "PSMain",
-								"profile": "ps_5_0"
+								"profile": "ps_6_6"
 							}
 						}
 					}]
@@ -4245,7 +4245,7 @@ TEST_CASE( "MaterialParser extracts primitiveTopology from JSON", "[material-par
 	// Arrange - material JSON with primitiveTopology: Line
 	const json materialJson = {
 		{ "id", "line_material" },
-		{ "passes", json::array( { { { "name", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } } } } ) }
+		{ "passes", json::array( { { { "name", "forward" }, { "primitiveTopology", "Line" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" } } } } } } } ) }
 	};
 
 	// Act
@@ -4265,7 +4265,7 @@ TEST_CASE( "MaterialParser defaults primitiveTopology to TRIANGLE when absent", 
 	// Arrange - material JSON without primitiveTopology field
 	const json materialJson = {
 		{ "id", "default_material" },
-		{ "passes", json::array( { { { "name", "forward" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_0" } } } } } } } ) }
+		{ "passes", json::array( { { { "name", "forward" }, { "shaders", { { "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" } } } } } } } ) }
 	};
 
 	// Act

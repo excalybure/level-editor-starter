@@ -89,7 +89,7 @@ TEST_CASE( "Shader reflection detects texture array and sampler from unlit shade
 	const auto psHandle = shaderManager.registerShader(
 		"shaders/unlit.hlsl",
 		"PSMain",
-		"ps_5_1",
+		"ps_6_6",
 		shader_manager::ShaderType::Pixel );
 
 	REQUIRE( psHandle != shader_manager::INVALID_SHADER_HANDLE );

@@ -20,8 +20,8 @@ TEST_CASE( "MaterialParser parses passes array with single pass", "[material-par
 					{ "name", "forward" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 					{ "states",
 						{
@@ -57,7 +57,7 @@ TEST_CASE( "MaterialParser parses passes array with multiple passes", "[material
 					{ "name", "depth_prepass" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+							{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 						} },
 					{ "states",
 						{
@@ -69,8 +69,8 @@ TEST_CASE( "MaterialParser parses passes array with multiple passes", "[material
 					{ "name", "forward" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 					{ "states",
 						{
@@ -105,7 +105,7 @@ TEST_CASE( "MaterialParser parses pass-specific parameters", "[material-parser][
 					{ "name", "shadow_cast" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+							{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 						} },
 					{ "parameters",
 						json::array( {
@@ -137,8 +137,8 @@ TEST_CASE( "MaterialParser parses pass-specific topology", "[material-parser][T3
 					{ "name", "wireframe" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/grid.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/grid.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/grid.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/grid.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 					{ "primitiveTopology", "Line" },
 				},
@@ -162,13 +162,13 @@ TEST_CASE( "MaterialParser rejects legacy single-pass format", "[material-parser
 		{ "pass", "forward" },
 		{ "shaders",
 			{
-				{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-				{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+				{ "vertex",
+					{ { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { " entry ", " VSMain " } } },
+				{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 			} },
-		{ "states",
-			{
-				{ "rasterizer", "solid_back" },
-			} },
+		{ "states", {
+						{ "rasterizer", "solid_back" },
+					} },
 	};
 
 	// Act
@@ -190,7 +190,7 @@ TEST_CASE( "MaterialParser handles missing pass name gracefully", "[material-par
 					// Missing "name" field
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 						} },
 				},
 			} ) },
@@ -216,7 +216,7 @@ TEST_CASE( "MaterialParser parses pass with all optional fields omitted", "[mate
 					{ "name", "forward" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 						} },
 				},
 			} ) },

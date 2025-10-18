@@ -552,8 +552,8 @@ TEST_CASE( "GridRenderer retrieves material from MaterialSystem", "[grid][materi
 					"passes": [{
 						"name": "grid",
 						"shaders": {
-							"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_5_1" },
-							"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_5_1" }
+							"vertex": { "file": "shaders/grid.hlsl", "entry": "VSMain", "profile": "vs_6_6" },
+							"pixel": { "file": "shaders/grid.hlsl", "entry": "PSMain", "profile": "ps_6_6" }
 						},
 						"states": {
 							"rasterizer": "solid_none",

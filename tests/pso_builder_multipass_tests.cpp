@@ -62,7 +62,7 @@ TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][
 					{
 						"name": "depth_prepass",
 						"shaders": {
-							"vertex": { "file": "shaders/unlit.hlsl", "profile": "vs_5_1", "entry": "VSMain" }
+							"vertex": { "file": "shaders/unlit.hlsl", "profile": "vs_6_6", "entry": "VSMain" }
 						},
 						"states": {
 							"rasterizer": "solid_back",
@@ -73,8 +73,8 @@ TEST_CASE( "PSOBuilder builds PSO from specific pass name", "[pipeline-builder][
 					{
 						"name": "forward",
 						"shaders": {
-							"vertex": { "file": "shaders/unlit.hlsl", "profile": "vs_5_1", "entry": "VSMain" },
-							"pixel": { "file": "shaders/unlit.hlsl", "profile": "ps_5_1", "entry": "PSMain" }
+							"vertex": { "file": "shaders/unlit.hlsl", "profile": "vs_6_6", "entry": "VSMain" },
+							"pixel": { "file": "shaders/unlit.hlsl", "profile": "ps_6_6", "entry": "PSMain" }
 						},
 						"states": {
 							"rasterizer": "solid_back",
@@ -161,15 +161,15 @@ TEST_CASE( "PSOBuilder builds different PSOs for different passes", "[pipeline-b
 					{
 						"name": "depth_prepass",
 						"shaders": {
-							"vertex": { "file": "shaders/simple.hlsl", "profile": "vs_5_1", "entry": "VSMain" }
+							"vertex": { "file": "shaders/simple.hlsl", "profile": "vs_6_6", "entry": "VSMain" }
 						},
 						"primitiveTopology": "Triangle"
 					},
 					{
 						"name": "forward",
 						"shaders": {
-							"vertex": { "file": "shaders/simple.hlsl", "profile": "vs_5_1", "entry": "VSMain" },
-							"pixel": { "file": "shaders/simple.hlsl", "profile": "ps_5_1", "entry": "PSMain" }
+							"vertex": { "file": "shaders/simple.hlsl", "profile": "vs_6_6", "entry": "VSMain" },
+							"pixel": { "file": "shaders/simple.hlsl", "profile": "ps_6_6", "entry": "PSMain" }
 						},
 						"primitiveTopology": "Triangle"
 					}
@@ -252,8 +252,8 @@ TEST_CASE( "PSOBuilder caches PSOs per pass name", "[pipeline-builder][T303][int
 								{ "name", "forward" },
 								{ "shaders",
 									{
-										{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-										{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+										{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+										{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 									} },
 							},
 						} ) },
@@ -317,8 +317,8 @@ TEST_CASE( "PSOBuilder returns nullptr when passName empty (no legacy support)",
 					{ "name", "forward" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 				},
 			} ) },
@@ -362,8 +362,8 @@ TEST_CASE( "PSOBuilder returns nullptr for invalid pass name", "[pipeline-builde
 					{ "name", "forward" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 				},
 			} ) },
@@ -406,8 +406,8 @@ TEST_CASE( "PSOBuilder uses pass-specific topology", "[pipeline-builder][T303][i
 					{ "name", "wireframe" },
 					{ "shaders",
 						{
-							{ "vertex", { { "file", "shaders/grid.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-							{ "pixel", { { "file", "shaders/grid.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+							{ "vertex", { { "file", "shaders/grid.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+							{ "pixel", { { "file", "shaders/grid.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 						} },
 					{ "primitiveTopology", "Line" },
 				},

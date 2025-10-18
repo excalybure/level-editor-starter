@@ -32,7 +32,7 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns MaterialPass for valid mater
 									{ "name", "depth_prepass" },
 									{ "shaders",
 										{
-											{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+											{ "vertex", { { "file", "shaders/unlit.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 										} },
 									{ "primitiveTopology", "Triangle" },
 								},
@@ -40,8 +40,8 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns MaterialPass for valid mater
 									{ "name", "forward" },
 									{ "shaders",
 										{
-											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
-											{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_5_1" }, { "entry", "PSMain" } } },
+											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
+											{ "pixel", { { "file", "shaders/simple.hlsl" }, { "profile", "ps_6_6" }, { "entry", "PSMain" } } },
 										} },
 									{ "primitiveTopology", "Triangle" },
 								},
@@ -93,7 +93,7 @@ TEST_CASE( "MaterialSystem::getMaterialPass returns nullptr for invalid pass nam
 									{ "name", "forward" },
 									{ "shaders",
 										{
-											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 										} },
 								},
 							} ) },
@@ -173,14 +173,14 @@ TEST_CASE( "MaterialSystem::hasMaterialPass checks pass existence", "[material-s
 									{ "name", "forward" },
 									{ "shaders",
 										{
-											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 										} },
 								},
 								{
 									{ "name", "wireframe" },
 									{ "shaders",
 										{
-											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_5_1" }, { "entry", "VSMain" } } },
+											{ "vertex", { { "file", "shaders/simple.hlsl" }, { "profile", "vs_6_6" }, { "entry", "VSMain" } } },
 										} },
 									{ "primitiveTopology", "Line" },
 								},

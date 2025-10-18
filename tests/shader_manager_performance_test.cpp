@@ -65,7 +65,7 @@ VSOutput VSMain(VSInput input)
 			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
-				"vs_5_0",
+				"vs_6_6",
 				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 			REQUIRE( handle != INVALID_SHADER_HANDLE );
@@ -86,7 +86,7 @@ VSOutput VSMain(VSInput input)
 			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
-				"vs_5_0",
+				"vs_6_6",
 				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 		}
@@ -100,7 +100,7 @@ VSOutput VSMain(VSInput input)
 			shader_manager::ShaderHandle duplicateHandle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
-				"vs_5_0",
+				"vs_6_6",
 				shader_manager::ShaderType::Vertex );
 
 			// Should return the existing handle
@@ -127,7 +127,7 @@ VSOutput VSMain(VSInput input)
 			shader_manager::ShaderHandle handle = shaderManager.registerShader(
 				shaderPaths[i],
 				"VSMain",
-				"vs_5_0",
+				"vs_6_6",
 				shader_manager::ShaderType::Vertex );
 			handles.push_back( handle );
 		}
@@ -148,7 +148,7 @@ VSOutput VSMain(VSInput input)
 			const shader_manager::ShaderHandle duplicateHandle = shaderManager.registerShader(
 				shaderPaths[randomIndex],
 				"VSMain",
-				"vs_5_0",
+				"vs_6_6",
 				shader_manager::ShaderType::Vertex );
 
 			REQUIRE( duplicateHandle == handles[randomIndex] );
