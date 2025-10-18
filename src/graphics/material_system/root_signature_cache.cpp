@@ -139,7 +139,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::buildRootSignatu
 			{
 				D3D12_DESCRIPTOR_RANGE range = {};
 				range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-				range.NumDescriptors = static_cast<UINT>( binding.arraySize ); // Use array size for texture arrays
+				range.NumDescriptors = 4096; // we support up to 4096 textures
 				range.BaseShaderRegister = static_cast<UINT>( binding.slot );
 				range.RegisterSpace = 0;
 				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;

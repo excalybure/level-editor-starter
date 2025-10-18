@@ -153,6 +153,7 @@ public:
 	bool createFrameConstantBuffer( dx12::Device *device );
 	void updateFrameConstants();
 	void bindFrameConstants( ID3D12GraphicsCommandList *commandList ) const;
+	D3D12_GPU_VIRTUAL_ADDRESS getFrameConstantsGPUAddress() const;
 
 	// Frame update and rendering
 	void update( float deltaTime );

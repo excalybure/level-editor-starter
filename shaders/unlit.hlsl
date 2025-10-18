@@ -57,9 +57,7 @@ cbuffer MaterialConstants : register(b2)
 };
 
 // Bindless texture array - accessed via indices stored in MaterialConstants.textureIndices
-// Note: SM 5.1 has limited array size, real bindless requires SM 6.6+ with DXC compiler
-// For now we use a fixed-size array as a transition step
-Texture2D g_textures[4] : register(t0);  // Array of up to 4 textures per material
+Texture2D g_textures[] : register(t0);
 
 // Samplers
 SamplerState linearSampler : register(s0);

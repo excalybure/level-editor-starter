@@ -4,6 +4,8 @@
 #include "graphics/material_system/material_system.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "graphics/sampler/sampler_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 #include "core/console.h"
 
@@ -50,6 +52,14 @@ GraphicsContext::GraphicsContext( dx12::Device *device, const std::string &mater
 		// Note: We don't throw here as the application can continue without samplers
 	}
 
+	// Create texture manager for bindless texture heap and texture loading
+	m_textureManager = std::make_unique<texture::TextureManager>();
+	if ( !m_textureManager->initialize( m_device ) )
+	{
+		console::error( "GraphicsContext: Failed to initialize texture manager" );
+		// Note: We don't throw here as the application can continue without textures
+	}
+
 	// Create immediate renderer for debug shapes and UI overlays
 	m_immediateRenderer = std::make_unique<ImmediateRenderer>( *m_device, *m_shaderManager );
 }
@@ -57,7 +67,7 @@ GraphicsContext::GraphicsContext( dx12::Device *device, const std::string &mater
 GraphicsContext::~GraphicsContext() = default;
 
 GraphicsContext::GraphicsContext( GraphicsContext &&other ) noexcept
-	: m_device( other.m_device ), m_shaderManager( std::move( other.m_shaderManager ) ), m_materialSystem( std::move( other.m_materialSystem ) ), m_gpuResourceManager( std::move( other.m_gpuResourceManager ) ), m_immediateRenderer( std::move( other.m_immediateRenderer ) ), m_samplerManager( std::move( other.m_samplerManager ) )
+	: m_device( other.m_device ), m_shaderManager( std::move( other.m_shaderManager ) ), m_materialSystem( std::move( other.m_materialSystem ) ), m_gpuResourceManager( std::move( other.m_gpuResourceManager ) ), m_immediateRenderer( std::move( other.m_immediateRenderer ) ), m_samplerManager( std::move( other.m_samplerManager ) ), m_textureManager( std::move( other.m_textureManager ) )
 {
 	other.m_device = nullptr;
 }
@@ -72,6 +82,7 @@ GraphicsContext &GraphicsContext::operator=( GraphicsContext &&other ) noexcept
 		m_immediateRenderer.reset();
 		m_gpuResourceManager.reset();
 		m_samplerManager.reset();
+		m_textureManager.reset();
 
 		// Now safe to move the new state
 		m_device = other.m_device;
@@ -80,6 +91,7 @@ GraphicsContext &GraphicsContext::operator=( GraphicsContext &&other ) noexcept
 		m_gpuResourceManager = std::move( other.m_gpuResourceManager );
 		m_immediateRenderer = std::move( other.m_immediateRenderer );
 		m_samplerManager = std::move( other.m_samplerManager );
+		m_textureManager = std::move( other.m_textureManager );
 
 		other.m_device = nullptr;
 	}

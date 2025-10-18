@@ -204,6 +204,11 @@ void Viewport::bindFrameConstants( ID3D12GraphicsCommandList *commandList ) cons
 	}
 }
 
+D3D12_GPU_VIRTUAL_ADDRESS Viewport::getFrameConstantsGPUAddress() const
+{
+	return m_frameConstantBuffer ? m_frameConstantBuffer->GetGPUVirtualAddress() : 0;
+}
+
 void Viewport::update( float deltaTime )
 {
 	if ( !m_controller || !m_camera )
@@ -1004,12 +1009,16 @@ void ViewportManager::render()
 				{
 					pix::ScopedEvent pixMeshRender( commandList, pix::MarkerColor::Green, "Mesh Rendering" );
 
-					// Update and bind frame constants for this viewport
+					// Update frame constants for this viewport
 					viewport->updateFrameConstants();
-					viewport->bindFrameConstants( commandList );
 
-					// Render scene - pass command list directly
-					meshRenderingSystem->render( *m_scene, *viewport->getCamera(), commandList );
+					// Pass frame constants GPU address to rendering system
+					// SetGraphicsRootSignature clears all bindings, so MeshRenderingSystem
+					// will rebind frame constants after setting the root signature
+					const D3D12_GPU_VIRTUAL_ADDRESS frameConstantsAddr = viewport->getFrameConstantsGPUAddress();
+
+					// Render scene - rendering system will bind frame constants after setting root signature
+					meshRenderingSystem->render( *m_scene, *viewport->getCamera(), commandList, frameConstantsAddr );
 				}
 			}
 

@@ -85,7 +85,7 @@ void MeshRenderingSystem::update( ecs::Scene &scene, float deltaTime )
 	// Rendering happens in the render() method
 }
 
-void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList )
+void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList, D3D12_GPU_VIRTUAL_ADDRESS frameConstantsGPUAddress )
 {
 	// Clear previous frame's constant buffers
 	clearFrameResources();
@@ -108,13 +108,22 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 		return;
 	}
 
-	// AF5: Bind bindless texture descriptor heap once per frame (if available)
+	// CRITICAL: After SetGraphicsRootSignature, all root parameter bindings are cleared!
+	// We must rebind frame constants and texture descriptor table in the correct order:
+
+	// 1. Bind frame constants to root parameter 0 (FrameConstants b0)
+	if ( frameConstantsGPUAddress != 0 )
+	{
+		commandList->SetGraphicsRootConstantBufferView( 0, frameConstantsGPUAddress );
+	}
+
+	// 2. Bind bindless texture descriptor heap to root parameter 3 (g_textures[] t0)
 	// This allows all materials to access textures via indices without per-material binding
 	if ( m_textureManager )
 	{
-		// TextureManager encapsulates the binding logic
-		// Root parameter index 2 is for texture descriptor table (SRVs)
-		m_textureManager->bindTextures( commandList, 2 );
+		// TextureManager sets the descriptor heap and binds the descriptor table
+		// Root parameter index 3 is for texture descriptor table (SRVs)
+		m_textureManager->bindTextures( commandList, 3 );
 	}
 
 	// Iterate through all entities to find those with both MeshRenderer and Transform components

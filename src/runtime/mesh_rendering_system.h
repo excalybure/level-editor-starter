@@ -65,7 +65,7 @@ public:
 		systems::SystemManager *systemManager,
 		graphics::texture::TextureManager *textureManager = nullptr );
 	void update( ecs::Scene &scene, float deltaTime ) override;
-	void render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList );
+	void render( ecs::Scene &scene, const camera::Camera &camera, ID3D12GraphicsCommandList *commandList, D3D12_GPU_VIRTUAL_ADDRESS frameConstantsGPUAddress = 0 );
 
 	// Public for testing
 	math::Mat4f calculateMVPMatrix(

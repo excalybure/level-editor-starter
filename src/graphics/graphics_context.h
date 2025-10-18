@@ -20,6 +20,11 @@ class GPUResourceManager;
 class ImmediateRenderer;
 class SamplerManager;
 
+namespace texture
+{
+class TextureManager;
+}
+
 namespace material_system
 {
 class MaterialSystem;
@@ -54,6 +59,7 @@ public:
 	GPUResourceManager *getGPUResourceManager() const { return m_gpuResourceManager.get(); }
 	ImmediateRenderer *getImmediateRenderer() const { return m_immediateRenderer.get(); }
 	SamplerManager *getSamplerManager() const { return m_samplerManager.get(); }
+	texture::TextureManager *getTextureManager() const { return m_textureManager.get(); }
 
 private:
 	dx12::Device *m_device = nullptr;
@@ -62,6 +68,7 @@ private:
 	std::unique_ptr<GPUResourceManager> m_gpuResourceManager;
 	std::unique_ptr<ImmediateRenderer> m_immediateRenderer;
 	std::unique_ptr<SamplerManager> m_samplerManager;
+	std::unique_ptr<texture::TextureManager> m_textureManager;
 };
 
 } // namespace graphics
