@@ -27,18 +27,31 @@ Check if DXC is available via vcpkg, otherwise use Windows SDK version:
 
 ## Implementation Steps
 
-### Step 1: Update CMakeLists.txt
-- [ ] Add `dxcompiler` library linkage to graphics target
-- [ ] Copy `dxcompiler.dll` and `dxil.dll` to output directory as post-build step
-- [ ] Update comment documentation about shader compilation
+### Step 1: Update CMakeLists.txt ✅
+- [X] Add `dxcompiler` library linkage to graphics target
+- [X] Copy `dxcompiler.dll` and `dxil.dll` to output directory as post-build step
+- [X] Update comment documentation about shader compilation
 
-### Step 2: Update shader_compiler.h
-- [ ] Keep existing `ShaderBlob` structure
-- [ ] Keep `CompileFromFile` signature (minimize API changes)
-- [ ] Add internal helper for DXC utils/compiler initialization
-- [ ] Consider adding optional `CompilerVersion` getter for diagnostics
+### Step 2: Update shader_compiler.h ✅
+- [X] Keep existing `ShaderBlob` structure
+- [X] Keep `CompileFromFile` signature (minimize API changes)
+- [X] Add internal helper for DXC utils/compiler initialization
+- [X] Add optional `CompilerVersion` getter for diagnostics
 
-### Step 3: Rewrite shader_compiler.cpp
+### Step 3: Rewrite shader_compiler.cpp ✅
+
+**Status**: Complete. DXC-based shader compiler implemented with:
+- DxcIncludeHandler for IDxcIncludeHandler interface
+- Public InitializeDxc() called at application startup (not lazy)
+- String conversion helpers moved to core/strings
+- Conditional 16-bit types support (SM 6.2+ only)
+- Complete error handling and blob conversion
+
+**Initialization**: `ShaderCompiler::InitializeDxc()` must be called once at startup:
+- `main.cpp`: Called after fixWorkingDirectory()
+- `tests/test_main.cpp`: Called in custom Catch2 main before running tests
+
+**Note**: DXC only supports SM 6.0+ profiles. SM 5.x profiles will fail with "invalid profile" error. Tests using vs_5_1/ps_5_1 need updating (see Step 4).
 
 #### 3.1: Include Handler Migration
 Current `ShaderIncludeHandler` implements `ID3DInclude` (FXC-specific).
@@ -260,7 +273,11 @@ If migration fails or causes critical issues:
 
 ## Status
 - [X] Plan reviewed
-- [ ] Implementation started
+- [X] Implementation started
+- [X] Step 1: CMakeLists.txt updated
+- [X] Step 2: shader_compiler.h updated
+- [X] Step 3: shader_compiler.cpp rewritten for DXC
+- [ ] Step 4: Update shader profiles to SM 6.x
 - [ ] Initial tests passing
 - [ ] All shaders migrated
 - [ ] Integration tests passing

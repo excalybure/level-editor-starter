@@ -6,6 +6,7 @@
 #include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/shader_manager/shader_compiler.h"
 #include "engine/integration/asset_gltf_integration.h"
 #include "engine/picking.h"
 #include "platform/dx12/dx12_device.h"
@@ -69,6 +70,9 @@ int main()
 {
 	// Fix current working directory - search for shaders folder
 	fixWorkingDirectory();
+
+	// Initialize DXC shader compiler (required for Shader Model 6.x support)
+	shader_manager::ShaderCompiler::InitializeDxc();
 
 	// Load editor config to restore window state
 	editor::EditorConfig editorConfig( "editor_config.json" );

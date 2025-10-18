@@ -164,6 +164,7 @@ target_link_libraries(platform PUBLIC
   dxgi
   dxguid
   d3dcompiler
+  dxcompiler
 )
 
 if (MSVC)
@@ -230,6 +231,45 @@ if (MSVC)
   target_compile_options(level_editor PRIVATE /W4 /permissive- /std:c++latest)
 endif()
 
+# Copy DXC runtime DLLs to output directory (required for shader compilation)
+# DXC enables Shader Model 6.x support for modern HLSL features
+if(WIN32)
+  # Find Windows SDK DXC binaries
+  file(GLOB_RECURSE DXC_DLL_PATH "C:/Program Files (x86)/Windows Kits/10/bin/*/x64/dxcompiler.dll")
+  file(GLOB_RECURSE DXIL_DLL_PATH "C:/Program Files (x86)/Windows Kits/10/bin/*/x64/dxil.dll")
+  
+  if(DXC_DLL_PATH AND DXIL_DLL_PATH)
+    # Get the most recent version (list is sorted)
+    list(GET DXC_DLL_PATH -1 DXC_DLL_PATH)
+    list(GET DXIL_DLL_PATH -1 DXIL_DLL_PATH)
+    
+    add_custom_command(TARGET level_editor POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${DXC_DLL_PATH}"
+        "$<TARGET_FILE_DIR:level_editor>"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${DXIL_DLL_PATH}"
+        "$<TARGET_FILE_DIR:level_editor>"
+      COMMENT "Copying DXC runtime DLLs for Shader Model 6.x support"
+    )
+    
+    # Also copy for test runner if tests are enabled
+    if(ENABLE_TESTS AND Catch2_FOUND)
+      add_custom_command(TARGET unit_test_runner POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${DXC_DLL_PATH}"
+          "$<TARGET_FILE_DIR:unit_test_runner>"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${DXIL_DLL_PATH}"
+          "$<TARGET_FILE_DIR:unit_test_runner>"
+        COMMENT "Copying DXC runtime DLLs for test runner"
+      )
+    endif()
+  else()
+    message(WARNING "DXC runtime DLLs not found in Windows SDK. Shader compilation with SM 6.x will fail at runtime.")
+  endif()
+endif()
+
 # -----------------------------------------------------------------------------
 # Testing (Catch2 via vcpkg manifest)
 # -----------------------------------------------------------------------------
@@ -252,6 +292,7 @@ endif()
 
 if(ENABLE_TESTS AND Catch2_FOUND)
   add_executable(unit_test_runner 
+    tests/test_main.cpp
     tests/graphics_context_tests.cpp
     tests/stb_image_integration_test.cpp
     tests/texture_loader_tests.cpp
