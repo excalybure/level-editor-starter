@@ -6,10 +6,12 @@
 #include <sstream>
 #include "runtime/components.h"
 #include "engine/assets/asset_manager.h"
+#include "engine/assets/assets.h"
 #include "graphics/gpu/gpu_resource_manager.h"
 #include "graphics/texture/scene_texture_loader.h"
 #include "runtime/scene_importer.h"
 #include "core/console.h"
+#include "math/vec.h"
 
 using json = nlohmann::json;
 
@@ -131,6 +133,118 @@ void deserializeMeshRenderer( const json &componentJson, components::MeshRendere
 	}
 }
 
+void serializeMaterialInstance( json &instanceJson, const assets::MaterialInstance &instance )
+{
+	// Always serialize baseMaterial
+	instanceJson["baseMaterial"] = instance.baseMaterial;
+
+	// Only serialize non-empty overrides for clean JSON
+	if ( instance.baseColorFactorOverride.has_value() )
+	{
+		const auto &v = instance.baseColorFactorOverride.value();
+		instanceJson["baseColorFactor"] = { v.x, v.y, v.z, v.w };
+	}
+
+	if ( instance.metallicFactorOverride.has_value() )
+	{
+		instanceJson["metallicFactor"] = instance.metallicFactorOverride.value();
+	}
+
+	if ( instance.roughnessFactorOverride.has_value() )
+	{
+		instanceJson["roughnessFactor"] = instance.roughnessFactorOverride.value();
+	}
+
+	if ( instance.emissiveFactorOverride.has_value() )
+	{
+		const auto &v = instance.emissiveFactorOverride.value();
+		instanceJson["emissiveFactor"] = { v.x, v.y, v.z };
+	}
+
+	if ( instance.baseColorTextureOverride.has_value() )
+	{
+		instanceJson["baseColorTexture"] = instance.baseColorTextureOverride.value();
+	}
+
+	if ( instance.metallicRoughnessTextureOverride.has_value() )
+	{
+		instanceJson["metallicRoughnessTexture"] = instance.metallicRoughnessTextureOverride.value();
+	}
+
+	if ( instance.normalTextureOverride.has_value() )
+	{
+		instanceJson["normalTexture"] = instance.normalTextureOverride.value();
+	}
+
+	if ( instance.emissiveTextureOverride.has_value() )
+	{
+		instanceJson["emissiveTexture"] = instance.emissiveTextureOverride.value();
+	}
+}
+
+void deserializeMaterialInstance( const json &instanceJson, assets::MaterialInstance &instance )
+{
+	// Always deserialize baseMaterial if present
+	if ( instanceJson.contains( "baseMaterial" ) )
+	{
+		instance.baseMaterial = instanceJson["baseMaterial"];
+	}
+
+	// Deserialize color factor (4 floats)
+	if ( instanceJson.contains( "baseColorFactor" ) && instanceJson["baseColorFactor"].is_array() && instanceJson["baseColorFactor"].size() == 4 )
+	{
+		instance.baseColorFactorOverride = math::Vec4f{
+			instanceJson["baseColorFactor"][0],
+			instanceJson["baseColorFactor"][1],
+			instanceJson["baseColorFactor"][2],
+			instanceJson["baseColorFactor"][3]
+		};
+	}
+
+	// Deserialize metallic factor
+	if ( instanceJson.contains( "metallicFactor" ) && instanceJson["metallicFactor"].is_number() )
+	{
+		instance.metallicFactorOverride = static_cast<float>( instanceJson["metallicFactor"] );
+	}
+
+	// Deserialize roughness factor
+	if ( instanceJson.contains( "roughnessFactor" ) && instanceJson["roughnessFactor"].is_number() )
+	{
+		instance.roughnessFactorOverride = static_cast<float>( instanceJson["roughnessFactor"] );
+	}
+
+	// Deserialize emissive factor (3 floats)
+	if ( instanceJson.contains( "emissiveFactor" ) && instanceJson["emissiveFactor"].is_array() && instanceJson["emissiveFactor"].size() == 3 )
+	{
+		instance.emissiveFactorOverride = math::Vec3f{
+			instanceJson["emissiveFactor"][0],
+			instanceJson["emissiveFactor"][1],
+			instanceJson["emissiveFactor"][2]
+		};
+	}
+
+	// Deserialize texture overrides
+	if ( instanceJson.contains( "baseColorTexture" ) && instanceJson["baseColorTexture"].is_string() )
+	{
+		instance.baseColorTextureOverride = instanceJson["baseColorTexture"];
+	}
+
+	if ( instanceJson.contains( "metallicRoughnessTexture" ) && instanceJson["metallicRoughnessTexture"].is_string() )
+	{
+		instance.metallicRoughnessTextureOverride = instanceJson["metallicRoughnessTexture"];
+	}
+
+	if ( instanceJson.contains( "normalTexture" ) && instanceJson["normalTexture"].is_string() )
+	{
+		instance.normalTextureOverride = instanceJson["normalTexture"];
+	}
+
+	if ( instanceJson.contains( "emissiveTexture" ) && instanceJson["emissiveTexture"].is_string() )
+	{
+		instance.emissiveTextureOverride = instanceJson["emissiveTexture"];
+	}
+}
+
 } // anonymous namespace
 
 std::expected<void, SerializationErrorInfo> SceneSerializer::saveScene(
@@ -220,6 +334,11 @@ std::expected<void, SerializationErrorInfo> SceneSerializer::saveScene(
 				if ( meshRenderer )
 				{
 					serializeMeshRenderer( entityJson["components"]["meshRenderer"], *meshRenderer );
+
+					// Serialize primitives with material instance overrides if present
+					// NOTE: This requires access to the loaded mesh, which is available after asset resolution
+					// For now, we serialize the MaterialInstance data stored in components when available
+					// Full primitive serialization happens during asset loading phase
 				}
 			}
 

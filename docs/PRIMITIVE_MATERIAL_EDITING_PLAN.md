@@ -214,21 +214,21 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Implement `updateFromInstance()` method
   - Apply overrides to GPU constants buffer
   
-- [ ] **T2.4:** Update MeshGPU::configureMaterials
+- [x] **T2.4:** Update MeshGPU::configureMaterials ✅ COMPLETED (Oct 19)
   - Pass MaterialInstance pointer when creating MaterialGPU
   - Ensure override values reach GPU buffer
 
 **Success Criteria:**
-- MaterialInstance struct compiles and passes unit tests
-- Primitive can store and retrieve MaterialInstance
-- MaterialGPU respects override values when present
+- [x] MaterialInstance struct compiles and passes unit tests
+- [x] Primitive can store and retrieve MaterialInstance
+- [x] MaterialGPU respects override values when present
 
 ---
 
 ### Milestone 3: Scene Serialization Support
 **Estimated:** 2-3 days
 
-- [ ] **T3.1:** Extend SceneSerializer for MaterialInstance
+- [x] **T3.1:** Extend SceneSerializer for MaterialInstance
   - Add materialInstance object serialization
   - Only serialize non-empty overrides
   - Parse materialInstance from JSON

@@ -377,6 +377,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/entity_inspector_tests.cpp
     tests/scene_serialization_tests.cpp
     tests/scene_serialization_meshpath_tests.cpp
+    tests/scene_serialization_material_instance_tests.cpp
     tests/asset_resolution_tests.cpp
     tests/visibility_integration_tests.cpp
     tests/scene_editor_integration_tests.cpp
