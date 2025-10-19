@@ -367,6 +367,55 @@ void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
 	}
 }
 
+void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &meshGPU )
+{
+	const std::uint32_t primitiveCount = meshGPU.getPrimitiveCount();
+	if ( primitiveCount == 0 )
+		return;
+
+	// Collapsible header for primitives tree
+	if ( ImGui::CollapsingHeader( "Primitives", ImGuiTreeNodeFlags_DefaultOpen ) )
+	{
+		ImGui::Indent();
+
+		for ( std::uint32_t i = 0; i < primitiveCount; ++i )
+		{
+			const auto &primitive = meshGPU.getPrimitive( i );
+
+			// Create unique ID for this primitive
+			ImGui::PushID( static_cast<int>( i ) );
+
+			// Tree node for primitive with index
+			const bool nodeOpen = ImGui::TreeNode( nullptr, "Primitive %u", i );
+
+			if ( nodeOpen )
+			{
+				// Display vertex count
+				ImGui::Text( "Vertices: %u", primitive.getVertexCount() );
+
+				// Display index count
+				ImGui::Text( "Indices: %u", primitive.getIndexCount() );
+
+				// Display material status
+				if ( primitive.hasMaterial() )
+				{
+					ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "Material: Assigned" );
+				}
+				else
+				{
+					ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "Material: None" );
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::PopID();
+		}
+
+		ImGui::Unindent();
+	}
+}
+
 void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 {
 	auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
@@ -395,6 +444,10 @@ void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 			ImGui::Text( "Primitives" );
 			ImGui::SameLine();
 			ImGui::TextDisabled( "%u", meshRenderer->gpuMesh->getPrimitiveCount() );
+
+			// Render primitive tree view
+			ImGui::Separator();
+			renderPrimitiveTree( *meshRenderer->gpuMesh );
 		}
 		else
 		{

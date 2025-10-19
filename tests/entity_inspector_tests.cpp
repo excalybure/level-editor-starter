@@ -7,6 +7,9 @@
 #include "runtime/components.h"
 #include "runtime/systems.h"
 #include "math/math.h"
+#include "engine/assets/assets.h"
+#include "graphics/gpu/mesh_gpu.h"
+#include "platform/dx12/dx12_device.h"
 #include <cmath>
 
 // ============================================================================
@@ -469,4 +472,79 @@ TEST_CASE( "Multi-selection shows common components", "[T2.8][entity_inspector][
 	REQUIRE( scene.hasComponent<components::Visible>( entity1 ) );
 	REQUIRE( scene.hasComponent<components::Visible>( entity2 ) );
 	REQUIRE( scene.hasComponent<components::Visible>( entity3 ) );
+}
+
+// ============================================================================
+// T1.1: Primitive Tree Display Tests
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - MeshRenderer shows primitive tree with vertex and index counts", "[T1.1][entity_inspector][primitive_tree][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	// Create a mesh with 2 primitives
+	auto mesh = std::make_shared<assets::Mesh>();
+
+	// First primitive: 3 vertices, 3 indices (triangle)
+	assets::Primitive prim0;
+	prim0.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addIndex( 0 );
+	prim0.addIndex( 1 );
+	prim0.addIndex( 2 );
+	mesh->addPrimitive( std::move( prim0 ) );
+
+	// Second primitive: 4 vertices, 6 indices (quad)
+	assets::Primitive prim1;
+	prim1.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addIndex( 0 );
+	prim1.addIndex( 1 );
+	prim1.addIndex( 2 );
+	prim1.addIndex( 0 );
+	prim1.addIndex( 2 );
+	prim1.addIndex( 3 );
+	mesh->addPrimitive( std::move( prim1 ) );
+
+	// Create GPU mesh
+	auto gpuMesh = std::make_shared<graphics::gpu::MeshGPU>( device, *mesh );
+	REQUIRE( gpuMesh->isValid() );
+	REQUIRE( gpuMesh->getPrimitiveCount() == 2 );
+
+	// Create entity with MeshRenderer
+	const ecs::Entity entity = scene.createEntity( "MeshEntity" );
+	components::MeshRenderer meshRenderer;
+	meshRenderer.meshHandle = 42;
+	meshRenderer.gpuMesh = gpuMesh;
+	scene.addComponent( entity, meshRenderer );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
+
+	// Act & Assert - Verify MeshRenderer has primitives
+	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRendererComp != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh->getPrimitiveCount() == 2 );
+
+	// Verify primitive 0 has correct counts
+	const auto &primitive0 = meshRendererComp->gpuMesh->getPrimitive( 0 );
+	REQUIRE( primitive0.getVertexCount() == 3 );
+	REQUIRE( primitive0.getIndexCount() == 3 );
+
+	// Verify primitive 1 has correct counts
+	const auto &primitive1 = meshRendererComp->gpuMesh->getPrimitive( 1 );
+	REQUIRE( primitive1.getVertexCount() == 4 );
+	REQUIRE( primitive1.getIndexCount() == 6 );
 }

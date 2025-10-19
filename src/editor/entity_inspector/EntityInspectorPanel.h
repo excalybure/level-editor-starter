@@ -4,6 +4,11 @@
 #include "runtime/entity.h"
 #include "runtime/components.h"
 
+namespace graphics::gpu
+{
+class MeshGPU;
+}
+
 namespace ecs
 {
 class Scene;
@@ -87,6 +92,7 @@ private:
 	void renderNameComponent( ecs::Entity entity );
 	void renderVisibleComponent( ecs::Entity entity );
 	void renderMeshRendererComponent( ecs::Entity entity );
+	void renderPrimitiveTree( const graphics::gpu::MeshGPU &meshGPU );
 
 	// Component management
 	void renderAddComponentMenu( ecs::Entity entity );
