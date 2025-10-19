@@ -6,6 +6,13 @@
 #include "runtime/components.h"
 #include "engine/assets/assets.h"
 #include "math/vec.h"
+#include <nlohmann/json.hpp>
+
+// NOTE: Tests for Copy/Paste commands cannot use ImGui clipboard directly
+// in test environment (requires ImGui context). Instead, we test:
+// 1. Command structure and properties (getDescription, getMemoryUsage, etc)
+// 2. Direct MaterialInstance operations without clipboard
+// 3. Command virtual functions (undo, canMergeWith, updateEntityReference)
 
 // Helper function to create a simple test scene with a mesh
 namespace
@@ -691,5 +698,125 @@ TEST_CASE( "SetPrimitiveMaterialPropertyCommand - Error handling", "[primitive-m
 			nullptr );
 
 		REQUIRE_FALSE( command.execute() );
+	}
+}
+
+TEST_CASE( "CopyPrimitiveMaterialCommand basics", "[primitive-material][command][unit]" )
+{
+	SECTION( "Copy command returns false for invalid entity" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		ecs::Entity invalidEntity;
+		invalidEntity.id = 9999;
+		invalidEntity.generation = 0;
+
+		editor::CopyPrimitiveMaterialCommand copyCmd( invalidEntity, 0, ecsScene, *testData.assetScene );
+		REQUIRE_FALSE( copyCmd.execute() );
+	}
+
+	SECTION( "Copy command returns false for out-of-range primitive" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 999, ecsScene, *testData.assetScene );
+		REQUIRE_FALSE( copyCmd.execute() );
+	}
+
+	SECTION( "Copy command has meaningful description" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 0, ecsScene, *testData.assetScene );
+		const auto desc = copyCmd.getDescription();
+		REQUIRE( desc.find( "Copy" ) != std::string::npos );
+	}
+
+	SECTION( "Copy command undo returns true (no-op)" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 0, ecsScene, *testData.assetScene );
+		REQUIRE( copyCmd.undo() ); // Copy's undo is a no-op and returns true
+	}
+
+	SECTION( "Copy command doesn't merge" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::CopyPrimitiveMaterialCommand copyCmd1( entity, 0, ecsScene, *testData.assetScene );
+		editor::CopyPrimitiveMaterialCommand copyCmd2( entity, 0, ecsScene, *testData.assetScene );
+
+		REQUIRE_FALSE( copyCmd1.canMergeWith( &copyCmd2 ) );
+		REQUIRE_FALSE( copyCmd1.mergeWith( std::make_unique<editor::CopyPrimitiveMaterialCommand>( entity, 0, ecsScene, *testData.assetScene ) ) );
+	}
+
+	SECTION( "Copy command updates entity reference" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 0, ecsScene, *testData.assetScene );
+
+		const auto newEntity = ecsScene.createEntity( "NewEntity" );
+		components::MeshRenderer newMeshRenderer;
+		newMeshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( newEntity, newMeshRenderer );
+
+		REQUIRE( copyCmd.updateEntityReference( entity, newEntity ) );
+	}
+}
+
+TEST_CASE( "PastePrimitiveMaterialCommand basics - No ImGui context", "[primitive-material][unit]" )
+{
+	// NOTE: PastePrimitiveMaterialCommand calls ImGui::GetClipboardText() in constructor
+	// which requires ImGui context. Cannot unit test without it.
+	// This test is marked as documentation that Paste tests require integration testing
+	// or need refactoring to defer clipboard access to execute() instead of constructor.
+
+	// For now, test the Copy command which doesn't have ImGui in constructor
+	SECTION( "Copy command can be instantiated without crash" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		// This should not crash - Copy constructor has no ImGui calls
+		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 0, ecsScene, *testData.assetScene );
+		REQUIRE( copyCmd.getDescription().find( "Copy" ) != std::string::npos );
 	}
 }

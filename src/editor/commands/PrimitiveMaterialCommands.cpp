@@ -4,6 +4,8 @@
 #include "graphics/gpu/material_gpu.h"
 #include "core/console.h"
 #include <format>
+#include <imgui.h>
+#include <nlohmann/json.hpp>
 
 namespace editor
 {
@@ -744,6 +746,254 @@ bool ClearAllPrimitiveMaterialOverridesCommand::updateEntityReference( ecs::Enti
 }
 
 void ClearAllPrimitiveMaterialOverridesCommand::triggerGPUUpdate()
+{
+	updateMaterialGPUForPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, m_gpuManager );
+}
+
+// =============================================================================
+// CopyPrimitiveMaterialCommand Implementation
+// =============================================================================
+
+CopyPrimitiveMaterialCommand::CopyPrimitiveMaterialCommand(
+	ecs::Entity entity,
+	uint32_t primitiveIndex,
+	ecs::Scene &ecsScene,
+	assets::Scene &assetScene )
+	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene )
+{
+}
+
+bool CopyPrimitiveMaterialCommand::execute()
+{
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup )
+	{
+		console::error( "CopyPrimitiveMaterialCommand: Invalid entity/primitive" );
+		return false;
+	}
+
+	const auto &materialInstance = lookup->primitive->getMaterialInstance();
+
+	// Serialize MaterialInstance to JSON
+	using json = nlohmann::json;
+	json instanceJson;
+
+	// Serialize value overrides if present
+	if ( materialInstance.baseColorFactorOverride.has_value() )
+	{
+		const auto &v = materialInstance.baseColorFactorOverride.value();
+		instanceJson["baseColorFactor"] = { v.x, v.y, v.z, v.w };
+	}
+
+	if ( materialInstance.metallicFactorOverride.has_value() )
+	{
+		instanceJson["metallicFactor"] = materialInstance.metallicFactorOverride.value();
+	}
+
+	if ( materialInstance.roughnessFactorOverride.has_value() )
+	{
+		instanceJson["roughnessFactor"] = materialInstance.roughnessFactorOverride.value();
+	}
+
+	if ( materialInstance.emissiveFactorOverride.has_value() )
+	{
+		const auto &v = materialInstance.emissiveFactorOverride.value();
+		instanceJson["emissiveFactor"] = { v.x, v.y, v.z };
+	}
+
+	// Serialize texture overrides if present
+	if ( materialInstance.baseColorTextureOverride.has_value() )
+	{
+		instanceJson["baseColorTexture"] = materialInstance.baseColorTextureOverride.value();
+	}
+
+	if ( materialInstance.metallicRoughnessTextureOverride.has_value() )
+	{
+		instanceJson["metallicRoughnessTexture"] = materialInstance.metallicRoughnessTextureOverride.value();
+	}
+
+	if ( materialInstance.normalTextureOverride.has_value() )
+	{
+		instanceJson["normalTexture"] = materialInstance.normalTextureOverride.value();
+	}
+
+	if ( materialInstance.emissiveTextureOverride.has_value() )
+	{
+		instanceJson["emissiveTexture"] = materialInstance.emissiveTextureOverride.value();
+	}
+
+	// Copy JSON string to clipboard
+	const std::string jsonString = instanceJson.dump();
+	ImGui::SetClipboardText( jsonString.c_str() );
+
+	console::info( "Copied material overrides from primitive {} to clipboard", m_primitiveIndex );
+	return true;
+}
+
+std::string CopyPrimitiveMaterialCommand::getDescription() const
+{
+	return std::format( "Copy Material Overrides from Primitive {}", m_primitiveIndex );
+}
+
+size_t CopyPrimitiveMaterialCommand::getMemoryUsage() const
+{
+	return sizeof( *this );
+}
+
+bool CopyPrimitiveMaterialCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+// =============================================================================
+// PastePrimitiveMaterialCommand Implementation
+// =============================================================================
+
+PastePrimitiveMaterialCommand::PastePrimitiveMaterialCommand(
+	ecs::Entity entity,
+	uint32_t primitiveIndex,
+	ecs::Scene &ecsScene,
+	assets::Scene &assetScene,
+	graphics::GPUResourceManager *gpuManager )
+	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene ), m_gpuManager( gpuManager )
+{
+	// Capture old state for undo
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( lookup )
+	{
+		m_oldMaterialInstance = lookup->primitive->getMaterialInstance();
+	}
+
+	// Parse clipboard content to get new material instance
+	const char *clipboardText = ImGui::GetClipboardText();
+	if ( clipboardText && clipboardText[0] != '\0' )
+	{
+		try
+		{
+			using json = nlohmann::json;
+			const auto clipJson = json::parse( clipboardText );
+
+			// Deserialize value overrides
+			if ( clipJson.contains( "baseColorFactor" ) && clipJson["baseColorFactor"].is_array() && clipJson["baseColorFactor"].size() == 4 )
+			{
+				m_newMaterialInstance.baseColorFactorOverride = math::Vec4f{
+					clipJson["baseColorFactor"][0],
+					clipJson["baseColorFactor"][1],
+					clipJson["baseColorFactor"][2],
+					clipJson["baseColorFactor"][3]
+				};
+			}
+
+			if ( clipJson.contains( "metallicFactor" ) && clipJson["metallicFactor"].is_number() )
+			{
+				m_newMaterialInstance.metallicFactorOverride = clipJson["metallicFactor"];
+			}
+
+			if ( clipJson.contains( "roughnessFactor" ) && clipJson["roughnessFactor"].is_number() )
+			{
+				m_newMaterialInstance.roughnessFactorOverride = clipJson["roughnessFactor"];
+			}
+
+			if ( clipJson.contains( "emissiveFactor" ) && clipJson["emissiveFactor"].is_array() && clipJson["emissiveFactor"].size() == 3 )
+			{
+				m_newMaterialInstance.emissiveFactorOverride = math::Vec3f{
+					clipJson["emissiveFactor"][0],
+					clipJson["emissiveFactor"][1],
+					clipJson["emissiveFactor"][2]
+				};
+			}
+
+			// Deserialize texture overrides
+			if ( clipJson.contains( "baseColorTexture" ) && clipJson["baseColorTexture"].is_string() )
+			{
+				m_newMaterialInstance.baseColorTextureOverride = clipJson["baseColorTexture"];
+			}
+
+			if ( clipJson.contains( "metallicRoughnessTexture" ) && clipJson["metallicRoughnessTexture"].is_string() )
+			{
+				m_newMaterialInstance.metallicRoughnessTextureOverride = clipJson["metallicRoughnessTexture"];
+			}
+
+			if ( clipJson.contains( "normalTexture" ) && clipJson["normalTexture"].is_string() )
+			{
+				m_newMaterialInstance.normalTextureOverride = clipJson["normalTexture"];
+			}
+
+			if ( clipJson.contains( "emissiveTexture" ) && clipJson["emissiveTexture"].is_string() )
+			{
+				m_newMaterialInstance.emissiveTextureOverride = clipJson["emissiveTexture"];
+			}
+		}
+		catch ( const std::exception &e )
+		{
+			console::error( "PastePrimitiveMaterialCommand: Failed to parse clipboard JSON: {}", e.what() );
+		}
+	}
+}
+
+bool PastePrimitiveMaterialCommand::execute()
+{
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup )
+	{
+		console::error( "PastePrimitiveMaterialCommand: Invalid entity/primitive" );
+		return false;
+	}
+
+	lookup->primitive->setMaterialInstance( m_newMaterialInstance );
+	triggerGPUUpdate();
+	return true;
+}
+
+bool PastePrimitiveMaterialCommand::undo()
+{
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup )
+		return false;
+
+	lookup->primitive->setMaterialInstance( m_oldMaterialInstance );
+	triggerGPUUpdate();
+	return true;
+}
+
+std::string PastePrimitiveMaterialCommand::getDescription() const
+{
+	return std::format( "Paste Material Overrides to Primitive {}", m_primitiveIndex );
+}
+
+size_t PastePrimitiveMaterialCommand::getMemoryUsage() const
+{
+	size_t size = sizeof( *this );
+
+	// Add sizes for old overrides
+	if ( m_oldMaterialInstance.baseColorTextureOverride.has_value() )
+		size += m_oldMaterialInstance.baseColorTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.metallicRoughnessTextureOverride.has_value() )
+		size += m_oldMaterialInstance.metallicRoughnessTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.normalTextureOverride.has_value() )
+		size += m_oldMaterialInstance.normalTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.emissiveTextureOverride.has_value() )
+		size += m_oldMaterialInstance.emissiveTextureOverride.value().capacity();
+
+	// Add sizes for new overrides
+	if ( m_newMaterialInstance.baseColorTextureOverride.has_value() )
+		size += m_newMaterialInstance.baseColorTextureOverride.value().capacity();
+	if ( m_newMaterialInstance.metallicRoughnessTextureOverride.has_value() )
+		size += m_newMaterialInstance.metallicRoughnessTextureOverride.value().capacity();
+	if ( m_newMaterialInstance.normalTextureOverride.has_value() )
+		size += m_newMaterialInstance.normalTextureOverride.value().capacity();
+	if ( m_newMaterialInstance.emissiveTextureOverride.has_value() )
+		size += m_newMaterialInstance.emissiveTextureOverride.value().capacity();
+
+	return size;
+}
+
+bool PastePrimitiveMaterialCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+void PastePrimitiveMaterialCommand::triggerGPUUpdate()
 {
 	updateMaterialGPUForPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, m_gpuManager );
 }

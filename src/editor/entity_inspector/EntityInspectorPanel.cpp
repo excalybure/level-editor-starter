@@ -876,6 +876,38 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 										}
 										ImGui::PopStyleColor();
 									}
+
+									// Copy button - always available
+									ImGui::SameLine();
+									if ( ImGui::Button( "Copy##primitive" ) )
+									{
+										if ( m_cachedAssetScene )
+										{
+											auto command = std::make_unique<CopyPrimitiveMaterialCommand>(
+												entity, i, m_scene, *m_cachedAssetScene );
+											m_commandHistory.executeCommand( std::move( command ) );
+										}
+									}
+									if ( ImGui::IsItemHovered() )
+									{
+										ImGui::SetTooltip( "Copy material overrides to clipboard as JSON" );
+									}
+
+									// Paste button - always available
+									ImGui::SameLine();
+									if ( ImGui::Button( "Paste##primitive" ) )
+									{
+										if ( m_cachedAssetScene && m_gpuManager )
+										{
+											auto command = std::make_unique<PastePrimitiveMaterialCommand>(
+												entity, i, m_scene, *m_cachedAssetScene, m_gpuManager );
+											m_commandHistory.executeCommand( std::move( command ) );
+										}
+									}
+									if ( ImGui::IsItemHovered() )
+									{
+										ImGui::SetTooltip( "Paste material overrides from clipboard" );
+									}
 								}
 
 								ImGui::Unindent();

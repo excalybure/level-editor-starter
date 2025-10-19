@@ -225,6 +225,91 @@ private:
 	void triggerGPUUpdate();
 };
 
+/**
+ * @brief Command for copying a primitive's material overrides to clipboard
+ * 
+ * Serializes the MaterialInstance of a primitive to JSON and places it on the clipboard.
+ * This command does not modify the primitive; it's primarily for UI interaction.
+ */
+class CopyPrimitiveMaterialCommand : public Command
+{
+public:
+	/**
+	 * @brief Construct a command to copy material overrides to clipboard
+	 * @param entity The entity with the MeshRenderer component
+	 * @param primitiveIndex Index of the primitive within the mesh
+	 * @param ecsScene The ECS scene containing the entity
+	 * @param assetScene The asset scene containing the mesh data
+	 */
+	CopyPrimitiveMaterialCommand(
+		ecs::Entity entity,
+		uint32_t primitiveIndex,
+		ecs::Scene &ecsScene,
+		assets::Scene &assetScene );
+
+	// Command interface implementation
+	bool execute() override;
+	bool undo() override { return true; } // Copy doesn't need undo
+	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command * ) const override { return false; }
+	bool mergeWith( std::unique_ptr<Command> ) override { return false; }
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+
+private:
+	ecs::Entity m_entity;
+	uint32_t m_primitiveIndex;
+
+	ecs::Scene *m_ecsScene;
+	assets::Scene *m_assetScene;
+};
+
+/**
+ * @brief Command for pasting material overrides from clipboard to a primitive
+ * 
+ * Parses a MaterialInstance from clipboard JSON and applies it to a primitive,
+ * replacing all overrides on the target primitive with the copied values.
+ */
+class PastePrimitiveMaterialCommand : public Command
+{
+public:
+	/**
+	 * @brief Construct a command to paste material overrides from clipboard
+	 * @param entity The entity with the MeshRenderer component
+	 * @param primitiveIndex Index of the primitive to paste into
+	 * @param ecsScene The ECS scene containing the entity
+	 * @param assetScene The asset scene containing the mesh data
+	 * @param gpuManager Optional GPU resource manager for triggering material updates
+	 */
+	PastePrimitiveMaterialCommand(
+		ecs::Entity entity,
+		uint32_t primitiveIndex,
+		ecs::Scene &ecsScene,
+		assets::Scene &assetScene,
+		graphics::GPUResourceManager *gpuManager = nullptr );
+
+	// Command interface implementation
+	bool execute() override;
+	bool undo() override;
+	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command * ) const override { return false; }
+	bool mergeWith( std::unique_ptr<Command> ) override { return false; }
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+
+private:
+	ecs::Entity m_entity;
+	uint32_t m_primitiveIndex;
+	assets::MaterialInstance m_oldMaterialInstance; // Store old state for undo
+	assets::MaterialInstance m_newMaterialInstance; // Store new state to apply
+
+	ecs::Scene *m_ecsScene;
+	assets::Scene *m_assetScene;
+	graphics::GPUResourceManager *m_gpuManager;
+
+	void triggerGPUUpdate();
+};
+
 // Helper: update MaterialGPU from asset primitive's MaterialInstance
 // Exposed for unit tests
 bool updateMaterialGPUForPrimitive(

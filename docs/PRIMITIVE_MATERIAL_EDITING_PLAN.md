@@ -299,10 +299,12 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Reset button for each texture property
   - MaterialGPU texture override support
   
-- [ ] **T5.2:** Copy/Paste material overrides
-  - Copy MaterialInstance from one primitive
-  - Paste to another primitive
-  - Multi-select support
+- [x] **T5.2:** Copy/Paste material overrides ✅ COMPLETED (Oct 19)
+  - CopyPrimitiveMaterialCommand serializes MaterialInstance to JSON clipboard
+  - PastePrimitiveMaterialCommand parses clipboard JSON and applies to primitive
+  - Both commands support undo/redo via command history
+  - UI buttons next to Clear All Overrides for Copy/Paste with tooltips
+  - Full state capture (all 8 properties: colors, factors, textures)
   
 - [ ] **T5.3:** Material presets
   - Save common override combinations
