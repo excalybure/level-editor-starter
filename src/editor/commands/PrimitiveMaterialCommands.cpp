@@ -643,25 +643,15 @@ MaterialPropertyValue ClearPrimitiveMaterialPropertyCommand::getCurrentPropertyV
 
 void ClearPrimitiveMaterialPropertyCommand::triggerGPUUpdate()
 {
-	if ( !m_gpuManager )
-		return;
-
-	auto *meshRenderer = m_ecsScene->getComponent<components::MeshRenderer>( m_entity );
-	if ( !meshRenderer || !meshRenderer->gpuMesh )
-		return;
-
-	if ( m_primitiveIndex >= meshRenderer->gpuMesh->getPrimitiveCount() )
+	// Lookup asset primitive
+	components::MeshRenderer *meshRenderer = nullptr;
+	assets::Primitive *primitiveAsset = nullptr;
+	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitiveAsset ) )
 		return;
 
 	auto &primitiveGPU = meshRenderer->gpuMesh->getPrimitive( m_primitiveIndex );
 	const auto materialGPU = primitiveGPU.getMaterial();
 	if ( !materialGPU )
-		return;
-
-	// Lookup asset primitive
-	components::MeshRenderer *meshRendererNonConst = nullptr;
-	assets::Primitive *primitiveAsset = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRendererNonConst, &primitiveAsset ) )
 		return;
 
 	const auto &materialInstance = primitiveAsset->getMaterialInstance();
