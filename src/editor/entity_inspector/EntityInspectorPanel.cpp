@@ -6,10 +6,12 @@
 #include "editor/commands/CommandHistory.h"
 #include "editor/commands/EcsCommands.h"
 #include "editor/commands/MacroCommand.h"
+#include "editor/commands/PrimitiveMaterialCommands.h"
 #include "editor/transform_commands.h"
 #include "math/math.h"
 #include "graphics/gpu/mesh_gpu.h"
 #include "graphics/gpu/material_gpu.h"
+#include "engine/assets/assets.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>
@@ -21,8 +23,10 @@ namespace editor
 EntityInspectorPanel::EntityInspectorPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
 	CommandHistory &commandHistory,
-	systems::SystemManager &systemManager )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_visible( true )
+	systems::SystemManager &systemManager,
+	assets::Scene *assetScene,
+	graphics::GPUResourceManager *gpuManager )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_assetScene( assetScene ), m_gpuManager( gpuManager ), m_visible( true )
 {
 }
 
@@ -368,7 +372,7 @@ void EntityInspectorPanel::renderVisibleComponent( ecs::Entity entity )
 	}
 }
 
-void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &meshGPU )
+void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphics::gpu::MeshGPU &meshGPU )
 {
 	const std::uint32_t primitiveCount = meshGPU.getPrimitiveCount();
 	if ( primitiveCount == 0 )
@@ -430,8 +434,19 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								};
 								if ( ImGui::ColorEdit4( "##BaseColor", baseColor, ImGuiColorEditFlags_Float ) )
 								{
-									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
-									// For now, just register that a change occurred (will be implemented in next tasks)
+									if ( m_assetScene && m_gpuManager )
+									{
+										const math::Vec4f newColor{ baseColor[0], baseColor[1], baseColor[2], baseColor[3] };
+										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::BaseColorFactor,
+											newColor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 								ImGui::PopItemWidth();
 
@@ -439,7 +454,17 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##BaseColor" ) )
 								{
-									// TODO: T4.2-T4.3 - Clear override and reset to base material value
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::BaseColorFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 
 								// Metallic Factor (editable)
@@ -448,13 +473,34 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								float metallicFactor = materialConstants.metallicFactor;
 								if ( ImGui::SliderFloat( "##Metallic", &metallicFactor, 0.0f, 1.0f ) )
 								{
-									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::MetallicFactor,
+											metallicFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Metallic" ) )
 								{
-									// TODO: T4.2-T4.3 - Clear override
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::MetallicFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 
 								// Roughness Factor (editable)
@@ -463,13 +509,34 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								float roughnessFactor = materialConstants.roughnessFactor;
 								if ( ImGui::SliderFloat( "##Roughness", &roughnessFactor, 0.0f, 1.0f ) )
 								{
-									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::RoughnessFactor,
+											roughnessFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Roughness" ) )
 								{
-									// TODO: T4.2-T4.3 - Clear override
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::RoughnessFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 
 								// Emissive Factor (editable)
@@ -482,13 +549,35 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								};
 								if ( ImGui::ColorEdit3( "##Emissive", emissiveFactor, ImGuiColorEditFlags_Float ) )
 								{
-									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+									if ( m_assetScene && m_gpuManager )
+									{
+										const math::Vec3f newColor{ emissiveFactor[0], emissiveFactor[1], emissiveFactor[2] };
+										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::EmissiveFactor,
+											newColor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Emissive" ) )
 								{
-									// TODO: T4.2-T4.3 - Clear override
+									if ( m_assetScene && m_gpuManager )
+									{
+										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
+											entity,
+											i,
+											MaterialPropertyType::EmissiveFactor,
+											m_scene,
+											*m_assetScene,
+											m_gpuManager );
+										m_commandHistory.executeCommand( std::move( command ) );
+									}
 								}
 
 								// Display textures section
@@ -609,7 +698,7 @@ void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 
 			// Render primitive tree view
 			ImGui::Separator();
-			renderPrimitiveTree( *meshRenderer->gpuMesh );
+			renderPrimitiveTree( entity, *meshRenderer->gpuMesh );
 		}
 		else
 		{

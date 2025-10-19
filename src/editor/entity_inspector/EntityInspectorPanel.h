@@ -14,9 +14,20 @@ namespace ecs
 class Scene;
 }
 
+namespace assets
+{
+class Scene;
+class AssetManager;
+} // namespace assets
+
 namespace systems
 {
 class SystemManager;
+}
+
+namespace graphics
+{
+class GPUResourceManager;
 }
 
 namespace editor
@@ -47,11 +58,15 @@ public:
 	 * @param selectionManager Selection manager for tracking selected entities
 	 * @param commandHistory Command history for undo/redo support
 	 * @param systemManager System manager for accessing TransformSystem
+	 * @param assetScene Asset scene containing mesh and material data
+	 * @param gpuManager GPU resource manager for triggering material updates
 	 */
 	EntityInspectorPanel( ecs::Scene &scene,
 		SelectionManager &selectionManager,
 		CommandHistory &commandHistory,
-		systems::SystemManager &systemManager );
+		systems::SystemManager &systemManager,
+		assets::Scene *assetScene = nullptr,
+		graphics::GPUResourceManager *gpuManager = nullptr );
 
 	/**
 	 * @brief Render the inspector panel UI
@@ -79,6 +94,8 @@ private:
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
 	systems::SystemManager &m_systemManager;
+	assets::Scene *m_assetScene;
+	graphics::GPUResourceManager *m_gpuManager;
 	bool m_visible;
 
 	// Rendering methods for different states
@@ -92,7 +109,7 @@ private:
 	void renderNameComponent( ecs::Entity entity );
 	void renderVisibleComponent( ecs::Entity entity );
 	void renderMeshRendererComponent( ecs::Entity entity );
-	void renderPrimitiveTree( const graphics::gpu::MeshGPU &meshGPU );
+	void renderPrimitiveTree( ecs::Entity entity, const graphics::gpu::MeshGPU &meshGPU );
 
 	// Component management
 	void renderAddComponentMenu( ecs::Entity entity );
