@@ -594,19 +594,6 @@ bool ClearPrimitiveMaterialPropertyCommand::updateEntityReference( ecs::Entity o
 
 MaterialPropertyValue ClearPrimitiveMaterialPropertyCommand::getCurrentPropertyValue() const
 {
-	// Same implementation as SetPrimitiveMaterialPropertyCommand::getCurrentPropertyValue
-	const auto *meshRenderer = m_ecsScene->getComponent<components::MeshRenderer>( m_entity );
-	if ( !meshRenderer || meshRenderer->meshHandle == assets::INVALID_MESH_HANDLE )
-	{
-		return getDefaultPropertyValue( m_propertyType );
-	}
-
-	const auto mesh = m_assetScene->getMesh( meshRenderer->meshHandle );
-	if ( !mesh || m_primitiveIndex >= mesh->getPrimitiveCount() )
-	{
-		return getDefaultPropertyValue( m_propertyType );
-	}
-
 	const components::MeshRenderer *meshRenderer = nullptr;
 	const assets::Primitive *primitive = nullptr;
 	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
