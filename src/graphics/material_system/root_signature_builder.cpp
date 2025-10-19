@@ -3,6 +3,8 @@
 #include "core/console.h"
 #include <algorithm>
 #include <unordered_set>
+#include <cctype>
+#include <stdexcept>
 
 namespace graphics::material_system
 {
@@ -166,12 +168,93 @@ bool RootSignatureBuilder::IsStaticSamplerName( const std::string &name )
 		"comparisonSampler"
 	};
 
-	return staticSamplerNames.find( name ) != staticSamplerNames.end();
+	// Check legacy names first
+	if ( staticSamplerNames.find( name ) != staticSamplerNames.end() )
+	{
+		return true;
+	}
+
+	// Check for pattern-based names: (linear|point|aniso)(Wrap|Clamp)(\d+X)?Sampler
+	// Examples: linearWrapSampler, linearClampSampler, anisoWrap4XSampler, anisoClamp16XSampler
+
+	// Must end with "Sampler"
+	if ( name.size() <= 7 || name.substr( name.size() - 7 ) != "Sampler" )
+	{
+		return false;
+	}
+
+	// Check for filter type prefix: linear, point, or aniso
+	if ( name.find( "linear" ) == 0 || name.find( "point" ) == 0 || name.find( "aniso" ) == 0 )
+	{
+		// Must contain either Wrap or Clamp
+		if ( name.find( "Wrap" ) != std::string::npos || name.find( "Clamp" ) != std::string::npos )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+D3D12_TEXTURE_ADDRESS_MODE RootSignatureBuilder::GetAddressModeForSamplerName( const std::string &name )
+{
+	// Parse address mode from sampler name
+	// Look for "Wrap" or "Clamp" in the name
+
+	if ( name.find( "Clamp" ) != std::string::npos )
+	{
+		return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	}
+
+	// Default to WRAP if not explicitly clamped
+	return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+}
+
+uint32_t RootSignatureBuilder::GetMaxAnisotropyForSamplerName( const std::string &name )
+{
+	// Parse anisotropy level from sampler name
+	// Look for patterns like "4X", "8X", "16X" etc in the name
+	// Examples: anisoWrap4XSampler -> 4, anisoClamp16XSampler -> 16
+
+	// Find "X" followed by "Sampler"
+	const size_t xPos = name.find( 'X' );
+	if ( xPos != std::string::npos && xPos > 0 && xPos + 8 == name.size() ) // "XSampler" is 8 chars
+	{
+		// Extract digit(s) before the 'X'
+		// Go backwards from xPos to find the start of the number
+		size_t digitStart = xPos - 1;
+		while ( digitStart > 0 && std::isdigit( name[digitStart - 1] ) )
+		{
+			--digitStart;
+		}
+
+		try
+		{
+			const auto anisotropyStr = name.substr( digitStart, xPos - digitStart );
+			const int anisotropy = std::stoi( anisotropyStr );
+
+			// Clamp to valid range [1, 16]
+			if ( anisotropy >= 1 && anisotropy <= 16 )
+			{
+				return static_cast<uint32_t>( anisotropy );
+			}
+		}
+		catch ( const std::exception & )
+		{
+			// If parsing fails, fall through to default
+		}
+	}
+
+	// Default to 1 (no anisotropy)
+	return 1;
 }
 
 D3D12_FILTER RootSignatureBuilder::GetFilterForSamplerName( const std::string &name )
 {
 	// Map sampler names to D3D12 filter types
+	// Support both legacy names and pattern-based names
+
+	// Check for legacy names first
 	if ( name == "pointSampler" )
 	{
 		return D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -185,7 +268,19 @@ D3D12_FILTER RootSignatureBuilder::GetFilterForSamplerName( const std::string &n
 		return D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
 	}
 
-	// Default to linear for linearSampler and unknown names
+	// Check for pattern-based names
+	// Extract filter type from prefix: (linear|point|aniso)
+
+	if ( name.find( "point" ) == 0 )
+	{
+		return D3D12_FILTER_MIN_MAG_MIP_POINT;
+	}
+	else if ( name.find( "aniso" ) == 0 )
+	{
+		return D3D12_FILTER_ANISOTROPIC;
+	}
+
+	// Default to linear for linearSampler, linearWrapSampler, linearClampSampler, and unknown names
 	return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 }
 
@@ -213,7 +308,8 @@ void RootSignatureBuilder::GroupBindingsForRootSignature(
 			staticSampler.name = binding.name;
 			staticSampler.slot = binding.slot;
 			staticSampler.filter = GetFilterForSamplerName( binding.name );
-			staticSampler.addressMode = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			staticSampler.addressMode = GetAddressModeForSamplerName( binding.name );
+			staticSampler.maxAnisotropy = GetMaxAnisotropyForSamplerName( binding.name );
 			outSpec.staticSamplers.push_back( staticSampler );
 		}
 		else

@@ -21,6 +21,7 @@ struct StaticSamplerBinding
 	int slot;
 	D3D12_FILTER filter;
 	D3D12_TEXTURE_ADDRESS_MODE addressMode;
+	uint32_t maxAnisotropy = 1; // Derived from sampler name (e.g., "4X", "16X")
 };
 
 // Root signature specification
@@ -63,6 +64,19 @@ public:
 	// @param name - Sampler name
 	// @return D3D12_FILTER type for this sampler
 	static D3D12_FILTER GetFilterForSamplerName( const std::string &name );
+
+	// Get texture address mode from sampler name
+	// Parses names like "linearWrapSampler", "linearClampSampler", etc.
+	// @param name - Sampler name
+	// @return D3D12_TEXTURE_ADDRESS_MODE (WRAP for Wrap*, CLAMP for Clamp*, defaults to WRAP)
+	static D3D12_TEXTURE_ADDRESS_MODE GetAddressModeForSamplerName( const std::string &name );
+
+	// Get max anisotropy level from sampler name
+	// Parses names like "anisoWrap4XSampler", "anisoClamp16XSampler"
+	// Extracts the numeric value or returns 1 for non-anisotropic samplers
+	// @param name - Sampler name
+	// @return Max anisotropy level (1 for non-anisotropic, 2-16 for anisotropic)
+	static uint32_t GetMaxAnisotropyForSamplerName( const std::string &name );
 
 private:
 	// Merge bindings from multiple shaders, removing duplicates

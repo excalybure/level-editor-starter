@@ -385,6 +385,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_system_pass_query_tests.cpp
     tests/material_instance_tests.cpp
     tests/root_signature_texture_tests.cpp
+    tests/sampler_name_parsing_tests.cpp
     tests/sampler_manager_tests.cpp
   )
   target_link_libraries(unit_test_runner PRIVATE 
