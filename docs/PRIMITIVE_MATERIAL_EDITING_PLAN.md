@@ -259,7 +259,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
 ### Milestone 4: Editor UI for Editing
 **Estimated:** 3-4 days
 
-- [ ] **T4.1:** Make material property widgets editable
+- [x] **T4.1:** Make material property widgets editable ✅ COMPLETED (Oct 19)
   - Enable color pickers for baseColorFactor, emissiveFactor
   - Enable sliders for metallicFactor, roughnessFactor
   - Add "Reset to Base" button per property

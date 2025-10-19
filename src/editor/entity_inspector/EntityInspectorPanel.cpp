@@ -419,42 +419,77 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 								const auto &materialConstants = materialGPU->getMaterialConstants();
 								const auto &pbrMaterial = sourceMaterial->getPBRMaterial();
 
-								// Display Base Color Factor (read-only)
+								// Base Color Factor (editable)
 								ImGui::Text( "Base Color Factor:" );
-								ImGui::SameLine();
-								ImGui::TextDisabled( "RGBA(%.2f, %.2f, %.2f, %.2f)",
+								ImGui::PushItemWidth( -1 ); // Full width for color picker
+								float baseColor[4] = {
 									materialConstants.baseColorFactor.x,
 									materialConstants.baseColorFactor.y,
 									materialConstants.baseColorFactor.z,
-									materialConstants.baseColorFactor.w );
+									materialConstants.baseColorFactor.w
+								};
+								if ( ImGui::ColorEdit4( "##BaseColor", baseColor, ImGuiColorEditFlags_Float ) )
+								{
+									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+									// For now, just register that a change occurred (will be implemented in next tasks)
+								}
+								ImGui::PopItemWidth();
 
-								// Display color preview box
-								const ImVec4 colorPreview(
-									materialConstants.baseColorFactor.x,
-									materialConstants.baseColorFactor.y,
-									materialConstants.baseColorFactor.z,
-									materialConstants.baseColorFactor.w );
-								const ImVec2 colorBoxSize( ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() );
+								// Add "Reset to Base" button for base color
 								ImGui::SameLine();
-								ImGui::ColorButton( "##ColorPreview", colorPreview, ImGuiColorEditFlags_NoTooltip, colorBoxSize );
+								if ( ImGui::SmallButton( "Reset##BaseColor" ) )
+								{
+									// TODO: T4.2-T4.3 - Clear override and reset to base material value
+								}
 
-								// Display Metallic Factor (read-only)
-								ImGui::Text( "Metallic Factor: " );
+								// Metallic Factor (editable)
+								ImGui::Text( "Metallic Factor:" );
+								ImGui::PushItemWidth( -100 ); // Leave space for reset button
+								float metallicFactor = materialConstants.metallicFactor;
+								if ( ImGui::SliderFloat( "##Metallic", &metallicFactor, 0.0f, 1.0f ) )
+								{
+									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+								}
+								ImGui::PopItemWidth();
 								ImGui::SameLine();
-								ImGui::TextDisabled( "%.2f", materialConstants.metallicFactor );
+								if ( ImGui::SmallButton( "Reset##Metallic" ) )
+								{
+									// TODO: T4.2-T4.3 - Clear override
+								}
 
-								// Display Roughness Factor (read-only)
-								ImGui::Text( "Roughness Factor: " );
+								// Roughness Factor (editable)
+								ImGui::Text( "Roughness Factor:" );
+								ImGui::PushItemWidth( -100 );
+								float roughnessFactor = materialConstants.roughnessFactor;
+								if ( ImGui::SliderFloat( "##Roughness", &roughnessFactor, 0.0f, 1.0f ) )
+								{
+									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+								}
+								ImGui::PopItemWidth();
 								ImGui::SameLine();
-								ImGui::TextDisabled( "%.2f", materialConstants.roughnessFactor );
+								if ( ImGui::SmallButton( "Reset##Roughness" ) )
+								{
+									// TODO: T4.2-T4.3 - Clear override
+								}
 
-								// Display Emissive Factor (read-only)
+								// Emissive Factor (editable)
 								ImGui::Text( "Emissive Factor:" );
-								ImGui::SameLine();
-								ImGui::TextDisabled( "RGB(%.2f, %.2f, %.2f)",
+								ImGui::PushItemWidth( -1 );
+								float emissiveFactor[3] = {
 									materialConstants.emissiveFactor.x,
 									materialConstants.emissiveFactor.y,
-									materialConstants.emissiveFactor.z );
+									materialConstants.emissiveFactor.z
+								};
+								if ( ImGui::ColorEdit3( "##Emissive", emissiveFactor, ImGuiColorEditFlags_Float ) )
+								{
+									// TODO: T4.2-T4.3 - Create and execute SetPrimitiveMaterialPropertyCommand
+								}
+								ImGui::PopItemWidth();
+								ImGui::SameLine();
+								if ( ImGui::SmallButton( "Reset##Emissive" ) )
+								{
+									// TODO: T4.2-T4.3 - Clear override
+								}
 
 								// Display textures section
 								if ( ImGui::TreeNode( static_cast<const void *>( &i ), "Textures##%u", i ) )
