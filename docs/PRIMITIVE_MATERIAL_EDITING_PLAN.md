@@ -199,7 +199,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
 ### Milestone 2: MaterialInstance Data Structure
 **Estimated:** 2-3 days
 
-- [ ] **T2.1:** Create `assets::MaterialInstance` struct
+- [x] **T2.1:** Create `assets::MaterialInstance` struct
   - Add to `assets.h` with all override fields
   - Implement helper methods (getEffective*, hasOverrides, clear)
   - Unit tests for override resolution logic

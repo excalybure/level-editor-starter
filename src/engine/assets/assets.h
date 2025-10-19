@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "math/bounding_box_3d.h"
@@ -128,6 +129,37 @@ private:
 	PBRMaterial m_pbrMaterial;
 };
 
+// MaterialInstance - Per-primitive material property overrides
+class MaterialInstance
+{
+public:
+	MaterialHandle baseMaterial = INVALID_MATERIAL_HANDLE;
+
+	// Optional overrides (nullopt = use base material value)
+	std::optional<math::Vec4f> baseColorFactorOverride;
+	std::optional<float> metallicFactorOverride;
+	std::optional<float> roughnessFactorOverride;
+	std::optional<math::Vec3f> emissiveFactorOverride;
+
+	// Texture overrides (empty string = use base material texture)
+	std::optional<std::string> baseColorTextureOverride;
+	std::optional<std::string> metallicRoughnessTextureOverride;
+	std::optional<std::string> normalTextureOverride;
+	std::optional<std::string> emissiveTextureOverride;
+
+	// Helper: Get effective value (override if present, else base material)
+	math::Vec4f getEffectiveBaseColor( const Material *baseMat ) const;
+	float getEffectiveMetallic( const Material *baseMat ) const;
+	float getEffectiveRoughness( const Material *baseMat ) const;
+	math::Vec3f getEffectiveEmissive( const Material *baseMat ) const;
+
+	// Check if any overrides are present
+	bool hasOverrides() const;
+
+	// Clear all overrides
+	void clearOverrides();
+};
+
 // Primitive class - represents a single drawable primitive with its own vertex/index data and material
 class Primitive
 {
@@ -169,10 +201,16 @@ public:
 	void setMaterialHandle( MaterialHandle handle ) { m_materialHandle = handle; }
 	bool hasMaterial() const { return m_materialHandle != INVALID_MATERIAL_HANDLE; }
 
+	// Material instance (overrides)
+	const MaterialInstance &getMaterialInstance() const { return m_materialInstance; }
+	void setMaterialInstance( const MaterialInstance &instance ) { m_materialInstance = instance; }
+	bool hasOverrides() const { return m_materialInstance.hasOverrides(); }
+
 private:
 	std::vector<Vertex> m_vertices;
 	std::vector<std::uint32_t> m_indices;
 	MaterialHandle m_materialHandle = INVALID_MATERIAL_HANDLE;
+	MaterialInstance m_materialInstance;
 
 	// Bounding box data
 	math::BoundingBox3Df m_bounds;
