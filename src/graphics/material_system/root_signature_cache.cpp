@@ -3,6 +3,8 @@
 #include "core/hash_utils.h"
 #include <d3d12.h>
 #include <functional>
+#include <algorithm>
+#include <optional>
 
 namespace graphics::material_system
 {
@@ -38,6 +40,7 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::getOrCreate(
 
 	// Store in cache
 	m_cache[hash] = rootSignature;
+	m_specCache[hash] = spec;
 
 	return rootSignature;
 }
@@ -277,6 +280,30 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::buildRootSignatu
 	}
 
 	return rootSignature;
+}
+
+std::optional<uint32_t> RootSignatureCache::getSrvDescriptorTableIndex( const RootSignatureSpec &spec )
+{
+	// Calculate root parameter index by walking through the layout in the same order as buildRootSignature
+	uint32_t parameterIndex = 0;
+
+	// CBV root descriptors come first (one parameter per CBV)
+	parameterIndex += static_cast<uint32_t>( spec.cbvRootDescriptors.size() );
+
+	// Check if we have any SRV bindings in descriptor table resources
+	const bool hasSrvs = std::any_of(
+		spec.descriptorTableResources.begin(),
+		spec.descriptorTableResources.end(),
+		[]( const ResourceBinding &binding ) { return binding.type == ResourceBindingType::SRV; } );
+
+	if ( !hasSrvs )
+	{
+		// No SRV descriptor table exists
+		return std::nullopt;
+	}
+
+	// SRV descriptor table is the first descriptor table parameter (after CBVs)
+	return parameterIndex;
 }
 
 } // namespace graphics::material_system

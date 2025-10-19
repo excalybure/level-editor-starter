@@ -2,9 +2,11 @@
 
 #include "graphics/material_system/parser.h"
 #include "graphics/material_system/cache.h"
+#include "graphics/material_system/root_signature_builder.h"
 #include <d3d12.h>
 #include <dxgiformat.h>
 #include <wrl/client.h>
+#include <utility>
 
 // Forward declaration
 namespace dx12
@@ -56,6 +58,18 @@ public:
 	// @param materialSystem - Material system for retrieving shader manager and reflection cache (required)
 	// @param material - Material definition with passes
 	static Microsoft::WRL::ComPtr<ID3D12RootSignature> getRootSignature(
+		dx12::Device *device,
+		const MaterialSystem *materialSystem,
+		const MaterialDefinition &material );
+
+	// Get or create root signature AND spec for a material pass using shader reflection
+	// Returns both the D3D12 root signature and the RootSignatureSpec used to create it
+	// This avoids duplicate RootSignatureBuilder::Build calls when both are needed
+	// @param device - D3D12 device
+	// @param materialSystem - Material system for retrieving shader manager and reflection cache (required)
+	// @param material - Material definition with passes
+	// @return pair of (root signature, spec) or (nullptr, empty spec) on failure
+	static std::pair<Microsoft::WRL::ComPtr<ID3D12RootSignature>, RootSignatureSpec> getRootSignatureWithSpec(
 		dx12::Device *device,
 		const MaterialSystem *materialSystem,
 		const MaterialDefinition &material );

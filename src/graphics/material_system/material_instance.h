@@ -1,11 +1,13 @@
 #pragma once
 
 #include "graphics/material_system/material_system.h"
+#include "graphics/material_system/root_signature_builder.h"
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <d3d12.h>
 #include <wrl/client.h>
+#include <optional>
 
 // Forward declarations
 namespace dx12
@@ -52,6 +54,14 @@ public:
 	// Returns nullptr if root signature not created or material invalid
 	ID3D12RootSignature *getRootSignature() const;
 
+	// Get root signature spec (for querying parameter layout)
+	// Returns nullptr if material invalid
+	const RootSignatureSpec *getRootSignatureSpec() const;
+
+	// Get root parameter index for SRV descriptor table (textures)
+	// Returns std::nullopt if no SRV descriptor table exists in this material
+	std::optional<uint32_t> getSrvDescriptorTableIndex() const;
+
 	// Get or create pipeline state for specific pass (lazy creation with caching)
 	// Returns nullptr if pass doesn't exist or PSO creation fails
 	ID3D12PipelineState *getPipelineState( const std::string &passName );
@@ -71,6 +81,8 @@ private:
 
 	// Single root signature shared by all passes
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+	// Root signature spec for querying parameter layout
+	RootSignatureSpec m_rootSignatureSpec;
 
 	// Per-pass PSO cache (lazy creation)
 	// Note: PSOBuilder has its own global cache that handles shader hot-reload

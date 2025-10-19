@@ -6,6 +6,7 @@
 #include <wrl/client.h>
 #include <unordered_map>
 #include <cstdint>
+#include <optional>
 
 namespace graphics::material_system
 {
@@ -22,6 +23,11 @@ public:
 		dx12::Device *device,
 		const RootSignatureSpec &spec );
 
+	// Get root parameter index for SRV descriptor table from spec
+	// Returns std::nullopt if no SRV descriptor table exists
+	// This allows dynamic lookup of the texture binding slot instead of hardcoding
+	static std::optional<uint32_t> getSrvDescriptorTableIndex( const RootSignatureSpec &spec );
+
 private:
 	// Compute hash of RootSignatureSpec for cache lookup
 	uint64_t hashSpec( const RootSignatureSpec &spec ) const;
@@ -33,6 +39,8 @@ private:
 
 	// Cache: hash -> root signature
 	std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D12RootSignature>> m_cache;
+	// Cache: hash -> root signature spec (for querying parameter indices)
+	std::unordered_map<uint64_t, RootSignatureSpec> m_specCache;
 };
 
 } // namespace graphics::material_system

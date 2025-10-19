@@ -119,14 +119,20 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 		commandList->SetGraphicsRootConstantBufferView( 0, frameConstantsGPUAddress );
 	}
 
-	// 2. Bind bindless texture descriptor heap to root parameter 3 (g_textures[] t0)
-	// This allows all materials to access textures via indices without per-material binding
+	// 2. Bind bindless texture descriptor heap to correct root parameter slot
+	// Query the SRV descriptor table parameter index from the material's root signature
+	// This allows materials with different root signature layouts to work correctly
 	auto *textureManager = m_graphicsContext.getTextureManager();
 	if ( textureManager )
 	{
-		// TextureManager sets the descriptor heap and binds the descriptor table
-		// Root parameter index 3 is for texture descriptor table (SRVs)
-		textureManager->bindTextures( commandList, 3 );
+		// Get the SRV descriptor table parameter index from material instance
+		const auto srvTableIndex = m_defaultMaterialInstance->getSrvDescriptorTableIndex();
+		if ( srvTableIndex.has_value() )
+		{
+			// TextureManager sets the descriptor heap and binds the descriptor table
+			textureManager->bindTextures( commandList, srvTableIndex.value() );
+		}
+		// If no SRV table exists, this material doesn't use textures (no binding needed)
 	}
 
 	// Iterate through all entities to find those with both MeshRenderer and Transform components

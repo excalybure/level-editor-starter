@@ -645,3 +645,59 @@ TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance",
 	REQUIRE( def2 == def3 );
 	REQUIRE( def1->id == "grid_material" );
 }
+
+TEST_CASE( "MaterialInstance getSrvDescriptorTableIndex queries root signature spec", "[material-instance][T307][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance SRV descriptor table index test" ) )
+	{
+		return;
+	}
+
+	shader_manager::ShaderManager shaderManager;
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
+	REQUIRE( initialized );
+
+	MaterialInstance instance( &device, &materialSystem, "mesh_unlit" );
+	REQUIRE( instance.isValid() );
+
+	// Act - query SRV descriptor table index
+	const auto srvTableIndex = instance.getSrvDescriptorTableIndex();
+
+	// Assert - mesh_unlit has textures, so should have SRV descriptor table
+	// The exact index depends on CBV count, but it should be present
+	REQUIRE( srvTableIndex.has_value() );
+	// Should be a valid root parameter index (typically 0-31)
+	REQUIRE( srvTableIndex.value() < 32 );
+
+	// Also verify we can query the root signature spec
+	const auto *spec = instance.getRootSignatureSpec();
+	REQUIRE( spec != nullptr );
+}
+
+TEST_CASE( "MaterialInstance without textures has no SRV descriptor table", "[material-instance][T307][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	if ( !requireHeadlessDevice( device, "MaterialInstance no SRV table test" ) )
+	{
+		return;
+	}
+
+	shader_manager::ShaderManager shaderManager;
+	MaterialSystem materialSystem;
+	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
+	REQUIRE( initialized );
+
+	// grid_material doesn't use textures (only CBVs)
+	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	REQUIRE( instance.isValid() );
+
+	// Act - query SRV descriptor table index
+	const auto srvTableIndex = instance.getSrvDescriptorTableIndex();
+
+	// Assert - grid_material has no textures, so no SRV descriptor table
+	REQUIRE_FALSE( srvTableIndex.has_value() );
+}

@@ -15,7 +15,7 @@ namespace graphics::material_system
 PipelineCache PSOBuilder::s_cache;
 static RootSignatureCache s_rootSignatureCache;
 
-Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
+std::pair<Microsoft::WRL::ComPtr<ID3D12RootSignature>, RootSignatureSpec> PSOBuilder::getRootSignatureWithSpec(
 	dx12::Device *device,
 	const MaterialSystem *materialSystem,
 	const MaterialDefinition &material )
@@ -23,13 +23,13 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	if ( !device || !device->get() )
 	{
 		console::error( "PSOBuilder::getRootSignature: invalid device" );
-		return nullptr;
+		return { nullptr, {} };
 	}
 
 	if ( !materialSystem )
 	{
 		console::error( "PSOBuilder::getRootSignature: MaterialSystem is required" );
-		return nullptr;
+		return { nullptr, {} };
 	}
 
 	shader_manager::ShaderManager *shaderManager = materialSystem->getShaderManager();
@@ -38,25 +38,36 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
 	if ( !shaderManager )
 	{
 		console::error( "PSOBuilder::getRootSignature: ShaderManager is required for reflection-based root signatures" );
-		return nullptr;
+		return { nullptr, {} };
 	}
 
 	if ( !reflectionCache )
 	{
 		console::error( "PSOBuilder::getRootSignature: ReflectionCache is required for reflection-based root signatures" );
-		return nullptr;
+		return { nullptr, {} };
 	}
 
 	if ( material.passes.empty() )
 	{
 		console::error( "PSOBuilder::getRootSignature: Material '{}' has no passes", material.id );
-		return nullptr;
+		return { nullptr, {} };
 	}
 
 	// Use first pass for root signature (all passes should have compatible bindings)
 	const MaterialPass &pass = material.passes[0];
 	const auto rootSigSpec = RootSignatureBuilder::Build( pass, shaderManager, reflectionCache );
-	return s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	auto rootSignature = s_rootSignatureCache.getOrCreate( device, rootSigSpec );
+	return { rootSignature, rootSigSpec };
+}
+
+Microsoft::WRL::ComPtr<ID3D12RootSignature> PSOBuilder::getRootSignature(
+	dx12::Device *device,
+	const MaterialSystem *materialSystem,
+	const MaterialDefinition &material )
+{
+	// Delegate to getRootSignatureWithSpec and discard the spec
+	auto [rootSignature, spec] = getRootSignatureWithSpec( device, materialSystem, material );
+	return rootSignature;
 }
 
 Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOBuilder::build(

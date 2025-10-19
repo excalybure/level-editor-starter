@@ -1,5 +1,8 @@
 #include "graphics/material_system/material_instance.h"
 #include "graphics/material_system/pso_builder.h"
+#include "graphics/material_system/root_signature_cache.h"
+#include "core/console.h"
+#include <optional>
 
 namespace graphics::material_system
 {
@@ -19,10 +22,13 @@ MaterialInstance::MaterialInstance(
 
 	if ( m_materialDefinition )
 	{
-		m_rootSignature = PSOBuilder::getRootSignature(
+		// Get both root signature and spec in one call to avoid duplicate Build
+		auto [rootSig, spec] = PSOBuilder::getRootSignatureWithSpec(
 			m_device,
 			m_materialSystem,
 			*m_materialDefinition );
+		m_rootSignature = rootSig;
+		m_rootSignatureSpec = spec;
 	}
 }
 
@@ -64,6 +70,24 @@ const MaterialPass *MaterialInstance::getPass( const std::string &passName ) con
 ID3D12RootSignature *MaterialInstance::getRootSignature() const
 {
 	return m_rootSignature.Get();
+}
+
+const RootSignatureSpec *MaterialInstance::getRootSignatureSpec() const
+{
+	if ( !m_materialDefinition )
+	{
+		return nullptr;
+	}
+	return &m_rootSignatureSpec;
+}
+
+std::optional<uint32_t> MaterialInstance::getSrvDescriptorTableIndex() const
+{
+	if ( !m_materialDefinition )
+	{
+		return std::nullopt;
+	}
+	return RootSignatureCache::getSrvDescriptorTableIndex( m_rootSignatureSpec );
 }
 
 bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
