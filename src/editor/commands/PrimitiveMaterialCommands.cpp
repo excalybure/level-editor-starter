@@ -160,19 +160,29 @@ void clearPropertyOnInstance( assets::MaterialInstance &inst, MaterialPropertyTy
 }
 
 // Helper: unify MeshRenderer -> Mesh -> Primitive lookup and validation
-// Returns true and fills out pointers when valid, otherwise returns false.
-bool lookupPrimitive(
+// Return small structs wrapped in std::optional when valid, otherwise std::nullopt.
+struct PrimitiveLookup
+{
+	components::MeshRenderer *meshRenderer;
+	assets::Primitive *primitive;
+};
+
+struct PrimitiveLookupConst
+{
+	const components::MeshRenderer *meshRenderer;
+	const assets::Primitive *primitive;
+};
+
+std::optional<PrimitiveLookup> lookupPrimitive(
 	ecs::Entity entity,
 	uint32_t primitiveIndex,
 	ecs::Scene *ecsScene,
-	assets::Scene *assetScene,
-	components::MeshRenderer **outMeshRenderer,
-	assets::Primitive **outPrimitive )
+	assets::Scene *assetScene )
 {
 	if ( !ecsScene || !assetScene )
 	{
 		console::error( "lookupPrimitive: null ecsScene or assetScene" );
-		return false;
+		return std::nullopt;
 	}
 
 	auto *meshRenderer = ecsScene->getComponent<components::MeshRenderer>( entity );
@@ -182,56 +192,46 @@ bool lookupPrimitive(
 			console::error( "lookupPrimitive: missing MeshRenderer for entity" );
 		else
 			console::error( std::format( "lookupPrimitive: invalid mesh handle {}", meshRenderer->meshHandle ) );
-		return false;
+		return std::nullopt;
 	}
 
 	const auto mesh = assetScene->getMesh( meshRenderer->meshHandle );
 	if ( !mesh )
 	{
 		console::error( std::format( "lookupPrimitive: assetScene returned null for mesh handle {}", meshRenderer->meshHandle ) );
-		return false;
+		return std::nullopt;
 	}
 
 	if ( primitiveIndex >= mesh->getPrimitiveCount() )
 	{
 		console::error( std::format( "lookupPrimitive: primitiveIndex {} >= primitiveCount {}", primitiveIndex, mesh->getPrimitiveCount() ) );
-		return false;
+		return std::nullopt;
 	}
 
-	if ( outMeshRenderer )
-		*outMeshRenderer = meshRenderer;
-	if ( outPrimitive )
-		*outPrimitive = &mesh->getPrimitive( primitiveIndex );
-	return true;
+	return PrimitiveLookup{ meshRenderer, &mesh->getPrimitive( primitiveIndex ) };
 }
 
-bool lookupPrimitive(
+std::optional<PrimitiveLookupConst> lookupPrimitive(
 	ecs::Entity entity,
 	uint32_t primitiveIndex,
 	const ecs::Scene *ecsScene,
-	const assets::Scene *assetScene,
-	const components::MeshRenderer **outMeshRenderer,
-	const assets::Primitive **outPrimitive )
+	const assets::Scene *assetScene )
 {
 	if ( !ecsScene || !assetScene )
-		return false;
+		return std::nullopt;
 
 	const auto *meshRenderer = ecsScene->getComponent<components::MeshRenderer>( entity );
 	if ( !meshRenderer || meshRenderer->meshHandle == assets::INVALID_MESH_HANDLE )
-		return false;
+		return std::nullopt;
 
 	const auto mesh = assetScene->getMesh( meshRenderer->meshHandle );
 	if ( !mesh )
-		return false;
+		return std::nullopt;
 
 	if ( primitiveIndex >= mesh->getPrimitiveCount() )
-		return false;
+		return std::nullopt;
 
-	if ( outMeshRenderer )
-		*outMeshRenderer = meshRenderer;
-	if ( outPrimitive )
-		*outPrimitive = &mesh->getPrimitive( primitiveIndex );
-	return true;
+	return PrimitiveLookupConst{ meshRenderer, &mesh->getPrimitive( primitiveIndex ) };
 }
 } // namespace
 
@@ -247,10 +247,12 @@ bool updateMaterialGPUForPrimitive(
 	if ( !gpuManager || !ecsScene || !assetScene )
 		return false;
 
-	components::MeshRenderer *meshRenderer = nullptr;
-	assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( entity, primitiveIndex, ecsScene, assetScene, &meshRenderer, &primitive ) )
+	const auto lookup = lookupPrimitive( entity, primitiveIndex, ecsScene, assetScene );
+	if ( !lookup )
 		return false;
+
+	components::MeshRenderer *meshRenderer = lookup->meshRenderer;
+	assets::Primitive *primitive = lookup->primitive;
 
 	if ( !meshRenderer->gpuMesh )
 		return false;
@@ -283,11 +285,10 @@ SetPrimitiveMaterialPropertyCommand::SetPrimitiveMaterialPropertyCommand(
 	m_oldValue = getCurrentPropertyValue();
 
 	// Check if an override already existed (use helper)
-	const components::MeshRenderer *meshRendererPtr = nullptr;
-	const assets::Primitive *primitivePtr = nullptr;
-	if ( lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRendererPtr, &primitivePtr ) )
+	const auto lookupCtor = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( lookupCtor )
 	{
-		const auto &materialInstance = primitivePtr->getMaterialInstance();
+		const auto &materialInstance = lookupCtor->primitive->getMaterialInstance();
 		m_hadOverrideBefore = instanceHasOverride( materialInstance, m_propertyType );
 	}
 }
@@ -360,13 +361,14 @@ bool SetPrimitiveMaterialPropertyCommand::updateEntityReference( ecs::Entity old
 bool SetPrimitiveMaterialPropertyCommand::applyPropertyValue( const MaterialPropertyValue &value, bool isOverride )
 {
 	// Lookup primitive (validation included)
-	components::MeshRenderer *meshRenderer = nullptr;
-	assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup )
 	{
 		console::error( "SetPrimitiveMaterialPropertyCommand: Invalid entity/primitive" );
 		return false;
 	}
+	components::MeshRenderer *meshRenderer = lookup->meshRenderer;
+	assets::Primitive *primitive = lookup->primitive;
 
 	auto materialInstance = primitive->getMaterialInstance();
 
@@ -381,7 +383,7 @@ bool SetPrimitiveMaterialPropertyCommand::applyPropertyValue( const MaterialProp
 	}
 
 	// Update the primitive's material instance
-	primitive->setMaterialInstance( materialInstance );
+	lookup->primitive->setMaterialInstance( materialInstance );
 
 	// Trigger GPU update
 	triggerGPUUpdate();
@@ -392,12 +394,14 @@ bool SetPrimitiveMaterialPropertyCommand::applyPropertyValue( const MaterialProp
 MaterialPropertyValue SetPrimitiveMaterialPropertyCommand::getCurrentPropertyValue() const
 {
 	// Lookup primitive
-	const components::MeshRenderer *meshRenderer = nullptr;
-	const assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup )
 	{
 		return getDefaultPropertyValue( m_propertyType );
 	}
+
+	const components::MeshRenderer *meshRenderer = lookup->meshRenderer;
+	const assets::Primitive *primitive = lookup->primitive;
 
 	const auto &materialInstance = primitive->getMaterialInstance();
 
@@ -515,11 +519,10 @@ ClearPrimitiveMaterialPropertyCommand::ClearPrimitiveMaterialPropertyCommand(
 	m_oldValue = getCurrentPropertyValue();
 
 	// Check if an override exists (use helper)
-	const components::MeshRenderer *meshRendererPtr = nullptr;
-	const assets::Primitive *primitive = nullptr;
-	if ( lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRendererPtr, &primitive ) )
+	const auto lookupCtor = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( lookupCtor )
 	{
-		const auto &materialInstance = primitive->getMaterialInstance();
+		const auto &materialInstance = lookupCtor->primitive->getMaterialInstance();
 		m_hadOverride = instanceHasOverride( materialInstance, m_propertyType );
 	}
 }
@@ -527,21 +530,20 @@ ClearPrimitiveMaterialPropertyCommand::ClearPrimitiveMaterialPropertyCommand(
 bool ClearPrimitiveMaterialPropertyCommand::execute()
 {
 	// Lookup primitive
-	components::MeshRenderer *meshRenderer = nullptr;
-	assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookupExec = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookupExec )
 	{
 		console::error( "ClearPrimitiveMaterialPropertyCommand: Invalid entity/primitive" );
 		return false;
 	}
 
-	auto materialInstance = primitive->getMaterialInstance();
+	auto materialInstance = lookupExec->primitive->getMaterialInstance();
 
 	// Clear the property override using helper
 	clearPropertyOnInstance( materialInstance, m_propertyType );
 
 	// Update the primitive's material instance
-	primitive->setMaterialInstance( materialInstance );
+	lookupExec->primitive->setMaterialInstance( materialInstance );
 
 	// Trigger GPU update
 	triggerGPUUpdate();
@@ -557,14 +559,13 @@ bool ClearPrimitiveMaterialPropertyCommand::undo()
 		return true;
 	}
 
-	components::MeshRenderer *meshRendererPtr = nullptr;
-	assets::Primitive *primitivePtr = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRendererPtr, &primitivePtr ) )
+	const auto lookupUndo = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookupUndo )
 		return false;
 
-	auto materialInstance = primitivePtr->getMaterialInstance();
+	auto materialInstance = lookupUndo->primitive->getMaterialInstance();
 	setPropertyOnInstance( materialInstance, m_propertyType, m_oldValue );
-	primitivePtr->setMaterialInstance( materialInstance );
+	lookupUndo->primitive->setMaterialInstance( materialInstance );
 	triggerGPUUpdate();
 
 	return true;
@@ -592,12 +593,11 @@ bool ClearPrimitiveMaterialPropertyCommand::updateEntityReference( ecs::Entity o
 
 MaterialPropertyValue ClearPrimitiveMaterialPropertyCommand::getCurrentPropertyValue() const
 {
-	const components::MeshRenderer *meshRenderer = nullptr;
-	const assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookupGet = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookupGet )
 		return getDefaultPropertyValue( m_propertyType );
 
-	const auto &materialInstance = primitive->getMaterialInstance();
+	const auto &materialInstance = lookupGet->primitive->getMaterialInstance();
 
 	switch ( m_propertyType )
 	{
@@ -682,39 +682,36 @@ ClearAllPrimitiveMaterialOverridesCommand::ClearAllPrimitiveMaterialOverridesCom
 	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene ), m_gpuManager( gpuManager )
 {
 	// Capture the current material instance for undo
-	const components::MeshRenderer *meshRendererPtr = nullptr;
-	const assets::Primitive *primitivePtr = nullptr;
-	if ( lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRendererPtr, &primitivePtr ) )
+	const auto lookupCtor = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( lookupCtor )
 	{
-		m_oldMaterialInstance = primitivePtr->getMaterialInstance();
+		m_oldMaterialInstance = lookupCtor->primitive->getMaterialInstance();
 	}
 }
 
 bool ClearAllPrimitiveMaterialOverridesCommand::execute()
 {
-	components::MeshRenderer *meshRenderer = nullptr;
-	assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookupExec = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookupExec )
 	{
 		console::error( "ClearAllPrimitiveMaterialOverridesCommand: Invalid entity/primitive" );
 		return false;
 	}
 
-	auto materialInstance = primitive->getMaterialInstance();
+	auto materialInstance = lookupExec->primitive->getMaterialInstance();
 	materialInstance.clearOverrides();
-	primitive->setMaterialInstance( materialInstance );
+	lookupExec->primitive->setMaterialInstance( materialInstance );
 	triggerGPUUpdate();
 	return true;
 }
 
 bool ClearAllPrimitiveMaterialOverridesCommand::undo()
 {
-	components::MeshRenderer *meshRenderer = nullptr;
-	assets::Primitive *primitive = nullptr;
-	if ( !lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, &meshRenderer, &primitive ) )
+	const auto lookupUndo = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookupUndo )
 		return false;
 
-	primitive->setMaterialInstance( m_oldMaterialInstance );
+	lookupUndo->primitive->setMaterialInstance( m_oldMaterialInstance );
 	triggerGPUUpdate();
 	return true;
 }

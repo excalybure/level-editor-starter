@@ -225,4 +225,13 @@ private:
 	void triggerGPUUpdate();
 };
 
+// Helper: update MaterialGPU from asset primitive's MaterialInstance
+// Exposed for unit tests
+bool updateMaterialGPUForPrimitive(
+	ecs::Entity entity,
+	uint32_t primitiveIndex,
+	ecs::Scene *ecsScene,
+	assets::Scene *assetScene,
+	graphics::GPUResourceManager *gpuManager );
+
 } // namespace editor
