@@ -8,10 +8,10 @@
 
 using json = nlohmann::json;
 
-TEST_CASE("glTF supports per-primitive material assignment", "[glTF][T3.2][unit][documentation]")
+TEST_CASE( "glTF supports per-primitive material assignment", "[glTF][T3.2][unit][documentation]" )
 {
 	// DOCUMENTATION: glTF 2.0 Specification Support for Per-Primitive Materials
-	// 
+	//
 	// glTF Structure:
 	//   mesh:
 	//     primitives:
@@ -24,33 +24,33 @@ TEST_CASE("glTF supports per-primitive material assignment", "[glTF][T3.2][unit]
 	//
 	// Arrange - Create a mesh with multiple primitives, each with different materials
 	auto mesh = std::make_unique<assets::Mesh>();
-	mesh->setPath("test_mesh.gltf");
-	mesh->setLoaded(true);
+	mesh->setPath( "test_mesh.gltf" );
+	mesh->setLoaded( true );
 
 	// Create primitives with different material handles
 	assets::Primitive prim0;
-	prim0.addVertex(assets::Vertex{{0, 0, 0}, {0, 1, 0}, {0, 0}});
-	prim0.setMaterialHandle(1);  // Material 1
-	mesh->getPrimitives().push_back(prim0);
+	prim0.addVertex( assets::Vertex{ { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0 } } );
+	prim0.setMaterialHandle( 1 ); // Material 1
+	mesh->getPrimitives().push_back( prim0 );
 
 	assets::Primitive prim1;
-	prim1.addVertex(assets::Vertex{{1, 0, 0}, {0, 1, 0}, {1, 0}});
-	prim1.setMaterialHandle(2);  // Material 2
-	mesh->getPrimitives().push_back(prim1);
+	prim1.addVertex( assets::Vertex{ { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0 } } );
+	prim1.setMaterialHandle( 2 ); // Material 2
+	mesh->getPrimitives().push_back( prim1 );
 
 	assets::Primitive prim2;
-	prim2.addVertex(assets::Vertex{{0, 1, 0}, {0, 1, 0}, {0, 1}});
-	prim2.setMaterialHandle(1);  // Material 1 (shared)
-	mesh->getPrimitives().push_back(prim2);
+	prim2.addVertex( assets::Vertex{ { 0, 1, 0 }, { 0, 1, 0 }, { 0, 1 } } );
+	prim2.setMaterialHandle( 1 ); // Material 1 (shared)
+	mesh->getPrimitives().push_back( prim2 );
 
 	// Assert - Each primitive has its assigned material
-	REQUIRE(mesh->getPrimitiveCount() == 3);
-	REQUIRE(mesh->getPrimitive(0).getMaterialHandle() == 1);
-	REQUIRE(mesh->getPrimitive(1).getMaterialHandle() == 2);
-	REQUIRE(mesh->getPrimitive(2).getMaterialHandle() == 1);
+	REQUIRE( mesh->getPrimitiveCount() == 3 );
+	REQUIRE( mesh->getPrimitive( 0 ).getMaterialHandle() == 1 );
+	REQUIRE( mesh->getPrimitive( 1 ).getMaterialHandle() == 2 );
+	REQUIRE( mesh->getPrimitive( 2 ).getMaterialHandle() == 1 );
 }
 
-TEST_CASE("glTF does NOT support per-primitive material property overrides natively", "[glTF][T3.2][unit][documentation]")
+TEST_CASE( "glTF does NOT support per-primitive material property overrides natively", "[glTF][T3.2][unit][documentation]" )
 {
 	// DOCUMENTATION: glTF 2.0 Specification Limitations
 	//
@@ -78,23 +78,23 @@ TEST_CASE("glTF does NOT support per-primitive material property overrides nativ
 
 	// Arrange - Create primitives with material overrides
 	assets::Primitive prim;
-	prim.addVertex(assets::Vertex{{0, 0, 0}, {0, 1, 0}, {0, 0}});
-	prim.setMaterialHandle(1);
+	prim.addVertex( assets::Vertex{ { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0 } } );
+	prim.setMaterialHandle( 1 );
 
 	// Create override for this primitive
 	assets::MaterialInstance instance;
 	instance.baseMaterial = 1;
-	instance.baseColorFactorOverride = math::Vec4f{1.0f, 0.0f, 0.0f, 1.0f};  // Red
-	prim.setMaterialInstance(instance);
+	instance.baseColorFactorOverride = math::Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f }; // Red
+	prim.setMaterialInstance( instance );
 
 	// Assert - Override is separate from base material
-	REQUIRE(prim.getMaterialHandle() == 1);  // Base material
-	REQUIRE(prim.getMaterialInstance().baseMaterial == 1);  // Override references same base
-	REQUIRE(prim.getMaterialInstance().baseColorFactorOverride.has_value());
-	REQUIRE(prim.getMaterialInstance().baseColorFactorOverride.value() == math::Vec4f{1.0f, 0.0f, 0.0f, 1.0f});
+	REQUIRE( prim.getMaterialHandle() == 1 );				 // Base material
+	REQUIRE( prim.getMaterialInstance().baseMaterial == 1 ); // Override references same base
+	REQUIRE( prim.getMaterialInstance().baseColorFactorOverride.has_value() );
+	REQUIRE( prim.getMaterialInstance().baseColorFactorOverride.value() == math::Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f } );
 }
 
-TEST_CASE("glTF loader maps primitives to base materials correctly", "[glTF][T3.2][unit][integration]")
+TEST_CASE( "glTF loader maps primitives to base materials correctly", "[glTF][T3.2][unit][integration]" )
 {
 	// DOCUMENTATION: glTF Loader Material Assignment
 	//
@@ -112,31 +112,31 @@ TEST_CASE("glTF loader maps primitives to base materials correctly", "[glTF][T3.
 
 	// Arrange - Simulate a multi-material mesh loaded from glTF
 	auto mesh = std::make_unique<assets::Mesh>();
-	
+
 	// Simulate 3 primitives from glTF file with different materials
-	for (int i = 0; i < 3; ++i)
+	for ( int i = 0; i < 3; ++i )
 	{
 		assets::Primitive prim;
-		prim.addVertex(assets::Vertex{{static_cast<float>(i), 0, 0}, {0, 1, 0}, {0, 0}});
-		prim.setMaterialHandle(i);  // Material 0, 1, 2
-		mesh->getPrimitives().push_back(prim);
+		prim.addVertex( assets::Vertex{ { static_cast<float>( i ), 0, 0 }, { 0, 1, 0 }, { 0, 0 } } );
+		prim.setMaterialHandle( i ); // Material 0, 1, 2
+		mesh->getPrimitives().push_back( prim );
 	}
 
 	// Act - Verify material assignment and lack of overrides
-	for (uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i)
+	for ( uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i )
 	{
-		const auto& prim = mesh->getPrimitive(i);
-		
+		const auto &prim = mesh->getPrimitive( i );
+
 		// Assert - Material handle is correctly assigned
-		REQUIRE(prim.getMaterialHandle() == i);
-		
+		REQUIRE( prim.getMaterialHandle() == i );
+
 		// Assert - No overrides by default (MaterialInstance is empty)
-		REQUIRE(!prim.hasOverrides());
-		REQUIRE(prim.getMaterialInstance().baseMaterial == assets::INVALID_MATERIAL_HANDLE);
+		REQUIRE( !prim.hasOverrides() );
+		REQUIRE( prim.getMaterialInstance().baseMaterial == assets::INVALID_MATERIAL_HANDLE );
 	}
 }
 
-TEST_CASE("glTF material properties are stored in base Material, not per-primitive", "[glTF][T3.2][unit][documentation]")
+TEST_CASE( "glTF material properties are stored in base Material, not per-primitive", "[glTF][T3.2][unit][documentation]" )
 {
 	// DOCUMENTATION: glTF Material Properties Storage
 	//
@@ -162,7 +162,7 @@ TEST_CASE("glTF material properties are stored in base Material, not per-primiti
 	//     baseColorFactor: [1.0, 0.0, 0.0, 1.0]
 	//   }
 	//   Material {
-	//     name: "blue"  
+	//     name: "blue"
 	//     baseColorFactor: [0.0, 0.0, 1.0, 1.0]
 	//   }
 	//   Mesh {
@@ -186,40 +186,40 @@ TEST_CASE("glTF material properties are stored in base Material, not per-primiti
 
 	// Arrange - Create materials with different properties
 	auto material1 = std::make_shared<assets::Material>();
-	material1->setName("metal_surface");
-	material1->getPBRMaterial().baseColorFactor = math::Vec4f{0.8f, 0.8f, 0.8f, 1.0f};
+	material1->setName( "metal_surface" );
+	material1->getPBRMaterial().baseColorFactor = math::Vec4f{ 0.8f, 0.8f, 0.8f, 1.0f };
 	material1->getPBRMaterial().metallicFactor = 0.9f;
 	material1->getPBRMaterial().roughnessFactor = 0.3f;
 
 	auto material2 = std::make_shared<assets::Material>();
-	material2->setName("rubber_surface");
-	material2->getPBRMaterial().baseColorFactor = math::Vec4f{0.2f, 0.2f, 0.2f, 1.0f};
+	material2->setName( "rubber_surface" );
+	material2->getPBRMaterial().baseColorFactor = math::Vec4f{ 0.2f, 0.2f, 0.2f, 1.0f };
 	material2->getPBRMaterial().metallicFactor = 0.1f;
 	material2->getPBRMaterial().roughnessFactor = 0.8f;
 
 	// Act - Create mesh with primitives using different materials
 	auto mesh = std::make_unique<assets::Mesh>();
-	
+
 	assets::Primitive prim1;
-	prim1.addVertex(assets::Vertex{{0, 0, 0}, {0, 1, 0}, {0, 0}});
-	prim1.setMaterialHandle(0);  // References material 0 (metal)
-	mesh->getPrimitives().push_back(prim1);
+	prim1.addVertex( assets::Vertex{ { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0 } } );
+	prim1.setMaterialHandle( 0 ); // References material 0 (metal)
+	mesh->getPrimitives().push_back( prim1 );
 
 	assets::Primitive prim2;
-	prim2.addVertex(assets::Vertex{{1, 0, 0}, {0, 1, 0}, {1, 0}});
-	prim2.setMaterialHandle(1);  // References material 1 (rubber)
-	mesh->getPrimitives().push_back(prim2);
+	prim2.addVertex( assets::Vertex{ { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0 } } );
+	prim2.setMaterialHandle( 1 ); // References material 1 (rubber)
+	mesh->getPrimitives().push_back( prim2 );
 
 	// Assert - Each primitive's material handle is independent
-	REQUIRE(mesh->getPrimitive(0).getMaterialHandle() == 0);
-	REQUIRE(mesh->getPrimitive(1).getMaterialHandle() == 1);
-	
+	REQUIRE( mesh->getPrimitive( 0 ).getMaterialHandle() == 0 );
+	REQUIRE( mesh->getPrimitive( 1 ).getMaterialHandle() == 1 );
+
 	// Assert - Material properties are stored in Material objects, not in primitives
-	REQUIRE(material1->getPBRMaterial().metallicFactor == 0.9f);
-	REQUIRE(material2->getPBRMaterial().metallicFactor == 0.1f);
+	REQUIRE( material1->getPBRMaterial().metallicFactor == 0.9f );
+	REQUIRE( material2->getPBRMaterial().metallicFactor == 0.1f );
 }
 
-TEST_CASE("MaterialInstance bridges glTF and per-primitive customization", "[glTF][T3.2][unit][documentation]")
+TEST_CASE( "MaterialInstance bridges glTF and per-primitive customization", "[glTF][T3.2][unit][documentation]" )
 {
 	// DOCUMENTATION: How MaterialInstance Works with glTF
 	//
@@ -249,55 +249,58 @@ TEST_CASE("MaterialInstance bridges glTF and per-primitive customization", "[glT
 
 	// Arrange - Simulate loaded glTF with primitives and add overrides
 	auto mesh = std::make_unique<assets::Mesh>();
-	
+
 	// All primitives start with same base material from glTF
 	const assets::MaterialHandle baseMaterial = 0;
-	
-	for (int i = 0; i < 6; ++i)
+
+	for ( int i = 0; i < 6; ++i )
 	{
 		assets::Primitive prim;
-		prim.addVertex(assets::Vertex{{static_cast<float>(i), 0, 0}, {0, 1, 0}, {0, 0}});
-		prim.setMaterialHandle(baseMaterial);
-		
+		prim.addVertex( assets::Vertex{ { static_cast<float>( i ), 0, 0 }, { 0, 1, 0 }, { 0, 0 } } );
+		prim.setMaterialHandle( baseMaterial );
+
 		// Add overrides for first 3 primitives
-		if (i < 3)
+		if ( i < 3 )
 		{
 			assets::MaterialInstance instance;
 			instance.baseMaterial = baseMaterial;
-			
+
 			// Set different colors
-			if (i == 0) instance.baseColorFactorOverride = math::Vec4f{1, 0, 0, 1};  // Red
-			else if (i == 1) instance.baseColorFactorOverride = math::Vec4f{0, 1, 0, 1};  // Green
-			else if (i == 2) instance.baseColorFactorOverride = math::Vec4f{0, 0, 1, 1};  // Blue
-			
-			prim.setMaterialInstance(instance);
+			if ( i == 0 )
+				instance.baseColorFactorOverride = math::Vec4f{ 1, 0, 0, 1 }; // Red
+			else if ( i == 1 )
+				instance.baseColorFactorOverride = math::Vec4f{ 0, 1, 0, 1 }; // Green
+			else if ( i == 2 )
+				instance.baseColorFactorOverride = math::Vec4f{ 0, 0, 1, 1 }; // Blue
+
+			prim.setMaterialInstance( instance );
 		}
-		
-		mesh->getPrimitives().push_back(prim);
+
+		mesh->getPrimitives().push_back( prim );
 	}
 
 	// Assert - All primitives have same base material
-	for (uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i)
+	for ( uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i )
 	{
-		REQUIRE(mesh->getPrimitive(i).getMaterialHandle() == baseMaterial);
+		REQUIRE( mesh->getPrimitive( i ).getMaterialHandle() == baseMaterial );
 	}
 
 	// Assert - Only first 3 primitives have color overrides
-	for (uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i)
+	for ( uint32_t i = 0; i < mesh->getPrimitiveCount(); ++i )
 	{
-		if (i < 3)
+		if ( i < 3 )
 		{
-			REQUIRE(mesh->getPrimitive(i).hasOverrides());
-			REQUIRE(mesh->getPrimitive(i).getMaterialInstance().baseColorFactorOverride.has_value());
+			REQUIRE( mesh->getPrimitive( i ).hasOverrides() );
+			REQUIRE( mesh->getPrimitive( i ).getMaterialInstance().baseColorFactorOverride.has_value() );
 		}
 		else
 		{
-			REQUIRE(!mesh->getPrimitive(i).hasOverrides());
+			REQUIRE( !mesh->getPrimitive( i ).hasOverrides() );
 		}
 	}
 }
 
-TEST_CASE("glTF loader recommendation: check cgltf for extension support", "[glTF][T3.2][unit][documentation]")
+TEST_CASE( "glTF loader recommendation: check cgltf for extension support", "[glTF][T3.2][unit][documentation]" )
 {
 	// DOCUMENTATION: Research Notes on glTF Extensions
 	//
@@ -324,10 +327,10 @@ TEST_CASE("glTF loader recommendation: check cgltf for extension support", "[glT
 	//   - MaterialInstance is our custom extension layer
 	//   - Scene serialization handles persistence
 
-	REQUIRE(true);  // Documentation test
+	REQUIRE( true ); // Documentation test
 }
 
-TEST_CASE("Recommendation for future: glTF custom extension for persistent overrides", "[glTF][T3.2][unit][documentation][future]")
+TEST_CASE( "Recommendation for future: glTF custom extension for persistent overrides", "[glTF][T3.2][unit][documentation][future]" )
 {
 	// DOCUMENTATION: Future Enhancement - Persistent glTF Overrides
 	//
@@ -363,5 +366,5 @@ TEST_CASE("Recommendation for future: glTF custom extension for persistent overr
 	//   - Overrides are managed separately in our scene format
 	//   - This keeps glTF files standard-compliant
 
-	REQUIRE(true);  // Documentation test
+	REQUIRE( true ); // Documentation test
 }
