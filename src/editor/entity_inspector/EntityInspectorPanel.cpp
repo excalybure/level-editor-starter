@@ -9,6 +9,7 @@
 #include "editor/transform_commands.h"
 #include "math/math.h"
 #include "graphics/gpu/mesh_gpu.h"
+#include "graphics/gpu/material_gpu.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>
@@ -386,7 +387,7 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 			ImGui::PushID( static_cast<int>( i ) );
 
 			// Tree node for primitive with index
-			const bool nodeOpen = ImGui::TreeNode( nullptr, "Primitive %u", i );
+			const bool nodeOpen = ImGui::TreeNode( static_cast<const void *>( nullptr ), "Primitive %u", i );
 
 			if ( nodeOpen )
 			{
@@ -396,10 +397,28 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 				// Display index count
 				ImGui::Text( "Indices: %u", primitive.getIndexCount() );
 
-				// Display material status
+				// Display material name
 				if ( primitive.hasMaterial() )
 				{
-					ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "Material: Assigned" );
+					const auto materialGPU = primitive.getMaterial();
+					if ( materialGPU )
+					{
+						const auto sourceMaterial = materialGPU->getSourceMaterial();
+						if ( sourceMaterial )
+						{
+							ImGui::Text( "Material: " );
+							ImGui::SameLine();
+							ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "%s", sourceMaterial->getName().c_str() );
+						}
+						else
+						{
+							ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "Material: Invalid" );
+						}
+					}
+					else
+					{
+						ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "Material: None" );
+					}
 				}
 				else
 				{
@@ -415,6 +434,7 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 		ImGui::Unindent();
 	}
 }
+
 
 void EntityInspectorPanel::renderMeshRendererComponent( ecs::Entity entity )
 {

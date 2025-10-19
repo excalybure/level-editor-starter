@@ -9,6 +9,9 @@
 #include "math/math.h"
 #include "engine/assets/assets.h"
 #include "graphics/gpu/mesh_gpu.h"
+#include "graphics/gpu/material_gpu.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 #include <cmath>
 
@@ -547,4 +550,111 @@ TEST_CASE( "EntityInspectorPanel - MeshRenderer shows primitive tree with vertex
 	const auto &primitive1 = meshRendererComp->gpuMesh->getPrimitive( 1 );
 	REQUIRE( primitive1.getVertexCount() == 4 );
 	REQUIRE( primitive1.getIndexCount() == 6 );
+}
+
+// ============================================================================
+// T1.2: Material Name Display Tests
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - Primitive tree displays material name per primitive", "[T1.2][entity_inspector][primitive_tree][material_name][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	// Create two materials with distinct names
+	auto material0 = std::make_shared<assets::Material>();
+	material0->setName( "RedMaterial" );
+	material0->setBaseColorFactor( 1.0f, 0.0f, 0.0f, 1.0f );
+	material0->setPath( "red_material" );
+	material0->setLoaded( true );
+
+	auto material1 = std::make_shared<assets::Material>();
+	material1->setName( "BlueMaterial" );
+	material1->setBaseColorFactor( 0.0f, 0.0f, 1.0f, 1.0f );
+	material1->setPath( "blue_material" );
+	material1->setLoaded( true );
+
+	// Create GPU materials
+	auto gpuMaterial0 = std::make_shared<graphics::gpu::MaterialGPU>( material0, device, textureManager );
+	auto gpuMaterial1 = std::make_shared<graphics::gpu::MaterialGPU>( material1, device, textureManager );
+	REQUIRE( gpuMaterial0->isValid() );
+	REQUIRE( gpuMaterial1->isValid() );
+
+	// Create a mesh with 2 primitives
+	auto mesh = std::make_shared<assets::Mesh>();
+
+	// First primitive: 3 vertices, 3 indices (triangle)
+	assets::Primitive prim0;
+	prim0.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim0.addIndex( 0 );
+	prim0.addIndex( 1 );
+	prim0.addIndex( 2 );
+	mesh->addPrimitive( std::move( prim0 ) );
+
+	// Second primitive: 4 vertices, 6 indices (quad)
+	assets::Primitive prim1;
+	prim1.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim1.addIndex( 0 );
+	prim1.addIndex( 1 );
+	prim1.addIndex( 2 );
+	prim1.addIndex( 0 );
+	prim1.addIndex( 2 );
+	prim1.addIndex( 3 );
+	mesh->addPrimitive( std::move( prim1 ) );
+
+	// Create GPU mesh
+	auto gpuMesh = std::make_shared<graphics::gpu::MeshGPU>( device, *mesh );
+	REQUIRE( gpuMesh->isValid() );
+	REQUIRE( gpuMesh->getPrimitiveCount() == 2 );
+
+	// Manually assign materials to primitives
+	gpuMesh->getPrimitive( 0 ).setMaterial( gpuMaterial0 );
+	gpuMesh->getPrimitive( 1 ).setMaterial( gpuMaterial1 );
+
+	// Create entity with MeshRenderer
+	const ecs::Entity entity = scene.createEntity( "MeshEntity" );
+	components::MeshRenderer meshRenderer;
+	meshRenderer.meshHandle = 42;
+	meshRenderer.gpuMesh = gpuMesh;
+	scene.addComponent( entity, meshRenderer );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
+
+	// Act & Assert - Verify primitives have materials with correct names
+	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRendererComp != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh->getPrimitiveCount() == 2 );
+
+	// Verify primitive 0 has RedMaterial
+	const auto &primitive0 = meshRendererComp->gpuMesh->getPrimitive( 0 );
+	REQUIRE( primitive0.hasMaterial() );
+	REQUIRE( primitive0.getMaterial() != nullptr );
+	const auto sourceMaterial0 = primitive0.getMaterial()->getSourceMaterial();
+	REQUIRE( sourceMaterial0.get() != nullptr );
+	REQUIRE( sourceMaterial0->getName() == "RedMaterial" );
+
+	// Verify primitive 1 has BlueMaterial
+	const auto &primitive1 = meshRendererComp->gpuMesh->getPrimitive( 1 );
+	REQUIRE( primitive1.hasMaterial() );
+	REQUIRE( primitive1.getMaterial() != nullptr );
+	const auto sourceMaterial1 = primitive1.getMaterial()->getSourceMaterial();
+	REQUIRE( sourceMaterial1.get() != nullptr );
+	REQUIRE( sourceMaterial1->getName() == "BlueMaterial" );
 }
