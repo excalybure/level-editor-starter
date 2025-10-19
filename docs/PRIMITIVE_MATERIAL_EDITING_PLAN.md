@@ -306,10 +306,14 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - UI buttons next to Clear All Overrides for Copy/Paste with tooltips
   - Full state capture (all 8 properties: colors, factors, textures)
   
-- [ ] **T5.3:** Material presets
-  - Save common override combinations
-  - Apply preset to selected primitives
-  - Preset library management
+- [x] **T5.3:** Material presets ✅ COMPLETED (Oct 19)
+  - MaterialPreset struct stores named preset configurations
+  - MaterialPresetManager handles preset library with add/remove/get operations
+  - Save/load presets to/from JSON file (material_presets.json)
+  - UI integration in EntityInspectorPanel with preset dropdown
+  - ApplyMaterialPresetCommand for undo/redo support
+  - Presets can partially override properties (flexible application)
+  - Full test coverage (9 tests, 46 assertions)
 
 ---
 

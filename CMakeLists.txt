@@ -181,6 +181,7 @@ add_library(editor STATIC
   src/editor/config/EditorConfig.cpp
   src/editor/entity_inspector/ComponentUI.cpp
   src/editor/entity_inspector/EntityInspectorPanel.cpp
+  src/editor/material_presets/MaterialPresetManager.cpp
   src/editor/gizmos.cpp
   src/editor/scene_hierarchy/SceneHierarchyPanel.cpp
   src/editor/selection.cpp
@@ -356,6 +357,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/update_material_gpu_tests.cpp
     tests/material_instance_override_tests.cpp
     tests/primitive_material_instance_tests.cpp
+    tests/material_preset_tests.cpp
     tests/gpu_resource_manager_tests.cpp
     tests/mesh_rendering_system_tests.cpp
     tests/asset_rendering_integration_tests.cpp

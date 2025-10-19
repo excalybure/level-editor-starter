@@ -65,4 +65,68 @@ void MaterialInstance::clearOverrides()
 	emissiveTextureOverride.reset();
 }
 
+MaterialPreset MaterialPreset::fromMaterialInstance( const std::string &presetName, const MaterialInstance &instance )
+{
+	MaterialPreset preset;
+	preset.name = presetName;
+	preset.baseColorFactorOverride = instance.baseColorFactorOverride;
+	preset.metallicFactorOverride = instance.metallicFactorOverride;
+	preset.roughnessFactorOverride = instance.roughnessFactorOverride;
+	preset.emissiveFactorOverride = instance.emissiveFactorOverride;
+	preset.baseColorTextureOverride = instance.baseColorTextureOverride;
+	preset.metallicRoughnessTextureOverride = instance.metallicRoughnessTextureOverride;
+	preset.normalTextureOverride = instance.normalTextureOverride;
+	preset.emissiveTextureOverride = instance.emissiveTextureOverride;
+	return preset;
+}
+
+void MaterialPreset::applyTo( MaterialInstance &instance ) const
+{
+	// Only apply overrides that are present in the preset
+	if ( baseColorFactorOverride.has_value() )
+	{
+		instance.baseColorFactorOverride = baseColorFactorOverride;
+	}
+	if ( metallicFactorOverride.has_value() )
+	{
+		instance.metallicFactorOverride = metallicFactorOverride;
+	}
+	if ( roughnessFactorOverride.has_value() )
+	{
+		instance.roughnessFactorOverride = roughnessFactorOverride;
+	}
+	if ( emissiveFactorOverride.has_value() )
+	{
+		instance.emissiveFactorOverride = emissiveFactorOverride;
+	}
+	if ( baseColorTextureOverride.has_value() )
+	{
+		instance.baseColorTextureOverride = baseColorTextureOverride;
+	}
+	if ( metallicRoughnessTextureOverride.has_value() )
+	{
+		instance.metallicRoughnessTextureOverride = metallicRoughnessTextureOverride;
+	}
+	if ( normalTextureOverride.has_value() )
+	{
+		instance.normalTextureOverride = normalTextureOverride;
+	}
+	if ( emissiveTextureOverride.has_value() )
+	{
+		instance.emissiveTextureOverride = emissiveTextureOverride;
+	}
+}
+
+bool MaterialPreset::hasOverrides() const
+{
+	return baseColorFactorOverride.has_value() ||
+		metallicFactorOverride.has_value() ||
+		roughnessFactorOverride.has_value() ||
+		emissiveFactorOverride.has_value() ||
+		baseColorTextureOverride.has_value() ||
+		metallicRoughnessTextureOverride.has_value() ||
+		normalTextureOverride.has_value() ||
+		emissiveTextureOverride.has_value();
+}
+
 } // namespace assets

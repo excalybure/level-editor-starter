@@ -12,6 +12,7 @@
 #include "graphics/gpu/mesh_gpu.h"
 #include "graphics/gpu/material_gpu.h"
 #include "engine/assets/assets.h"
+#include "core/console.h"
 #include <imgui.h>
 #include <format>
 #include <cstring>
@@ -25,8 +26,9 @@ EntityInspectorPanel::EntityInspectorPanel( ecs::Scene &scene,
 	CommandHistory &commandHistory,
 	systems::SystemManager &systemManager,
 	assets::AssetManager *assetManager,
-	graphics::GPUResourceManager *gpuManager )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_cachedAssetScene( nullptr ), m_cachedAssetScenePath( "" ), m_visible( true )
+	graphics::GPUResourceManager *gpuManager,
+	MaterialPresetManager *presetManager )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_presetManager( presetManager ), m_cachedAssetScene( nullptr ), m_cachedAssetScenePath( "" ), m_visible( true )
 {
 }
 
@@ -907,6 +909,93 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 									if ( ImGui::IsItemHovered() )
 									{
 										ImGui::SetTooltip( "Paste material overrides from clipboard" );
+									}
+
+									// Preset UI (if preset manager is available)
+									if ( m_presetManager )
+									{
+										ImGui::Separator();
+
+										// Save as preset button
+										static char presetNameBuffer[128] = "New Preset";
+										ImGui::SetNextItemWidth( 150.0f );
+										ImGui::InputText( "##presetName", presetNameBuffer, sizeof( presetNameBuffer ) );
+										ImGui::SameLine();
+										if ( ImGui::Button( "Save Preset" ) )
+										{
+											const assets::MaterialPreset preset = assets::MaterialPreset::fromMaterialInstance(
+												std::string( presetNameBuffer ), assetPrimitive->getMaterialInstance() );
+											if ( m_presetManager->addPreset( preset ) )
+											{
+												console::info( "Saved material preset '{}'", preset.name );
+											}
+										}
+										if ( ImGui::IsItemHovered() )
+										{
+											ImGui::SetTooltip( "Save current overrides as a new preset" );
+										}
+
+										// Apply preset dropdown
+										const auto presetNames = m_presetManager->getPresetNames();
+										if ( !presetNames.empty() )
+										{
+											static int selectedPresetIndex = 0;
+											if ( selectedPresetIndex >= static_cast<int>( presetNames.size() ) )
+											{
+												selectedPresetIndex = 0;
+											}
+
+											ImGui::SetNextItemWidth( 150.0f );
+											if ( ImGui::BeginCombo( "##presetSelect", presetNames[selectedPresetIndex].c_str() ) )
+											{
+												for ( int n = 0; n < static_cast<int>( presetNames.size() ); ++n )
+												{
+													const bool isSelected = ( selectedPresetIndex == n );
+													if ( ImGui::Selectable( presetNames[n].c_str(), isSelected ) )
+													{
+														selectedPresetIndex = n;
+													}
+													if ( isSelected )
+													{
+														ImGui::SetItemDefaultFocus();
+													}
+												}
+												ImGui::EndCombo();
+											}
+
+											ImGui::SameLine();
+											if ( ImGui::Button( "Apply Preset" ) )
+											{
+												const auto preset = m_presetManager->getPreset( presetNames[selectedPresetIndex] );
+												if ( preset.has_value() && m_cachedAssetScene && m_gpuManager )
+												{
+													auto command = std::make_unique<ApplyMaterialPresetCommand>(
+														entity, i, preset.value(), m_scene, *m_cachedAssetScene, m_gpuManager );
+													m_commandHistory.executeCommand( std::move( command ) );
+												}
+											}
+											if ( ImGui::IsItemHovered() )
+											{
+												ImGui::SetTooltip( "Apply selected preset to this primitive" );
+											}
+
+											// Delete preset button
+											ImGui::SameLine();
+											ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.8f, 0.2f, 0.2f, 0.7f ) );
+											if ( ImGui::Button( "Delete##preset" ) )
+											{
+												if ( m_presetManager->removePreset( presetNames[selectedPresetIndex] ) )
+												{
+													console::info( "Deleted material preset '{}'", presetNames[selectedPresetIndex] );
+													selectedPresetIndex = 0;
+												}
+											}
+											ImGui::PopStyleColor();
+											if ( ImGui::IsItemHovered() )
+											{
+												ImGui::SetTooltip( "Delete the selected preset" );
+											}
+										}
 									}
 								}
 

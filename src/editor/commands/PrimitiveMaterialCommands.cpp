@@ -1012,4 +1012,103 @@ void PastePrimitiveMaterialCommand::triggerGPUUpdate()
 	updateMaterialGPUForPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, m_gpuManager );
 }
 
+// =============================================================================
+// ApplyMaterialPresetCommand Implementation
+// =============================================================================
+
+ApplyMaterialPresetCommand::ApplyMaterialPresetCommand(
+	ecs::Entity entity,
+	uint32_t primitiveIndex,
+	const assets::MaterialPreset &preset,
+	ecs::Scene &ecsScene,
+	assets::Scene &assetScene,
+	graphics::GPUResourceManager *gpuManager )
+	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_presetName( preset.name ), m_preset( preset ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene ), m_gpuManager( gpuManager )
+{
+	// Capture current state for undo
+	const auto lookup = lookupPrimitive( entity, primitiveIndex, &ecsScene, &assetScene );
+	if ( lookup && lookup->primitive )
+	{
+		m_oldMaterialInstance = lookup->primitive->getMaterialInstance();
+	}
+}
+
+bool ApplyMaterialPresetCommand::execute()
+{
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup || !lookup->primitive )
+	{
+		console::error( "ApplyMaterialPresetCommand: Failed to lookup primitive" );
+		return false;
+	}
+
+	// Get current material instance
+	assets::MaterialInstance instance = lookup->primitive->getMaterialInstance();
+
+	// Apply preset (only properties present in preset are modified)
+	m_preset.applyTo( instance );
+
+	// Set the modified instance
+	lookup->primitive->setMaterialInstance( instance );
+
+	// Trigger GPU update
+	triggerGPUUpdate();
+
+	return true;
+}
+
+bool ApplyMaterialPresetCommand::undo()
+{
+	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
+	if ( !lookup || !lookup->primitive )
+		return false;
+
+	lookup->primitive->setMaterialInstance( m_oldMaterialInstance );
+	triggerGPUUpdate();
+	return true;
+}
+
+std::string ApplyMaterialPresetCommand::getDescription() const
+{
+	return std::format( "Apply Preset '{}' to Primitive {}", m_presetName, m_primitiveIndex );
+}
+
+size_t ApplyMaterialPresetCommand::getMemoryUsage() const
+{
+	size_t size = sizeof( *this );
+	size += m_presetName.capacity();
+
+	// Add sizes for old overrides
+	if ( m_oldMaterialInstance.baseColorTextureOverride.has_value() )
+		size += m_oldMaterialInstance.baseColorTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.metallicRoughnessTextureOverride.has_value() )
+		size += m_oldMaterialInstance.metallicRoughnessTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.normalTextureOverride.has_value() )
+		size += m_oldMaterialInstance.normalTextureOverride.value().capacity();
+	if ( m_oldMaterialInstance.emissiveTextureOverride.has_value() )
+		size += m_oldMaterialInstance.emissiveTextureOverride.value().capacity();
+
+	// Add sizes for preset overrides
+	if ( m_preset.baseColorTextureOverride.has_value() )
+		size += m_preset.baseColorTextureOverride.value().capacity();
+	if ( m_preset.metallicRoughnessTextureOverride.has_value() )
+		size += m_preset.metallicRoughnessTextureOverride.value().capacity();
+	if ( m_preset.normalTextureOverride.has_value() )
+		size += m_preset.normalTextureOverride.value().capacity();
+	if ( m_preset.emissiveTextureOverride.has_value() )
+		size += m_preset.emissiveTextureOverride.value().capacity();
+
+	return size;
+}
+
+bool ApplyMaterialPresetCommand::updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity )
+{
+	return editor::updateEntityReference( m_entity, oldEntity, newEntity );
+}
+
+void ApplyMaterialPresetCommand::triggerGPUUpdate()
+{
+	updateMaterialGPUForPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene, m_gpuManager );
+}
+
 } // namespace editor

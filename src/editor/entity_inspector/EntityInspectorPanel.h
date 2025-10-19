@@ -4,6 +4,7 @@
 #include "runtime/entity.h"
 #include "runtime/components.h"
 #include "editor/commands/PrimitiveMaterialCommands.h"
+#include "editor/material_presets/MaterialPresetManager.h"
 
 namespace graphics::gpu
 {
@@ -61,13 +62,15 @@ public:
 	 * @param systemManager System manager for accessing TransformSystem
 	 * @param assetManager Asset manager for loading mesh data and material instances
 	 * @param gpuManager GPU resource manager for triggering material updates
+	 * @param presetManager Material preset manager for saving/loading presets (optional)
 	 */
 	EntityInspectorPanel( ecs::Scene &scene,
 		SelectionManager &selectionManager,
 		CommandHistory &commandHistory,
 		systems::SystemManager &systemManager,
 		assets::AssetManager *assetManager = nullptr,
-		graphics::GPUResourceManager *gpuManager = nullptr );
+		graphics::GPUResourceManager *gpuManager = nullptr,
+		MaterialPresetManager *presetManager = nullptr );
 
 	/**
 	 * @brief Render the inspector panel UI
@@ -109,6 +112,7 @@ private:
 	systems::SystemManager &m_systemManager;
 	assets::AssetManager *m_assetManager;
 	graphics::GPUResourceManager *m_gpuManager;
+	MaterialPresetManager *m_presetManager;
 	mutable assets::Scene *m_cachedAssetScene; // Cache of loaded asset scene for override detection
 	std::string m_cachedAssetScenePath;		   // Track the path of the cached scene
 	bool m_visible;

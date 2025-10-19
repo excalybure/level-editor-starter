@@ -36,6 +36,7 @@
 #include "editor/asset_browser/AssetBrowserPanel.h"
 #include "editor/commands/EcsCommands.h"
 #include "editor/config/EditorConfig.h"
+#include "editor/material_presets/MaterialPresetManager.h"
 
 namespace editor
 {
@@ -127,6 +128,7 @@ struct UI::Impl
 	std::unique_ptr<SceneHierarchyPanel> hierarchyPanel;
 	std::unique_ptr<EntityInspectorPanel> inspectorPanel;
 	std::unique_ptr<AssetBrowserPanel> assetBrowserPanel;
+	std::unique_ptr<MaterialPresetManager> presetManager;
 	bool showHierarchyPanel = true;
 	bool showInspectorPanel = true;
 	bool showAssetBrowserPanel = true;
@@ -302,6 +304,12 @@ void UI::shutdown()
 {
 	if ( !m_initialized )
 		return;
+
+	// Save material presets before shutdown
+	if ( m_impl->presetManager )
+	{
+		m_impl->presetManager->saveToFile( "material_presets.json" );
+	}
 
 	// Save window visibility states to config before shutdown
 	if ( m_impl->editorConfig )
@@ -2002,11 +2010,15 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 	// Create GizmoUI with GizmoSystem dependency
 	m_impl->gizmoUI = std::make_unique<GizmoUI>( *m_impl->gizmoSystem );
 
+	// Create material preset manager and load presets
+	m_impl->presetManager = std::make_unique<MaterialPresetManager>();
+	m_impl->presetManager->loadFromFile( "material_presets.json" );
+
 	// Create scene editing panels
 	m_impl->hierarchyPanel = std::make_unique<SceneHierarchyPanel>(
 		scene, selectionManager, *m_impl->commandHistory, &assetManager, m_impl->gpuManager );
 	m_impl->inspectorPanel = std::make_unique<EntityInspectorPanel>(
-		scene, selectionManager, *m_impl->commandHistory, systemManager, &assetManager, m_impl->gpuManager );
+		scene, selectionManager, *m_impl->commandHistory, systemManager, &assetManager, m_impl->gpuManager, m_impl->presetManager.get() );
 	m_impl->assetBrowserPanel = std::make_unique<AssetBrowserPanel>(
 		assetManager, scene, *m_impl->commandHistory );
 

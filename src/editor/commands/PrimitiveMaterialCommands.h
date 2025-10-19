@@ -320,6 +320,56 @@ public:
 	void parseJsonForTesting( const char *jsonText ) { parseClipboardJson( jsonText ); }
 };
 
+/**
+ * @brief Command for applying a material preset to a primitive
+ * 
+ * Applies a saved material preset to a primitive's MaterialInstance.
+ * Only properties present in the preset are applied (partial override support).
+ * Supports undo/redo by storing the previous MaterialInstance state.
+ */
+class ApplyMaterialPresetCommand : public Command
+{
+public:
+	/**
+	 * @brief Construct a command to apply a material preset
+	 * @param entity The entity with the MeshRenderer component
+	 * @param primitiveIndex Index of the primitive within the mesh
+	 * @param preset The preset to apply
+	 * @param ecsScene The ECS scene containing the entity
+	 * @param assetScene The asset scene containing the mesh data
+	 * @param gpuManager Optional GPU resource manager for triggering material updates
+	 */
+	ApplyMaterialPresetCommand(
+		ecs::Entity entity,
+		uint32_t primitiveIndex,
+		const assets::MaterialPreset &preset,
+		ecs::Scene &ecsScene,
+		assets::Scene &assetScene,
+		graphics::GPUResourceManager *gpuManager = nullptr );
+
+	// Command interface implementation
+	bool execute() override;
+	bool undo() override;
+	std::string getDescription() const override;
+	size_t getMemoryUsage() const override;
+	bool canMergeWith( const Command * ) const override { return false; }
+	bool mergeWith( std::unique_ptr<Command> ) override { return false; }
+	bool updateEntityReference( ecs::Entity oldEntity, ecs::Entity newEntity ) override;
+
+private:
+	ecs::Entity m_entity;
+	uint32_t m_primitiveIndex;
+	std::string m_presetName;						// For description
+	assets::MaterialInstance m_oldMaterialInstance; // Store old state for undo
+	assets::MaterialPreset m_preset;				// Preset to apply
+
+	ecs::Scene *m_ecsScene;
+	assets::Scene *m_assetScene;
+	graphics::GPUResourceManager *m_gpuManager;
+
+	void triggerGPUUpdate();
+};
+
 // Helper: update MaterialGPU from asset primitive's MaterialInstance
 // Exposed for unit tests
 bool updateMaterialGPUForPrimitive(

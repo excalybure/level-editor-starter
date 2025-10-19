@@ -160,6 +160,33 @@ public:
 	void clearOverrides();
 };
 
+// MaterialPreset - Named preset of material property overrides
+struct MaterialPreset
+{
+	std::string name;
+
+	// Optional overrides (nullopt = don't override this property)
+	std::optional<math::Vec4f> baseColorFactorOverride;
+	std::optional<float> metallicFactorOverride;
+	std::optional<float> roughnessFactorOverride;
+	std::optional<math::Vec3f> emissiveFactorOverride;
+
+	// Texture overrides (nullopt = don't override this property)
+	std::optional<std::string> baseColorTextureOverride;
+	std::optional<std::string> metallicRoughnessTextureOverride;
+	std::optional<std::string> normalTextureOverride;
+	std::optional<std::string> emissiveTextureOverride;
+
+	// Create preset from MaterialInstance
+	static MaterialPreset fromMaterialInstance( const std::string &presetName, const MaterialInstance &instance );
+
+	// Apply preset to MaterialInstance (only overrides properties present in preset)
+	void applyTo( MaterialInstance &instance ) const;
+
+	// Check if preset has any overrides
+	bool hasOverrides() const;
+};
+
 // Primitive class - represents a single drawable primitive with its own vertex/index data and material
 class Primitive
 {
