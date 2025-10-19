@@ -204,7 +204,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Implement helper methods (getEffective*, hasOverrides, clear)
   - Unit tests for override resolution logic
   
-- [ ] **T2.2:** Integrate MaterialInstance into Primitive
+- [x] **T2.2:** Integrate MaterialInstance into Primitive
   - Add `m_materialInstance` member
   - Add getter/setter methods
   - Update copy/move constructors
