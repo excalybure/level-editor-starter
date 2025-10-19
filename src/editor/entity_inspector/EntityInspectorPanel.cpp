@@ -397,7 +397,7 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 				// Display index count
 				ImGui::Text( "Indices: %u", primitive.getIndexCount() );
 
-				// Display material name
+				// Display material name and properties
 				if ( primitive.hasMaterial() )
 				{
 					const auto materialGPU = primitive.getMaterial();
@@ -409,6 +409,113 @@ void EntityInspectorPanel::renderPrimitiveTree( const graphics::gpu::MeshGPU &me
 							ImGui::Text( "Material: " );
 							ImGui::SameLine();
 							ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "%s", sourceMaterial->getName().c_str() );
+
+							// Create collapsible header for material properties
+							if ( ImGui::TreeNode( static_cast<const void *>( &i ), "Properties##%u", i ) )
+							{
+								ImGui::Indent();
+
+								// Get material constants and source material PBR properties
+								const auto &materialConstants = materialGPU->getMaterialConstants();
+								const auto &pbrMaterial = sourceMaterial->getPBRMaterial();
+
+								// Display Base Color Factor (read-only)
+								ImGui::Text( "Base Color Factor:" );
+								ImGui::SameLine();
+								ImGui::TextDisabled( "RGBA(%.2f, %.2f, %.2f, %.2f)",
+									materialConstants.baseColorFactor.x,
+									materialConstants.baseColorFactor.y,
+									materialConstants.baseColorFactor.z,
+									materialConstants.baseColorFactor.w );
+
+								// Display color preview box
+								const ImVec4 colorPreview(
+									materialConstants.baseColorFactor.x,
+									materialConstants.baseColorFactor.y,
+									materialConstants.baseColorFactor.z,
+									materialConstants.baseColorFactor.w );
+								const ImVec2 colorBoxSize( ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() );
+								ImGui::SameLine();
+								ImGui::ColorButton( "##ColorPreview", colorPreview, ImGuiColorEditFlags_NoTooltip, colorBoxSize );
+
+								// Display Metallic Factor (read-only)
+								ImGui::Text( "Metallic Factor: " );
+								ImGui::SameLine();
+								ImGui::TextDisabled( "%.2f", materialConstants.metallicFactor );
+
+								// Display Roughness Factor (read-only)
+								ImGui::Text( "Roughness Factor: " );
+								ImGui::SameLine();
+								ImGui::TextDisabled( "%.2f", materialConstants.roughnessFactor );
+
+								// Display Emissive Factor (read-only)
+								ImGui::Text( "Emissive Factor:" );
+								ImGui::SameLine();
+								ImGui::TextDisabled( "RGB(%.2f, %.2f, %.2f)",
+									materialConstants.emissiveFactor.x,
+									materialConstants.emissiveFactor.y,
+									materialConstants.emissiveFactor.z );
+
+								// Display textures section
+								if ( ImGui::TreeNode( static_cast<const void *>( &i ), "Textures##%u", i ) )
+								{
+									ImGui::Indent();
+
+									// Display Base Color Texture
+									ImGui::Text( "Base Color: " );
+									ImGui::SameLine();
+									if ( pbrMaterial.baseColorTexture.empty() )
+									{
+										ImGui::TextDisabled( "(none)" );
+									}
+									else
+									{
+										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.baseColorTexture.c_str() );
+									}
+
+									// Display Metallic Roughness Texture
+									ImGui::Text( "Metallic Roughness: " );
+									ImGui::SameLine();
+									if ( pbrMaterial.metallicRoughnessTexture.empty() )
+									{
+										ImGui::TextDisabled( "(none)" );
+									}
+									else
+									{
+										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.metallicRoughnessTexture.c_str() );
+									}
+
+									// Display Normal Texture
+									ImGui::Text( "Normal: " );
+									ImGui::SameLine();
+									if ( pbrMaterial.normalTexture.empty() )
+									{
+										ImGui::TextDisabled( "(none)" );
+									}
+									else
+									{
+										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.normalTexture.c_str() );
+									}
+
+									// Display Emissive Texture
+									ImGui::Text( "Emissive: " );
+									ImGui::SameLine();
+									if ( pbrMaterial.emissiveTexture.empty() )
+									{
+										ImGui::TextDisabled( "(none)" );
+									}
+									else
+									{
+										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.emissiveTexture.c_str() );
+									}
+
+									ImGui::Unindent();
+									ImGui::TreePop();
+								}
+
+								ImGui::Unindent();
+								ImGui::TreePop();
+							}
 						}
 						else
 						{

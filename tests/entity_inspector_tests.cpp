@@ -658,3 +658,186 @@ TEST_CASE( "EntityInspectorPanel - Primitive tree displays material name per pri
 	REQUIRE( sourceMaterial1.get() != nullptr );
 	REQUIRE( sourceMaterial1->getName() == "BlueMaterial" );
 }
+
+// ============================================================================
+// T1.3: Material Properties Display Tests (Read-Only)
+// ============================================================================
+
+TEST_CASE( "EntityInspectorPanel - Primitive tree displays material properties (read-only)", "[T1.3][entity_inspector][primitive_tree][material_properties][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	// Create a material with specific PBR properties
+	auto material = std::make_shared<assets::Material>();
+	material->setName( "TestPBRMaterial" );
+	material->setBaseColorFactor( 0.8f, 0.2f, 0.1f, 0.9f );
+	material->setMetallicFactor( 0.7f );
+	material->setRoughnessFactor( 0.3f );
+	material->setPath( "test_pbr_material" );
+	material->setLoaded( true );
+
+	// Set emissive factor through direct PBR access
+	auto &pbrMaterial = material->getPBRMaterial();
+	pbrMaterial.emissiveFactor = { 0.15f, 0.05f, 0.02f };
+	pbrMaterial.baseColorTexture = "textures/base_color.png";
+	pbrMaterial.normalTexture = "textures/normal.png";
+	pbrMaterial.metallicRoughnessTexture = "textures/metallic_roughness.png";
+	pbrMaterial.emissiveTexture = "textures/emissive.png";
+
+	// Create GPU material
+	auto gpuMaterial = std::make_shared<graphics::gpu::MaterialGPU>( material, device, textureManager );
+	REQUIRE( gpuMaterial->isValid() );
+
+	// Create a mesh with a single primitive
+	auto mesh = std::make_shared<assets::Mesh>();
+
+	assets::Primitive prim;
+	prim.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addIndex( 0 );
+	prim.addIndex( 1 );
+	prim.addIndex( 2 );
+	mesh->addPrimitive( std::move( prim ) );
+
+	// Create GPU mesh and assign material
+	auto gpuMesh = std::make_shared<graphics::gpu::MeshGPU>( device, *mesh );
+	REQUIRE( gpuMesh->isValid() );
+	gpuMesh->getPrimitive( 0 ).setMaterial( gpuMaterial );
+
+	// Create entity with MeshRenderer
+	const ecs::Entity entity = scene.createEntity( "MaterialPropertiesEntity" );
+	components::MeshRenderer meshRenderer;
+	meshRenderer.meshHandle = 42;
+	meshRenderer.gpuMesh = gpuMesh;
+	scene.addComponent( entity, meshRenderer );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
+
+	// Act & Assert - Verify material properties are accessible
+	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRendererComp != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh != nullptr );
+	REQUIRE( meshRendererComp->gpuMesh->getPrimitiveCount() == 1 );
+
+	const auto &primitive = meshRendererComp->gpuMesh->getPrimitive( 0 );
+	REQUIRE( primitive.hasMaterial() );
+
+	const auto materialGPU = primitive.getMaterial();
+	REQUIRE( materialGPU != nullptr );
+	REQUIRE( materialGPU->isValid() );
+
+	// Verify material constants
+	const auto &constants = materialGPU->getMaterialConstants();
+	REQUIRE( constants.baseColorFactor.x == 0.8f );
+	REQUIRE( constants.baseColorFactor.y == 0.2f );
+	REQUIRE( constants.baseColorFactor.z == 0.1f );
+	REQUIRE( constants.baseColorFactor.w == 0.9f );
+	REQUIRE( constants.metallicFactor == 0.7f );
+	REQUIRE( constants.roughnessFactor == 0.3f );
+	REQUIRE( constants.emissiveFactor.x == 0.15f );
+	REQUIRE( constants.emissiveFactor.y == 0.05f );
+	REQUIRE( constants.emissiveFactor.z == 0.02f );
+
+	// Verify source material PBR properties for texture names
+	const auto sourceMaterial = materialGPU->getSourceMaterial();
+	REQUIRE( sourceMaterial != nullptr );
+	const auto &pbr = sourceMaterial->getPBRMaterial();
+	REQUIRE( pbr.baseColorTexture == "textures/base_color.png" );
+	REQUIRE( pbr.normalTexture == "textures/normal.png" );
+	REQUIRE( pbr.metallicRoughnessTexture == "textures/metallic_roughness.png" );
+	REQUIRE( pbr.emissiveTexture == "textures/emissive.png" );
+}
+
+TEST_CASE( "EntityInspectorPanel - Primitive tree displays material properties with empty textures", "[T1.3][entity_inspector][primitive_tree][material_properties][unit]" )
+{
+	// Arrange
+	dx12::Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+
+	ecs::Scene scene;
+	systems::SystemManager systemManager;
+	editor::SelectionManager selectionManager( scene, systemManager );
+	CommandHistory commandHistory;
+
+	// Create a material with no textures
+	auto material = std::make_shared<assets::Material>();
+	material->setName( "SimpleMaterial" );
+	material->setBaseColorFactor( 1.0f, 0.5f, 0.2f, 1.0f );
+	material->setMetallicFactor( 0.0f );
+	material->setRoughnessFactor( 0.8f );
+	material->setPath( "simple_material" );
+	material->setLoaded( true );
+
+	// Create GPU material (no textures)
+	auto gpuMaterial = std::make_shared<graphics::gpu::MaterialGPU>( material, device, textureManager );
+	REQUIRE( gpuMaterial->isValid() );
+
+	// Create a mesh with a single primitive
+	auto mesh = std::make_shared<assets::Mesh>();
+
+	assets::Primitive prim;
+	prim.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addVertex( assets::Vertex{ { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addVertex( assets::Vertex{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
+	prim.addIndex( 0 );
+	prim.addIndex( 1 );
+	prim.addIndex( 2 );
+	mesh->addPrimitive( std::move( prim ) );
+
+	// Create GPU mesh and assign material
+	auto gpuMesh = std::make_shared<graphics::gpu::MeshGPU>( device, *mesh );
+	REQUIRE( gpuMesh->isValid() );
+	gpuMesh->getPrimitive( 0 ).setMaterial( gpuMaterial );
+
+	// Create entity with MeshRenderer
+	const ecs::Entity entity = scene.createEntity( "NoTexturesEntity" );
+	components::MeshRenderer meshRenderer;
+	meshRenderer.meshHandle = 42;
+	meshRenderer.gpuMesh = gpuMesh;
+	scene.addComponent( entity, meshRenderer );
+
+	selectionManager.select( entity );
+
+	editor::EntityInspectorPanel panel( scene, selectionManager, commandHistory, systemManager );
+
+	// Act & Assert - Verify material properties work with no textures
+	const auto *meshRendererComp = scene.getComponent<components::MeshRenderer>( entity );
+	REQUIRE( meshRendererComp != nullptr );
+
+	const auto &primitive = meshRendererComp->gpuMesh->getPrimitive( 0 );
+	const auto materialGPU = primitive.getMaterial();
+	REQUIRE( materialGPU != nullptr );
+
+	// Verify material constants are accessible
+	const auto &constants = materialGPU->getMaterialConstants();
+	REQUIRE( constants.baseColorFactor.x == 1.0f );
+	REQUIRE( constants.baseColorFactor.y == 0.5f );
+	REQUIRE( constants.baseColorFactor.z == 0.2f );
+	REQUIRE( constants.metallicFactor == 0.0f );
+	REQUIRE( constants.roughnessFactor == 0.8f );
+
+	// Verify textures are empty
+	const auto sourceMaterial = materialGPU->getSourceMaterial();
+	REQUIRE( sourceMaterial != nullptr );
+	const auto &pbr = sourceMaterial->getPBRMaterial();
+	REQUIRE( pbr.baseColorTexture.empty() );
+	REQUIRE( pbr.normalTexture.empty() );
+	REQUIRE( pbr.metallicRoughnessTexture.empty() );
+	REQUIRE( pbr.emissiveTexture.empty() );
+}

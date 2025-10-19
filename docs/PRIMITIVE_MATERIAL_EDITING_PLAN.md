@@ -175,24 +175,24 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
 ### Milestone 1: Read-Only Primitive Display (Quick Win)
 **Estimated:** 1-2 days
 
-- [ ] **T1.1:** Add primitive tree view to EntityInspectorPanel
+- [x] **T1.1:** Add primitive tree view to EntityInspectorPanel
   - Collapsible tree under MeshRenderer component
   - Show: Primitive index, vertex count, index count
   
-- [ ] **T1.2:** Display current material name per primitive
+- [x] **T1.2:** Display current material name per primitive
   - Query MaterialGPU for base material
   - Show material ID as text
   
-- [ ] **T1.3:** Show material properties (read-only)
+- [x] **T1.3:** Show material properties (read-only)
   - baseColorFactor (color picker disabled)
   - metallicFactor, roughnessFactor (sliders disabled)
   - emissiveFactor (color picker disabled)
   - Texture names (text only)
 
 **Success Criteria:**
-- Can expand MeshRenderer component and see all primitives
-- Each primitive shows current material properties
-- UI is read-only but visually clear
+- [x] Can expand MeshRenderer component and see all primitives
+- [x] Each primitive shows current material properties
+- [x] UI is read-only but visually clear
 
 ---
 
