@@ -9,8 +9,7 @@
 #include <wrl.h>
 #include "math/vec.h"
 #include "math/matrix.h"
-#include "graphics/material_system/material_system.h"
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 
 namespace dx12
 {
@@ -106,7 +105,7 @@ private:
 	// Material system integration
 	graphics::material_system::MaterialSystem *m_materialSystem = nullptr;
 	graphics::material_system::MaterialHandle m_materialHandle;
-	std::unique_ptr<graphics::material_system::MaterialInstance> m_materialInstance;
+	std::unique_ptr<graphics::material_system::CompiledMaterial> m_compiledMaterial;
 
 	// Constant buffer
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;

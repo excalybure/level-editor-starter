@@ -1,4 +1,4 @@
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 #include "graphics/material_system/pso_builder.h"
 #include "graphics/material_system/root_signature_cache.h"
 #include "core/console.h"
@@ -7,7 +7,7 @@
 namespace graphics::material_system
 {
 
-MaterialInstance::MaterialInstance(
+CompiledMaterial::CompiledMaterial(
 	dx12::Device *device,
 	MaterialSystem *materialSystem,
 	const std::string &materialId )
@@ -32,7 +32,7 @@ MaterialInstance::MaterialInstance(
 	}
 }
 
-bool MaterialInstance::isValid() const
+bool CompiledMaterial::isValid() const
 {
 	if ( !m_materialDefinition )
 	{
@@ -43,7 +43,7 @@ bool MaterialInstance::isValid() const
 	return !m_materialDefinition->passes.empty();
 }
 
-bool MaterialInstance::hasPass( const std::string &passName ) const
+bool CompiledMaterial::hasPass( const std::string &passName ) const
 {
 	if ( !m_materialDefinition )
 	{
@@ -53,12 +53,12 @@ bool MaterialInstance::hasPass( const std::string &passName ) const
 	return m_materialDefinition->hasPass( passName );
 }
 
-const MaterialDefinition *MaterialInstance::getMaterial() const
+const MaterialDefinition *CompiledMaterial::getMaterial() const
 {
 	return m_materialDefinition;
 }
 
-const MaterialPass *MaterialInstance::getPass( const std::string &passName ) const
+const MaterialPass *CompiledMaterial::getPass( const std::string &passName ) const
 {
 	if ( !m_materialDefinition )
 	{
@@ -67,12 +67,12 @@ const MaterialPass *MaterialInstance::getPass( const std::string &passName ) con
 	return m_materialDefinition->getPass( passName );
 }
 
-ID3D12RootSignature *MaterialInstance::getRootSignature() const
+ID3D12RootSignature *CompiledMaterial::getRootSignature() const
 {
 	return m_rootSignature.Get();
 }
 
-const RootSignatureSpec *MaterialInstance::getRootSignatureSpec() const
+const RootSignatureSpec *CompiledMaterial::getRootSignatureSpec() const
 {
 	if ( !m_materialDefinition )
 	{
@@ -81,7 +81,7 @@ const RootSignatureSpec *MaterialInstance::getRootSignatureSpec() const
 	return &m_rootSignatureSpec;
 }
 
-std::optional<uint32_t> MaterialInstance::getSrvDescriptorTableIndex() const
+std::optional<uint32_t> CompiledMaterial::getSrvDescriptorTableIndex() const
 {
 	if ( !m_materialDefinition )
 	{
@@ -90,7 +90,7 @@ std::optional<uint32_t> MaterialInstance::getSrvDescriptorTableIndex() const
 	return RootSignatureCache::getSrvDescriptorTableIndex( m_rootSignatureSpec );
 }
 
-bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
+bool CompiledMaterial::createPipelineStateForPass( const std::string &passName )
 {
 	if ( !m_materialDefinition )
 	{
@@ -118,7 +118,7 @@ bool MaterialInstance::createPipelineStateForPass( const std::string &passName )
 	return true;
 }
 
-ID3D12PipelineState *MaterialInstance::getPipelineState( const std::string &passName )
+ID3D12PipelineState *CompiledMaterial::getPipelineState( const std::string &passName )
 {
 	if ( !hasPass( passName ) )
 	{
@@ -138,7 +138,7 @@ ID3D12PipelineState *MaterialInstance::getPipelineState( const std::string &pass
 	return m_pipelineStates[passName].Get();
 }
 
-bool MaterialInstance::setupCommandList( ID3D12GraphicsCommandList *commandList, const std::string &passName )
+bool CompiledMaterial::setupCommandList( ID3D12GraphicsCommandList *commandList, const std::string &passName )
 {
 	if ( !commandList )
 	{

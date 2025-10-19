@@ -68,8 +68,8 @@ From `MeshRenderingSystem` evolution and `MaterialSystem` implementation:
 
 ### Location
 ```
-src/graphics/material_system/material_instance.h
-src/graphics/material_system/material_instance.cpp
+src/graphics/material_system/compiled_material.h
+src/graphics/material_system/compiled_material.cpp
 ```
 
 ### Interface
@@ -168,7 +168,7 @@ All tasks follow strict **Red → Green → Refactor** workflow per atomic funct
 **Objective:** Basic MaterialInstance construction and material validation
 
 **Atomic Functionalities:**
-- **AF1**: Create `material_instance.h/cpp` files with class skeleton
+- **AF1**: Create `compiled_material.h/cpp` files with class skeleton
   - Define MaterialInstance class with constructor/destructor
   - Add member variables (device, materialSystem, materialHandle)
   - No implementation yet, just structure

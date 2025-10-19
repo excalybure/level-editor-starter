@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 #include "graphics/material_system/material_system.h"
 #include "platform/dx12/dx12_device.h"
 #include "test_dx12_helpers.h"
@@ -20,11 +20,11 @@ static std::string getTestMaterialsPath()
 	return "../materials.json";
 }
 
-TEST_CASE( "MaterialInstance constructor stores device and material system", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial constructor stores device and material system", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance constructor test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial constructor test" ) )
 	{
 		return;
 	}
@@ -32,18 +32,18 @@ TEST_CASE( "MaterialInstance constructor stores device and material system", "[m
 	MaterialSystem materialSystem;
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized ); // Act - just create the instance
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 
 	// Assert - check that material was found and is valid (indicates MaterialSystem integration)
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.getMaterial() != nullptr );
 }
 
-TEST_CASE( "MaterialInstance with valid material ID is valid", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial with valid material ID is valid", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance valid test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial valid test" ) )
 	{
 		return;
 	}
@@ -54,17 +54,17 @@ TEST_CASE( "MaterialInstance with valid material ID is valid", "[material-instan
 	REQUIRE( initialized );
 
 	// Act
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 
 	// Assert
 	REQUIRE( instance.isValid() );
 }
 
-TEST_CASE( "MaterialInstance with invalid material ID is invalid", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial with invalid material ID is invalid", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance invalid test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial invalid test" ) )
 	{
 		return;
 	}
@@ -74,17 +74,17 @@ TEST_CASE( "MaterialInstance with invalid material ID is invalid", "[material-in
 	REQUIRE( initialized );
 
 	// Act
-	MaterialInstance instance( &device, &materialSystem, "nonexistent_material" );
+	CompiledMaterial instance( &device, &materialSystem, "nonexistent_material" );
 
 	// Assert
 	REQUIRE_FALSE( instance.isValid() );
 }
 
-TEST_CASE( "MaterialInstance hasPass returns true for existing pass", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial hasPass returns true for existing pass", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance hasPass test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial hasPass test" ) )
 	{
 		return;
 	}
@@ -93,16 +93,16 @@ TEST_CASE( "MaterialInstance hasPass returns true for existing pass", "[material
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() ); // Act & Assert
 	REQUIRE( instance.hasPass( "grid" ) );
 }
 
-TEST_CASE( "MaterialInstance hasPass returns false for non-existing pass", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial hasPass returns false for non-existing pass", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance hasPass false test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial hasPass false test" ) )
 	{
 		return;
 	}
@@ -112,18 +112,18 @@ TEST_CASE( "MaterialInstance hasPass returns false for non-existing pass", "[mat
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act & Assert
 	REQUIRE_FALSE( instance.hasPass( "nonexistent_pass" ) );
 }
 
-TEST_CASE( "MaterialInstance getPass returns correct pass definition", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial getPass returns correct pass definition", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getPass test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial getPass test" ) )
 	{
 		return;
 	}
@@ -133,7 +133,7 @@ TEST_CASE( "MaterialInstance getPass returns correct pass definition", "[materia
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act
@@ -144,11 +144,11 @@ TEST_CASE( "MaterialInstance getPass returns correct pass definition", "[materia
 	REQUIRE( pass->passName == "grid" );
 }
 
-TEST_CASE( "MaterialInstance getPass returns nullptr for invalid pass", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial getPass returns nullptr for invalid pass", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getPass nullptr test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial getPass nullptr test" ) )
 	{
 		return;
 	}
@@ -158,7 +158,7 @@ TEST_CASE( "MaterialInstance getPass returns nullptr for invalid pass", "[materi
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act
@@ -168,11 +168,11 @@ TEST_CASE( "MaterialInstance getPass returns nullptr for invalid pass", "[materi
 	REQUIRE( pass == nullptr );
 }
 
-TEST_CASE( "MaterialInstance getMaterial returns correct material definition", "[material-instance-T301][unit]" )
+TEST_CASE( "CompiledMaterial getMaterial returns correct material definition", "[material-instance-T301][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getMaterial test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial getMaterial test" ) )
 	{
 		return;
 	}
@@ -182,7 +182,7 @@ TEST_CASE( "MaterialInstance getMaterial returns correct material definition", "
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act
@@ -195,11 +195,11 @@ TEST_CASE( "MaterialInstance getMaterial returns correct material definition", "
 
 // T302 Tests: Root Signature Integration
 
-TEST_CASE( "MaterialInstance retrieves root signature on construction", "[material-instance-T302][integration]" )
+TEST_CASE( "CompiledMaterial retrieves root signature on construction", "[material-instance-T302][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance root signature test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial root signature test" ) )
 	{
 		return;
 	}
@@ -210,18 +210,18 @@ TEST_CASE( "MaterialInstance retrieves root signature on construction", "[materi
 	REQUIRE( initialized );
 
 	// Act
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 
 	// Assert - root signature should be created during construction
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.getRootSignature() != nullptr );
 }
 
-TEST_CASE( "MaterialInstance getRootSignature returns valid pointer", "[material-instance-T302][integration]" )
+TEST_CASE( "CompiledMaterial getRootSignature returns valid pointer", "[material-instance-T302][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getRootSignature test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial getRootSignature test" ) )
 	{
 		return;
 	}
@@ -231,7 +231,7 @@ TEST_CASE( "MaterialInstance getRootSignature returns valid pointer", "[material
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act
@@ -241,11 +241,11 @@ TEST_CASE( "MaterialInstance getRootSignature returns valid pointer", "[material
 	REQUIRE( rootSig != nullptr );
 }
 
-TEST_CASE( "MaterialInstance with invalid material has no root signature", "[material-instance-T302][integration]" )
+TEST_CASE( "CompiledMaterial with invalid material has no root signature", "[material-instance-T302][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance invalid root signature test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial invalid root signature test" ) )
 	{
 		return;
 	}
@@ -255,7 +255,7 @@ TEST_CASE( "MaterialInstance with invalid material has no root signature", "[mat
 	REQUIRE( initialized );
 
 	// Act
-	MaterialInstance instance( &device, &materialSystem, "nonexistent_material" );
+	CompiledMaterial instance( &device, &materialSystem, "nonexistent_material" );
 
 	// Assert
 	REQUIRE_FALSE( instance.isValid() );
@@ -264,11 +264,11 @@ TEST_CASE( "MaterialInstance with invalid material has no root signature", "[mat
 
 // T303 Tests: Multi-Pass PSO Management
 
-TEST_CASE( "MaterialInstance getPipelineState creates PSO on first access", "[material-instance][T303][integration]" )
+TEST_CASE( "CompiledMaterial getPipelineState creates PSO on first access", "[material-instance][T303][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance getPipelineState test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial getPipelineState test" ) )
 	{
 		return;
 	}
@@ -278,7 +278,7 @@ TEST_CASE( "MaterialInstance getPipelineState creates PSO on first access", "[ma
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "grid" ) );
 
@@ -289,11 +289,11 @@ TEST_CASE( "MaterialInstance getPipelineState creates PSO on first access", "[ma
 	REQUIRE( pso != nullptr );
 }
 
-TEST_CASE( "MaterialInstance getPipelineState returns cached PSO on second access", "[material-instance][T303][integration]" )
+TEST_CASE( "CompiledMaterial getPipelineState returns cached PSO on second access", "[material-instance][T303][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance PSO caching test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial PSO caching test" ) )
 	{
 		return;
 	}
@@ -303,7 +303,7 @@ TEST_CASE( "MaterialInstance getPipelineState returns cached PSO on second acces
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act - access twice
@@ -315,11 +315,11 @@ TEST_CASE( "MaterialInstance getPipelineState returns cached PSO on second acces
 	REQUIRE( pso1 == pso2 );
 }
 
-TEST_CASE( "MaterialInstance getPipelineState for different passes creates separate PSOs", "[material-instance][T303][integration]" )
+TEST_CASE( "CompiledMaterial getPipelineState for different passes creates separate PSOs", "[material-instance][T303][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance multi-pass PSO test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial multi-pass PSO test" ) )
 	{
 		return;
 	}
@@ -387,7 +387,7 @@ TEST_CASE( "MaterialInstance getPipelineState for different passes creates separ
 	const bool initialized = materialSystem.initialize( jsonPath.string(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "multipass_material" );
+	CompiledMaterial instance( &device, &materialSystem, "multipass_material" );
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "forward" ) );
 	REQUIRE( instance.hasPass( "shadow" ) );
@@ -405,11 +405,11 @@ TEST_CASE( "MaterialInstance getPipelineState for different passes creates separ
 	fs::remove_all( tempDir );
 }
 
-TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr", "[material-instance][T303][unit]" )
+TEST_CASE( "CompiledMaterial getPipelineState for invalid pass returns nullptr", "[material-instance][T303][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance invalid pass PSO test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial invalid pass PSO test" ) )
 	{
 		return;
 	}
@@ -418,7 +418,7 @@ TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr",
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act - request non-existent pass
@@ -429,16 +429,16 @@ TEST_CASE( "MaterialInstance getPipelineState for invalid pass returns nullptr",
 }
 
 // Note: Shader hot-reload is handled automatically by PSOBuilder's global cache
-// MaterialInstance doesn't need explicit hot-reload support - PSOs are recreated
+// CompiledMaterial doesn't need explicit hot-reload support - PSOs are recreated
 // when PSOBuilder detects shader file changes via content hashing
 
 // T304 Tests: Command List Setup
 
-TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[material-instance][T304][integration]" )
+TEST_CASE( "CompiledMaterial setupCommandList sets PSO and root signature", "[material-instance][T304][integration]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial setupCommandList test" ) )
 	{
 		return;
 	}
@@ -448,7 +448,7 @@ TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[ma
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "grid" ) );
 
@@ -468,11 +468,11 @@ TEST_CASE( "MaterialInstance setupCommandList sets PSO and root signature", "[ma
 	// but we can verify the method returned true, indicating both resources were available
 }
 
-TEST_CASE( "MaterialInstance setupCommandList returns false for invalid pass", "[material-instance][T304][unit]" )
+TEST_CASE( "CompiledMaterial setupCommandList returns false for invalid pass", "[material-instance][T304][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList invalid pass test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial setupCommandList invalid pass test" ) )
 	{
 		return;
 	}
@@ -482,7 +482,7 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for invalid pass", "
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Get command list
@@ -496,11 +496,11 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for invalid pass", "
 	REQUIRE_FALSE( success );
 }
 
-TEST_CASE( "MaterialInstance setupCommandList returns false for nullptr command list", "[material-instance][T304][unit]" )
+TEST_CASE( "CompiledMaterial setupCommandList returns false for nullptr command list", "[material-instance][T304][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance setupCommandList nullptr test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial setupCommandList nullptr test" ) )
 	{
 		return;
 	}
@@ -509,7 +509,7 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for nullptr command 
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act - pass nullptr command list
@@ -519,7 +519,7 @@ TEST_CASE( "MaterialInstance setupCommandList returns false for nullptr command 
 	REQUIRE_FALSE( success );
 }
 
-TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "[material-instance][T304][integration]" )
+TEST_CASE( "CompiledMaterial setupCommandList with different passes succeeds", "[material-instance][T304][integration]" )
 {
 	// Arrange - create temp JSON with multi-pass material
 	const auto tempDir = fs::temp_directory_path() / "material_instance_t304_test";
@@ -580,7 +580,7 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 	file.close();
 
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance multi-pass setupCommandList test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial multi-pass setupCommandList test" ) )
 	{
 		fs::remove_all( tempDir );
 		return;
@@ -591,7 +591,7 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 	const bool initialized = materialSystem.initialize( jsonPath.string(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "multipass_material" );
+	CompiledMaterial instance( &device, &materialSystem, "multipass_material" );
 	REQUIRE( instance.isValid() );
 	REQUIRE( instance.hasPass( "forward" ) );
 	REQUIRE( instance.hasPass( "shadow" ) );
@@ -616,13 +616,13 @@ TEST_CASE( "MaterialInstance setupCommandList with different passes succeeds", "
 }
 
 // Note: T305 hot-reload tests removed - hot-reload is now handled automatically by
-// PSOBuilder's global cache. No explicit MaterialInstance callback mechanism needed.
+// PSOBuilder's global cache. No explicit CompiledMaterial callback mechanism needed.
 
-TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance", "[material-instance][T306][unit]" )
+TEST_CASE( "CompiledMaterial caches MaterialDefinition pointer for performance", "[material-instance][T306][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance definition caching test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial definition caching test" ) )
 	{
 		return;
 	}
@@ -631,7 +631,7 @@ TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance",
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), nullptr );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act - call getMaterial() multiple times
@@ -646,11 +646,11 @@ TEST_CASE( "MaterialInstance caches MaterialDefinition pointer for performance",
 	REQUIRE( def1->id == "grid_material" );
 }
 
-TEST_CASE( "MaterialInstance getSrvDescriptorTableIndex queries root signature spec", "[material-instance][T307][unit]" )
+TEST_CASE( "CompiledMaterial getSrvDescriptorTableIndex queries root signature spec", "[material-instance][T307][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance SRV descriptor table index test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial SRV descriptor table index test" ) )
 	{
 		return;
 	}
@@ -660,7 +660,7 @@ TEST_CASE( "MaterialInstance getSrvDescriptorTableIndex queries root signature s
 	const bool initialized = materialSystem.initialize( getTestMaterialsPath(), &shaderManager );
 	REQUIRE( initialized );
 
-	MaterialInstance instance( &device, &materialSystem, "mesh_unlit" );
+	CompiledMaterial instance( &device, &materialSystem, "mesh_unlit" );
 	REQUIRE( instance.isValid() );
 
 	// Act - query SRV descriptor table index
@@ -677,11 +677,11 @@ TEST_CASE( "MaterialInstance getSrvDescriptorTableIndex queries root signature s
 	REQUIRE( spec != nullptr );
 }
 
-TEST_CASE( "MaterialInstance without textures has no SRV descriptor table", "[material-instance][T307][unit]" )
+TEST_CASE( "CompiledMaterial without textures has no SRV descriptor table", "[material-instance][T307][unit]" )
 {
 	// Arrange
 	dx12::Device device;
-	if ( !requireHeadlessDevice( device, "MaterialInstance no SRV table test" ) )
+	if ( !requireHeadlessDevice( device, "CompiledMaterial no SRV table test" ) )
 	{
 		return;
 	}
@@ -692,7 +692,7 @@ TEST_CASE( "MaterialInstance without textures has no SRV descriptor table", "[ma
 	REQUIRE( initialized );
 
 	// grid_material doesn't use textures (only CBVs)
-	MaterialInstance instance( &device, &materialSystem, "grid_material" );
+	CompiledMaterial instance( &device, &materialSystem, "grid_material" );
 	REQUIRE( instance.isValid() );
 
 	// Act - query SRV descriptor table index

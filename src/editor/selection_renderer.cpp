@@ -14,7 +14,7 @@
 #include "runtime/ecs.h"
 #include "core/time.h"
 #include "graphics/shader_manager/shader_manager.h"
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 #include "graphics/gpu/mesh_gpu.h"
 #include "runtime/systems.h"
 #include "platform/dx12/dx12_device.h"
@@ -50,10 +50,10 @@ void SelectionRenderer::renderSelectionOutlines( ecs::Scene &scene,
 		return;
 	}
 
-	// Setup material instance for outline rendering
-	if ( !m_outlineMaterialInstance || !m_outlineMaterialInstance->setupCommandList( commandList, "outline" ) )
+	// Setup material for outline rendering
+	if ( !m_outlineCompiledMaterial || !m_outlineCompiledMaterial->setupCommandList( commandList, "outline" ) )
 	{
-		console::warning( "SelectionRenderer: Failed to setup outline material instance" );
+		console::warning( "SelectionRenderer: Failed to setup outline material" );
 		return;
 	}
 
@@ -120,10 +120,10 @@ void SelectionRenderer::renderRectSelection( const math::Vec2<> &startPos,
 		return;
 	}
 
-	// Setup material instance for rect rendering
-	if ( !m_rectMaterialInstance || !m_rectMaterialInstance->setupCommandList( commandList, "rect" ) )
+	// Setup material for rect rendering
+	if ( !m_rectCompiledMaterial || !m_rectCompiledMaterial->setupCommandList( commandList, "rect" ) )
 	{
-		console::warning( "SelectionRenderer: Failed to setup rect material instance" );
+		console::warning( "SelectionRenderer: Failed to setup rect material" );
 		return;
 	}
 
@@ -169,36 +169,36 @@ void SelectionRenderer::setupRenderingResources()
 {
 	try
 	{
-		// Create MaterialInstance for outline rendering
+		// Create CompiledMaterial for outline rendering
 		if ( m_materialSystem )
 		{
-			m_outlineMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+			m_outlineCompiledMaterial = std::make_unique<graphics::material_system::CompiledMaterial>(
 				&m_device,
 				m_materialSystem,
 				"selection_outline" );
 
-			if ( !m_outlineMaterialInstance->isValid() )
+			if ( !m_outlineCompiledMaterial->isValid() )
 			{
-				console::error( "SelectionRenderer: Failed to create outline material instance" );
+				console::error( "SelectionRenderer: Failed to create outline compiled material" );
 			}
-			else if ( !m_outlineMaterialInstance->hasPass( "outline" ) )
+			else if ( !m_outlineCompiledMaterial->hasPass( "outline" ) )
 			{
-				console::error( "SelectionRenderer: Material 'selection_outline' does not have 'outline' pass" );
+				console::error( "SelectionRenderer: Outline material missing 'outline' pass" );
 			}
 
-			// Create MaterialInstance for rect selection rendering
-			m_rectMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+			// Create CompiledMaterial for rect selection rendering
+			m_rectCompiledMaterial = std::make_unique<graphics::material_system::CompiledMaterial>(
 				&m_device,
 				m_materialSystem,
 				"selection_rect" );
 
-			if ( !m_rectMaterialInstance->isValid() )
+			if ( !m_rectCompiledMaterial->isValid() )
 			{
-				console::error( "SelectionRenderer: Failed to create rect material instance" );
+				console::error( "SelectionRenderer: Failed to create rect selection compiled material" );
 			}
-			else if ( !m_rectMaterialInstance->hasPass( "rect" ) )
+			else if ( !m_rectCompiledMaterial->hasPass( "rect" ) )
 			{
-				console::error( "SelectionRenderer: Material 'selection_rect' does not have 'rect' pass" );
+				console::error( "SelectionRenderer: Rect selection material missing 'rect' pass" );
 			}
 		}
 		else

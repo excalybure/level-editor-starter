@@ -747,7 +747,7 @@ bool MaterialInstance::createPipelineStateForPass(const std::string &passName) {
 2. `src/graphics/material_system/material_system.cpp` - Implemented new initialize(), forward old to new
 3. `src/graphics/material_system/pso_builder.h` - Added ShaderManager/cache parameters to build() and getRootSignature()
 4. `src/graphics/material_system/pso_builder.cpp` - Updated signatures, migrated implementations to use reflection-based API with fallback
-5. `src/graphics/material_system/material_instance.cpp` - Updated createPipelineStateForPass() to pass ShaderManager/cache
+5. `src/graphics/material_system/compiled_material.cpp` - Updated createPipelineStateForPass() to pass ShaderManager/cache
 6. `tests/material_system_tests.cpp` - Removed 3 legacy T013 tests (12 assertions)
 
 ### Migration Status

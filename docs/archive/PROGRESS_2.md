@@ -42,7 +42,7 @@ MaterialParser only recognizes value types for artist-facing properties:
 - `src/graphics/material_system/root_signature_builder.cpp` - Removed legacy Build() implementation and helper methods (158 lines deleted)
 - `src/graphics/material_system/pso_builder.h` - Updated signatures to require ShaderManager/ReflectionCache, removed default parameters
 - `src/graphics/material_system/pso_builder.cpp` - Removed fallback logic, added null checks with error messages for required parameters
-- `src/graphics/material_system/material_instance.cpp` - Updated to pass ShaderManager and ReflectionCache from MaterialSystem
+- `src/graphics/material_system/compiled_material.cpp` - Updated to pass ShaderManager and ReflectionCache from MaterialSystem
 - `docs/REFLECTION_BASED_ROOT_SIGNATURE_PLAN.md` - Updated Task 7.2 and final status to reflect legacy removal
 - `PROGRESS_2.md` - Added this entry documenting the complete migration
 

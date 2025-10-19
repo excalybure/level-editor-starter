@@ -97,17 +97,17 @@ bool GridRenderer::initialize( dx12::Device *device, graphics::material_system::
 		return false;
 	}
 
-	// Create MaterialInstance for PSO and root signature management
-	m_materialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+	// Create CompiledMaterial for PSO and root signature management
+	m_compiledMaterial = std::make_unique<graphics::material_system::CompiledMaterial>(
 		m_device, m_materialSystem, "grid_material" );
 
-	if ( !m_materialInstance->isValid() )
+	if ( !m_compiledMaterial->isValid() )
 	{
-		console::error( "GridRenderer: Failed to create MaterialInstance" );
+		console::error( "GridRenderer: Failed to create CompiledMaterial" );
 		return false;
 	}
 
-	if ( !m_materialInstance->hasPass( "grid" ) )
+	if ( !m_compiledMaterial->hasPass( "grid" ) )
 	{
 		console::error( "GridRenderer: Material does not have 'grid' pass" );
 		return false;
@@ -131,7 +131,7 @@ void GridRenderer::shutdown()
 	}
 
 	m_constantBuffer.Reset();
-	m_materialInstance.reset();
+	m_compiledMaterial.reset();
 	m_device = nullptr;
 	m_materialSystem = nullptr;
 }
@@ -178,10 +178,10 @@ bool GridRenderer::render( const camera::Camera &camera,
 	scissorRect.bottom = static_cast<LONG>( viewportHeight );
 	commandList->RSSetScissorRects( 1, &scissorRect );
 
-	// Use MaterialInstance to set PSO and root signature
-	if ( !m_materialInstance->setupCommandList( commandList, "grid" ) )
+	// Use CompiledMaterial to set PSO and root signature
+	if ( !m_compiledMaterial->setupCommandList( commandList, "grid" ) )
 	{
-		console::warning( "Grid MaterialInstance failed to setup command list" );
+		console::warning( "Grid CompiledMaterial failed to setup command list" );
 		return false;
 	}
 

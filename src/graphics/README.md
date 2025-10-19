@@ -98,7 +98,7 @@ graphics/
 ├── material_system/              # Data-driven materials
 │   ├── material_system.h/cpp
 │   ├── material.h/cpp
-│   ├── material_instance.h/cpp
+│   ├── compiled_material.h/cpp
 │   └── root_signature_builder.h/cpp
 ├── shader_manager/               # Shader compilation
 │   ├── shader_manager.h/cpp

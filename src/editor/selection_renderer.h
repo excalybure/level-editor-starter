@@ -6,7 +6,7 @@
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
 #include "graphics/material_system/material_system.h"
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 #include "platform/dx12/dx12_device.h"
 #include "runtime/entity.h"
 
@@ -82,9 +82,9 @@ private:
 	systems::SystemManager *m_systemManager = nullptr;
 	SelectionStyle m_style;
 
-	// Material instances for rendering
-	std::unique_ptr<graphics::material_system::MaterialInstance> m_outlineMaterialInstance;
-	std::unique_ptr<graphics::material_system::MaterialInstance> m_rectMaterialInstance;
+	// Compiled materials for rendering
+	std::unique_ptr<graphics::material_system::CompiledMaterial> m_outlineCompiledMaterial;
+	std::unique_ptr<graphics::material_system::CompiledMaterial> m_rectCompiledMaterial;
 
 	// Constant buffer for both outline and rect rendering
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;

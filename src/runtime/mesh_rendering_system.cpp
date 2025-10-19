@@ -2,7 +2,7 @@
 #include "graphics/graphics_context.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/gpu/material_gpu.h"
-#include "graphics/material_system/material_instance.h"
+#include "graphics/material_system/compiled_material.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "graphics/texture/texture_manager.h"
 #include "core/console.h"
@@ -48,26 +48,26 @@ namespace systems
 MeshRenderingSystem::MeshRenderingSystem( graphics::GraphicsContext &graphicsContext, systems::SystemManager *systemManager )
 	: m_graphicsContext( graphicsContext ), m_systemManager( systemManager )
 {
-	// Phase 2: Create default MaterialInstance if MaterialSystem available
+	// Phase 2: Create default CompiledMaterial if MaterialSystem available
 	auto *materialSystem = m_graphicsContext.getMaterialSystem();
 	if ( materialSystem )
 	{
-		m_defaultMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
+		m_defaultCompiledMaterial = std::make_unique<graphics::material_system::CompiledMaterial>(
 			m_graphicsContext.getDevice(),
 			materialSystem,
 			"mesh_unlit" );
 
-		if ( !m_defaultMaterialInstance->isValid() )
+		if ( !m_defaultCompiledMaterial->isValid() )
 		{
-			console::error( "MeshRenderingSystem: Failed to create default material instance" );
+			console::error( "MeshRenderingSystem: Failed to create valid default compiled material" );
 		}
-		else if ( !m_defaultMaterialInstance->hasPass( "forward" ) )
+		else if ( !m_defaultCompiledMaterial->hasPass( "forward" ) )
 		{
-			console::error( "MeshRenderingSystem: Material 'mesh_unlit' does not have 'forward' pass" );
+			console::error( "MeshRenderingSystem: Default material 'mesh_unlit' missing 'forward' pass" );
 		}
 		else
 		{
-			console::info( "MeshRenderingSystem: Successfully created MaterialInstance for 'mesh_unlit'" );
+			console::info( "MeshRenderingSystem: Successfully created CompiledMaterial for 'mesh_unlit'" );
 		}
 	}
 	else
@@ -97,16 +97,16 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 		return;
 	}
 
-	// Phase 3: Setup material for rendering using MaterialInstance
-	if ( !m_defaultMaterialInstance || !m_defaultMaterialInstance->isValid() )
+	// Phase 3: Setup material for rendering using CompiledMaterial
+	if ( !m_defaultCompiledMaterial || !m_defaultCompiledMaterial->isValid() )
 	{
-		console::error( "MeshRenderingSystem: No valid MaterialInstance available for rendering" );
+		console::error( "MeshRenderingSystem: No valid CompiledMaterial available for rendering" );
 		return;
 	}
 
-	if ( !m_defaultMaterialInstance->setupCommandList( commandList, "forward" ) )
+	if ( !m_defaultCompiledMaterial->setupCommandList( commandList, "forward" ) )
 	{
-		console::warning( "MeshRenderingSystem: Failed to setup MaterialInstance for rendering" );
+		console::warning( "MeshRenderingSystem: Failed to setup CompiledMaterial for rendering" );
 		return;
 	}
 
@@ -125,8 +125,8 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 	auto *textureManager = m_graphicsContext.getTextureManager();
 	if ( textureManager )
 	{
-		// Get the SRV descriptor table parameter index from material instance
-		const auto srvTableIndex = m_defaultMaterialInstance->getSrvDescriptorTableIndex();
+		// Get the SRV descriptor table parameter index from compiled material
+		const auto srvTableIndex = m_defaultCompiledMaterial->getSrvDescriptorTableIndex();
 		if ( srvTableIndex.has_value() )
 		{
 			// TextureManager sets the descriptor heap and binds the descriptor table

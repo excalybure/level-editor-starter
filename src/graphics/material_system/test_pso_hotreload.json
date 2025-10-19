@@ -1,0 +1,42 @@
+{
+		"materials": [
+			{
+				"id": "material_a",
+				"passes": [{
+					"name": "forward",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/simple.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_6_6"
+						},
+						"pixel": {
+							"file": "shaders/simple.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_6_6"
+						}
+					},
+					"topology": "triangle"
+				}]
+			},
+			{
+				"id": "material_b",
+				"passes": [{
+					"name": "forward",
+					"shaders": {
+						"vertex": {
+							"file": "shaders/simple.hlsl",
+							"entry": "VSMain",
+							"profile": "vs_6_6"
+						},
+						"pixel": {
+							"file": "shaders/simple.hlsl",
+							"entry": "PSMain",
+							"profile": "ps_6_6"
+						}
+					},
+					"topology": "triangle"
+				}]
+			}
+		]
+	}

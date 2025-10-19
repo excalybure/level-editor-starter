@@ -204,9 +204,9 @@ All tests passed (43 assertions in 10 test cases)
 - No functional changes - MaterialInstance behavior identical
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Removed m_materialHandle member, removed getHandle() method
-- `src/graphics/material_system/material_instance.cpp`: Changed m_materialHandle to local const variable in constructor
-- `tests/material_instance_tests.cpp`: Updated constructor test to check isValid() instead of getHandle(), removed redundant getHandle test
+- `src/graphics/material_system/compiled_material.h`: Removed m_materialHandle member, removed getHandle() method
+- `src/graphics/material_system/compiled_material.cpp`: Changed m_materialHandle to local const variable in constructor
+- `tests/compiled_material_tests.cpp`: Updated constructor test to check isValid() instead of getHandle(), removed redundant getHandle test
 
 **Trade-offs:**
 - None - this is a pure simplification with no downsides
@@ -248,15 +248,15 @@ All tests passed (110 assertions in 7 test cases)
 - Code reduction: ~40 lines removed from MaterialInstance (header + implementation)
 - Dependency reduction: MaterialInstance no longer depends on ShaderManager at all
 - All existing functionality preserved - hot-reload still works, just handled at the PipelineBuilder level
-- Constructor signature change required updates in 4 files: material_instance_tests.cpp, grid.cpp, mesh_rendering_system.cpp, selection_renderer.cpp
+- Constructor signature change required updates in 4 files: compiled_material_tests.cpp, grid.cpp, mesh_rendering_system.cpp, selection_renderer.cpp
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Removed ShaderManager forward declaration, removed ShaderManager parameter from constructor, removed onShaderReloaded(), removed m_shaderManager/m_hotReloadCallbackHandle/m_dirtyPasses members
-- `src/graphics/material_system/material_instance.cpp`: Removed shader_manager include, simplified constructor (no callback registration), removed destructor callback cleanup, simplified getPipelineState() and createPipelineStateForPass(), deleted onShaderReloaded()
+- `src/graphics/material_system/compiled_material.h`: Removed ShaderManager forward declaration, removed ShaderManager parameter from constructor, removed onShaderReloaded(), removed m_shaderManager/m_hotReloadCallbackHandle/m_dirtyPasses members
+- `src/graphics/material_system/compiled_material.cpp`: Removed shader_manager include, simplified constructor (no callback registration), removed destructor callback cleanup, simplified getPipelineState() and createPipelineStateForPass(), deleted onShaderReloaded()
 - `src/graphics/grid/grid.cpp`: Updated MaterialInstance constructor call (removed nullptr parameter)
 - `src/runtime/mesh_rendering_system.cpp`: Updated MaterialInstance constructor call (removed m_shaderManager.get() parameter)
 - `src/editor/selection_renderer.cpp`: Updated 2 MaterialInstance constructor calls (removed &m_shaderManager parameters)
-- `tests/material_instance_tests.cpp`: Removed shader_manager include, updated 20+ constructor calls (removed nullptr/&shaderManager parameters), removed 5 T305 hot-reload tests, added explanatory notes
+- `tests/compiled_material_tests.cpp`: Removed shader_manager include, updated 20+ constructor calls (removed nullptr/&shaderManager parameters), removed 5 T305 hot-reload tests, added explanatory notes
 
 **Trade-offs:**
 - MaterialInstance is simpler and more focused - only manages PSO/root signature lifecycle
@@ -284,7 +284,7 @@ All tests passed (110 assertions in 7 test cases)
 - AF7: Use cached pointer in getPass() - call m_materialDefinition->getPass() instead of MaterialSystem::getMaterialPass()
 - AF8: Refresh cache in onShaderReloaded() - re-query MaterialDefinition via MaterialHandle to ensure cache is fresh after hot-reload
 
-**Tests:** 1 new test added to `material_instance_tests.cpp`:
+**Tests:** 1 new test added to `compiled_material_tests.cpp`:
 - `"MaterialInstance caches MaterialDefinition pointer for performance"` [T306][unit] - verifies getMaterial() returns identical pointer across three consecutive calls
 
 Filtered test commands:
@@ -308,9 +308,9 @@ All tests passed (110 assertions in 7 test cases)
 - Code is cleaner: removed redundant MaterialSystem->getMaterial() calls from every method
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Added `const MaterialDefinition* m_materialDefinition` member
-- `src/graphics/material_system/material_instance.cpp`: Updated constructor to cache pointer; simplified isValid(), hasPass(), getMaterial(), getPass(), and onShaderReloaded() to use cache
-- `tests/material_instance_tests.cpp`: Added T306 caching test
+- `src/graphics/material_system/compiled_material.h`: Added `const MaterialDefinition* m_materialDefinition` member
+- `src/graphics/material_system/compiled_material.cpp`: Updated constructor to cache pointer; simplified isValid(), hasPass(), getMaterial(), getPass(), and onShaderReloaded() to use cache
+- `tests/compiled_material_tests.cpp`: Added T306 caching test
 
 **Trade-offs:**
 - Adds one pointer member (8 bytes) to MaterialInstance - negligible memory overhead
@@ -385,7 +385,7 @@ All tests passed (19 assertions in 1 test case)
 - AF4: Unregister callback on destruction - checks if m_hotReloadCallbackHandle is valid, calls unregisterReloadCallback() for cleanup
 - AF5: Test callback registration and cleanup - verify callback registered when ShaderManager provided, not registered when nullptr, properly unregistered on destruction
 
-**Tests:** 5 new test cases added to `material_instance_tests.cpp` (lines 626-832):
+**Tests:** 5 new test cases added to `compiled_material_tests.cpp` (lines 626-832):
 - `"MaterialInstance without ShaderManager does not register callback"` [unit] - validates nullptr case doesn't crash
 - `"MaterialInstance registers hot-reload callback with ShaderManager"` [integration] - validates callback registration succeeds
 - `"MaterialInstance hot-reload marks all passes dirty"` [integration] - validates onShaderReloaded() marks passes dirty
@@ -417,9 +417,9 @@ All tests passed (17 assertions in 4 test cases)
 - Next task: T306 will refactor GridRenderer to use MaterialInstance
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Added shader_manager::ShaderManager forward declaration, modified constructor signature (4 params), added onShaderReloaded() private method, added m_shaderManager and m_hotReloadCallbackHandle members
-- `src/graphics/material_system/material_instance.cpp`: Added shader_manager.h include, updated constructor to register callback, updated destructor to unregister callback, implemented onShaderReloaded() (iterates passes, marks dirty, clears cache)
-- `tests/material_instance_tests.cpp`: Fixed ~20 existing test instantiations to use new 4-parameter constructor with nullptr, added 5 comprehensive T305 test cases
+- `src/graphics/material_system/compiled_material.h`: Added shader_manager::ShaderManager forward declaration, modified constructor signature (4 params), added onShaderReloaded() private method, added m_shaderManager and m_hotReloadCallbackHandle members
+- `src/graphics/material_system/compiled_material.cpp`: Added shader_manager.h include, updated constructor to register callback, updated destructor to unregister callback, implemented onShaderReloaded() (iterates passes, marks dirty, clears cache)
+- `tests/compiled_material_tests.cpp`: Fixed ~20 existing test instantiations to use new 4-parameter constructor with nullptr, added 5 comprehensive T305 test cases
 
 **Trade-offs:**
 - Chose optional ShaderManager parameter (nullptr) over overloaded constructors for simplicity and backward compatibility
@@ -441,7 +441,7 @@ All tests passed (17 assertions in 4 test cases)
 - AF2: Set PSO and root signature on command list - calls SetPipelineState() and SetGraphicsRootSignature() with retrieved resources
 - AF3: Handle nullptr cases gracefully - returns false if command list nullptr, PSO unavailable, or root signature unavailable
 
-**Tests:** 4 new test cases added to `material_instance_tests.cpp`:
+**Tests:** 4 new test cases added to `compiled_material_tests.cpp`:
 - `"MaterialInstance setupCommandList sets PSO and root signature"` - validates successful setup with valid pass
 - `"MaterialInstance setupCommandList returns false for invalid pass"` - validates graceful handling of non-existent pass
 - `"MaterialInstance setupCommandList returns false for nullptr command list"` - validates nullptr safety
@@ -470,9 +470,9 @@ All tests passed (19 assertions in 4 test cases)
 - Next task: T305 will add hot-reload integration with ShaderManager callbacks
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Added setupCommandList() public method declaration with documentation
-- `src/graphics/material_system/material_instance.cpp`: Implemented method with validation, resource retrieval, and command list setup (30 lines)
-- `tests/material_instance_tests.cpp`: Added 4 comprehensive test cases covering success, invalid pass, nullptr, and multi-pass scenarios
+- `src/graphics/material_system/compiled_material.h`: Added setupCommandList() public method declaration with documentation
+- `src/graphics/material_system/compiled_material.cpp`: Implemented method with validation, resource retrieval, and command list setup (30 lines)
+- `tests/compiled_material_tests.cpp`: Added 4 comprehensive test cases covering success, invalid pass, nullptr, and multi-pass scenarios
 
 **Trade-offs:**
 - Chose to return bool rather than throw exceptions for consistency with C++ D3D12 API patterns
@@ -522,7 +522,7 @@ All tests passed (15 assertions in 4 test cases)
 - AF3: Added dirty flag management via `m_dirtyPasses` unordered_set - initializes empty, removes pass from set on successful PSO creation, enables future hot-reload support
 - AF4: Handled pass not found gracefully - returns nullptr from `getPipelineState()` when pass doesn't exist or PSO creation fails
 
-**Tests:** 4 new test cases added to `material_instance_tests.cpp`:
+**Tests:** 4 new test cases added to `compiled_material_tests.cpp`:
 - `"MaterialInstance getPipelineState creates PSO on first access"` - validates lazy creation
 - `"MaterialInstance getPipelineState returns cached PSO on second access"` - validates caching works (same pointer returned)
 - `"MaterialInstance getPipelineState for different passes creates separate PSOs"` - validates per-pass PSO management
@@ -544,9 +544,9 @@ unit_test_runner.exe "*getPipelineState*"
 - Next task: T304 will add `setupCommandList()` convenience method to bind PSO and root signature in one call
 
 **Files modified:**
-- `src/graphics/material_system/material_instance.h`: Added `getPipelineState()` public method, `createPipelineStateForPass()` private method, `m_pipelineStates` map, `m_dirtyPasses` set, includes for unordered_map and unordered_set
-- `src/graphics/material_system/material_instance.cpp`: Implemented both methods with full error handling and caching logic
-- `tests/material_instance_tests.cpp`: Added 4 comprehensive test cases covering lazy creation, caching, multi-pass, and error cases
+- `src/graphics/material_system/compiled_material.h`: Added `getPipelineState()` public method, `createPipelineStateForPass()` private method, `m_pipelineStates` map, `m_dirtyPasses` set, includes for unordered_map and unordered_set
+- `src/graphics/material_system/compiled_material.cpp`: Implemented both methods with full error handling and caching logic
+- `tests/compiled_material_tests.cpp`: Added 4 comprehensive test cases covering lazy creation, caching, multi-pass, and error cases
 
 **Trade-offs:**
 - Chose to cache PSOs per-pass rather than globally to support future multi-pass materials with different PSOs per pass

@@ -8,7 +8,9 @@
 #include "math/math.h"
 #include "math/matrix.h"
 #include "graphics/shader_manager/shader_manager.h"
-#include "graphics/material_system/material_instance.h"
+#include "graphics/gpu/mesh_gpu.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/material_system/compiled_material.h"
 #include "systems.h"
 
 namespace camera
@@ -65,7 +67,7 @@ private:
 	systems::SystemManager *m_systemManager;
 
 	// Default material instance for mesh rendering
-	std::unique_ptr<graphics::material_system::MaterialInstance> m_defaultMaterialInstance;
+	std::unique_ptr<graphics::material_system::CompiledMaterial> m_defaultCompiledMaterial;
 
 	// Per-frame storage for object constant buffers to keep them alive until GPU execution
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> m_frameConstantBuffers;

@@ -73,7 +73,7 @@ add_library(graphics STATIC
   src/graphics/material_system/root_signature_cache.cpp
   src/graphics/material_system/pso_builder.cpp
   src/graphics/material_system/state_parser.cpp
-  src/graphics/material_system/material_instance.cpp
+  src/graphics/material_system/compiled_material.cpp
   src/graphics/material_system/shader_reflection.cpp
   src/graphics/texture/texture_loader.cpp
   src/graphics/texture/bindless_texture_heap.cpp
@@ -383,7 +383,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/material_parser_multipass_tests.cpp
     tests/pso_builder_multipass_tests.cpp
     tests/material_system_pass_query_tests.cpp
-    tests/material_instance_tests.cpp
+    tests/compiled_material_tests.cpp
     tests/root_signature_texture_tests.cpp
     tests/sampler_name_parsing_tests.cpp
     tests/sampler_manager_tests.cpp
