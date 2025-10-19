@@ -138,14 +138,29 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignatureCache::buildRootSignatu
 		if ( !srvBindings.empty() )
 		{
 			std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
-			for ( const auto &binding : srvBindings )
+
+			// Sort bindings by slot to merge contiguous ranges
+			std::sort( srvBindings.begin(), srvBindings.end(), []( const ResourceBinding &a, const ResourceBinding &b ) { return a.slot < b.slot; } );
+
+			size_t i = 0;
+			while ( i < srvBindings.size() )
 			{
 				D3D12_DESCRIPTOR_RANGE range = {};
 				range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-				range.NumDescriptors = 4096; // we support up to 4096 textures
-				range.BaseShaderRegister = static_cast<UINT>( binding.slot );
+				range.BaseShaderRegister = static_cast<UINT>( srvBindings[i].slot );
 				range.RegisterSpace = 0;
 				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+				// Count consecutive SRV bindings starting from this slot
+				size_t startSlot = srvBindings[i].slot;
+				size_t count = 0;
+				while ( i < srvBindings.size() && srvBindings[i].slot == startSlot + count )
+				{
+					count++;
+					i++;
+				}
+
+				range.NumDescriptors = static_cast<UINT>( count );
 				ranges.push_back( range );
 			}
 
