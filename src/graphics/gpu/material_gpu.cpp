@@ -35,12 +35,25 @@ MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx1
 	initializeGPUResources();
 }
 
+MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, const assets::MaterialInstance *instance, graphics::texture::TextureManager &textureManager )
+	: m_material( material ), m_device( &device ), m_textureManager( &textureManager ), m_materialInstance( instance )
+{
+	if ( !material )
+	{
+		console::error( "MaterialGPU: Cannot create from null material" );
+		return;
+	}
+
+	initializeGPUResources();
+}
+
 MaterialGPU::MaterialGPU( MaterialGPU &&other ) noexcept
-	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_textureManager( other.m_textureManager ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_baseColorTexture( other.m_baseColorTexture ), m_metallicRoughnessTexture( other.m_metallicRoughnessTexture ), m_normalTexture( other.m_normalTexture ), m_emissiveTexture( other.m_emissiveTexture ), m_isValid( other.m_isValid )
+	: m_material( std::move( other.m_material ) ), m_materialConstants( other.m_materialConstants ), m_device( other.m_device ), m_textureManager( other.m_textureManager ), m_materialInstance( other.m_materialInstance ), m_constantBuffer( std::move( other.m_constantBuffer ) ), m_baseColorTexture( other.m_baseColorTexture ), m_metallicRoughnessTexture( other.m_metallicRoughnessTexture ), m_normalTexture( other.m_normalTexture ), m_emissiveTexture( other.m_emissiveTexture ), m_isValid( other.m_isValid )
 {
 	other.m_isValid = false;
 	other.m_device = nullptr;
 	other.m_textureManager = nullptr;
+	other.m_materialInstance = nullptr;
 	other.m_baseColorTexture = graphics::texture::kInvalidTextureHandle;
 	other.m_metallicRoughnessTexture = graphics::texture::kInvalidTextureHandle;
 	other.m_normalTexture = graphics::texture::kInvalidTextureHandle;
@@ -55,6 +68,7 @@ MaterialGPU &MaterialGPU::operator=( MaterialGPU &&other ) noexcept
 		m_materialConstants = other.m_materialConstants;
 		m_device = other.m_device;
 		m_textureManager = other.m_textureManager;
+		m_materialInstance = other.m_materialInstance;
 		m_constantBuffer = std::move( other.m_constantBuffer );
 		m_baseColorTexture = other.m_baseColorTexture;
 		m_metallicRoughnessTexture = other.m_metallicRoughnessTexture;
@@ -65,6 +79,7 @@ MaterialGPU &MaterialGPU::operator=( MaterialGPU &&other ) noexcept
 		other.m_isValid = false;
 		other.m_device = nullptr;
 		other.m_textureManager = nullptr;
+		other.m_materialInstance = nullptr;
 		other.m_baseColorTexture = graphics::texture::kInvalidTextureHandle;
 		other.m_metallicRoughnessTexture = graphics::texture::kInvalidTextureHandle;
 		other.m_normalTexture = graphics::texture::kInvalidTextureHandle;
@@ -158,12 +173,21 @@ void MaterialGPU::updateMaterialConstants()
 
 	const auto &pbr = m_material->getPBRMaterial();
 
-	m_materialConstants.baseColorFactor = pbr.baseColorFactor;
-
-	m_materialConstants.metallicFactor = pbr.metallicFactor;
-	m_materialConstants.roughnessFactor = pbr.roughnessFactor;
-
-	m_materialConstants.emissiveFactor = pbr.emissiveFactor;
+	// Apply overrides if MaterialInstance is provided, otherwise use base material
+	if ( m_materialInstance )
+	{
+		m_materialConstants.baseColorFactor = m_materialInstance->getEffectiveBaseColor( m_material.get() );
+		m_materialConstants.metallicFactor = m_materialInstance->getEffectiveMetallic( m_material.get() );
+		m_materialConstants.roughnessFactor = m_materialInstance->getEffectiveRoughness( m_material.get() );
+		m_materialConstants.emissiveFactor = m_materialInstance->getEffectiveEmissive( m_material.get() );
+	}
+	else
+	{
+		m_materialConstants.baseColorFactor = pbr.baseColorFactor;
+		m_materialConstants.metallicFactor = pbr.metallicFactor;
+		m_materialConstants.roughnessFactor = pbr.roughnessFactor;
+		m_materialConstants.emissiveFactor = pbr.emissiveFactor;
+	}
 
 	// Set texture flags based on available textures
 	m_materialConstants.textureFlags = 0;
@@ -217,6 +241,29 @@ void MaterialGPU::initializeGPUResources()
 	updateMaterialConstants();
 	createConstantBuffer();
 	m_isValid = true;
+}
+
+void MaterialGPU::updateFromInstance( const assets::MaterialInstance *instance )
+{
+	m_materialInstance = instance;
+	updateMaterialConstants();
+
+	// Update the GPU constant buffer with new values
+	if ( m_constantBuffer )
+	{
+		void *mappedData = nullptr;
+		D3D12_RANGE readRange = { 0, 0 };
+		HRESULT hr = m_constantBuffer->Map( 0, &readRange, &mappedData );
+		if ( SUCCEEDED( hr ) )
+		{
+			memcpy( mappedData, &m_materialConstants, sizeof( MaterialConstants ) );
+			m_constantBuffer->Unmap( 0, nullptr );
+		}
+		else
+		{
+			console::error( "MaterialGPU::updateFromInstance: Failed to map constant buffer" );
+		}
+	}
 }
 
 } // namespace graphics::gpu

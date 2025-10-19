@@ -11,7 +11,8 @@
 namespace assets
 {
 class Material;
-}
+class MaterialInstance;
+} // namespace assets
 namespace dx12
 {
 class Device;
@@ -60,6 +61,9 @@ public:
 	// Constructor taking assets::Material, device, and texture manager for full GPU resource creation
 	MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager &textureManager );
 
+	// Constructor with optional MaterialInstance for per-primitive overrides
+	MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, const assets::MaterialInstance *instance, graphics::texture::TextureManager &textureManager );
+
 	// Move constructor and assignment
 	MaterialGPU( MaterialGPU &&other ) noexcept;
 	MaterialGPU &operator=( MaterialGPU &&other ) noexcept;
@@ -89,11 +93,15 @@ public:
 	// Material source access
 	std::shared_ptr<assets::Material> getSourceMaterial() const { return m_material; }
 
+	// Update material constants from MaterialInstance overrides
+	void updateFromInstance( const assets::MaterialInstance *instance );
+
 private:
 	std::shared_ptr<assets::Material> m_material;
 	MaterialConstants m_materialConstants;
 	dx12::Device *m_device = nullptr;							   // Required device for GPU resource creation
 	graphics::texture::TextureManager *m_textureManager = nullptr; // Required texture manager
+	const assets::MaterialInstance *m_materialInstance = nullptr;  // Optional per-primitive overrides
 
 	// D3D12 GPU resources
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_constantBuffer;

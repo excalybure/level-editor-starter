@@ -209,7 +209,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Add getter/setter methods
   - Update copy/move constructors
   
-- [ ] **T2.3:** Update MaterialGPU to accept MaterialInstance
+- [x] **T2.3:** Update MaterialGPU to accept MaterialInstance
   - Add optional MaterialInstance* parameter to constructor
   - Implement `updateFromInstance()` method
   - Apply overrides to GPU constants buffer
