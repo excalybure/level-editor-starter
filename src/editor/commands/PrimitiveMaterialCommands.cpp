@@ -855,84 +855,98 @@ PastePrimitiveMaterialCommand::PastePrimitiveMaterialCommand(
 	ecs::Scene &ecsScene,
 	assets::Scene &assetScene,
 	graphics::GPUResourceManager *gpuManager )
-	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene ), m_gpuManager( gpuManager )
+	: m_entity( entity ), m_primitiveIndex( primitiveIndex ), m_ecsScene( &ecsScene ), m_assetScene( &assetScene ), m_gpuManager( gpuManager ), m_clipboardParsed( false )
 {
-	// Capture old state for undo
+	// Capture old state for undo (this is safe - doesn't need clipboard)
 	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
 	if ( lookup )
 	{
 		m_oldMaterialInstance = lookup->primitive->getMaterialInstance();
 	}
+}
 
-	// Parse clipboard content to get new material instance
-	const char *clipboardText = ImGui::GetClipboardText();
-	if ( clipboardText && clipboardText[0] != '\0' )
+// Helper: parse JSON string into MaterialInstance
+void PastePrimitiveMaterialCommand::parseClipboardJson( const char *jsonText )
+{
+	if ( m_clipboardParsed )
+		return; // Already parsed
+
+	m_clipboardParsed = true;
+
+	if ( !jsonText || jsonText[0] == '\0' )
+		return; // Empty clipboard
+
+	try
 	{
-		try
+		using json = nlohmann::json;
+		const auto clipJson = json::parse( jsonText );
+
+		// Deserialize value overrides
+		if ( clipJson.contains( "baseColorFactor" ) && clipJson["baseColorFactor"].is_array() && clipJson["baseColorFactor"].size() == 4 )
 		{
-			using json = nlohmann::json;
-			const auto clipJson = json::parse( clipboardText );
-
-			// Deserialize value overrides
-			if ( clipJson.contains( "baseColorFactor" ) && clipJson["baseColorFactor"].is_array() && clipJson["baseColorFactor"].size() == 4 )
-			{
-				m_newMaterialInstance.baseColorFactorOverride = math::Vec4f{
-					clipJson["baseColorFactor"][0],
-					clipJson["baseColorFactor"][1],
-					clipJson["baseColorFactor"][2],
-					clipJson["baseColorFactor"][3]
-				};
-			}
-
-			if ( clipJson.contains( "metallicFactor" ) && clipJson["metallicFactor"].is_number() )
-			{
-				m_newMaterialInstance.metallicFactorOverride = clipJson["metallicFactor"];
-			}
-
-			if ( clipJson.contains( "roughnessFactor" ) && clipJson["roughnessFactor"].is_number() )
-			{
-				m_newMaterialInstance.roughnessFactorOverride = clipJson["roughnessFactor"];
-			}
-
-			if ( clipJson.contains( "emissiveFactor" ) && clipJson["emissiveFactor"].is_array() && clipJson["emissiveFactor"].size() == 3 )
-			{
-				m_newMaterialInstance.emissiveFactorOverride = math::Vec3f{
-					clipJson["emissiveFactor"][0],
-					clipJson["emissiveFactor"][1],
-					clipJson["emissiveFactor"][2]
-				};
-			}
-
-			// Deserialize texture overrides
-			if ( clipJson.contains( "baseColorTexture" ) && clipJson["baseColorTexture"].is_string() )
-			{
-				m_newMaterialInstance.baseColorTextureOverride = clipJson["baseColorTexture"];
-			}
-
-			if ( clipJson.contains( "metallicRoughnessTexture" ) && clipJson["metallicRoughnessTexture"].is_string() )
-			{
-				m_newMaterialInstance.metallicRoughnessTextureOverride = clipJson["metallicRoughnessTexture"];
-			}
-
-			if ( clipJson.contains( "normalTexture" ) && clipJson["normalTexture"].is_string() )
-			{
-				m_newMaterialInstance.normalTextureOverride = clipJson["normalTexture"];
-			}
-
-			if ( clipJson.contains( "emissiveTexture" ) && clipJson["emissiveTexture"].is_string() )
-			{
-				m_newMaterialInstance.emissiveTextureOverride = clipJson["emissiveTexture"];
-			}
+			m_newMaterialInstance.baseColorFactorOverride = math::Vec4f{
+				clipJson["baseColorFactor"][0],
+				clipJson["baseColorFactor"][1],
+				clipJson["baseColorFactor"][2],
+				clipJson["baseColorFactor"][3]
+			};
 		}
-		catch ( const std::exception &e )
+
+		if ( clipJson.contains( "metallicFactor" ) && clipJson["metallicFactor"].is_number() )
 		{
-			console::error( "PastePrimitiveMaterialCommand: Failed to parse clipboard JSON: {}", e.what() );
+			m_newMaterialInstance.metallicFactorOverride = clipJson["metallicFactor"];
 		}
+
+		if ( clipJson.contains( "roughnessFactor" ) && clipJson["roughnessFactor"].is_number() )
+		{
+			m_newMaterialInstance.roughnessFactorOverride = clipJson["roughnessFactor"];
+		}
+
+		if ( clipJson.contains( "emissiveFactor" ) && clipJson["emissiveFactor"].is_array() && clipJson["emissiveFactor"].size() == 3 )
+		{
+			m_newMaterialInstance.emissiveFactorOverride = math::Vec3f{
+				clipJson["emissiveFactor"][0],
+				clipJson["emissiveFactor"][1],
+				clipJson["emissiveFactor"][2]
+			};
+		}
+
+		// Deserialize texture overrides
+		if ( clipJson.contains( "baseColorTexture" ) && clipJson["baseColorTexture"].is_string() )
+		{
+			m_newMaterialInstance.baseColorTextureOverride = clipJson["baseColorTexture"];
+		}
+
+		if ( clipJson.contains( "metallicRoughnessTexture" ) && clipJson["metallicRoughnessTexture"].is_string() )
+		{
+			m_newMaterialInstance.metallicRoughnessTextureOverride = clipJson["metallicRoughnessTexture"];
+		}
+
+		if ( clipJson.contains( "normalTexture" ) && clipJson["normalTexture"].is_string() )
+		{
+			m_newMaterialInstance.normalTextureOverride = clipJson["normalTexture"];
+		}
+
+		if ( clipJson.contains( "emissiveTexture" ) && clipJson["emissiveTexture"].is_string() )
+		{
+			m_newMaterialInstance.emissiveTextureOverride = clipJson["emissiveTexture"];
+		}
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "PastePrimitiveMaterialCommand: Failed to parse JSON: {}", e.what() );
 	}
 }
 
 bool PastePrimitiveMaterialCommand::execute()
 {
+	// Defer clipboard access to execute() - allows unit testing without ImGui context
+	if ( !m_clipboardParsed )
+	{
+		const char *clipboardText = ImGui::GetClipboardText();
+		parseClipboardJson( clipboardText );
+	}
+
 	const auto lookup = lookupPrimitive( m_entity, m_primitiveIndex, m_ecsScene, m_assetScene );
 	if ( !lookup )
 	{

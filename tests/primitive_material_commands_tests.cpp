@@ -797,15 +797,9 @@ TEST_CASE( "CopyPrimitiveMaterialCommand basics", "[primitive-material][command]
 	}
 }
 
-TEST_CASE( "PastePrimitiveMaterialCommand basics - No ImGui context", "[primitive-material][unit]" )
+TEST_CASE( "PastePrimitiveMaterialCommand - deferred clipboard", "[primitive-material][copy-paste][unit]" )
 {
-	// NOTE: PastePrimitiveMaterialCommand calls ImGui::GetClipboardText() in constructor
-	// which requires ImGui context. Cannot unit test without it.
-	// This test is marked as documentation that Paste tests require integration testing
-	// or need refactoring to defer clipboard access to execute() instead of constructor.
-
-	// For now, test the Copy command which doesn't have ImGui in constructor
-	SECTION( "Copy command can be instantiated without crash" )
+	SECTION( "Paste command can be constructed without ImGui context" )
 	{
 		ecs::Scene ecsScene;
 		auto testData = createTestAssetScene();
@@ -815,8 +809,167 @@ TEST_CASE( "PastePrimitiveMaterialCommand basics - No ImGui context", "[primitiv
 		meshRenderer.meshHandle = testData.meshHandle;
 		ecsScene.addComponent( entity, meshRenderer );
 
-		// This should not crash - Copy constructor has no ImGui calls
-		editor::CopyPrimitiveMaterialCommand copyCmd( entity, 0, ecsScene, *testData.assetScene );
-		REQUIRE( copyCmd.getDescription().find( "Copy" ) != std::string::npos );
+		// This should not crash - constructor no longer calls ImGui::GetClipboardText()
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 0, ecsScene, *testData.assetScene, nullptr );
+		REQUIRE( pasteCmd.getDescription().find( "Paste" ) != std::string::npos );
+	}
+
+	SECTION( "Paste applies metallic factor from JSON" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		auto mesh = testData.assetScene->getMesh( testData.meshHandle );
+		auto &primitive = mesh->getPrimitive( 0 );
+
+		primitive.setMaterialInstance( assets::MaterialInstance() );
+		REQUIRE( !primitive.getMaterialInstance().metallicFactorOverride.has_value() );
+
+		// Create paste command and manually inject JSON for testing
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 0, ecsScene, *testData.assetScene, nullptr );
+		pasteCmd.parseJsonForTesting( R"({"metallicFactor": 0.9})" );
+		REQUIRE( pasteCmd.execute() );
+
+		// Verify override was applied
+		const auto &instance = primitive.getMaterialInstance();
+		REQUIRE( instance.metallicFactorOverride.has_value() );
+		REQUIRE( instance.metallicFactorOverride.value() == 0.9f );
+	}
+
+	SECTION( "Paste undo restores original state" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		auto mesh = testData.assetScene->getMesh( testData.meshHandle );
+		auto &primitive = mesh->getPrimitive( 0 );
+
+		// Set original override
+		assets::MaterialInstance originalInstance;
+		originalInstance.roughnessFactorOverride = 0.4f;
+		primitive.setMaterialInstance( originalInstance );
+
+		// Paste new value via test JSON
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 0, ecsScene, *testData.assetScene, nullptr );
+		pasteCmd.parseJsonForTesting( R"({"roughnessFactor": 0.8})" );
+		REQUIRE( pasteCmd.execute() );
+
+		// Check new value applied
+		REQUIRE( primitive.getMaterialInstance().roughnessFactorOverride.value() == 0.8f );
+
+		// Undo
+		REQUIRE( pasteCmd.undo() );
+
+		// Check original restored
+		REQUIRE( primitive.getMaterialInstance().roughnessFactorOverride.value() == 0.4f );
+	}
+
+	SECTION( "Paste with partial JSON data only sets specified properties" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		auto mesh = testData.assetScene->getMesh( testData.meshHandle );
+		auto &primitive = mesh->getPrimitive( 0 );
+
+		primitive.setMaterialInstance( assets::MaterialInstance() );
+
+		// Paste with partial JSON
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 0, ecsScene, *testData.assetScene, nullptr );
+		pasteCmd.parseJsonForTesting( R"({"metallicFactor": 0.7, "normalTexture": "normal.png"})" );
+		REQUIRE( pasteCmd.execute() );
+
+		const auto &instance = primitive.getMaterialInstance();
+
+		// Only these should be set
+		REQUIRE( instance.metallicFactorOverride.has_value() );
+		REQUIRE( instance.metallicFactorOverride.value() == 0.7f );
+		REQUIRE( instance.normalTextureOverride.has_value() );
+		REQUIRE( instance.normalTextureOverride.value() == "normal.png" );
+
+		// Others should not be set
+		REQUIRE( !instance.baseColorFactorOverride.has_value() );
+		REQUIRE( !instance.roughnessFactorOverride.has_value() );
+	}
+
+	SECTION( "Paste command returns false for invalid entity" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		ecs::Entity invalidEntity;
+		invalidEntity.id = 9999;
+		invalidEntity.generation = 0;
+
+		editor::PastePrimitiveMaterialCommand pasteCmd( invalidEntity, 0, ecsScene, *testData.assetScene, nullptr );
+		pasteCmd.parseJsonForTesting( "{}" );
+		REQUIRE_FALSE( pasteCmd.execute() );
+	}
+
+	SECTION( "Paste command returns false for out-of-range primitive" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 999, ecsScene, *testData.assetScene, nullptr );
+		pasteCmd.parseJsonForTesting( "{}" );
+		REQUIRE_FALSE( pasteCmd.execute() );
+	}
+
+	SECTION( "Paste command doesn't merge" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::PastePrimitiveMaterialCommand pasteCmd1( entity, 0, ecsScene, *testData.assetScene, nullptr );
+		auto pasteCmd2 = std::make_unique<editor::PastePrimitiveMaterialCommand>( entity, 0, ecsScene, *testData.assetScene, nullptr );
+
+		REQUIRE_FALSE( pasteCmd1.canMergeWith( pasteCmd2.get() ) );
+		REQUIRE_FALSE( pasteCmd1.mergeWith( std::move( pasteCmd2 ) ) );
+	}
+
+	SECTION( "Paste command updates entity reference" )
+	{
+		ecs::Scene ecsScene;
+		auto testData = createTestAssetScene();
+
+		const auto entity = ecsScene.createEntity( "TestEntity" );
+		components::MeshRenderer meshRenderer;
+		meshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( entity, meshRenderer );
+
+		editor::PastePrimitiveMaterialCommand pasteCmd( entity, 0, ecsScene, *testData.assetScene, nullptr );
+
+		const auto newEntity = ecsScene.createEntity( "NewEntity" );
+		components::MeshRenderer newMeshRenderer;
+		newMeshRenderer.meshHandle = testData.meshHandle;
+		ecsScene.addComponent( newEntity, newMeshRenderer );
+
+		REQUIRE( pasteCmd.updateEntityReference( entity, newEntity ) );
 	}
 }

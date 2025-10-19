@@ -269,6 +269,9 @@ private:
  * 
  * Parses a MaterialInstance from clipboard JSON and applies it to a primitive,
  * replacing all overrides on the target primitive with the copied values.
+ * 
+ * Note: Clipboard access is deferred to execute() rather than constructor,
+ * allowing this command to be unit-tested without requiring an active ImGui context.
  */
 class PastePrimitiveMaterialCommand : public Command
 {
@@ -302,12 +305,19 @@ private:
 	uint32_t m_primitiveIndex;
 	assets::MaterialInstance m_oldMaterialInstance; // Store old state for undo
 	assets::MaterialInstance m_newMaterialInstance; // Store new state to apply
+	bool m_clipboardParsed = false;					// Track if clipboard has been read/parsed
 
 	ecs::Scene *m_ecsScene;
 	assets::Scene *m_assetScene;
 	graphics::GPUResourceManager *m_gpuManager;
 
+	// Helper: parse JSON string into MaterialInstance
+	void parseClipboardJson( const char *jsonText );
 	void triggerGPUUpdate();
+
+public:
+	// For unit testing: allows direct JSON parsing without ImGui context
+	void parseJsonForTesting( const char *jsonText ) { parseClipboardJson( jsonText ); }
 };
 
 // Helper: update MaterialGPU from asset primitive's MaterialInstance
