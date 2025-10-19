@@ -3,6 +3,7 @@
 #include <string>
 #include "runtime/entity.h"
 #include "runtime/components.h"
+#include "editor/commands/PrimitiveMaterialCommands.h"
 
 namespace graphics::gpu
 {
@@ -58,14 +59,14 @@ public:
 	 * @param selectionManager Selection manager for tracking selected entities
 	 * @param commandHistory Command history for undo/redo support
 	 * @param systemManager System manager for accessing TransformSystem
-	 * @param assetScene Asset scene containing mesh and material data
+	 * @param assetManager Asset manager for loading mesh data and material instances
 	 * @param gpuManager GPU resource manager for triggering material updates
 	 */
 	EntityInspectorPanel( ecs::Scene &scene,
 		SelectionManager &selectionManager,
 		CommandHistory &commandHistory,
 		systems::SystemManager &systemManager,
-		assets::Scene *assetScene = nullptr,
+		assets::AssetManager *assetManager = nullptr,
 		graphics::GPUResourceManager *gpuManager = nullptr );
 
 	/**
@@ -89,13 +90,27 @@ public:
 	 */
 	bool isVisible() const { return m_visible; }
 
+	/**
+	 * @brief Set the current asset scene for material override detection
+	 * @param assetScene Pointer to the loaded asset scene (can be nullptr)
+	 */
+	void setAssetScene( assets::Scene *assetScene ) { m_cachedAssetScene = assetScene; }
+
+	/**
+	 * @brief Set the path of the current asset scene to enable lazy-loading
+	 * @param assetScenePath Path to the asset scene file (e.g., "assets/models/scene.glb")
+	 */
+	void setAssetScenePath( const std::string &assetScenePath ) { m_cachedAssetScenePath = assetScenePath; }
+
 private:
 	ecs::Scene &m_scene;
 	SelectionManager &m_selectionManager;
 	CommandHistory &m_commandHistory;
 	systems::SystemManager &m_systemManager;
-	assets::Scene *m_assetScene;
+	assets::AssetManager *m_assetManager;
 	graphics::GPUResourceManager *m_gpuManager;
+	mutable assets::Scene *m_cachedAssetScene; // Cache of loaded asset scene for override detection
+	std::string m_cachedAssetScenePath;		   // Track the path of the cached scene
 	bool m_visible;
 
 	// Rendering methods for different states
@@ -150,6 +165,10 @@ private:
 		std::vector<components::Visible> beforeVisibles; // For multi-selection
 	};
 	VisibleEditState m_visibleEditState;
+
+	// Helper methods for material override detection
+	assets::Scene *getOrLoadAssetScene();
+	bool isPropertyOverridden( const assets::Primitive &primitive, MaterialPropertyType propertyType ) const;
 };
 
 } // namespace editor

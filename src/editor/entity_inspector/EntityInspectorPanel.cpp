@@ -24,9 +24,9 @@ EntityInspectorPanel::EntityInspectorPanel( ecs::Scene &scene,
 	SelectionManager &selectionManager,
 	CommandHistory &commandHistory,
 	systems::SystemManager &systemManager,
-	assets::Scene *assetScene,
+	assets::AssetManager *assetManager,
 	graphics::GPUResourceManager *gpuManager )
-	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_assetScene( assetScene ), m_gpuManager( gpuManager ), m_visible( true )
+	: m_scene( scene ), m_selectionManager( selectionManager ), m_commandHistory( commandHistory ), m_systemManager( systemManager ), m_assetManager( assetManager ), m_gpuManager( gpuManager ), m_cachedAssetScene( nullptr ), m_cachedAssetScenePath( "" ), m_visible( true )
 {
 }
 
@@ -414,6 +414,22 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 							ImGui::SameLine();
 							ImGui::TextColored( ImVec4( 0.0f, 1.0f, 0.0f, 1.0f ), "%s", sourceMaterial->getName().c_str() );
 
+							// Try to get the asset-level primitive for override detection
+							assets::Primitive *assetPrimitive = nullptr;
+							assets::Scene *assetScene = getOrLoadAssetScene();
+							if ( assetScene )
+							{
+								const auto *meshRenderer = m_scene.getComponent<components::MeshRenderer>( entity );
+								if ( meshRenderer && meshRenderer->meshHandle < assets::INVALID_MESH_HANDLE )
+								{
+									const auto mesh = assetScene->getMesh( meshRenderer->meshHandle );
+									if ( mesh && i < mesh->getPrimitiveCount() )
+									{
+										assetPrimitive = &mesh->getPrimitive( i );
+									}
+								}
+							}
+
 							// Create collapsible header for material properties
 							if ( ImGui::TreeNode( static_cast<const void *>( &i ), "Properties##%u", i ) )
 							{
@@ -424,7 +440,15 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 								const auto &pbrMaterial = sourceMaterial->getPBRMaterial();
 
 								// Base Color Factor (editable)
-								ImGui::Text( "Base Color Factor:" );
+								// Add visual indicator for overridden properties
+								if ( assetPrimitive && isPropertyOverridden( *assetPrimitive, MaterialPropertyType::BaseColorFactor ) )
+								{
+									ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "⭐ Base Color Factor:" );
+								}
+								else
+								{
+									ImGui::Text( "Base Color Factor:" );
+								}
 								ImGui::PushItemWidth( -1 ); // Full width for color picker
 								float baseColor[4] = {
 									materialConstants.baseColorFactor.x,
@@ -434,7 +458,7 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 								};
 								if ( ImGui::ColorEdit4( "##BaseColor", baseColor, ImGuiColorEditFlags_Float ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										const math::Vec4f newColor{ baseColor[0], baseColor[1], baseColor[2], baseColor[3] };
 										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
@@ -443,37 +467,73 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 											MaterialPropertyType::BaseColorFactor,
 											newColor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
+
+								// Add tooltip with base and override values
+								if ( ImGui::IsItemHovered() && assetPrimitive )
+								{
+									const auto &materialInstance = assetPrimitive->getMaterialInstance();
+									const auto &baseValue = pbrMaterial.baseColorFactor;
+									if ( materialInstance.baseColorFactorOverride.has_value() )
+									{
+										const auto &override = materialInstance.baseColorFactorOverride.value();
+										ImGui::SetItemTooltip( "Base: (%.2f, %.2f, %.2f, %.2f)\nOverride: (%.2f, %.2f, %.2f, %.2f)",
+											baseValue.x,
+											baseValue.y,
+											baseValue.z,
+											baseValue.w,
+											override.x,
+											override.y,
+											override.z,
+											override.w );
+									}
+									else
+									{
+										ImGui::SetItemTooltip( "Base: (%.2f, %.2f, %.2f, %.2f)\nNo override",
+											baseValue.x,
+											baseValue.y,
+											baseValue.z,
+											baseValue.w );
+									}
+								}
+
 								ImGui::PopItemWidth();
 
 								// Add "Reset to Base" button for base color
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##BaseColor" ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
 											entity,
 											i,
 											MaterialPropertyType::BaseColorFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
 
 								// Metallic Factor (editable)
-								ImGui::Text( "Metallic Factor:" );
+								if ( assetPrimitive && isPropertyOverridden( *assetPrimitive, MaterialPropertyType::MetallicFactor ) )
+								{
+									ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "⭐ Metallic Factor:" );
+								}
+								else
+								{
+									ImGui::Text( "Metallic Factor:" );
+								}
 								ImGui::PushItemWidth( -100 ); // Leave space for reset button
 								float metallicFactor = materialConstants.metallicFactor;
 								if ( ImGui::SliderFloat( "##Metallic", &metallicFactor, 0.0f, 1.0f ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
 											entity,
@@ -481,35 +541,60 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 											MaterialPropertyType::MetallicFactor,
 											metallicFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
+
+								// Add tooltip with base and override values
+								if ( ImGui::IsItemHovered() && assetPrimitive )
+								{
+									const auto &materialInstance = assetPrimitive->getMaterialInstance();
+									if ( materialInstance.metallicFactorOverride.has_value() )
+									{
+										ImGui::SetItemTooltip( "Base: %.2f\nOverride: %.2f",
+											pbrMaterial.metallicFactor,
+											materialInstance.metallicFactorOverride.value() );
+									}
+									else
+									{
+										ImGui::SetItemTooltip( "Base: %.2f\nNo override",
+											pbrMaterial.metallicFactor );
+									}
+								}
+
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Metallic" ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
 											entity,
 											i,
 											MaterialPropertyType::MetallicFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
 
 								// Roughness Factor (editable)
-								ImGui::Text( "Roughness Factor:" );
+								if ( assetPrimitive && isPropertyOverridden( *assetPrimitive, MaterialPropertyType::RoughnessFactor ) )
+								{
+									ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "⭐ Roughness Factor:" );
+								}
+								else
+								{
+									ImGui::Text( "Roughness Factor:" );
+								}
 								ImGui::PushItemWidth( -100 );
 								float roughnessFactor = materialConstants.roughnessFactor;
 								if ( ImGui::SliderFloat( "##Roughness", &roughnessFactor, 0.0f, 1.0f ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
 											entity,
@@ -517,30 +602,55 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 											MaterialPropertyType::RoughnessFactor,
 											roughnessFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
+
+								// Add tooltip with base and override values
+								if ( ImGui::IsItemHovered() && assetPrimitive )
+								{
+									const auto &materialInstance = assetPrimitive->getMaterialInstance();
+									if ( materialInstance.roughnessFactorOverride.has_value() )
+									{
+										ImGui::SetItemTooltip( "Base: %.2f\nOverride: %.2f",
+											pbrMaterial.roughnessFactor,
+											materialInstance.roughnessFactorOverride.value() );
+									}
+									else
+									{
+										ImGui::SetItemTooltip( "Base: %.2f\nNo override",
+											pbrMaterial.roughnessFactor );
+									}
+								}
+
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Roughness" ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
 											entity,
 											i,
 											MaterialPropertyType::RoughnessFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
 
 								// Emissive Factor (editable)
-								ImGui::Text( "Emissive Factor:" );
+								if ( assetPrimitive && isPropertyOverridden( *assetPrimitive, MaterialPropertyType::EmissiveFactor ) )
+								{
+									ImGui::TextColored( ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), "⭐ Emissive Factor:" );
+								}
+								else
+								{
+									ImGui::Text( "Emissive Factor:" );
+								}
 								ImGui::PushItemWidth( -1 );
 								float emissiveFactor[3] = {
 									materialConstants.emissiveFactor.x,
@@ -549,7 +659,7 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 								};
 								if ( ImGui::ColorEdit3( "##Emissive", emissiveFactor, ImGuiColorEditFlags_Float ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										const math::Vec3f newColor{ emissiveFactor[0], emissiveFactor[1], emissiveFactor[2] };
 										auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
@@ -558,23 +668,48 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 											MaterialPropertyType::EmissiveFactor,
 											newColor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
 								}
+
+								// Add tooltip with base and override values
+								if ( ImGui::IsItemHovered() && assetPrimitive )
+								{
+									const auto &materialInstance = assetPrimitive->getMaterialInstance();
+									if ( materialInstance.emissiveFactorOverride.has_value() )
+									{
+										const auto &override = materialInstance.emissiveFactorOverride.value();
+										ImGui::SetItemTooltip( "Base: (%.2f, %.2f, %.2f)\nOverride: (%.2f, %.2f, %.2f)",
+											pbrMaterial.emissiveFactor.x,
+											pbrMaterial.emissiveFactor.y,
+											pbrMaterial.emissiveFactor.z,
+											override.x,
+											override.y,
+											override.z );
+									}
+									else
+									{
+										ImGui::SetItemTooltip( "Base: (%.2f, %.2f, %.2f)\nNo override",
+											pbrMaterial.emissiveFactor.x,
+											pbrMaterial.emissiveFactor.y,
+											pbrMaterial.emissiveFactor.z );
+									}
+								}
+
 								ImGui::PopItemWidth();
 								ImGui::SameLine();
 								if ( ImGui::SmallButton( "Reset##Emissive" ) )
 								{
-									if ( m_assetScene && m_gpuManager )
+									if ( m_cachedAssetScene && m_gpuManager )
 									{
 										auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
 											entity,
 											i,
 											MaterialPropertyType::EmissiveFactor,
 											m_scene,
-											*m_assetScene,
+											*m_cachedAssetScene,
 											m_gpuManager );
 										m_commandHistory.executeCommand( std::move( command ) );
 									}
@@ -635,6 +770,35 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 
 									ImGui::Unindent();
 									ImGui::TreePop();
+								}
+
+								// Add "Clear All Overrides" button if primitive has overrides
+								if ( assetPrimitive )
+								{
+									bool hasAnyOverride = false;
+									for ( int prop = 0; prop <= static_cast<int>( MaterialPropertyType::EmissiveTexture ); ++prop )
+									{
+										if ( isPropertyOverridden( *assetPrimitive, static_cast<MaterialPropertyType>( prop ) ) )
+										{
+											hasAnyOverride = true;
+											break;
+										}
+									}
+
+									if ( hasAnyOverride )
+									{
+										ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 1.0f, 0.5f, 0.0f, 0.7f ) );
+										if ( ImGui::Button( "Clear All Overrides##primitive" ) )
+										{
+											if ( m_cachedAssetScene && m_gpuManager )
+											{
+												auto command = std::make_unique<ClearAllPrimitiveMaterialOverridesCommand>(
+													entity, i, m_scene, *m_cachedAssetScene, m_gpuManager );
+												m_commandHistory.executeCommand( std::move( command ) );
+											}
+										}
+										ImGui::PopStyleColor();
+									}
 								}
 
 								ImGui::Unindent();
@@ -1215,6 +1379,54 @@ void EntityInspectorPanel::renderMultiVisibleComponent( const std::vector<ecs::E
 		}
 
 		ImGui::PopID();
+	}
+}
+
+// Helper methods for material override detection
+assets::Scene *EntityInspectorPanel::getOrLoadAssetScene()
+{
+	// Return cached scene if already loaded
+	if ( m_cachedAssetScene )
+		return m_cachedAssetScene;
+
+	// Try to load from cached path if available
+	if ( !m_cachedAssetScenePath.empty() && m_assetManager )
+	{
+		auto assetScene = m_assetManager->load<assets::Scene>( m_cachedAssetScenePath );
+		if ( assetScene && assetScene->isLoaded() )
+		{
+			m_cachedAssetScene = assetScene.get();
+			return m_cachedAssetScene;
+		}
+	}
+
+	// Unable to load asset scene
+	return nullptr;
+}
+
+bool EntityInspectorPanel::isPropertyOverridden( const assets::Primitive &primitive, MaterialPropertyType propertyType ) const
+{
+	const auto &instance = primitive.getMaterialInstance();
+	switch ( propertyType )
+	{
+	case MaterialPropertyType::BaseColorFactor:
+		return instance.baseColorFactorOverride.has_value();
+	case MaterialPropertyType::MetallicFactor:
+		return instance.metallicFactorOverride.has_value();
+	case MaterialPropertyType::RoughnessFactor:
+		return instance.roughnessFactorOverride.has_value();
+	case MaterialPropertyType::EmissiveFactor:
+		return instance.emissiveFactorOverride.has_value();
+	case MaterialPropertyType::BaseColorTexture:
+		return instance.baseColorTextureOverride.has_value();
+	case MaterialPropertyType::MetallicRoughnessTexture:
+		return instance.metallicRoughnessTextureOverride.has_value();
+	case MaterialPropertyType::NormalTexture:
+		return instance.normalTextureOverride.has_value();
+	case MaterialPropertyType::EmissiveTexture:
+		return instance.emissiveTextureOverride.has_value();
+	default:
+		return false;
 	}
 }
 

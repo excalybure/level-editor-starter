@@ -270,12 +270,12 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Update MaterialInstance on execute
   - Trigger MaterialGPU update
   
-- [ ] **T4.3:** Wire up commands to UI widgets
+- [x] **T4.3:** Wire up commands to UI widgets
   - Detect value changes in ImGui widgets
   - Create and execute command
   - Add to command history
   
-- [ ] **T4.4:** Add visual indicators for overrides
+- [x] **T4.4:** Add visual indicators for overrides
   - Show icon/color when property is overridden
   - "Clear All Overrides" button per primitive
   - Tooltip showing base vs override value
