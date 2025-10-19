@@ -1,23 +1,29 @@
-﻿#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 #include "engine/assets/assets.h"
 #include "graphics/gpu/mesh_gpu.h"
 #include "graphics/gpu/material_gpu.h"
 
-TEST_CASE( "GPUResourceManager can be instantiated", "[gpu_resource_manager][unit]" )
+TEST_CASE( "GPUResourceManager requires TextureManager", "[gpu_resource_manager][unit]" )
 {
 	// Arrange - create a DX12 device
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	// Act - create GPUResourceManager
-	graphics::GPUResourceManager manager( device );
+	// Act - attempt to create GPUResourceManager without TextureManager should error
+	// This test validates that textureManager is now required (not optional)
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
-	// Assert - manager should be created successfully
+	// Assert - manager should be created successfully with textureManager
 	REQUIRE( manager.isValid() );
+	REQUIRE( manager.getTextureManager() != nullptr );
 }
 
 TEST_CASE( "GPUResourceManager caches mesh GPU buffers from shared_ptr", "[gpu_resource_manager][unit]" )
@@ -25,7 +31,9 @@ TEST_CASE( "GPUResourceManager caches mesh GPU buffers from shared_ptr", "[gpu_r
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create a test mesh with actual data
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -59,7 +67,9 @@ TEST_CASE( "GPUResourceManager caches material GPU resources from shared_ptr", "
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create a test material
 	auto material = std::make_shared<assets::Material>();
@@ -80,7 +90,9 @@ TEST_CASE( "GPUResourceManager clears cache properly", "[gpu_resource_manager][u
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create test assets
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -120,7 +132,9 @@ TEST_CASE( "GPUResourceManager tracks cache statistics", "[gpu_resource_manager]
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create test assets
 	auto mesh = std::make_shared<assets::Mesh>();
@@ -154,7 +168,9 @@ TEST_CASE( "Extract and validate PBR factor values", "[gpu_resource_manager][uni
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create a material with specific PBR factor values
 	auto material = std::make_shared<assets::Material>();
@@ -201,7 +217,9 @@ TEST_CASE( "configureMaterials properly setup materials", "[gpu_resource_manager
 	// Arrange
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create a test material
 	const auto material = std::make_shared<assets::Material>();
@@ -253,7 +271,9 @@ TEST_CASE( "configureMaterials assigns default material when primitive has no ma
 {
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager manager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager manager( device, textureManager );
 
 	// Create a simple mesh with a primitive that has NO material assigned
 	auto mesh = std::make_shared<assets::Mesh>();

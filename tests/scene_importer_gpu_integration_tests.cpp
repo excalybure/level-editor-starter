@@ -7,6 +7,8 @@
 #include "runtime/components.h"
 #include "runtime/scene_importer.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "engine/assets/assets.h"
 #include "math/vec.h"
 #include "platform/dx12/dx12_device.h"
@@ -66,7 +68,9 @@ TEST_CASE( "SceneImporter creates MeshRenderer with GPU resources using GPUResou
 	// Create a dummy device and manager for stubbed test
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager resourceManager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager resourceManager( device, textureManager );
 	const bool result = runtime::SceneImporter::importScene( scene, targetScene );
 
 	// Verify import succeeded
@@ -100,7 +104,9 @@ TEST_CASE( "SceneImporter with GPUResourceManager creates actual GPU resources",
 	// Create a DX12 device and GPU resource manager
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager resourceManager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager resourceManager( device, textureManager );
 
 	// Create a scene with a mesh node
 	auto scene = std::make_shared<assets::Scene>();
@@ -206,7 +212,9 @@ TEST_CASE( "SceneImporter createGPUResources adds GPU resources to existing scen
 	// Step 2: Create GPU resources separately
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager resourceManager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager resourceManager( device, textureManager );
 	const bool gpuResult = runtime::SceneImporter::createGPUResources( scene, targetScene, resourceManager );
 	REQUIRE( gpuResult );
 

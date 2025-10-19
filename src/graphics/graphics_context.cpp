@@ -58,8 +58,7 @@ GraphicsContext::GraphicsContext( dx12::Device *device, const std::string &mater
 	}
 
 	// Create GPU resource manager for GPU resource creation and management
-	// Pass texture manager so MaterialGPU can load and bind textures
-	m_gpuResourceManager = std::make_unique<GPUResourceManager>( *m_device, m_textureManager.get() );
+	m_gpuResourceManager = std::make_unique<GPUResourceManager>( *m_device, *m_textureManager );
 
 	// Create immediate renderer for debug shapes and UI overlays
 	m_immediateRenderer = std::make_unique<ImmediateRenderer>( *m_device, *m_shaderManager );

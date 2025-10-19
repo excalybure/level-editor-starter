@@ -8,8 +8,8 @@
 namespace graphics
 {
 
-GPUResourceManager::GPUResourceManager( dx12::Device &device, texture::TextureManager *textureManager )
-	: m_device( &device ), m_textureManager( textureManager )
+GPUResourceManager::GPUResourceManager( dx12::Device &device, texture::TextureManager &textureManager )
+	: m_device( &device ), m_textureManager( &textureManager )
 {
 	// Basic validation
 	if ( !m_device )
@@ -20,10 +20,9 @@ GPUResourceManager::GPUResourceManager( dx12::Device &device, texture::TextureMa
 
 	if ( !m_textureManager )
 	{
-		console::warning( "GPUResourceManager: No TextureManager provided - materials will not have texture support" );
+		console::error( "GPUResourceManager: null TextureManager provided" );
+		return;
 	}
-
-	console::info( "GPUResourceManager initialized successfully" );
 }
 
 std::shared_ptr<graphics::gpu::MeshGPU> GPUResourceManager::getMeshGPU( std::shared_ptr<assets::Mesh> mesh )
@@ -84,9 +83,9 @@ std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( 
 		m_materialCache.erase( it );
 	}
 
-	// Cache miss - create new MaterialGPU with TextureManager if available
+	// Cache miss - create new MaterialGPU with TextureManager
 	++m_statistics.cacheMisses;
-	const auto materialGPU = m_textureManager ? std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device, m_textureManager ) : std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device );
+	const auto materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device, *m_textureManager );
 	if ( !materialGPU->isValid() )
 	{
 		console::error( "GPUResourceManager: failed to create MaterialGPU" );
@@ -111,7 +110,7 @@ std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getDefaultMateri
 		defaultMaterial->setMetallicFactor( 0.0f );
 		defaultMaterial->setRoughnessFactor( 1.0f );
 
-		m_defaultMaterialGPU = m_textureManager ? std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device, m_textureManager ) : std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device );
+		m_defaultMaterialGPU = std::make_shared<graphics::gpu::MaterialGPU>( defaultMaterial, *m_device, *m_textureManager );
 		if ( !m_defaultMaterialGPU->isValid() )
 		{
 			console::error( "GPUResourceManager: failed to create default MaterialGPU" );

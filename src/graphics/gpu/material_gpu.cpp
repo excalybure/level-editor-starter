@@ -23,35 +23,8 @@ struct ObjectConstants
 	ObjectConstants() = default;
 };
 
-MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material )
-	: m_material( material ), m_device( nullptr )
-{
-	if ( !material )
-	{
-		console::error( "MaterialGPU: Cannot create from null material" );
-		return;
-	}
-
-	updateMaterialConstants();
-	// Note: GPU resources not created without device
-	console::info( "MaterialGPU: Created material-only instance (no GPU resources)" );
-	m_isValid = true;
-}
-
-MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device )
-	: m_material( material ), m_device( &device )
-{
-	if ( !material )
-	{
-		console::error( "MaterialGPU: Cannot create from null material" );
-		return;
-	}
-
-	initializeGPUResources();
-}
-
-MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager *textureManager )
-	: m_material( material ), m_device( &device ), m_textureManager( textureManager )
+MaterialGPU::MaterialGPU( const std::shared_ptr<assets::Material> &material, dx12::Device &device, graphics::texture::TextureManager &textureManager )
+	: m_material( material ), m_device( &device ), m_textureManager( &textureManager )
 {
 	if ( !material )
 	{
@@ -213,14 +186,10 @@ void MaterialGPU::updateMaterialConstants()
 
 	// Populate texture indices from TextureManager if available
 	// This must be called after loadTextures() to have valid texture handles
-	// If no TextureManager, indices remain UINT32_MAX (invalid)
-	if ( m_textureManager )
-	{
-		m_materialConstants.textureIndices[0] = m_textureManager->getSrvIndex( m_baseColorTexture );
-		m_materialConstants.textureIndices[1] = m_textureManager->getSrvIndex( m_normalTexture );
-		m_materialConstants.textureIndices[2] = m_textureManager->getSrvIndex( m_metallicRoughnessTexture );
-		m_materialConstants.textureIndices[3] = m_textureManager->getSrvIndex( m_emissiveTexture );
-	}
+	m_materialConstants.textureIndices[0] = m_textureManager->getSrvIndex( m_baseColorTexture );
+	m_materialConstants.textureIndices[1] = m_textureManager->getSrvIndex( m_normalTexture );
+	m_materialConstants.textureIndices[2] = m_textureManager->getSrvIndex( m_metallicRoughnessTexture );
+	m_materialConstants.textureIndices[3] = m_textureManager->getSrvIndex( m_emissiveTexture );
 }
 
 void MaterialGPU::loadTextures()

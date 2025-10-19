@@ -8,19 +8,33 @@
 #include "runtime/ecs.h"
 #include "runtime/components.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 
 // Mock GPUResourceManager for testing (CPU-only tests don't need actual GPU resources)
 class MockGPUResourceManager : public graphics::GPUResourceManager
 {
 public:
-	MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice() ) {}
+	MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice(), getMockTextureManager() ) {}
 
 private:
 	static dx12::Device &getMockDevice()
 	{
 		static dx12::Device device;
 		return device;
+	}
+
+	static graphics::texture::TextureManager &getMockTextureManager()
+	{
+		static graphics::texture::TextureManager textureManager;
+		static bool initialized = false;
+		if ( !initialized )
+		{
+			textureManager.initialize( &getMockDevice(), 1024 );
+			initialized = true;
+		}
+		return textureManager;
 	}
 };
 

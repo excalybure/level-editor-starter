@@ -4,6 +4,8 @@
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
 #include "graphics/graphics_context.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/assets/asset_manager.h"
@@ -19,10 +21,12 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 	{
 		// Arrange - create minimal resources
 		dx12::Device device; // Note: this won't initialize without a window, but we can test instantiation
+		graphics::texture::TextureManager textureManager;
+		textureManager.initialize( &device, 1024 );
 
 		// Act - create managers
 		assets::AssetManager assetManager;
-		graphics::GPUResourceManager gpuResourceManager( device );
+		graphics::GPUResourceManager gpuResourceManager( device, textureManager );
 
 		// Assert - basic instantiation successful
 		REQUIRE( true ); // If we get here, instantiation worked
@@ -32,10 +36,12 @@ TEST_CASE( "Asset loading to rendering integration initializes correctly", "[int
 	{
 		// Arrange
 		dx12::Device device;
+		graphics::texture::TextureManager textureManager;
+		textureManager.initialize( &device, 1024 );
 		ecs::Scene scene;
 		systems::SystemManager systemManager;
 		assets::AssetManager assetManager;
-		graphics::GPUResourceManager gpuResourceManager( device );
+		graphics::GPUResourceManager gpuResourceManager( device, textureManager );
 		editor::SelectionManager selectionManager( scene, systemManager );
 		editor::UI ui;
 

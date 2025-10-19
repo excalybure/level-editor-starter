@@ -19,10 +19,8 @@ class TextureManager;
 class GPUResourceManager : public gpu::MaterialProvider
 {
 public:
-	// Constructor
-	explicit GPUResourceManager( dx12::Device &device, texture::TextureManager *textureManager = nullptr );
+	explicit GPUResourceManager( dx12::Device &device, texture::TextureManager &textureManager );
 
-	// Destructor
 	~GPUResourceManager() = default;
 
 	// Disable copy/move for now

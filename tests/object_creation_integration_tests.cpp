@@ -5,6 +5,8 @@
 #include "runtime/ecs.h"
 #include "engine/assets/asset_manager.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 #include "editor/commands/EcsCommands.h"
 #include "editor/commands/CommandHistory.h"
@@ -22,13 +24,25 @@ namespace fs = std::filesystem;
 class MockGPUResourceManager : public graphics::GPUResourceManager
 {
 public:
-	MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice() ) {}
+	MockGPUResourceManager() : graphics::GPUResourceManager( getMockDevice(), getMockTextureManager() ) {}
 
 private:
 	static dx12::Device &getMockDevice()
 	{
 		static dx12::Device device;
 		return device;
+	}
+
+	static graphics::texture::TextureManager &getMockTextureManager()
+	{
+		static graphics::texture::TextureManager textureManager;
+		static bool initialized = false;
+		if ( !initialized )
+		{
+			textureManager.initialize( &getMockDevice(), 1024 );
+			initialized = true;
+		}
+		return textureManager;
 	}
 };
 

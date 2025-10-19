@@ -8,6 +8,8 @@
 #include "runtime/scene_importer.h"
 #include "engine/assets/assets.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 
 using Catch::Approx;
@@ -203,7 +205,9 @@ TEST_CASE( "SceneImporter GPU and non-GPU paths produce identical results", "[sc
 	// Create a dummy device and manager for GPU path test
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
-	graphics::GPUResourceManager resourceManager( device );
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+	graphics::GPUResourceManager resourceManager( device, textureManager );
 	const bool gpuResult = runtime::SceneImporter::importScene( scene, gpuScene );
 	REQUIRE( gpuResult );
 

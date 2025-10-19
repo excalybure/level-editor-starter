@@ -5,6 +5,8 @@
 #include "graphics/gpu/mesh_gpu.h"
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/gpu/gpu_resource_manager.h"
+#include "graphics/texture/texture_manager.h"
+#include "graphics/texture/bindless_texture_heap.h"
 #include "platform/dx12/dx12_device.h"
 
 TEST_CASE( "PrimitiveGPU creates vertex buffer from primitive", "[gpu][primitive][unit]" )
@@ -213,6 +215,10 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
+	// Create TextureManager (required for MaterialGPU)
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+
 	// Create a test primitive
 	assets::Primitive primitive;
 	primitive.addVertex( assets::Vertex{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } } );
@@ -228,8 +234,8 @@ TEST_CASE( "PrimitiveGPU constructor with MaterialGPU creates valid buffer", "[g
 	material->setMetallicFactor( 0.5f );
 	material->setRoughnessFactor( 0.3f );
 
-	// Create MaterialGPU
-	std::shared_ptr<graphics::gpu::MaterialGPU> materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material );
+	// Create MaterialGPU with device and textureManager
+	std::shared_ptr<graphics::gpu::MaterialGPU> materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material, device, textureManager );
 
 	// Create primitive GPU buffer and set material
 	graphics::gpu::PrimitiveGPU primGPU( device, primitive );
@@ -299,8 +305,12 @@ TEST_CASE( "MeshGPU can resolve materials from Scene and create MaterialGPU via 
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
+	// Create TextureManager (required for GPUResourceManager)
+	graphics::texture::TextureManager textureManager;
+	textureManager.initialize( &device, 1024 );
+
 	// Create GPU resource manager
-	graphics::GPUResourceManager resourceManager( device );
+	graphics::GPUResourceManager resourceManager( device, textureManager );
 	REQUIRE( resourceManager.isValid() );
 
 	// Create a test material
