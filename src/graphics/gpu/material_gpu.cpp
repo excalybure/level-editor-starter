@@ -189,21 +189,29 @@ void MaterialGPU::updateMaterialConstants()
 		m_materialConstants.emissiveFactor = pbr.emissiveFactor;
 	}
 
-	// Set texture flags based on available textures
+	// Set texture flags based on available textures (considering overrides)
 	m_materialConstants.textureFlags = 0;
-	if ( !pbr.baseColorTexture.empty() )
+
+	// Helper lambda to check if texture exists (override or base)
+	auto hasTexture = [&]( const std::optional<std::string> &override, const std::string &base ) -> bool {
+		if ( m_materialInstance && override.has_value() )
+			return !override.value().empty();
+		return !base.empty();
+	};
+
+	if ( hasTexture( m_materialInstance ? m_materialInstance->baseColorTextureOverride : std::nullopt, pbr.baseColorTexture ) )
 	{
 		m_materialConstants.textureFlags |= MaterialConstants::kBaseColorTextureBit;
 	}
-	if ( !pbr.metallicRoughnessTexture.empty() )
+	if ( hasTexture( m_materialInstance ? m_materialInstance->metallicRoughnessTextureOverride : std::nullopt, pbr.metallicRoughnessTexture ) )
 	{
 		m_materialConstants.textureFlags |= MaterialConstants::kMetallicRoughnessTextureBit;
 	}
-	if ( !pbr.normalTexture.empty() )
+	if ( hasTexture( m_materialInstance ? m_materialInstance->normalTextureOverride : std::nullopt, pbr.normalTexture ) )
 	{
 		m_materialConstants.textureFlags |= MaterialConstants::kNormalTextureBit;
 	}
-	if ( !pbr.emissiveTexture.empty() )
+	if ( hasTexture( m_materialInstance ? m_materialInstance->emissiveTextureOverride : std::nullopt, pbr.emissiveTexture ) )
 	{
 		m_materialConstants.textureFlags |= MaterialConstants::kEmissiveTextureBit;
 	}
@@ -226,13 +234,22 @@ void MaterialGPU::loadTextures()
 
 	const auto &pbr = m_material->getPBRMaterial();
 
-	// Use pre-loaded texture handles from Material
-	// These are populated by loadSceneTextures() after loading the scene
-	// and resolve the actual texture paths using the scene's base path
-	m_baseColorTexture = pbr.baseColorTextureHandle;
-	m_metallicRoughnessTexture = pbr.metallicRoughnessTextureHandle;
-	m_normalTexture = pbr.normalTextureHandle;
-	m_emissiveTexture = pbr.emissiveTextureHandle;
+	// Helper that returns the texture handle: load override via TextureManager when an override path
+	// is present and non-empty; otherwise return the base material's pre-resolved handle.
+	const auto pickTextureHandle = [&]( const std::optional<std::string> &overridePath, graphics::texture::TextureHandle baseHandle ) -> graphics::texture::TextureHandle {
+		if ( overridePath.has_value() && !overridePath->empty() )
+			return m_textureManager->loadTexture( overridePath.value() );
+		return baseHandle;
+	};
+
+	// Use the helper for each texture; if there is no material instance, pass std::nullopt
+	const std::optional<std::string> noOverride;
+	const auto &inst = m_materialInstance;
+
+	m_baseColorTexture = pickTextureHandle( inst ? inst->baseColorTextureOverride : noOverride, pbr.baseColorTextureHandle );
+	m_metallicRoughnessTexture = pickTextureHandle( inst ? inst->metallicRoughnessTextureOverride : noOverride, pbr.metallicRoughnessTextureHandle );
+	m_normalTexture = pickTextureHandle( inst ? inst->normalTextureOverride : noOverride, pbr.normalTextureHandle );
+	m_emissiveTexture = pickTextureHandle( inst ? inst->emissiveTextureOverride : noOverride, pbr.emissiveTextureHandle );
 }
 
 void MaterialGPU::initializeGPUResources()
@@ -246,6 +263,11 @@ void MaterialGPU::initializeGPUResources()
 void MaterialGPU::updateFromInstance( const assets::MaterialInstance *instance )
 {
 	m_materialInstance = instance;
+
+	// Reload textures to apply texture overrides
+	loadTextures();
+
+	// Update material constants (includes texture flags and indices)
 	updateMaterialConstants();
 
 	// Update the GPU constant buffer with new values

@@ -715,57 +715,134 @@ void EntityInspectorPanel::renderPrimitiveTree( ecs::Entity entity, const graphi
 									}
 								}
 
-								// Display textures section
+								// Display textures section with editable inputs
 								if ( ImGui::TreeNode( static_cast<const void *>( &i ), "Textures##%u", i ) )
 								{
 									ImGui::Indent();
 
-									// Display Base Color Texture
-									ImGui::Text( "Base Color: " );
-									ImGui::SameLine();
-									if ( pbrMaterial.baseColorTexture.empty() )
-									{
-										ImGui::TextDisabled( "(none)" );
-									}
-									else
-									{
-										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.baseColorTexture.c_str() );
-									}
+									// Helper lambda to get effective texture value (override or base)
+									auto getEffectiveTexture = [&]( const std::optional<std::string> &override, const std::string &base ) -> std::string {
+										if ( assetPrimitive && override.has_value() )
+											return override.value();
+										return base;
+									};
 
-									// Display Metallic Roughness Texture
-									ImGui::Text( "Metallic Roughness: " );
-									ImGui::SameLine();
-									if ( pbrMaterial.metallicRoughnessTexture.empty() )
-									{
-										ImGui::TextDisabled( "(none)" );
-									}
-									else
-									{
-										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.metallicRoughnessTexture.c_str() );
-									}
+									// Helper lambda to render texture input with override indicator and reset button
+									auto renderTextureInput = [&]( const char *label, MaterialPropertyType propertyType, const std::string &baseTexture, const std::optional<std::string> &overrideTexture ) -> void {
+										const bool isOverridden = assetPrimitive && isPropertyOverridden( *assetPrimitive, propertyType );
+										const std::string effectiveTexture = getEffectiveTexture( overrideTexture, baseTexture );
 
-									// Display Normal Texture
-									ImGui::Text( "Normal: " );
-									ImGui::SameLine();
-									if ( pbrMaterial.normalTexture.empty() )
-									{
-										ImGui::TextDisabled( "(none)" );
-									}
-									else
-									{
-										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.normalTexture.c_str() );
-									}
+										// Override indicator (colored dot)
+										if ( isOverridden )
+										{
+											ImGui::TextColored( ImVec4( 1.0f, 0.6f, 0.0f, 1.0f ), "●" );
+											ImGui::SameLine();
+											if ( ImGui::IsItemHovered() )
+												ImGui::SetTooltip( "Overridden from base material" );
+										}
 
-									// Display Emissive Texture
-									ImGui::Text( "Emissive: " );
-									ImGui::SameLine();
-									if ( pbrMaterial.emissiveTexture.empty() )
+										ImGui::Text( "%s", label );
+										ImGui::SameLine();
+
+										// Texture input field
+										char textureBuffer[256] = {};
+										std::strncpy( textureBuffer, effectiveTexture.c_str(), sizeof( textureBuffer ) - 1 );
+
+										ImGui::PushItemWidth( -110.0f ); // Leave space for browse and reset buttons
+										const std::string inputID = std::format( "##{}_{}", label, i );
+										if ( ImGui::InputText( inputID.c_str(), textureBuffer, sizeof( textureBuffer ), ImGuiInputTextFlags_EnterReturnsTrue ) )
+										{
+											// User pressed Enter - create command to set texture override
+											if ( m_cachedAssetScene && m_gpuManager )
+											{
+												const std::string newTexture( textureBuffer );
+												auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+													entity,
+													i,
+													propertyType,
+													newTexture,
+													m_scene,
+													*m_cachedAssetScene,
+													m_gpuManager );
+												m_commandHistory.executeCommand( std::move( command ) );
+											}
+										}
+										ImGui::PopItemWidth();
+
+										// Browse button (placeholder for future file picker)
+										ImGui::SameLine();
+										const std::string browseID = std::format( "...##{}", label );
+										if ( ImGui::SmallButton( browseID.c_str() ) )
+										{
+											// TODO: Open file picker or highlight in asset browser
+											// For now, show a tooltip suggesting drag-and-drop
+										}
+										if ( ImGui::IsItemHovered() )
+										{
+											ImGui::SetTooltip( "Use drag-and-drop from Asset Browser\nOr type texture path and press Enter" );
+										}
+
+										// Drag-and-drop target for texture assets
+										if ( ImGui::BeginDragDropTarget() )
+										{
+											if ( const ImGuiPayload *payload = ImGui::AcceptDragDropPayload( "ASSET_BROWSER_ITEM" ) )
+											{
+												const std::string droppedPath( static_cast<const char *>( payload->Data ) );
+												// Accept drag-drop and create command to set texture override
+												if ( m_cachedAssetScene && m_gpuManager )
+												{
+													auto command = std::make_unique<SetPrimitiveMaterialPropertyCommand>(
+														entity,
+														i,
+														propertyType,
+														droppedPath,
+														m_scene,
+														*m_cachedAssetScene,
+														m_gpuManager );
+													m_commandHistory.executeCommand( std::move( command ) );
+												}
+											}
+											ImGui::EndDragDropTarget();
+										}
+
+										// Reset button (only show if overridden)
+										if ( isOverridden )
+										{
+											ImGui::SameLine();
+											const std::string resetID = std::format( "Reset##{}", label );
+											if ( ImGui::SmallButton( resetID.c_str() ) )
+											{
+												if ( m_cachedAssetScene && m_gpuManager )
+												{
+													auto command = std::make_unique<ClearPrimitiveMaterialPropertyCommand>(
+														entity,
+														i,
+														propertyType,
+														m_scene,
+														*m_cachedAssetScene,
+														m_gpuManager );
+													m_commandHistory.executeCommand( std::move( command ) );
+												}
+											}
+										}
+									};
+
+									// Render texture inputs for each texture type
+									if ( assetPrimitive )
 									{
-										ImGui::TextDisabled( "(none)" );
+										const auto &instance = assetPrimitive->getMaterialInstance();
+										renderTextureInput( "Base Color:", MaterialPropertyType::BaseColorTexture, pbrMaterial.baseColorTexture, instance.baseColorTextureOverride );
+										renderTextureInput( "Metallic Roughness:", MaterialPropertyType::MetallicRoughnessTexture, pbrMaterial.metallicRoughnessTexture, instance.metallicRoughnessTextureOverride );
+										renderTextureInput( "Normal:", MaterialPropertyType::NormalTexture, pbrMaterial.normalTexture, instance.normalTextureOverride );
+										renderTextureInput( "Emissive:", MaterialPropertyType::EmissiveTexture, pbrMaterial.emissiveTexture, instance.emissiveTextureOverride );
 									}
 									else
 									{
-										ImGui::TextColored( ImVec4( 0.8f, 0.8f, 1.0f, 1.0f ), "%s", pbrMaterial.emissiveTexture.c_str() );
+										// Fallback: no asset primitive, just show base material textures (read-only)
+										ImGui::Text( "Base Color: %s", pbrMaterial.baseColorTexture.empty() ? "(none)" : pbrMaterial.baseColorTexture.c_str() );
+										ImGui::Text( "Metallic Roughness: %s", pbrMaterial.metallicRoughnessTexture.empty() ? "(none)" : pbrMaterial.metallicRoughnessTexture.c_str() );
+										ImGui::Text( "Normal: %s", pbrMaterial.normalTexture.empty() ? "(none)" : pbrMaterial.normalTexture.c_str() );
+										ImGui::Text( "Emissive: %s", pbrMaterial.emissiveTexture.empty() ? "(none)" : pbrMaterial.emissiveTexture.c_str() );
 									}
 
 									ImGui::Unindent();

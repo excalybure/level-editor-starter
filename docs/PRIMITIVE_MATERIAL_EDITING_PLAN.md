@@ -291,10 +291,13 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
 ### Milestone 5: Advanced Features (Optional)
 **Estimated:** 2-3 days
 
-- [ ] **T5.1:** Texture picker UI
-  - Browse/select textures for override
-  - Preview texture thumbnails
-  - "Use Base Material Texture" option
+- [x] **T5.1:** Texture picker UI ✅ COMPLETED (Oct 19)
+  - Editable texture input fields with Enter-to-confirm
+  - Drag-and-drop support from Asset Browser
+  - Browse button with tooltip (placeholder for future file picker)
+  - Visual override indicators (orange dot)
+  - Reset button for each texture property
+  - MaterialGPU texture override support
   
 - [ ] **T5.2:** Copy/Paste material overrides
   - Copy MaterialInstance from one primitive
