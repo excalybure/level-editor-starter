@@ -237,14 +237,22 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Check if glTF supports per-primitive material properties
   - Map to MaterialInstance if applicable
   
-- [ ] **T3.3:** Scene loading/saving tests
+- [x] **T3.3:** Scene loading/saving tests ✅ COMPLETED (Oct 19)
   - Save scene with overrides, load, verify values
   - Test partial overrides (only some properties set)
 
 **Success Criteria:**
-- Scenes with material overrides save/load correctly
-- JSON format is clean and minimal (only overrides saved)
-- Backward compatibility maintained (scenes without overrides still work)
+- ✅ Scenes with material overrides save/load correctly
+- ✅ JSON format is clean and minimal (only overrides saved)
+- ✅ Backward compatibility maintained (scenes without overrides still work)
+
+**Test Coverage (6 tests, 62 assertions):**
+1. Scene save/load with full material overrides on multiple primitives
+2. Partial material overrides serialize cleanly (only non-empty fields)
+3. Material instance overrides load correctly from JSON
+4. Round-trip save/load preserves all override values
+5. Backward compatibility: scenes without overrides still work
+6. Multiple primitives with different override patterns serialize cleanly
 
 ---
 
