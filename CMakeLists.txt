@@ -351,6 +351,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gpu_buffer_tests.cpp
     tests/material_gpu_tests.cpp
     tests/material_gpu_instance_tests.cpp
+    tests/mesh_gpu_material_instance_tests.cpp
     tests/material_instance_override_tests.cpp
     tests/primitive_material_instance_tests.cpp
     tests/gpu_resource_manager_tests.cpp

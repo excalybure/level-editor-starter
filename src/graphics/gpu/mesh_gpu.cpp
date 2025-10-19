@@ -225,7 +225,15 @@ void MeshGPU::configureMaterials( MaterialProvider &materialProvider, const asse
 			const assets::MaterialHandle materialHandle = srcPrimitive.getMaterialHandle();
 			if ( const auto material = scene.getMaterial( materialHandle ) )
 			{
-				materialToAssign = materialProvider.getMaterialGPU( material );
+				// Check if primitive has MaterialInstance overrides
+				const assets::MaterialInstance *instance = nullptr;
+				if ( srcPrimitive.hasOverrides() )
+				{
+					instance = &srcPrimitive.getMaterialInstance();
+				}
+
+				// Create MaterialGPU with optional MaterialInstance
+				materialToAssign = materialProvider.getMaterialGPU( material, instance );
 				if ( !materialToAssign )
 				{
 					console::error( "Failed to create MaterialGPU for material handle '{}'", materialHandle );

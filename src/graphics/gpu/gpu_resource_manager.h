@@ -34,6 +34,7 @@ public:
 
 	// Material resource caching
 	std::shared_ptr<graphics::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) override;
+	std::shared_ptr<graphics::gpu::MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material, const assets::MaterialInstance *instance ) override;
 	std::shared_ptr<graphics::gpu::MaterialGPU> getDefaultMaterialGPU() override;
 
 	// Cache management

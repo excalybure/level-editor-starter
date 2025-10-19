@@ -9,12 +9,14 @@ namespace dx12
 {
 class Device;
 }
+// Forward declarations
 namespace assets
 {
 class Material;
 class Mesh;
 class Primitive;
 class Scene;
+class MaterialInstance;
 } // namespace assets
 namespace graphics::gpu
 {
@@ -30,6 +32,7 @@ class MaterialProvider
 public:
 	virtual ~MaterialProvider() = default;
 	virtual std::shared_ptr<MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material ) = 0;
+	virtual std::shared_ptr<MaterialGPU> getMaterialGPU( std::shared_ptr<assets::Material> material, const assets::MaterialInstance *instance ) = 0;
 	virtual std::shared_ptr<MaterialGPU> getDefaultMaterialGPU() = 0;
 };
 

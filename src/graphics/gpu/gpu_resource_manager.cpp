@@ -98,6 +98,24 @@ std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( 
 	return materialGPU;
 }
 
+std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getMaterialGPU( std::shared_ptr<assets::Material> material, const assets::MaterialInstance *instance )
+{
+	if ( !material )
+	{
+		console::error( "GPUResourceManager::getMaterialGPU: null material provided" );
+		return nullptr;
+	}
+
+	// Create new MaterialGPU with instance - don't cache since instance-specific
+	const auto materialGPU = std::make_shared<graphics::gpu::MaterialGPU>( material, *m_device, instance, *m_textureManager );
+	if ( !materialGPU->isValid() )
+	{
+		console::error( "GPUResourceManager: failed to create MaterialGPU with instance" );
+		return nullptr;
+	}
+
+	return materialGPU;
+}
 std::shared_ptr<graphics::gpu::MaterialGPU> GPUResourceManager::getDefaultMaterialGPU()
 {
 	// Create default material if not cached
