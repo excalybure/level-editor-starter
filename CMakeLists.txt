@@ -177,6 +177,7 @@ add_library(editor STATIC
   src/editor/commands/CommandProfiler.cpp
   src/editor/commands/CommandUI.cpp
   src/editor/commands/EcsCommands.cpp
+  src/editor/commands/PrimitiveMaterialCommands.cpp
   src/editor/config/EditorConfig.cpp
   src/editor/entity_inspector/ComponentUI.cpp
   src/editor/entity_inspector/EntityInspectorPanel.cpp
@@ -364,6 +365,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/gizmo_operation_switching_tests.cpp
     tests/gizmo_keyboard_blocking_tests.cpp
     tests/transform_commands_tests.cpp
+    tests/primitive_material_commands_tests.cpp
     tests/editor_command_tests.cpp
     tests/ecs_command_tests.cpp
     tests/command_ui_tests.cpp

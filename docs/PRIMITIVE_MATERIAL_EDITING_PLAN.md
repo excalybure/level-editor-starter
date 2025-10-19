@@ -264,7 +264,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Enable sliders for metallicFactor, roughnessFactor
   - Add "Reset to Base" button per property
   
-- [ ] **T4.2:** Implement SetPrimitiveMaterialPropertyCommand
+- [x] **T4.2:** Implement SetPrimitiveMaterialPropertyCommand ✅ COMPLETED (Oct 19)
   - Create command class with execute/undo
   - Store old/new values
   - Update MaterialInstance on execute
@@ -496,15 +496,15 @@ primitive0.setMaterialInstance(instance);
 - [x] UI is clean and intuitive
 
 ### Milestone 2 Complete When:
-- [ ] MaterialInstance struct implemented and tested
-- [ ] Primitive stores MaterialInstance
-- [ ] MaterialGPU respects overrides
-- [ ] Unit tests pass
+- [x] MaterialInstance struct implemented and tested
+- [x] Primitive stores MaterialInstance
+- [x] MaterialGPU respects overrides
+- [x] Unit tests pass
 
 ### Milestone 3 Complete When:
-- [ ] Scenes with overrides save/load correctly
-- [ ] JSON format is clean
-- [ ] Backward compatibility verified
+- [x] Scenes with overrides save/load correctly
+- [x] JSON format is clean
+- [x] Backward compatibility verified
 
 ### Milestone 4 Complete When:
 - [ ] Can edit all properties per primitive
