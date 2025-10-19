@@ -1,4 +1,5 @@
 #include "runtime/mesh_rendering_system.h"
+#include "graphics/graphics_context.h"
 #include "platform/dx12/dx12_device.h"
 #include "graphics/gpu/material_gpu.h"
 #include "graphics/material_system/material_instance.h"
@@ -44,15 +45,16 @@ bool isEffectivelyVisible( const ecs::Scene &scene, ecs::Entity entity )
 namespace systems
 {
 
-MeshRenderingSystem::MeshRenderingSystem( dx12::Device &device, graphics::material_system::MaterialSystem *materialSystem, std::shared_ptr<shader_manager::ShaderManager> shaderManager, graphics::SamplerManager &samplerManager, systems::SystemManager *systemManager, graphics::texture::TextureManager *textureManager )
-	: m_device( device ), m_materialSystem( materialSystem ), m_shaderManager( shaderManager ), m_samplerManager( samplerManager ), m_systemManager( systemManager ), m_textureManager( textureManager )
+MeshRenderingSystem::MeshRenderingSystem( graphics::GraphicsContext &graphicsContext, systems::SystemManager *systemManager )
+	: m_graphicsContext( graphicsContext ), m_systemManager( systemManager )
 {
 	// Phase 2: Create default MaterialInstance if MaterialSystem available
-	if ( m_materialSystem )
+	auto *materialSystem = m_graphicsContext.getMaterialSystem();
+	if ( materialSystem )
 	{
 		m_defaultMaterialInstance = std::make_unique<graphics::material_system::MaterialInstance>(
-			&m_device,
-			m_materialSystem,
+			m_graphicsContext.getDevice(),
+			materialSystem,
 			"mesh_unlit" );
 
 		if ( !m_defaultMaterialInstance->isValid() )
@@ -119,11 +121,12 @@ void MeshRenderingSystem::render( ecs::Scene &scene, const camera::Camera &camer
 
 	// 2. Bind bindless texture descriptor heap to root parameter 3 (g_textures[] t0)
 	// This allows all materials to access textures via indices without per-material binding
-	if ( m_textureManager )
+	auto *textureManager = m_graphicsContext.getTextureManager();
+	if ( textureManager )
 	{
 		// TextureManager sets the descriptor heap and binds the descriptor table
 		// Root parameter index 3 is for texture descriptor table (SRVs)
-		m_textureManager->bindTextures( commandList, 3 );
+		textureManager->bindTextures( commandList, 3 );
 	}
 
 	// Iterate through all entities to find those with both MeshRenderer and Transform components
@@ -230,7 +233,7 @@ void MeshRenderingSystem::renderEntity( ecs::Scene &scene, ecs::Entity entity, c
 	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
-	HRESULT hr = m_device.get()->CreateCommittedResource(
+	HRESULT hr = m_graphicsContext.getDevice()->get()->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&bufferDesc,

@@ -5,6 +5,7 @@
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
+#include "graphics/graphics_context.h"
 #include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/camera/camera.h"
@@ -19,13 +20,10 @@ TEST_CASE( "MeshRenderingSystem can be created with renderer and ShaderManager",
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
+	graphics::GraphicsContext graphicsContext( &device );
 
 	// Act & Assert - should compile and create without error
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 }
 
 TEST_CASE( "MeshRenderingSystem update method can be called without error", "[mesh_rendering_system][unit]" )
@@ -34,11 +32,8 @@ TEST_CASE( "MeshRenderingSystem update method can be called without error", "[me
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 	const float deltaTime = 0.016f; // 60 FPS
 
@@ -52,11 +47,8 @@ TEST_CASE( "MeshRenderingSystem render method processes entities with MeshRender
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create an entity with both Transform and MeshRenderer components
@@ -77,11 +69,8 @@ TEST_CASE( "MeshRenderingSystem calculateMVPMatrix returns valid matrix for iden
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 
 	components::Transform transform;  // Default: identity transform
 	camera::PerspectiveCamera camera; // Default camera
@@ -104,11 +93,8 @@ TEST_CASE( "MeshRenderingSystem renderEntity handles empty MeshRenderer without 
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with empty mesh renderer (no GPU mesh)
@@ -128,11 +114,8 @@ TEST_CASE( "MeshRenderingSystem complete render system processes entities correc
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create multiple entities with different component combinations
@@ -159,11 +142,8 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with non-identity transform and empty mesh renderer
@@ -178,13 +158,13 @@ TEST_CASE( "MeshRenderingSystem renderEntity sets MVP matrix on renderer when GP
 	camera::PerspectiveCamera camera;
 
 	// Store initial matrix
-	const auto initialMatrix = renderer.getViewProjectionMatrix();
+	const auto initialMatrix = graphicsContext.getImmediateRenderer()->getViewProjectionMatrix();
 
 	// Act
 	system.renderEntity( scene, entity, camera, device.getCommandList() );
 
 	// Assert - Matrix should remain unchanged when gpuMesh is null
-	const auto finalMatrix = renderer.getViewProjectionMatrix();
+	const auto finalMatrix = graphicsContext.getImmediateRenderer()->getViewProjectionMatrix();
 	REQUIRE( finalMatrix.m00() == initialMatrix.m00() );
 	REQUIRE( finalMatrix.m11() == initialMatrix.m11() );
 	REQUIRE( finalMatrix.m22() == initialMatrix.m22() );
@@ -197,19 +177,17 @@ TEST_CASE( "Renderer getCommandContext provides access to command context during
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	shader_manager::ShaderManager shaderManager;
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, shaderManager );
+	graphics::GraphicsContext graphicsContext( &device );
+	auto *renderer = graphicsContext.getImmediateRenderer();
 
 	// Act & Assert - No active frame, should return nullptr
-	REQUIRE( renderer.getCommandContext() == nullptr );
+	REQUIRE( renderer->getCommandContext() == nullptr );
 
 	// Begin headless frame to create command context
-	renderer.beginHeadlessForTests();
+	renderer->beginHeadlessForTests();
 
 	// Now command context should be available
-	auto *commandContext = renderer.getCommandContext();
+	auto *commandContext = renderer->getCommandContext();
 	REQUIRE( commandContext != nullptr );
 
 	// Verify command list is accessible through context
@@ -223,16 +201,14 @@ TEST_CASE( "MeshRenderingSystem uses world transforms for parent-child hierarchi
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
+	graphics::GraphicsContext graphicsContext( &device );
 
 	ecs::Scene scene;
 	systems::SystemManager systemManager;
 	auto *transformSystem = systemManager.addSystem<systems::TransformSystem>();
 
 	// Create MeshRenderingSystem with SystemManager access for hierarchy support
-	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, &systemManager );
+	auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( graphicsContext, &systemManager );
 	systemManager.initialize( scene );
 
 	// Create parent and child entities
@@ -367,11 +343,8 @@ TEST_CASE( "MeshRenderingSystem integrates texture binding during rendering", "[
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with mesh renderer
@@ -397,16 +370,10 @@ TEST_CASE( "MeshRenderingSystem binds descriptor heap once per frame for bindles
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
+	graphics::GraphicsContext graphicsContext( &device );
 
-	// Create TextureManager with bindless heap
-	graphics::texture::TextureManager textureManager;
-	textureManager.initialize( &device, 100 ); // Small heap for testing
-
-	// Create MeshRenderingSystem with TextureManager
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr, &textureManager );
+	// Create MeshRenderingSystem (already has TextureManager from GraphicsContext)
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 
 	ecs::Scene scene;
 

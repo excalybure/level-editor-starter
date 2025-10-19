@@ -3,6 +3,7 @@
 #include "runtime/ecs.h"
 #include "runtime/systems.h"
 #include "runtime/mesh_rendering_system.h"
+#include "graphics/graphics_context.h"
 #include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/assets/asset_manager.h"
@@ -53,12 +54,10 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 
 		REQUIRE( device.initializeHeadless() );
 
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		graphics::GraphicsContext graphicsContext( &device );
 
 		// Act - create MeshRenderingSystem
-		graphics::SamplerManager samplerManager;
-		samplerManager.initialize( &device );
-		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, nullptr ); // Assert
+		auto meshRenderingSystem = std::make_unique<systems::MeshRenderingSystem>( graphicsContext, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 	}
 
@@ -69,14 +68,12 @@ TEST_CASE( "MeshRenderingSystem integration with asset managers", "[integration]
 
 		REQUIRE( device.initializeHeadless() );
 
-		auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
+		graphics::GraphicsContext graphicsContext( &device );
 		systems::SystemManager systemManager;
 		ecs::Scene scene;
 
 		// Act - add system to manager
-		graphics::SamplerManager samplerManager;
-		samplerManager.initialize( &device );
-		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( device, nullptr, shaderManager, samplerManager, nullptr ); // Assert
+		auto *meshRenderingSystem = systemManager.addSystem<systems::MeshRenderingSystem>( graphicsContext, nullptr ); // Assert
 		REQUIRE( meshRenderingSystem != nullptr );
 
 		// Act - initialize systems

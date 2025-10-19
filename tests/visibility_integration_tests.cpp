@@ -3,6 +3,7 @@
 #include "runtime/mesh_rendering_system.h"
 #include "runtime/ecs.h"
 #include "runtime/components.h"
+#include "graphics/graphics_context.h"
 #include "graphics/immediate_renderer/immediate_renderer.h"
 #include "graphics/sampler/sampler_manager.h"
 #include "engine/camera/camera.h"
@@ -16,11 +17,8 @@ TEST_CASE( "MeshRenderingSystem skips entities with visible=false", "[T6.0][visi
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with Transform, MeshRenderer, and Visible components
@@ -75,11 +73,8 @@ TEST_CASE( "MeshRenderingSystem renders entities without Visible component", "[T
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity without Visible component (should still render)
@@ -102,11 +97,8 @@ TEST_CASE( "MeshRenderingSystem respects castShadows flag", "[T6.0][visibility][
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create entity with castShadows=false
@@ -136,11 +128,8 @@ TEST_CASE( "Hierarchical visibility: invisible parent hides children", "[hierarc
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=false
@@ -184,11 +173,8 @@ TEST_CASE( "Hierarchical visibility: visible parent shows visible children", "[h
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -227,11 +213,8 @@ TEST_CASE( "Hierarchical visibility: visible parent respects invisible children"
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create parent entity with visible=true
@@ -270,11 +253,8 @@ TEST_CASE( "Hierarchical visibility: deep hierarchy respects all ancestors", "[h
 	dx12::Device device;
 	REQUIRE( device.initializeHeadless() );
 
-	auto shaderManager = std::make_shared<shader_manager::ShaderManager>();
-	graphics::SamplerManager samplerManager;
-	samplerManager.initialize( &device );
-	graphics::ImmediateRenderer renderer( device, *shaderManager );
-	systems::MeshRenderingSystem system( device, nullptr, shaderManager, samplerManager, nullptr );
+	graphics::GraphicsContext graphicsContext( &device );
+	systems::MeshRenderingSystem system( graphicsContext, nullptr );
 	ecs::Scene scene;
 
 	// Create grandparent (visible=false)
