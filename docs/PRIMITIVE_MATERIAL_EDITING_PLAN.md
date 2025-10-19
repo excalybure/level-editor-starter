@@ -233,7 +233,7 @@ User Edit → Command → Primitive.m_materialInstance → MaterialGPU update �
   - Only serialize non-empty overrides
   - Parse materialInstance from JSON
   
-- [ ] **T3.2:** Update glTF loader (if needed)
+- [x] **T3.2:** Update glTF loader (if needed)
   - Check if glTF supports per-primitive material properties
   - Map to MaterialInstance if applicable
   
@@ -558,3 +558,69 @@ primitive0.setMaterialInstance(instance);
 
 ### ✅ Chosen: Hybrid (Lightweight UI + MaterialInstance)
 **Why:** Best of both worlds - quick iteration path + proper long-term solution
+
+---
+
+## T3.2 Findings: glTF Loader Analysis
+
+### glTF 2.0 Per-Primitive Material Support
+
+**Status:** ✅ **No loader changes required**
+
+### Key Findings
+
+1. **glTF Already Supports Per-Primitive Materials**
+   - Each primitive in a mesh can reference a different material
+   - Material references are by index into the materials array
+   - Perfect alignment with our Primitive-based mesh architecture
+   - GLTFLoader already handles this correctly
+
+2. **glTF Does NOT Support Per-Primitive Material Property Overrides**
+   - glTF 2.0 spec only supports assigning different base materials
+   - No built-in mechanism for per-primitive property overrides
+   - To customize a primitive's appearance in standard glTF:
+     - Create a new material definition with desired properties
+     - Assign that material to the primitive
+     - Results in material duplication for unique customizations
+
+3. **Our Solution: MaterialInstance as Custom Extension Layer**
+   - Separate from glTF base materials
+   - Stored in our scene serialization format
+   - Bridges the gap between glTF limitations and artist workflow
+   - Allows editing primitives without duplicating materials
+
+### Architecture
+
+```
+glTF File          → GLTFLoader → Mesh { 
+                                   primitives: [
+                                     { materialHandle: 0 },
+                                     { materialHandle: 1 }
+                                   ]
+                                 }
+
+Our Scene JSON  → SceneDeserializer → Mesh {
+                                       primitives: [
+                                         { materialHandle: 0,
+                                           materialInstance: { baseColorFactor: [1,0,0,1] } },
+                                         { materialHandle: 1,
+                                           materialInstance: { metallicFactor: 0.8 } }
+                                       ]
+                                     }
+```
+
+### Implementation Status
+
+- ✅ glTF loader correctly assigns per-primitive base materials
+- ✅ GLTFLoader::extractPrimitive() maps material indices to handles
+- ✅ MaterialInstance layer is separate and not tied to glTF loading
+- ✅ Scene serialization (T3.1) handles persistence of overrides
+- ✅ No changes required to GLTFLoader for T3.2
+
+### Future Enhancement (Optional)
+
+If we want to persist MaterialInstance overrides in glTF files:
+- Define custom glTF extension: `VENDOR_primitive_material_overrides`
+- Extend GLTFLoader to parse extension data
+- Populate MaterialInstance during glTF loading
+- Not required for current workflow (overrides stored in scene format)
