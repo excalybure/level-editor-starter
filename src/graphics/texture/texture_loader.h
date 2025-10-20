@@ -14,8 +14,8 @@ struct ImageData
 	std::vector<uint8_t> pixels;
 	uint32_t width = 0;
 	uint32_t height = 0;
-	uint32_t channels = 4;								  // Always RGBA
-	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // sRGB for standard image files
+	uint32_t channels = 0; // Actual channel count (1, 2, 3, or 4)
+	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 };
 
 class TextureLoader

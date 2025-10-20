@@ -76,11 +76,12 @@ TEST_CASE( "Texture uploads data with staging buffer", "[dx12][texture][loading]
 
 	// Upload data
 	device.beginFrame();
+	const uint32_t bytesPerPixel = imageData->channels;
 	const bool uploadResult = texture.uploadTextureData(
 		device.getCommandList(),
 		imageData->pixels.data(),
-		imageData->width * 4,					 // rowPitch (RGBA = 4 bytes per pixel)
-		imageData->width * imageData->height * 4 // slicePitch
+		imageData->width * bytesPerPixel,					 // rowPitch
+		imageData->width * imageData->height * bytesPerPixel // slicePitch
 	);
 	device.endFrame();
 
@@ -103,11 +104,12 @@ TEST_CASE( "Texture upload validates command list", "[dx12][texture][loading]" )
 	REQUIRE( texture.createFromImageData( &device, imageData.value() ) );
 
 	// Try to upload without valid command list
+	const uint32_t bytesPerPixel = imageData->channels;
 	const bool result = texture.uploadTextureData(
 		nullptr,
 		imageData->pixels.data(),
-		imageData->width * 4,
-		imageData->width * imageData->height * 4 );
+		imageData->width * bytesPerPixel,
+		imageData->width * imageData->height * bytesPerPixel );
 
 	REQUIRE_FALSE( result );
 
@@ -130,11 +132,12 @@ TEST_CASE( "Integration: Load PNG and create GPU texture", "[dx12][texture][inte
 
 	// Upload texture data
 	device.beginFrame();
+	const uint32_t bytesPerPixel = imageData->channels;
 	REQUIRE( texture.uploadTextureData(
 		device.getCommandList(),
 		imageData->pixels.data(),
-		imageData->width * 4,
-		imageData->width * imageData->height * 4 ) );
+		imageData->width * bytesPerPixel,
+		imageData->width * imageData->height * bytesPerPixel ) );
 	device.endFrame();
 
 	// Verify final state

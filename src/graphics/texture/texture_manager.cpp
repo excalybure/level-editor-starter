@@ -8,6 +8,32 @@
 namespace graphics::texture
 {
 
+// Helper function to get bytes per pixel for a given DXGI format
+static constexpr uint32_t getBytesPerPixel( DXGI_FORMAT format ) noexcept
+{
+	switch ( format )
+	{
+	case DXGI_FORMAT_R8_UNORM:
+	case DXGI_FORMAT_R8_UINT:
+	case DXGI_FORMAT_R8_SNORM:
+	case DXGI_FORMAT_R8_SINT:
+		return 1;
+	case DXGI_FORMAT_R8G8_UNORM:
+	case DXGI_FORMAT_R8G8_UINT:
+	case DXGI_FORMAT_R8G8_SNORM:
+	case DXGI_FORMAT_R8G8_SINT:
+		return 2;
+	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+	case DXGI_FORMAT_R8G8B8A8_UINT:
+	case DXGI_FORMAT_R8G8B8A8_SNORM:
+	case DXGI_FORMAT_R8G8B8A8_SINT:
+		return 4;
+	default:
+		return 4; // Default to 4 for safety
+	}
+}
+
 // Destructor must be in cpp where BindlessTextureHeap is complete
 TextureManager::~TextureManager() = default;
 
@@ -222,7 +248,8 @@ TextureHandle TextureManager::createTextureFromImageData( const ImageData &image
 	}
 
 	ID3D12GraphicsCommandList *commandList = m_device->getCommandList();
-	const uint32_t rowPitch = imageData.width * 4; // RGBA = 4 bytes per pixel
+	const uint32_t bytesPerPixel = getBytesPerPixel( imageData.format );
+	const uint32_t rowPitch = imageData.width * bytesPerPixel;
 	const uint32_t slicePitch = rowPitch * imageData.height;
 	if ( !texture->uploadTextureData( commandList, imageData.pixels.data(), rowPitch, slicePitch ) )
 	{

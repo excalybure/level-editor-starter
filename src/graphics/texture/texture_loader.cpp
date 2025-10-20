@@ -14,8 +14,8 @@ std::optional<ImageData> TextureLoader::loadFromFile( const std::string &path )
 {
 	int width, height, channels;
 
-	// Force 4 channels (RGBA)
-	stbi_uc *pixels = stbi_load( path.c_str(), &width, &height, &channels, 4 );
+	// Load with actual channel count (0 = auto-detect)
+	stbi_uc *pixels = stbi_load( path.c_str(), &width, &height, &channels, 0 );
 
 	if ( !pixels )
 	{
@@ -23,13 +23,38 @@ std::optional<ImageData> TextureLoader::loadFromFile( const std::string &path )
 		return std::nullopt;
 	}
 
+	// Validate channels
+	if ( channels < 1 || channels > 4 )
+	{
+		console::error( "Image has unsupported channel count: {}", channels );
+		stbi_image_free( pixels );
+		return std::nullopt;
+	}
+
 	ImageData imageData;
 	imageData.width = static_cast<uint32_t>( width );
 	imageData.height = static_cast<uint32_t>( height );
-	imageData.channels = 4;
-	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // sRGB format for proper color space
+	imageData.channels = static_cast<uint32_t>( channels );
 
-	const size_t dataSize = width * height * 4;
+	// Select format based on actual channel count
+	switch ( channels )
+	{
+	case 1:
+		imageData.format = DXGI_FORMAT_R8_UNORM;
+		break;
+	case 2:
+		imageData.format = DXGI_FORMAT_R8G8_UNORM;
+		break;
+	case 3:
+		// Note: 3-channel images will be stored as RGB, but may need expansion to RGBA for GPU upload
+		imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		break;
+	case 4:
+		imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		break;
+	}
+
+	const size_t dataSize = width * height * channels;
 	imageData.pixels.resize( dataSize );
 	std::memcpy( imageData.pixels.data(), pixels, dataSize );
 
@@ -48,8 +73,8 @@ std::optional<ImageData> TextureLoader::loadFromMemory( const uint8_t *data, siz
 
 	int width, height, channels;
 
-	// Force 4 channels (RGBA)
-	stbi_uc *pixels = stbi_load_from_memory( data, static_cast<int>( size ), &width, &height, &channels, 4 );
+	// Load with actual channel count (0 = auto-detect)
+	stbi_uc *pixels = stbi_load_from_memory( data, static_cast<int>( size ), &width, &height, &channels, 0 );
 
 	if ( !pixels )
 	{
@@ -57,13 +82,38 @@ std::optional<ImageData> TextureLoader::loadFromMemory( const uint8_t *data, siz
 		return std::nullopt;
 	}
 
+	// Validate channels
+	if ( channels < 1 || channels > 4 )
+	{
+		console::error( "Image has unsupported channel count: {}", channels );
+		stbi_image_free( pixels );
+		return std::nullopt;
+	}
+
 	ImageData imageData;
 	imageData.width = static_cast<uint32_t>( width );
 	imageData.height = static_cast<uint32_t>( height );
-	imageData.channels = 4;
-	imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // sRGB format for proper color space
+	imageData.channels = static_cast<uint32_t>( channels );
 
-	const size_t dataSize = width * height * 4;
+	// Select format based on actual channel count
+	switch ( channels )
+	{
+	case 1:
+		imageData.format = DXGI_FORMAT_R8_UNORM;
+		break;
+	case 2:
+		imageData.format = DXGI_FORMAT_R8G8_UNORM;
+		break;
+	case 3:
+		// Note: 3-channel images will be stored as RGB, but may need expansion to RGBA for GPU upload
+		imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		break;
+	case 4:
+		imageData.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		break;
+	}
+
+	const size_t dataSize = width * height * channels;
 	imageData.pixels.resize( dataSize );
 	std::memcpy( imageData.pixels.data(), pixels, dataSize );
 
