@@ -579,3 +579,48 @@ TEST_CASE( "AssetBrowserPanel supports drag-and-drop", "[AssetBrowser][T3.7][uni
 		REQUIRE( !panel.canDragAsset( fixture.testRoot + "/unknown.xyz" ) );
 	}
 }
+
+TEST_CASE( "AssetBrowserPanel generates asset tooltips", "[AssetBrowser][T3.8][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+	panel.setRootPath( fixture.testRoot );
+
+	SECTION( "buildTooltipText includes filename" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file1.txt";
+		const auto tooltip = panel.buildTooltipText( assetPath );
+
+		REQUIRE( tooltip.find( "file1.txt" ) != std::string::npos );
+	}
+
+	SECTION( "buildTooltipText includes asset type" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file2.gltf";
+		const auto tooltip = panel.buildTooltipText( assetPath );
+
+		REQUIRE( tooltip.find( "Mesh" ) != std::string::npos );
+	}
+
+	SECTION( "buildTooltipText includes file size" )
+	{
+		const std::string assetPath = fixture.testRoot + "/file1.txt";
+		const auto tooltip = panel.buildTooltipText( assetPath );
+
+		// Should contain size in bytes or human-readable format
+		REQUIRE( ( tooltip.find( "B" ) != std::string::npos ||
+			tooltip.find( "0" ) != std::string::npos ) );
+	}
+
+	SECTION( "buildTooltipText handles non-existent files" )
+	{
+		const auto tooltip = panel.buildTooltipText( "nonexistent.txt" );
+
+		// Should return a string (possibly empty or with error message)
+		REQUIRE( tooltip.empty() );
+	}
+}

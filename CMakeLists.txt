@@ -389,6 +389,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/visibility_integration_tests.cpp
     tests/scene_editor_integration_tests.cpp
     tests/object_creation_integration_tests.cpp
+    tests/asset_browser_tests.cpp
     tests/editor_config_tests.cpp
     tests/material_system_tests.cpp
     tests/material_pass_tests.cpp

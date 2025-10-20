@@ -526,6 +526,18 @@ void AssetBrowserPanel::renderAssetGrid()
 			selectAsset( filePath );
 		}
 
+		// Tooltip on hover
+		if ( ImGui::IsItemHovered( ImGuiHoveredFlags_DelayNormal ) )
+		{
+			const auto tooltipText = buildTooltipText( filePath );
+			if ( !tooltipText.empty() )
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text( "%s", tooltipText.c_str() );
+				ImGui::EndTooltip();
+			}
+		}
+
 		// Drag-and-drop source
 		if ( canDragAsset( filePath ) && ImGui::BeginDragDropSource( ImGuiDragDropFlags_None ) )
 		{
@@ -738,6 +750,65 @@ std::string AssetBrowserPanel::getDragDropPayload( const std::string &assetPath 
 
 	// Return the full asset path as payload
 	return assetPath;
+}
+
+std::string AssetBrowserPanel::buildTooltipText( const std::string &assetPath ) const
+{
+	const auto metadata = getAssetMetadata( assetPath );
+
+	// Return empty string if file doesn't exist
+	if ( !metadata.exists )
+	{
+		return "";
+	}
+
+	// Build tooltip text with filename, type, and size
+	std::string tooltip;
+
+	// Filename
+	tooltip += "File: " + metadata.filename + "\n";
+
+	// Asset type
+	switch ( metadata.type )
+	{
+	case AssetType::Mesh:
+		tooltip += "Type: Mesh\n";
+		break;
+	case AssetType::Texture:
+		tooltip += "Type: Texture\n";
+		break;
+	case AssetType::Material:
+		tooltip += "Type: Material\n";
+		break;
+	case AssetType::Unknown:
+		tooltip += "Type: Unknown\n";
+		break;
+	}
+
+	// File size (convert to human-readable format)
+	const double sizeKB = metadata.sizeBytes / 1024.0;
+	const double sizeMB = sizeKB / 1024.0;
+
+	if ( sizeMB >= 1.0 )
+	{
+		char sizeBuffer[32];
+		snprintf( sizeBuffer, sizeof( sizeBuffer ), "Size: %.2f MB", sizeMB );
+		tooltip += sizeBuffer;
+	}
+	else if ( sizeKB >= 1.0 )
+	{
+		char sizeBuffer[32];
+		snprintf( sizeBuffer, sizeof( sizeBuffer ), "Size: %.2f KB", sizeKB );
+		tooltip += sizeBuffer;
+	}
+	else
+	{
+		char sizeBuffer[32];
+		snprintf( sizeBuffer, sizeof( sizeBuffer ), "Size: %zu B", metadata.sizeBytes );
+		tooltip += sizeBuffer;
+	}
+
+	return tooltip;
 }
 
 } // namespace editor

@@ -85,6 +85,9 @@ public:
 	bool canDragAsset( const std::string &assetPath ) const;
 	std::string getDragDropPayload( const std::string &assetPath ) const;
 
+	// Tooltip support
+	std::string buildTooltipText( const std::string &assetPath ) const;
+
 private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;
