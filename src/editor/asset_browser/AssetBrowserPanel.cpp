@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <filesystem>
 #include <algorithm>
+#include <windows.h>
 
 namespace editor
 {
@@ -20,6 +21,32 @@ AssetBrowserPanel::AssetBrowserPanel( assets::AssetManager &assetManager,
 {
 	// Initialize current path to root path
 	m_currentPath = m_rootPath;
+}
+
+std::string AssetBrowserPanel::pathToUtf8String( const std::filesystem::path &path )
+{
+	try
+	{
+		// Convert wide path to UTF-8 string
+		// Use wstring first (native Windows format), then encode to UTF-8
+		const std::wstring widePath = path.wstring();
+
+		// Convert wide string to UTF-8
+		int utf8Size = WideCharToMultiByte( CP_UTF8, 0, widePath.c_str(), -1, nullptr, 0, nullptr, nullptr );
+		if ( utf8Size <= 0 )
+		{
+			return "(unknown)";
+		}
+
+		std::string utf8String( utf8Size - 1, '\0' ); // -1 to exclude null terminator
+		WideCharToMultiByte( CP_UTF8, 0, widePath.c_str(), -1, &utf8String[0], utf8Size, nullptr, nullptr );
+
+		return utf8String;
+	}
+	catch ( const std::exception & )
+	{
+		return "(unknown)";
+	}
 }
 
 void AssetBrowserPanel::render()
@@ -233,20 +260,12 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 	try
 	{
 		// Get immediate subdirectories
-		std::vector<std::string> subdirs;
+		std::vector<std::filesystem::path> subdirs;
 		for ( const auto &entry : std::filesystem::directory_iterator( path ) )
 		{
 			if ( entry.is_directory() )
 			{
-				try
-				{
-					const std::string subdirPath = entry.path().string();
-					subdirs.push_back( subdirPath );
-				}
-				catch ( const std::exception &e )
-				{
-					console::error( "Exception trying to parse directory: {}", e.what() );
-				}
+				subdirs.push_back( entry.path() );
 			}
 		}
 
@@ -256,8 +275,12 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 		// Render tree nodes for each subdirectory
 		for ( const auto &subdir : subdirs )
 		{
-			const std::string displayName = std::filesystem::path( subdir ).filename().string();
-			const bool isCurrentPath = ( subdir == m_currentPath );
+			// Get display name safely using UTF-8 conversion
+			const std::string displayName = pathToUtf8String( subdir.filename() );
+
+			// Convert path to UTF-8 for comparison and navigation
+			const std::string subdirPath = pathToUtf8String( subdir );
+			const bool isCurrentPath = ( subdirPath == m_currentPath );
 
 			// Use different flags for current directory (highlight)
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -296,13 +319,13 @@ void AssetBrowserPanel::renderDirectoryTree( const std::string &path )
 			// Handle click on tree node
 			if ( ImGui::IsItemClicked() )
 			{
-				navigateToDirectory( subdir );
+				navigateToDirectory( subdirPath );
 			}
 
 			// Recursively render children if node is open and has subdirectories
 			if ( nodeOpen && hasSubdirs )
 			{
-				renderDirectoryTree( subdir );
+				renderDirectoryTree( subdirPath );
 				ImGui::TreePop();
 			}
 		}
@@ -970,7 +993,6 @@ std::string AssetBrowserPanel::buildTooltipText( const std::string &assetPath ) 
 		{
 			const DXGI_FORMAT format = static_cast<DXGI_FORMAT>( metadata.textureFormat );
 			// Use DirectX format name lookup
-			const LPCSTR formatName = nullptr;
 			try
 			{
 				// Note: D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetName() is available in d3dx12 headers

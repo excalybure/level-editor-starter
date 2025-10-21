@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <filesystem>
 
 // Forward declarations
 namespace assets
@@ -108,6 +109,9 @@ private:
 	// Helper methods for file system operations
 	std::vector<std::string> getDirectoryContents( const std::string &path ) const;
 	bool isDirectory( const std::string &path ) const;
+
+	// Path conversion helper for Unicode support
+	static std::string pathToUtf8String( const std::filesystem::path &path );
 
 	// UI rendering helpers
 	void renderDirectoryTree( const std::string &path );
