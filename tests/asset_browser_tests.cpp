@@ -323,6 +323,32 @@ TEST_CASE( "AssetBrowserPanel identifies asset types from file extensions", "[As
 		const auto type = panel.getAssetTypeFromExtension( "noextension" );
 		REQUIRE( type == editor::AssetType::Unknown );
 	}
+
+	SECTION( "PNG files are identified as textures" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "image.png" );
+		REQUIRE( type == editor::AssetType::Texture );
+	}
+
+	SECTION( "JPG files are identified as textures" )
+	{
+		const auto type1 = panel.getAssetTypeFromExtension( "photo.jpg" );
+		const auto type2 = panel.getAssetTypeFromExtension( "photo.jpeg" );
+		REQUIRE( type1 == editor::AssetType::Texture );
+		REQUIRE( type2 == editor::AssetType::Texture );
+	}
+
+	SECTION( "DDS files are identified as textures" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "texture.dds" );
+		REQUIRE( type == editor::AssetType::Texture );
+	}
+
+	SECTION( "TGA files are identified as textures" )
+	{
+		const auto type = panel.getAssetTypeFromExtension( "sprite.tga" );
+		REQUIRE( type == editor::AssetType::Texture );
+	}
 }
 
 TEST_CASE( "AssetBrowserPanel filters files from directories", "[AssetBrowser][T3.4][unit]" )

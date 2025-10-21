@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <memory>
+#include <string>
 #include <wrl.h>
 #include "math/color.h"
 
@@ -107,6 +108,9 @@ public:
 
 	// Create a new viewport render target
 	std::shared_ptr<Texture> createViewportRenderTarget( UINT width, UINT height );
+
+	// Create texture from image file (for asset browser previews)
+	std::shared_ptr<Texture> createTextureFromFile( const std::string &filePath );
 
 	// Get next available SRV descriptor handle
 	D3D12_CPU_DESCRIPTOR_HANDLE getNextSrvHandle();

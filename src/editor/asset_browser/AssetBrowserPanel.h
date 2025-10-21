@@ -2,6 +2,8 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <memory>
 
 // Forward declarations
 namespace assets
@@ -13,6 +15,12 @@ namespace ecs
 {
 class Scene;
 }
+
+namespace dx12
+{
+class Device;
+class Texture;
+} // namespace dx12
 
 class CommandHistory;
 
@@ -55,6 +63,9 @@ public:
 	// Root path configuration
 	void setRootPath( const std::string &path );
 	const std::string &getRootPath() const { return m_rootPath; }
+
+	// Device for texture loading
+	void setDevice( dx12::Device *device ) { m_device = device; }
 
 	// Current path navigation
 	const std::string &getCurrentPath() const { return m_currentPath; }
@@ -103,12 +114,16 @@ private:
 	assets::AssetManager &m_assetManager;
 	ecs::Scene &m_scene;
 	CommandHistory &m_commandHistory;
+	dx12::Device *m_device = nullptr;
 
 	// State members
 	bool m_visible = true;
 	std::string m_rootPath = "assets/";
 	std::string m_currentPath;
 	std::string m_selectedAsset;
+
+	// Texture preview cache (path -> texture)
+	std::unordered_map<std::string, std::shared_ptr<dx12::Texture>> m_textureCache;
 };
 
 } // namespace editor

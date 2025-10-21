@@ -479,6 +479,100 @@ std::shared_ptr<Texture> TextureManager::createViewportRenderTarget( UINT width,
 	return texture;
 }
 
+std::shared_ptr<Texture> TextureManager::createTextureFromFile( const std::string &filePath )
+{
+	if ( !m_device )
+	{
+		console::error( "TextureManager::createTextureFromFile: Device is null" );
+		return std::shared_ptr<Texture>();
+	}
+
+	if ( !m_srvHeap )
+	{
+		console::error( "TextureManager::createTextureFromFile: SRV heap is null" );
+		return std::shared_ptr<Texture>();
+	}
+
+	// Check if we have space
+	if ( m_currentRtvIndex >= TextureManager::kMaxTextures || m_currentSrvIndex >= TextureManager::kMaxTextures )
+	{
+		console::error( "TextureManager::createTextureFromFile: Descriptor heap full" );
+		return std::shared_ptr<Texture>();
+	}
+
+	// Load image data
+	const auto imageDataResult = graphics::texture::TextureLoader::loadFromFile( filePath );
+	if ( !imageDataResult.has_value() )
+	{
+		console::error( "TextureManager::createTextureFromFile: Failed to load image from '{}'", filePath );
+		return std::shared_ptr<Texture>();
+	}
+
+	const auto &imageData = imageDataResult.value();
+	auto texture = std::make_shared<Texture>();
+
+	// Create the texture from image data
+	if ( !texture->createFromImageData( m_device, imageData, D3D12_RESOURCE_FLAG_NONE ) )
+	{
+		console::error( "TextureManager::createTextureFromFile: Failed to create texture from '{}'", filePath );
+		return std::shared_ptr<Texture>();
+	}
+
+	// Upload texture data to GPU (requires command list to be open)
+	const bool needsFrameScope = !m_device->isInFrame();
+	if ( needsFrameScope )
+	{
+		m_device->beginFrame();
+	}
+
+	ID3D12GraphicsCommandList *commandList = m_device->getCommandList();
+	const uint32_t bytesPerPixel = imageData.channels > 0 ? imageData.channels : 4;
+	const uint32_t rowPitch = imageData.width * bytesPerPixel;
+	const uint32_t slicePitch = rowPitch * imageData.height;
+
+	if ( !texture->uploadTextureData( commandList, imageData.pixels.data(), rowPitch, slicePitch ) )
+	{
+		console::error( "TextureManager::createTextureFromFile: Failed to upload texture data for '{}'", filePath );
+		if ( needsFrameScope )
+		{
+			m_device->endFrame();
+		}
+		return std::shared_ptr<Texture>();
+	}
+
+	if ( needsFrameScope )
+	{
+		m_device->endFrame();
+	}
+
+	// Get SRV handle and create shader resource view
+	D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+	srvCpuHandle.ptr += ( TextureManager::kSrvIndexOffset + m_currentSrvIndex ) * m_srvDescriptorSize;
+
+	if ( !texture->createShaderResourceView( m_device, srvCpuHandle ) )
+	{
+		console::error( "TextureManager::createTextureFromFile: Failed to create SRV for '{}'", filePath );
+		return std::shared_ptr<Texture>();
+	}
+
+	// Store the SRV CPU handle for future updates
+	texture->m_srvCpuHandle = srvCpuHandle;
+
+	// Calculate GPU handle for ImGui
+	const D3D12_GPU_DESCRIPTOR_HANDLE gpuHandleStart = m_srvHeap->GetGPUDescriptorHandleForHeapStart();
+	const D3D12_CPU_DESCRIPTOR_HANDLE cpuHandleStart = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+	const UINT64 offset = srvCpuHandle.ptr - cpuHandleStart.ptr;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+	gpuHandle.ptr = gpuHandleStart.ptr + offset;
+
+	// Store the GPU handle in the texture
+	texture->m_srvGpuHandle = gpuHandle;
+
+	++m_currentSrvIndex;
+
+	return texture;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE TextureManager::getNextSrvHandle()
 {
 	if ( !m_srvHeap || m_currentSrvIndex >= TextureManager::kMaxTextures )

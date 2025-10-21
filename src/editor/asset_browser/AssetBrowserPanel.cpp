@@ -3,6 +3,8 @@
 #include "runtime/ecs.h"
 #include "editor/commands/CommandHistory.h"
 #include "core/console.h"
+#include "platform/dx12/dx12_device.h"
+#include "graphics/texture/texture_loader.h"
 
 #include <imgui.h>
 #include <filesystem>
@@ -411,7 +413,13 @@ AssetType AssetBrowserPanel::getAssetTypeFromExtension( const std::string &filen
 			return AssetType::Mesh;
 		}
 
-		// Future: Add texture formats (.png, .jpg, etc.)
+		// Check for texture formats
+		if ( extension == ".png" || extension == ".jpg" || extension == ".jpeg" ||
+			extension == ".dds" || extension == ".tga" )
+		{
+			return AssetType::Texture;
+		}
+
 		// Future: Add material formats (.mat, etc.)
 
 		return AssetType::Unknown;
@@ -493,37 +501,109 @@ void AssetBrowserPanel::renderAssetGrid()
 		// Begin grid cell
 		ImGui::BeginGroup();
 
-		// Display icon based on asset type
-		const char *icon = "?";
-		switch ( assetType )
-		{
-		case AssetType::Mesh:
-			icon = "[M]";
-			break;
-		case AssetType::Texture:
-			icon = "[T]";
-			break;
-		case AssetType::Material:
-			icon = "[Mat]";
-			break;
-		case AssetType::Unknown:
-		default:
-			icon = "[?]";
-			break;
-		}
-
-		// Render icon as button (placeholder for thumbnail)
+		// Check if this is selected
 		const bool isSelected = ( filePath == m_selectedAsset );
 		if ( isSelected )
 		{
 			ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.3f, 0.5f, 0.8f, 1.0f ) );
 		}
 
-		// Create unique button ID using the file path
-		const std::string buttonLabel = std::string( icon ) + "##" + filePath;
-		if ( ImGui::Button( buttonLabel.c_str(), ImVec2( cellSize, cellSize ) ) )
+		// For texture assets, try to load and show the actual image
+		bool renderedImage = false;
+		if ( assetType == AssetType::Texture && m_device )
 		{
-			selectAsset( filePath );
+			// Check if texture is already cached
+			std::shared_ptr<dx12::Texture> texture;
+			const auto it = m_textureCache.find( filePath );
+			if ( it != m_textureCache.end() )
+			{
+				texture = it->second;
+			}
+			else
+			{
+				// Load texture from file
+				auto *textureManager = m_device->getTextureManager();
+				if ( textureManager )
+				{
+					texture = textureManager->createTextureFromFile( filePath );
+					if ( texture )
+					{
+						m_textureCache[filePath] = texture;
+					}
+				}
+			}
+
+			// Render the texture if we have it
+			if ( texture )
+			{
+				const void *textureId = texture->getImGuiTextureId();
+				if ( textureId )
+				{
+					// Calculate aspect-preserving size
+					const float aspectRatio = static_cast<float>( texture->getWidth() ) / static_cast<float>( texture->getHeight() );
+					ImVec2 imageSize;
+					if ( aspectRatio > 1.0f )
+					{
+						// Wider than tall
+						imageSize.x = cellSize;
+						imageSize.y = cellSize / aspectRatio;
+					}
+					else
+					{
+						// Taller than wide
+						imageSize.x = cellSize * aspectRatio;
+						imageSize.y = cellSize;
+					}
+
+					// Center the image
+					const float offsetX = ( cellSize - imageSize.x ) * 0.5f;
+					const float offsetY = ( cellSize - imageSize.y ) * 0.5f;
+					if ( offsetX > 0.0f )
+						ImGui::SetCursorPosX( ImGui::GetCursorPosX() + offsetX );
+					if ( offsetY > 0.0f )
+						ImGui::Dummy( ImVec2( 0.0f, offsetY ) );
+
+					ImGui::Image( reinterpret_cast<ImTextureID>( textureId ), imageSize );
+
+					// Make clickable
+					if ( ImGui::IsItemClicked() )
+					{
+						selectAsset( filePath );
+					}
+
+					renderedImage = true;
+				}
+			}
+		}
+
+		// Fallback to text icon if no image rendered
+		if ( !renderedImage )
+		{
+			// Display icon based on asset type
+			const char *icon = "?";
+			switch ( assetType )
+			{
+			case AssetType::Mesh:
+				icon = "[M]";
+				break;
+			case AssetType::Texture:
+				icon = "[T]";
+				break;
+			case AssetType::Material:
+				icon = "[Mat]";
+				break;
+			case AssetType::Unknown:
+			default:
+				icon = "[?]";
+				break;
+			}
+
+			// Create unique button ID using the file path
+			const std::string buttonLabel = std::string( icon ) + "##" + filePath;
+			if ( ImGui::Button( buttonLabel.c_str(), ImVec2( cellSize, cellSize ) ) )
+			{
+				selectAsset( filePath );
+			}
 		}
 
 		// Tooltip on hover

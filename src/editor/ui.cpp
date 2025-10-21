@@ -2025,6 +2025,12 @@ void UI::initializeSceneOperations( ecs::Scene &scene,
 	// Configure asset browser root path
 	m_impl->assetBrowserPanel->setRootPath( "assets/" );
 
+	// Set device for texture loading
+	if ( m_impl->device )
+	{
+		m_impl->assetBrowserPanel->setDevice( m_impl->device );
+	}
+
 	// Wire focus callback for hierarchy panel to focus camera on entity
 	m_impl->hierarchyPanel->setFocusCallback( [this]( ecs::Entity entity ) {
 		// Get the perspective viewport
