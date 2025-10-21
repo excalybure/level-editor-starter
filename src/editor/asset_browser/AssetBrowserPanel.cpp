@@ -686,6 +686,39 @@ AssetMetadata AssetBrowserPanel::getAssetMetadata( const std::string &assetPath 
 		{
 			metadata.sizeBytes = std::filesystem::file_size( path );
 		}
+
+		// For textures, load and extract additional metadata
+		if ( metadata.type == AssetType::Texture && m_device )
+		{
+			// Try to load texture from cache or create new
+			std::shared_ptr<dx12::Texture> texture;
+			const auto it = m_textureCache.find( assetPath );
+			if ( it != m_textureCache.end() )
+			{
+				texture = it->second;
+			}
+			else
+			{
+				// Load texture from file
+				auto *textureManager = m_device->getTextureManager();
+				if ( textureManager )
+				{
+					texture = textureManager->createTextureFromFile( assetPath );
+					if ( texture )
+					{
+						m_textureCache[assetPath] = texture;
+					}
+				}
+			}
+
+			// Extract texture properties
+			if ( texture )
+			{
+				metadata.textureWidth = texture->getWidth();
+				metadata.textureHeight = texture->getHeight();
+				metadata.textureFormat = static_cast<uint32_t>( texture->getFormat() );
+			}
+		}
 	}
 	catch ( const std::filesystem::filesystem_error & )
 	{
@@ -739,6 +772,75 @@ void AssetBrowserPanel::renderAssetPreview()
 	}
 
 	ImGui::Text( "Type: %s", typeStr );
+
+	// Display texture-specific metadata if available
+	if ( metadata.type == AssetType::Texture )
+	{
+		if ( metadata.textureWidth > 0 && metadata.textureHeight > 0 )
+		{
+			ImGui::Text( "Dimensions: %u x %u", metadata.textureWidth, metadata.textureHeight );
+		}
+
+		// Display format
+		if ( metadata.textureFormat != 0 )
+		{
+			const DXGI_FORMAT format = static_cast<DXGI_FORMAT>( metadata.textureFormat );
+			const char *formatStr = "Unknown";
+			switch ( format )
+			{
+			case DXGI_FORMAT_R8G8B8A8_UNORM:
+				formatStr = "R8G8B8A8_UNORM";
+				break;
+			case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+				formatStr = "R8G8B8A8_UNORM_SRGB";
+				break;
+			case DXGI_FORMAT_B8G8R8A8_UNORM:
+				formatStr = "B8G8R8A8_UNORM";
+				break;
+			case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+				formatStr = "B8G8R8A8_UNORM_SRGB";
+				break;
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+				formatStr = "R16G16B16A16_FLOAT";
+				break;
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+				formatStr = "R32G32B32A32_FLOAT";
+				break;
+			case DXGI_FORMAT_BC1_UNORM:
+				formatStr = "BC1_UNORM";
+				break;
+			case DXGI_FORMAT_BC1_UNORM_SRGB:
+				formatStr = "BC1_UNORM_SRGB";
+				break;
+			case DXGI_FORMAT_BC3_UNORM:
+				formatStr = "BC3_UNORM";
+				break;
+			case DXGI_FORMAT_BC3_UNORM_SRGB:
+				formatStr = "BC3_UNORM_SRGB";
+				break;
+			case DXGI_FORMAT_BC4_UNORM:
+				formatStr = "BC4_UNORM";
+				break;
+			case DXGI_FORMAT_BC5_UNORM:
+				formatStr = "BC5_UNORM";
+				break;
+			case DXGI_FORMAT_BC7_UNORM:
+				formatStr = "BC7_UNORM";
+				break;
+			case DXGI_FORMAT_BC7_UNORM_SRGB:
+				formatStr = "BC7_UNORM_SRGB";
+				break;
+			default:
+				ImGui::Text( "Format: Format(%u)", static_cast<uint32_t>( format ) );
+				formatStr = nullptr;
+				break;
+			}
+			if ( formatStr )
+			{
+				ImGui::Text( "Format: %s", formatStr );
+			}
+		}
+	}
 
 	// File size
 	const double sizeKB = metadata.sizeBytes / 1024.0;
@@ -856,6 +958,81 @@ std::string AssetBrowserPanel::buildTooltipText( const std::string &assetPath ) 
 		break;
 	case AssetType::Texture:
 		tooltip += "Type: Texture\n";
+		// Add texture dimensions if available
+		if ( metadata.textureWidth > 0 && metadata.textureHeight > 0 )
+		{
+			char dimBuffer[32];
+			snprintf( dimBuffer, sizeof( dimBuffer ), "Dimensions: %ux%u\n", metadata.textureWidth, metadata.textureHeight );
+			tooltip += dimBuffer;
+		}
+		// Add texture format if available
+		if ( metadata.textureFormat != 0 )
+		{
+			const DXGI_FORMAT format = static_cast<DXGI_FORMAT>( metadata.textureFormat );
+			// Use DirectX format name lookup
+			const LPCSTR formatName = nullptr;
+			try
+			{
+				// Note: D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetName() is available in d3dx12 headers
+				// For now, we'll use a simple approach to format common texture formats
+				std::string formatStr;
+				switch ( format )
+				{
+				case DXGI_FORMAT_R8G8B8A8_UNORM:
+					formatStr = "R8G8B8A8_UNORM";
+					break;
+				case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+					formatStr = "R8G8B8A8_UNORM_SRGB";
+					break;
+				case DXGI_FORMAT_B8G8R8A8_UNORM:
+					formatStr = "B8G8R8A8_UNORM";
+					break;
+				case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+					formatStr = "B8G8R8A8_UNORM_SRGB";
+					break;
+				case DXGI_FORMAT_R16G16B16A16_FLOAT:
+					formatStr = "R16G16B16A16_FLOAT";
+					break;
+				case DXGI_FORMAT_R32G32B32A32_FLOAT:
+					formatStr = "R32G32B32A32_FLOAT";
+					break;
+				case DXGI_FORMAT_BC1_UNORM:
+					formatStr = "BC1_UNORM";
+					break;
+				case DXGI_FORMAT_BC1_UNORM_SRGB:
+					formatStr = "BC1_UNORM_SRGB";
+					break;
+				case DXGI_FORMAT_BC3_UNORM:
+					formatStr = "BC3_UNORM";
+					break;
+				case DXGI_FORMAT_BC3_UNORM_SRGB:
+					formatStr = "BC3_UNORM_SRGB";
+					break;
+				case DXGI_FORMAT_BC4_UNORM:
+					formatStr = "BC4_UNORM";
+					break;
+				case DXGI_FORMAT_BC5_UNORM:
+					formatStr = "BC5_UNORM";
+					break;
+				case DXGI_FORMAT_BC7_UNORM:
+					formatStr = "BC7_UNORM";
+					break;
+				case DXGI_FORMAT_BC7_UNORM_SRGB:
+					formatStr = "BC7_UNORM_SRGB";
+					break;
+				default:
+					char formatBuffer[32];
+					snprintf( formatBuffer, sizeof( formatBuffer ), "Format(%u)", static_cast<uint32_t>( format ) );
+					formatStr = formatBuffer;
+					break;
+				}
+				tooltip += "Format: " + formatStr + "\n";
+			}
+			catch ( const std::exception & )
+			{
+				// If format lookup fails, skip it
+			}
+		}
 		break;
 	case AssetType::Material:
 		tooltip += "Type: Material\n";

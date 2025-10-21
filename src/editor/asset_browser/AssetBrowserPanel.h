@@ -43,6 +43,11 @@ struct AssetMetadata
 	AssetType type = AssetType::Unknown;
 	std::string filename;
 	std::size_t sizeBytes = 0;
+
+	// Texture-specific metadata
+	uint32_t textureWidth = 0;
+	uint32_t textureHeight = 0;
+	uint32_t textureFormat = 0; // DXGI_FORMAT as uint32_t
 };
 
 // Asset browser panel for importing and managing assets
@@ -123,7 +128,8 @@ private:
 	std::string m_selectedAsset;
 
 	// Texture preview cache (path -> texture)
-	std::unordered_map<std::string, std::shared_ptr<dx12::Texture>> m_textureCache;
+	// Mutable to allow caching in const methods
+	mutable std::unordered_map<std::string, std::shared_ptr<dx12::Texture>> m_textureCache;
 };
 
 } // namespace editor

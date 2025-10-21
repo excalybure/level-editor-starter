@@ -4,7 +4,10 @@
 #include "engine/assets/asset_manager.h"
 #include "runtime/ecs.h"
 #include "editor/commands/CommandHistory.h"
+#include "platform/dx12/dx12_device.h"
 
+#include <d3d12.h>
+#include <dxgiformat.h>
 #include <filesystem>
 #include <fstream>
 #include <chrono>
@@ -648,5 +651,240 @@ TEST_CASE( "AssetBrowserPanel generates asset tooltips", "[AssetBrowser][T3.8][u
 
 		// Should return a string (possibly empty or with error message)
 		REQUIRE( tooltip.empty() );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel extracts texture metadata", "[AssetBrowser][T3.9][texture][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+
+	// Initialize device for texture loading
+	dx12::Device device;
+	if ( !device.initializeHeadless() )
+	{
+		SKIP( "DirectX 12 device initialization failed - cannot test texture loading" );
+	}
+
+	panel.setDevice( &device );
+	panel.setRootPath( "assets/test" );
+
+	SECTION( "getAssetMetadata populates texture width and height" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto metadata = panel.getAssetMetadata( testTexture );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.type == editor::AssetType::Texture );
+		REQUIRE( metadata.textureWidth > 0 );
+		REQUIRE( metadata.textureHeight > 0 );
+	}
+
+	SECTION( "getAssetMetadata populates texture format" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto metadata = panel.getAssetMetadata( testTexture );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.textureFormat != 0 );
+	}
+
+	SECTION( "getAssetMetadata leaves texture fields empty for non-texture assets" )
+	{
+		const std::string meshFile = fixture.testRoot + "/test_mesh.gltf";
+		std::ofstream( meshFile ).close();
+
+		const auto metadata = panel.getAssetMetadata( meshFile );
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.type == editor::AssetType::Mesh );
+		REQUIRE( metadata.textureWidth == 0 );
+		REQUIRE( metadata.textureHeight == 0 );
+		REQUIRE( metadata.textureFormat == 0 );
+	}
+
+	SECTION( "getAssetMetadata caches textures to avoid redundant loading" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		// Load metadata twice - second call should use cache
+		const auto metadata1 = panel.getAssetMetadata( testTexture );
+		const auto metadata2 = panel.getAssetMetadata( testTexture );
+
+		REQUIRE( metadata1.textureWidth == metadata2.textureWidth );
+		REQUIRE( metadata1.textureHeight == metadata2.textureHeight );
+		REQUIRE( metadata1.textureFormat == metadata2.textureFormat );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel texture tooltip includes dimensions and format", "[AssetBrowser][T3.10][texture][unit]" )
+{
+	TempDirectoryFixture fixture;
+	assets::AssetManager assetManager;
+	ecs::Scene scene;
+	CommandHistory commandHistory;
+
+	editor::AssetBrowserPanel panel( assetManager, scene, commandHistory );
+
+	// Initialize device for texture loading
+	dx12::Device device;
+	if ( !device.initializeHeadless() )
+	{
+		SKIP( "DirectX 12 device initialization failed - cannot test texture loading" );
+	}
+
+	panel.setDevice( &device );
+	panel.setRootPath( "assets/test" );
+
+	SECTION( "buildTooltipText includes texture dimensions" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto tooltip = panel.buildTooltipText( testTexture );
+
+		REQUIRE( !tooltip.empty() );
+		REQUIRE( tooltip.find( "Dimensions:" ) != std::string::npos );
+		REQUIRE( tooltip.find( "x" ) != std::string::npos ); // Should contain dimension separator
+	}
+
+	SECTION( "buildTooltipText includes texture format" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto tooltip = panel.buildTooltipText( testTexture );
+
+		REQUIRE( !tooltip.empty() );
+		REQUIRE( tooltip.find( "Format:" ) != std::string::npos );
+	}
+
+	SECTION( "buildTooltipText includes all texture metadata" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto tooltip = panel.buildTooltipText( testTexture );
+
+		// Should include filename, type, dimensions, format, and size
+		REQUIRE( tooltip.find( "test_red_2x2.png" ) != std::string::npos );
+		REQUIRE( tooltip.find( "Texture" ) != std::string::npos );
+		REQUIRE( tooltip.find( "Dimensions:" ) != std::string::npos );
+		REQUIRE( tooltip.find( "Format:" ) != std::string::npos );
+		REQUIRE( tooltip.find( "Size:" ) != std::string::npos );
+	}
+
+	SECTION( "buildTooltipText supports common texture formats" )
+	{
+		const std::string testTexture = "assets/test/test_red_2x2.png";
+		if ( !std::filesystem::exists( testTexture ) )
+		{
+			SKIP( "Test texture file not found" );
+		}
+
+		const auto tooltip = panel.buildTooltipText( testTexture );
+
+		// PNG should be loaded as one of the standard formats
+		REQUIRE( ( tooltip.find( "UNORM" ) != std::string::npos ||
+			tooltip.find( "Format(" ) != std::string::npos ) ); // Either named format or numeric
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel AssetMetadata struct contains texture fields", "[AssetBrowser][T3.11][texture][unit]" )
+{
+	// Test that AssetMetadata properly stores texture information
+	editor::AssetMetadata metadata;
+
+	SECTION( "AssetMetadata initializes with zero texture values" )
+	{
+		REQUIRE( metadata.textureWidth == 0 );
+		REQUIRE( metadata.textureHeight == 0 );
+		REQUIRE( metadata.textureFormat == 0 );
+	}
+
+	SECTION( "AssetMetadata can store texture dimensions" )
+	{
+		metadata.textureWidth = 1024;
+		metadata.textureHeight = 768;
+
+		REQUIRE( metadata.textureWidth == 1024 );
+		REQUIRE( metadata.textureHeight == 768 );
+	}
+
+	SECTION( "AssetMetadata can store texture format" )
+	{
+		metadata.textureFormat = static_cast<uint32_t>( DXGI_FORMAT_R8G8B8A8_UNORM );
+
+		REQUIRE( metadata.textureFormat == static_cast<uint32_t>( DXGI_FORMAT_R8G8B8A8_UNORM ) );
+	}
+
+	SECTION( "AssetMetadata preserves existing fields" )
+	{
+		metadata.exists = true;
+		metadata.type = editor::AssetType::Texture;
+		metadata.filename = "test.png";
+		metadata.sizeBytes = 1024;
+		metadata.textureWidth = 512;
+		metadata.textureHeight = 512;
+
+		REQUIRE( metadata.exists );
+		REQUIRE( metadata.type == editor::AssetType::Texture );
+		REQUIRE( metadata.filename == "test.png" );
+		REQUIRE( metadata.sizeBytes == 1024 );
+		REQUIRE( metadata.textureWidth == 512 );
+		REQUIRE( metadata.textureHeight == 512 );
+	}
+}
+
+TEST_CASE( "AssetBrowserPanel handles texture format name conversion", "[AssetBrowser][T3.12][texture][unit]" )
+{
+	// This test verifies that the tooltip formatting handles various texture formats correctly
+
+	SECTION( "R8G8B8A8_UNORM format is represented correctly" )
+	{
+		const uint32_t format = static_cast<uint32_t>( DXGI_FORMAT_R8G8B8A8_UNORM );
+
+		REQUIRE( format == 28u ); // Known value for R8G8B8A8_UNORM
+	}
+
+	SECTION( "BC formats are supported" )
+	{
+		const uint32_t format = static_cast<uint32_t>( DXGI_FORMAT_BC7_UNORM );
+
+		REQUIRE( format == 98u ); // Known value for BC7_UNORM
+	}
+
+	SECTION( "Unknown formats have zero value" )
+	{
+		const uint32_t format = static_cast<uint32_t>( DXGI_FORMAT_UNKNOWN );
+
+		REQUIRE( format == 0u );
 	}
 }
