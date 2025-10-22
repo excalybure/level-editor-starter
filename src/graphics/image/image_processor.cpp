@@ -124,9 +124,57 @@ std::optional<graphics::texture::ImageData> ImageProcessor::resizeAspect(
 	uint32_t maxHeight,
 	ResizeFilter filter )
 {
-	// TODO: Implement in TDD
-	console::error( "ImageProcessor::resizeAspect not implemented yet" );
-	return std::nullopt;
+	// Validate inputs
+	if ( source.width == 0 || source.height == 0 )
+	{
+		console::error( "ImageProcessor::resizeAspect: Invalid source dimensions ({}x{})",
+			source.width,
+			source.height );
+		return std::nullopt;
+	}
+
+	if ( maxWidth == 0 || maxHeight == 0 )
+	{
+		console::error( "ImageProcessor::resizeAspect: Invalid max dimensions ({}x{})",
+			maxWidth,
+			maxHeight );
+		return std::nullopt;
+	}
+
+	// If image already fits, return as-is (no upscaling)
+	if ( source.width <= maxWidth && source.height <= maxHeight )
+	{
+		return source;
+	}
+
+	// Calculate aspect ratio
+	const float sourceAspect = static_cast<float>( source.width ) / static_cast<float>( source.height );
+	const float boxAspect = static_cast<float>( maxWidth ) / static_cast<float>( maxHeight );
+
+	uint32_t targetWidth = 0;
+	uint32_t targetHeight = 0;
+
+	// Determine which dimension constrains the fit
+	if ( sourceAspect > boxAspect )
+	{
+		// Width is the limiting dimension
+		targetWidth = maxWidth;
+		targetHeight = static_cast<uint32_t>( maxWidth / sourceAspect );
+	}
+	else
+	{
+		// Height is the limiting dimension
+		targetHeight = maxHeight;
+		targetWidth = static_cast<uint32_t>( maxHeight * sourceAspect );
+	}
+
+	// Ensure dimensions are at least 1
+	if ( targetWidth == 0 )
+		targetWidth = 1;
+	if ( targetHeight == 0 )
+		targetHeight = 1;
+
+	return resize( source, targetWidth, targetHeight, filter );
 }
 
 std::optional<graphics::texture::ImageData> ImageProcessor::createThumbnail(
@@ -134,9 +182,58 @@ std::optional<graphics::texture::ImageData> ImageProcessor::createThumbnail(
 	uint32_t size,
 	ResizeFilter filter )
 {
-	// TODO: Implement in TDD
-	console::error( "ImageProcessor::createThumbnail not implemented yet" );
-	return std::nullopt;
+	// Validate inputs
+	if ( source.width == 0 || source.height == 0 )
+	{
+		console::error( "ImageProcessor::createThumbnail: Invalid source dimensions ({}x{})",
+			source.width,
+			source.height );
+		return std::nullopt;
+	}
+
+	if ( size == 0 )
+	{
+		console::error( "ImageProcessor::createThumbnail: Invalid thumbnail size (0)" );
+		return std::nullopt;
+	}
+
+	if ( source.channels == 0 || source.channels > 4 )
+	{
+		console::error( "ImageProcessor::createThumbnail: Invalid channel count ({})", source.channels );
+		return std::nullopt;
+	}
+
+	if ( source.pixels.empty() )
+	{
+		console::error( "ImageProcessor::createThumbnail: Empty pixel data" );
+		return std::nullopt;
+	}
+
+	// Determine crop region (center square)
+	const uint32_t cropSize = ( source.width < source.height ) ? source.width : source.height;
+	const uint32_t cropX = ( source.width - cropSize ) / 2;
+	const uint32_t cropY = ( source.height - cropSize ) / 2;
+
+	// Extract center square
+	graphics::texture::ImageData cropped;
+	cropped.width = cropSize;
+	cropped.height = cropSize;
+	cropped.channels = source.channels;
+	cropped.format = source.format;
+	cropped.pixels.resize( static_cast<size_t>( cropSize ) * cropSize * source.channels );
+
+	// Copy cropped region row by row
+	for ( uint32_t y = 0; y < cropSize; ++y )
+	{
+		const size_t srcOffset = ( ( cropY + y ) * source.width + cropX ) * source.channels;
+		const size_t dstOffset = y * cropSize * source.channels;
+		const size_t rowBytes = cropSize * source.channels;
+
+		std::memcpy( cropped.pixels.data() + dstOffset, source.pixels.data() + srcOffset, rowBytes );
+	}
+
+	// Resize the cropped square to target thumbnail size
+	return resize( cropped, size, size, filter );
 }
 
 std::vector<graphics::texture::ImageData> ImageProcessor::generateMipmaps(

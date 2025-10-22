@@ -129,3 +129,132 @@ TEST_CASE( "ImageProcessor::resize handles invalid inputs", "[image][resize]" )
 		REQUIRE_FALSE( result.has_value() );
 	}
 }
+
+TEST_CASE( "ImageProcessor::resizeAspect maintains aspect ratio", "[image][resize]" )
+{
+	SECTION( "Wide image fits within box" )
+	{
+		// 200x100 image (2:1 aspect) -> max 100x100 box -> should be 100x50
+		const auto source = createTestImage( 200, 100, 4 );
+		const auto result = ImageProcessor::resizeAspect( source, 100, 100, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 100 );
+		REQUIRE( result->height == 50 );
+		REQUIRE( result->channels == 4 );
+	}
+
+	SECTION( "Tall image fits within box" )
+	{
+		// 100x200 image (1:2 aspect) -> max 100x100 box -> should be 50x100
+		const auto source = createTestImage( 100, 200, 4 );
+		const auto result = ImageProcessor::resizeAspect( source, 100, 100, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 50 );
+		REQUIRE( result->height == 100 );
+		REQUIRE( result->channels == 4 );
+	}
+
+	SECTION( "Square image fits exactly" )
+	{
+		// 128x128 image -> max 64x64 box -> should be 64x64
+		const auto source = createTestImage( 128, 128, 4 );
+		const auto result = ImageProcessor::resizeAspect( source, 64, 64, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 64 );
+		REQUIRE( result->height == 64 );
+		REQUIRE( result->channels == 4 );
+	}
+
+	SECTION( "Image smaller than box is not upscaled" )
+	{
+		// 50x50 image -> max 100x100 box -> stays 50x50 (no upscale)
+		const auto source = createTestImage( 50, 50, 4 );
+		const auto result = ImageProcessor::resizeAspect( source, 100, 100, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 50 );
+		REQUIRE( result->height == 50 );
+	}
+
+	SECTION( "Very wide image" )
+	{
+		// 800x100 image (8:1 aspect) -> max 200x200 box -> should be 200x25
+		const auto source = createTestImage( 800, 100, 3 );
+		const auto result = ImageProcessor::resizeAspect( source, 200, 200, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 200 );
+		REQUIRE( result->height == 25 );
+		REQUIRE( result->channels == 3 );
+	}
+}
+
+TEST_CASE( "ImageProcessor::createThumbnail generates square output", "[image][thumbnail]" )
+{
+	SECTION( "Wide image crops to square" )
+	{
+		// 200x100 image -> 64x64 thumbnail (crops width)
+		const auto source = createTestImage( 200, 100, 4 );
+		const auto result = ImageProcessor::createThumbnail( source, 64, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 64 );
+		REQUIRE( result->height == 64 );
+		REQUIRE( result->channels == 4 );
+	}
+
+	SECTION( "Tall image crops to square" )
+	{
+		// 100x200 image -> 64x64 thumbnail (crops height)
+		const auto source = createTestImage( 100, 200, 4 );
+		const auto result = ImageProcessor::createThumbnail( source, 64, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 64 );
+		REQUIRE( result->height == 64 );
+		REQUIRE( result->channels == 4 );
+	}
+
+	SECTION( "Square image resizes to thumbnail" )
+	{
+		// 256x256 image -> 100x100 thumbnail
+		const auto source = createTestImage( 256, 256, 3 );
+		const auto result = ImageProcessor::createThumbnail( source, 100, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 100 );
+		REQUIRE( result->height == 100 );
+		REQUIRE( result->channels == 3 );
+	}
+
+	SECTION( "Small image upscales to thumbnail" )
+	{
+		// 32x32 image -> 64x64 thumbnail
+		const auto source = createTestImage( 32, 32, 4 );
+		const auto result = ImageProcessor::createThumbnail( source, 64, ResizeFilter::Bilinear );
+
+		REQUIRE( result.has_value() );
+		REQUIRE( result->width == 64 );
+		REQUIRE( result->height == 64 );
+	}
+
+	SECTION( "Invalid inputs return nullopt" )
+	{
+		const auto source = createTestImage( 100, 100, 4 );
+
+		// Zero size
+		const auto result1 = ImageProcessor::createThumbnail( source, 0, ResizeFilter::Bilinear );
+		REQUIRE_FALSE( result1.has_value() );
+
+		// Empty source
+		ImageData empty;
+		empty.width = 0;
+		empty.height = 0;
+		empty.channels = 4;
+		const auto result2 = ImageProcessor::createThumbnail( empty, 64, ResizeFilter::Bilinear );
+		REQUIRE_FALSE( result2.has_value() );
+	}
+}
