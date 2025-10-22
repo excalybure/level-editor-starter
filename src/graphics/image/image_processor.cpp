@@ -209,6 +209,12 @@ std::optional<graphics::texture::ImageData> ImageProcessor::createThumbnail(
 		return std::nullopt;
 	}
 
+	// If image is already square, skip cropping and resize directly
+	if ( source.width == source.height )
+	{
+		return resize( source, size, size, filter );
+	}
+
 	// Determine crop region (center square)
 	const uint32_t cropSize = ( source.width < source.height ) ? source.width : source.height;
 	const uint32_t cropX = ( source.width - cropSize ) / 2;
