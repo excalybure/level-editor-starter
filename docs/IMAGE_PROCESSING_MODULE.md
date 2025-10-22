@@ -449,11 +449,48 @@ Phase 2.2: Texture loading integration (33 assertions in 3 test cases)
 Total: 58 assertions across 5 test cases - all passing ✅
 ```
 
-**Next Step:** Phase 2.3 (Future) - GPU Upload Integration
-- Modify `dx12::Texture::createFromImageData()` to accept mip levels count
-- Update `dx12::Texture::uploadTextureData()` to upload all mip levels
-- Create SRV with proper mip level range
-- This requires DirectX 12 resource state management and proper subresource indexing
+**Phase 2.3: GPU Upload Integration** ✅ COMPLETE
+
+**Goal:** Enable GPU to render with mipmapped textures
+
+1. **Implementation** (`dx12_texture.cpp`) ✅
+   - ✅ Modified `Texture::createFromImageData()` to calculate and use mip level count from ImageData
+   - ✅ Added `Texture::getMipLevels()` getter to expose mip count
+   - ✅ Implemented `Texture::uploadAllMipLevels()` to upload all mip levels using D3D12 subresource indexing
+   - ✅ Updated `Texture::createShaderResourceView()` to use `m_mipLevels` instead of hardcoded 1
+
+2. **GPU Upload Details** ✅
+   - ✅ Proper D3D12 resource creation with `MipLevels` field set from ImageData
+   - ✅ Upload buffer sized for all subresources via `GetRequiredIntermediateSize()`
+   - ✅ Subresource data prepared for base level + all additional mip levels
+   - ✅ `UpdateSubresources()` called with correct mip count and data array
+   - ✅ Resource transition to `PIXEL_SHADER_RESOURCE` state after upload
+
+3. **Testing** ✅
+   - ✅ Test resource creation with mip levels (6 assertions)
+   - ✅ Test upload of all mip levels (4 assertions)
+   - ✅ Test SRV exposes correct mip count (8 assertions)
+   - ✅ Integration test: full pipeline from load to GPU upload (11 assertions)
+   - All Phase 2.3 tests passing: 29 assertions across 4 test cases
+
+**Deliverable:** Complete GPU mipmap pipeline. Textures can be loaded with mipmaps, uploaded to GPU with all levels, and rendered with proper SRV configuration. Ready for visual verification (requires shader sampling with mipmaps).
+
+**Test Results:**
+```
+Phase 2.3: GPU Upload Integration (29 assertions in 4 test cases)
+- Texture creates resource with mip levels: 6 assertions
+- Texture uploads all mip levels: 4 assertions  
+- Texture SRV exposes all mip levels: 8 assertions
+- Integration test: 11 assertions (load -> create -> upload -> SRV)
+
+All Phase 2.3 tests passing ✅
+All texture tests passing (102 assertions in 18 test cases) ✅
+```
+
+**Next Steps:**
+- **Visual Verification**: Test in-engine rendering to verify mipmaps reduce aliasing at distance
+- **TextureManager Integration**: Add convenience method `createTextureWithMipmaps(path, maxLevels, filter)` that combines load + create + upload
+- **Asset Browser Integration**: Use mipmapped textures for previews to improve quality
 
 ---
 

@@ -170,3 +170,126 @@ TEST_CASE( "ImageData with mipmaps has correct structure", "[dx12][texture][mipm
 	REQUIRE( imageData->mipLevels[0].channels == 4 );
 	REQUIRE( imageData->mipLevels[0].pixels.size() == 1 * 1 * 4 );
 }
+
+TEST_CASE( "Texture creates resource with mip levels", "[dx12][texture][mipmap][phase2.3]" )
+{
+	// Load test image with mipmaps
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	const auto imageData = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+	REQUIRE( imageData.has_value() );
+
+	// Create device
+	Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create texture from mipmapped image data
+	Texture texture;
+	const bool result = texture.createFromImageData( &device, imageData.value() );
+
+	// Verify texture created with correct mip level count (base + 1 additional = 2 total)
+	REQUIRE( result );
+	REQUIRE( texture.getWidth() == 2 );
+	REQUIRE( texture.getHeight() == 2 );
+	REQUIRE( texture.getMipLevels() == 2 ); // This will fail - getMipLevels() doesn't exist yet
+
+	device.shutdown();
+}
+
+TEST_CASE( "Texture uploads all mip levels", "[dx12][texture][mipmap][phase2.3]" )
+{
+	// Load test image with mipmaps
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	const auto imageData = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+	REQUIRE( imageData.has_value() );
+
+	// Create device
+	Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	// Create texture from mipmapped image data
+	Texture texture;
+	REQUIRE( texture.createFromImageData( &device, imageData.value() ) );
+
+	// Upload all mip levels (base + additional)
+	device.beginFrame();
+	const bool result = texture.uploadAllMipLevels( device.getCommandList(), imageData.value() );
+	device.endFrame();
+
+	REQUIRE( result ); // This will fail - uploadAllMipLevels() doesn't exist yet
+
+	device.shutdown();
+}
+
+TEST_CASE( "Texture SRV exposes all mip levels", "[dx12][texture][mipmap][phase2.3]" )
+{
+	// Load test image with mipmaps
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	const auto imageData = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+	REQUIRE( imageData.has_value() );
+
+	// Create device and texture manager
+	Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	TextureManager textureManager;
+	REQUIRE( textureManager.initialize( &device ) );
+
+	// Create texture
+	auto texture = std::make_shared<Texture>();
+	REQUIRE( texture->createFromImageData( &device, imageData.value() ) );
+
+	// Upload all mip levels
+	device.beginFrame();
+	REQUIRE( texture->uploadAllMipLevels( device.getCommandList(), imageData.value() ) );
+	device.endFrame();
+
+	// Create SRV (this should respect mip levels)
+	const D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = textureManager.getNextSrvHandle();
+	REQUIRE( texture->createShaderResourceView( &device, srvHandle ) );
+
+	// Verify texture has proper mip levels exposed
+	REQUIRE( texture->getMipLevels() == 2 ); // Base + 1 additional
+	REQUIRE( srvHandle.ptr != 0 );			 // SRV handle was allocated
+
+	textureManager.shutdown();
+	device.shutdown();
+}
+
+TEST_CASE( "Integration: TextureManager creates mipmapped texture from file", "[dx12][texture][mipmap][phase2.3][integration]" )
+{
+	// Create device and texture manager
+	Device device;
+	REQUIRE( device.initializeHeadless() );
+
+	TextureManager textureManager;
+	REQUIRE( textureManager.initialize( &device ) );
+
+	// Load test image with mipmaps (2x2 -> 1x1 = 2 mip levels)
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	const auto imageData = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+	REQUIRE( imageData.has_value() );
+	REQUIRE( imageData->mipLevels.size() == 1 ); // 1 additional mip beyond base
+
+	// Create texture via the standard path
+	auto texture = std::make_shared<Texture>();
+	REQUIRE( texture->createFromImageData( &device, imageData.value() ) );
+
+	// Upload via new method
+	device.beginFrame();
+	const bool uploadResult = texture->uploadAllMipLevels( device.getCommandList(), imageData.value() );
+	device.endFrame();
+	REQUIRE( uploadResult );
+
+	// Create SRV
+	const D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = textureManager.getNextSrvHandle();
+	REQUIRE( texture->createShaderResourceView( &device, srvHandle ) );
+
+	// Verify final texture state
+	REQUIRE( texture->getWidth() == 2 );
+	REQUIRE( texture->getHeight() == 2 );
+	REQUIRE( texture->getMipLevels() == 2 );
+	REQUIRE( texture->getResource() != nullptr );
+
+	textureManager.shutdown();
+	device.shutdown();
+}

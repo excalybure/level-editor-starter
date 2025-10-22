@@ -99,7 +99,7 @@ bool Texture::createShaderResourceView( Device *device, D3D12_CPU_DESCRIPTOR_HAN
 	srvDesc.Format = m_format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MipLevels = m_mipLevels;
 
 	// Create the shader resource view
 	device->get()->CreateShaderResourceView( m_resource.Get(), &srvDesc, srvCpuHandle );
@@ -225,6 +225,9 @@ bool Texture::createFromImageData(
 	m_height = imageData.height;
 	m_format = imageData.format;
 
+	// Calculate total mip levels: base level (1) + additional mip levels
+	m_mipLevels = static_cast<UINT>( 1 + imageData.mipLevels.size() );
+
 	// Create texture resource description
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -232,7 +235,7 @@ bool Texture::createFromImageData(
 	textureDesc.Width = imageData.width;
 	textureDesc.Height = imageData.height;
 	textureDesc.DepthOrArraySize = 1;
-	textureDesc.MipLevels = 1;
+	textureDesc.MipLevels = m_mipLevels;
 	textureDesc.Format = imageData.format;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
@@ -351,6 +354,115 @@ bool Texture::uploadTextureData(
 
 	// Store upload buffer to keep it alive until GPU is done
 	// It will be released when the texture is destroyed or when a new upload happens
+	m_uploadBuffer = uploadBuffer;
+
+	return true;
+}
+
+bool Texture::uploadAllMipLevels(
+	ID3D12GraphicsCommandList *commandList,
+	const graphics::texture::ImageData &imageData )
+{
+	if ( !commandList )
+	{
+		console::error( "Texture::uploadAllMipLevels: Command list is null" );
+		return false;
+	}
+
+	if ( !m_resource || !m_device )
+	{
+		console::error( "Texture::uploadAllMipLevels: Resource or device is null" );
+		return false;
+	}
+
+	// Calculate total mip count (base + additional)
+	const UINT totalMips = static_cast<UINT>( 1 + imageData.mipLevels.size() );
+
+	// Validate mip count matches resource
+	if ( totalMips != m_mipLevels )
+	{
+		console::error( "Texture::uploadAllMipLevels: Mip count mismatch (data={}, resource={})", totalMips, m_mipLevels );
+		return false;
+	}
+
+	// Get required size for upload buffer (all subresources)
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize( m_resource.Get(), 0, totalMips );
+
+	// Create upload heap for staging buffer
+	D3D12_HEAP_PROPERTIES uploadHeapProps = {};
+	uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	uploadHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	uploadHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	uploadHeapProps.CreationNodeMask = 1;
+	uploadHeapProps.VisibleNodeMask = 1;
+
+	D3D12_RESOURCE_DESC bufferDesc = {};
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Alignment = 0;
+	bufferDesc.Width = uploadBufferSize;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.SampleDesc.Quality = 0;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
+	try
+	{
+		throwIfFailed( m_device->get()->CreateCommittedResource(
+			&uploadHeapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&bufferDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &uploadBuffer ) ) );
+	}
+	catch ( const std::exception &e )
+	{
+		console::error( "Texture::uploadAllMipLevels: Failed to create upload buffer ({})", e.what() );
+		return false;
+	}
+
+	// Prepare subresource data for all mip levels
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	subresources.reserve( totalMips );
+
+	// Base level (mip 0)
+	{
+		D3D12_SUBRESOURCE_DATA subresource = {};
+		const uint32_t bytesPerPixel = imageData.channels > 0 ? imageData.channels : 4;
+		subresource.pData = imageData.pixels.data();
+		subresource.RowPitch = imageData.width * bytesPerPixel;
+		subresource.SlicePitch = subresource.RowPitch * imageData.height;
+		subresources.push_back( subresource );
+	}
+
+	// Additional mip levels (mip 1, 2, ...)
+	for ( const auto &mipLevel : imageData.mipLevels )
+	{
+		D3D12_SUBRESOURCE_DATA subresource = {};
+		const uint32_t bytesPerPixel = mipLevel.channels > 0 ? mipLevel.channels : 4;
+		subresource.pData = mipLevel.pixels.data();
+		subresource.RowPitch = mipLevel.width * bytesPerPixel;
+		subresource.SlicePitch = subresource.RowPitch * mipLevel.height;
+		subresources.push_back( subresource );
+	}
+
+	// Copy data to upload buffer and schedule copy to texture
+	const UINT64 result = UpdateSubresources( commandList, m_resource.Get(), uploadBuffer.Get(), 0, 0, totalMips, subresources.data() );
+	if ( result == 0 )
+	{
+		console::error( "Texture::uploadAllMipLevels: UpdateSubresources failed" );
+		return false;
+	}
+
+	// Transition texture to pixel shader resource state
+	transitionTo( commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+
+	// Store upload buffer to keep it alive until GPU is done
 	m_uploadBuffer = uploadBuffer;
 
 	return true;

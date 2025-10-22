@@ -57,6 +57,11 @@ public:
 		uint32_t rowPitch,
 		uint32_t slicePitch );
 
+	// NEW: Upload all mip levels from ImageData
+	bool uploadAllMipLevels(
+		ID3D12GraphicsCommandList *commandList,
+		const graphics::texture::ImageData &imageData );
+
 	// Resize the texture (recreates the resource)
 	bool resize( Device *device, UINT width, UINT height );
 
@@ -73,6 +78,7 @@ public:
 	UINT getWidth() const { return m_width; }
 	UINT getHeight() const { return m_height; }
 	DXGI_FORMAT getFormat() const { return m_format; }
+	UINT getMipLevels() const { return m_mipLevels; }
 
 	// Resource state management
 	void transitionTo( ID3D12GraphicsCommandList *commandList, D3D12_RESOURCE_STATES newState );
@@ -89,6 +95,7 @@ private:
 
 	UINT m_width = 0;
 	UINT m_height = 0;
+	UINT m_mipLevels = 1;
 	DXGI_FORMAT m_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	D3D12_RESOURCE_STATES m_currentState = D3D12_RESOURCE_STATE_COMMON;
 
