@@ -54,13 +54,13 @@ auto resized = ImageProcessor::resizeAspect(
 
 **Phase 1 (Current):**
 - [x] Module structure
-- [ ] resize() function
-- [ ] resizeAspect() function
-- [ ] createThumbnail() function
+- [x] resize() function
+- [x] resizeAspect() function
+- [x] createThumbnail() function
 
 **Phase 2 (Future):**
-- [ ] generateMipmaps()
-- [ ] calculateMipLevels()
+- [x] generateMipmaps()
+- [x] calculateMipLevels()
 
 **Phase 3+ (Future):**
 - [ ] Image filters (blur, sharpen)

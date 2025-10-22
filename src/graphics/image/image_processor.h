@@ -66,7 +66,7 @@ public:
 		uint32_t size,
 		ResizeFilter filter = ResizeFilter::Bilinear );
 
-	// ===== Mipmaps (Future) =====
+	// ===== Mipmaps =====
 
 	/// Generate full mipmap chain
 	/// @param source Source image (mip level 0)
