@@ -5,6 +5,9 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <stb_image_resize2.h>
 
+#include <bit>
+#include <algorithm>
+
 namespace graphics::image
 {
 
@@ -247,16 +250,79 @@ std::vector<graphics::texture::ImageData> ImageProcessor::generateMipmaps(
 	uint32_t maxLevels,
 	MipmapFilter filter )
 {
-	// TODO: Future implementation
-	console::error( "ImageProcessor::generateMipmaps not implemented yet" );
-	return {};
+	// Validate inputs
+	if ( source.width == 0 || source.height == 0 )
+	{
+		console::error( "ImageProcessor::generateMipmaps: Invalid source dimensions ({}x{})",
+			source.width,
+			source.height );
+		return {};
+	}
+
+	if ( source.channels == 0 || source.channels > 4 )
+	{
+		console::error( "ImageProcessor::generateMipmaps: Invalid channel count ({})", source.channels );
+		return {};
+	}
+
+	if ( source.pixels.empty() )
+	{
+		console::error( "ImageProcessor::generateMipmaps: Empty pixel data" );
+		return {};
+	}
+
+	// Map MipmapFilter to ResizeFilter for downsampling
+	ResizeFilter resizeFilter;
+	switch ( filter )
+	{
+	case MipmapFilter::Box:
+		resizeFilter = ResizeFilter::NearestNeighbor;
+		break;
+	case MipmapFilter::Triangle:
+		resizeFilter = ResizeFilter::Bilinear;
+		break;
+	case MipmapFilter::Kaiser:
+		resizeFilter = ResizeFilter::Lanczos;
+		break;
+	}
+
+	// Determine number of levels
+	const uint32_t fullLevels = calculateMipLevels( source.width, source.height );
+	const uint32_t numLevels = ( maxLevels == 0 ) ? fullLevels : std::min( maxLevels, fullLevels );
+
+	std::vector<graphics::texture::ImageData> result;
+	result.reserve( numLevels );
+
+	// Level 0 is the source
+	result.push_back( source );
+
+	// Generate subsequent levels by halving dimensions
+	auto current = source;
+	for ( uint32_t i = 1; i < numLevels; ++i )
+	{
+		const uint32_t targetWidth = std::max( 1u, current.width / 2 );
+		const uint32_t targetHeight = std::max( 1u, current.height / 2 );
+
+		auto resized = resize( current, targetWidth, targetHeight, resizeFilter );
+		if ( !resized )
+		{
+			console::error( "ImageProcessor::generateMipmaps: Failed to generate level {}", i );
+			return {};
+		}
+
+		result.push_back( *resized );
+		current = *resized;
+	}
+
+	return result;
 }
 
 uint32_t ImageProcessor::calculateMipLevels( uint32_t width, uint32_t height )
 {
-	// TODO: Future implementation
-	console::error( "ImageProcessor::calculateMipLevels not implemented yet" );
-	return 0;
+	const uint32_t maxDim = std::max( width, height );
+	if ( maxDim == 0 )
+		return 0;
+	return std::bit_width( maxDim );
 }
 
 } // namespace graphics::image

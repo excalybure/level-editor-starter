@@ -258,3 +258,90 @@ TEST_CASE( "ImageProcessor::createThumbnail generates square output", "[image][t
 		REQUIRE_FALSE( result2.has_value() );
 	}
 }
+
+TEST_CASE( "ImageProcessor::calculateMipLevels computes correct level count", "[image][mipmap]" )
+{
+	SECTION( "Square power-of-two textures" )
+	{
+		REQUIRE( ImageProcessor::calculateMipLevels( 1, 1 ) == 1 );
+		REQUIRE( ImageProcessor::calculateMipLevels( 2, 2 ) == 2 );
+		REQUIRE( ImageProcessor::calculateMipLevels( 4, 4 ) == 3 );
+		REQUIRE( ImageProcessor::calculateMipLevels( 8, 8 ) == 4 );
+		REQUIRE( ImageProcessor::calculateMipLevels( 256, 256 ) == 9 );
+		REQUIRE( ImageProcessor::calculateMipLevels( 512, 512 ) == 10 );
+	}
+
+	SECTION( "Non-square textures use max dimension" )
+	{
+		REQUIRE( ImageProcessor::calculateMipLevels( 4, 2 ) == 3 );		// max=4 -> 3 levels
+		REQUIRE( ImageProcessor::calculateMipLevels( 2, 4 ) == 3 );		// max=4 -> 3 levels
+		REQUIRE( ImageProcessor::calculateMipLevels( 256, 128 ) == 9 ); // max=256 -> 9 levels
+		REQUIRE( ImageProcessor::calculateMipLevels( 128, 256 ) == 9 ); // max=256 -> 9 levels
+	}
+
+	SECTION( "Non-power-of-two dimensions" )
+	{
+		REQUIRE( ImageProcessor::calculateMipLevels( 3, 3 ) == 2 );		// floor(log2(3))+1 = 1+1=2
+		REQUIRE( ImageProcessor::calculateMipLevels( 5, 5 ) == 3 );		// floor(log2(5))+1 ≈2+1=3
+		REQUIRE( ImageProcessor::calculateMipLevels( 100, 100 ) == 7 ); // floor(log2(100))+1 ≈6+1=7
+	}
+}
+
+TEST_CASE( "ImageProcessor::generateMipmaps creates correct chain", "[image][mipmap]" )
+{
+	SECTION( "Full mipmap chain for 4x4 image" )
+	{
+		const auto source = createTestImage( 4, 4, 4 );
+		const auto mipmaps = ImageProcessor::generateMipmaps( source, 0, MipmapFilter::Box );
+
+		REQUIRE( mipmaps.size() == 3 ); // 4x4, 2x2, 1x1
+		REQUIRE( mipmaps[0].width == 4 );
+		REQUIRE( mipmaps[0].height == 4 );
+		REQUIRE( mipmaps[1].width == 2 );
+		REQUIRE( mipmaps[1].height == 2 );
+		REQUIRE( mipmaps[2].width == 1 );
+		REQUIRE( mipmaps[2].height == 1 );
+		REQUIRE( mipmaps[0].channels == 4 );
+		REQUIRE( mipmaps[1].channels == 4 );
+		REQUIRE( mipmaps[2].channels == 4 );
+	}
+
+	SECTION( "Limited mipmap levels" )
+	{
+		const auto source = createTestImage( 8, 8, 3 );
+		const auto mipmaps = ImageProcessor::generateMipmaps( source, 2, MipmapFilter::Triangle );
+
+		REQUIRE( mipmaps.size() == 2 ); // Only 8x8 and 4x4
+		REQUIRE( mipmaps[0].width == 8 );
+		REQUIRE( mipmaps[0].height == 8 );
+		REQUIRE( mipmaps[1].width == 4 );
+		REQUIRE( mipmaps[1].height == 4 );
+	}
+
+	SECTION( "Non-square image uses max dimension for levels" )
+	{
+		const auto source = createTestImage( 8, 4, 4 ); // max=8, levels=4 (8,4,2,1)
+		const auto mipmaps = ImageProcessor::generateMipmaps( source, 0, MipmapFilter::Box );
+
+		REQUIRE( mipmaps.size() == 4 );
+		REQUIRE( mipmaps[0].width == 8 );
+		REQUIRE( mipmaps[0].height == 4 );
+		REQUIRE( mipmaps[1].width == 4 );
+		REQUIRE( mipmaps[1].height == 2 );
+		REQUIRE( mipmaps[2].width == 2 );
+		REQUIRE( mipmaps[2].height == 1 );
+		REQUIRE( mipmaps[3].width == 1 );
+		REQUIRE( mipmaps[3].height == 1 );
+	}
+
+	SECTION( "Invalid inputs return empty vector" )
+	{
+		ImageData empty;
+		empty.width = 0;
+		empty.height = 0;
+		empty.channels = 4;
+
+		const auto mipmaps = ImageProcessor::generateMipmaps( empty, 0, MipmapFilter::Box );
+		REQUIRE( mipmaps.empty() );
+	}
+}
