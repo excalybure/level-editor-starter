@@ -1,9 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <graphics/texture/texture_loader.h>
+#include <graphics/image/image_processor.h>
 #include <fstream>
 #include <filesystem>
 
 using namespace graphics::texture;
+using namespace graphics::image;
 
 TEST_CASE( "TextureLoader loads valid PNG file", "[texture][unit]" )
 {
@@ -115,5 +117,74 @@ TEST_CASE( "TextureLoader returns nullopt for non-image data URI", "[texture][un
 {
 	const auto result = TextureLoader::loadFromDataURI( "data:text/plain;base64,SGVsbG8=" );
 
+	REQUIRE_FALSE( result.has_value() );
+}
+
+TEST_CASE( "TextureLoader::loadWithMipmaps generates mipmap chain", "[texture][mipmap]" )
+{
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	REQUIRE( std::filesystem::exists( testFile ) );
+
+	SECTION( "Load with full mipmap chain" )
+	{
+		const auto result = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+
+		REQUIRE( result.has_value() );
+		const auto &imageData = result.value();
+
+		// Base level
+		REQUIRE( imageData.width == 2 );
+		REQUIRE( imageData.height == 2 );
+		REQUIRE( imageData.channels == 4 );
+
+		// Should have 1 additional mip level (1x1)
+		REQUIRE( imageData.mipLevels.size() == 1 );
+		REQUIRE( imageData.mipLevels[0].width == 1 );
+		REQUIRE( imageData.mipLevels[0].height == 1 );
+		REQUIRE( imageData.mipLevels[0].channels == 4 );
+	}
+
+	SECTION( "Load with limited mip levels" )
+	{
+		const auto result = TextureLoader::loadWithMipmaps( testFile, 1, MipmapFilter::Triangle );
+
+		REQUIRE( result.has_value() );
+		const auto &imageData = result.value();
+
+		// Should only have base level (maxLevels=1)
+		REQUIRE( imageData.width == 2 );
+		REQUIRE( imageData.height == 2 );
+		REQUIRE( imageData.mipLevels.empty() );
+	}
+
+	SECTION( "Compare with manual mipmap generation" )
+	{
+		// Load without mipmaps
+		const auto baseImage = TextureLoader::loadFromFile( testFile );
+		REQUIRE( baseImage.has_value() );
+
+		// Generate mipmaps manually
+		const auto manualMips = ImageProcessor::generateMipmaps( baseImage.value(), 0, MipmapFilter::Kaiser );
+
+		// Load with mipmaps
+		const auto withMips = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Kaiser );
+		REQUIRE( withMips.has_value() );
+
+		// Should match
+		REQUIRE( manualMips.size() == ( 1 + withMips->mipLevels.size() ) );
+		REQUIRE( withMips->width == manualMips[0].width );
+		REQUIRE( withMips->height == manualMips[0].height );
+
+		for ( size_t i = 0; i < withMips->mipLevels.size(); ++i )
+		{
+			REQUIRE( withMips->mipLevels[i].width == manualMips[i + 1].width );
+			REQUIRE( withMips->mipLevels[i].height == manualMips[i + 1].height );
+		}
+	}
+}
+
+TEST_CASE( "TextureLoader::loadWithMipmaps handles invalid file", "[texture][mipmap]" )
+{
+	const auto result = TextureLoader::loadWithMipmaps( "nonexistent.png", 0, MipmapFilter::Box );
 	REQUIRE_FALSE( result.has_value() );
 }

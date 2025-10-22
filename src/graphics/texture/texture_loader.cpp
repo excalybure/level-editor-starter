@@ -1,4 +1,5 @@
 #include "texture_loader.h"
+#include "graphics/image/image_processor.h"
 #include <core/console.h>
 #include <array>
 #include <fstream>
@@ -218,6 +219,44 @@ std::optional<std::vector<uint8_t>> TextureLoader::decodeBase64( const std::stri
 	}
 
 	return decoded;
+}
+
+std::optional<ImageData> TextureLoader::loadWithMipmaps(
+	const std::string &path,
+	uint32_t maxLevels,
+	graphics::image::MipmapFilter filter )
+{
+	// First, load the base image
+	auto baseImage = loadFromFile( path );
+	if ( !baseImage.has_value() )
+	{
+		return std::nullopt;
+	}
+
+	// If maxLevels is 1, return just the base image (no mipmaps)
+	if ( maxLevels == 1 )
+	{
+		return baseImage;
+	}
+
+	// Generate mipmap chain
+	const auto mipmaps = graphics::image::ImageProcessor::generateMipmaps( baseImage.value(), maxLevels, filter );
+	if ( mipmaps.empty() )
+	{
+		console::error( "TextureLoader::loadWithMipmaps: Failed to generate mipmaps for {}", path );
+		return std::nullopt;
+	}
+
+	// mipmaps[0] is the base image, rest are the mip levels
+	// Move mips 1..N into mipLevels vector
+	baseImage->mipLevels.clear();
+	baseImage->mipLevels.reserve( mipmaps.size() - 1 );
+	for ( size_t i = 1; i < mipmaps.size(); ++i )
+	{
+		baseImage->mipLevels.push_back( mipmaps[i] );
+	}
+
+	return baseImage;
 }
 
 } // namespace graphics::texture

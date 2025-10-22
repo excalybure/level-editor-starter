@@ -345,3 +345,53 @@ TEST_CASE( "ImageProcessor::generateMipmaps creates correct chain", "[image][mip
 		REQUIRE( mipmaps.empty() );
 	}
 }
+
+TEST_CASE( "ImageData can store mipmap chain", "[image][mipmap][imagedata]" )
+{
+	SECTION( "ImageData with mipLevels stores additional mips" )
+	{
+		ImageData baseImage;
+		baseImage.width = 4;
+		baseImage.height = 4;
+		baseImage.channels = 4;
+		baseImage.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		baseImage.pixels.resize( 4 * 4 * 4 );
+
+		// Add mip level 1 (2x2)
+		ImageData mip1;
+		mip1.width = 2;
+		mip1.height = 2;
+		mip1.channels = 4;
+		mip1.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		mip1.pixels.resize( 2 * 2 * 4 );
+
+		// Add mip level 2 (1x1)
+		ImageData mip2;
+		mip2.width = 1;
+		mip2.height = 1;
+		mip2.channels = 4;
+		mip2.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		mip2.pixels.resize( 1 * 1 * 4 );
+
+		baseImage.mipLevels.push_back( mip1 );
+		baseImage.mipLevels.push_back( mip2 );
+
+		REQUIRE( baseImage.mipLevels.size() == 2 );
+		REQUIRE( baseImage.mipLevels[0].width == 2 );
+		REQUIRE( baseImage.mipLevels[0].height == 2 );
+		REQUIRE( baseImage.mipLevels[1].width == 1 );
+		REQUIRE( baseImage.mipLevels[1].height == 1 );
+	}
+
+	SECTION( "Empty mipLevels indicates single-level texture" )
+	{
+		ImageData singleLevel;
+		singleLevel.width = 8;
+		singleLevel.height = 8;
+		singleLevel.channels = 3;
+		singleLevel.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		singleLevel.pixels.resize( 8 * 8 * 3 );
+
+		REQUIRE( singleLevel.mipLevels.empty() );
+	}
+}

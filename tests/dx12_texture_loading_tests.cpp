@@ -1,10 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <platform/dx12/dx12_device.h>
 #include <graphics/texture/texture_loader.h>
+#include <graphics/image/image_processor.h>
 #include <filesystem>
 
 using namespace dx12;
 using namespace graphics::texture;
+using namespace graphics::image;
 
 TEST_CASE( "Texture creates from ImageData", "[dx12][texture][loading]" )
 {
@@ -146,4 +148,25 @@ TEST_CASE( "Integration: Load PNG and create GPU texture", "[dx12][texture][inte
 	REQUIRE( texture.getHeight() == 2 );
 
 	device.shutdown();
+}
+
+TEST_CASE( "ImageData with mipmaps has correct structure", "[dx12][texture][mipmap]" )
+{
+	// Load image with mipmaps
+	const std::string testFile = "assets/test/test_red_2x2.png";
+	const auto imageData = TextureLoader::loadWithMipmaps( testFile, 0, MipmapFilter::Box );
+	REQUIRE( imageData.has_value() );
+
+	// Verify base level
+	REQUIRE( imageData->width == 2 );
+	REQUIRE( imageData->height == 2 );
+	REQUIRE( imageData->channels == 4 );
+	REQUIRE( imageData->pixels.size() == 2 * 2 * 4 );
+
+	// Should have 1 additional mip level (1x1)
+	REQUIRE( imageData->mipLevels.size() == 1 );
+	REQUIRE( imageData->mipLevels[0].width == 1 );
+	REQUIRE( imageData->mipLevels[0].height == 1 );
+	REQUIRE( imageData->mipLevels[0].channels == 4 );
+	REQUIRE( imageData->mipLevels[0].pixels.size() == 1 * 1 * 4 );
 }
