@@ -1,6 +1,6 @@
 # Image Processing Module - Design Document
 
-**Status:** Phase 1 Complete ✅  
+**Status:** Phase 3 Complete ✅  
 **Created:** 2025-10-21  
 **Layer:** Graphics (Layer 2)  
 **Namespace:** `graphics::image`  
@@ -494,26 +494,43 @@ All texture tests passing (102 assertions in 18 test cases) ✅
 
 ---
 
-### Phase 3: Channel Operations
+### Phase 3: Channel Operations ✅ COMPLETE
 **Goal:** Enable material authoring workflows
 
-1. **Implementation** (`image_converter.h/cpp`)
-   - Implement `extractChannel()` function
-   - Implement `packChannels()` function
-   - Implement `swizzle()` function
-   - Implement basic format conversions
+1. **Implementation** (`image_converter.h/cpp`) ✅
+   - ✅ Implement `extractChannel()` function - Extract R/G/B/A as single-channel grayscale
+   - ✅ Implement `packChannels()` function - Pack 1-4 single-channel images into multi-channel
+   - ✅ Implement `swizzle()` function - Rearrange channels (RGBA->BGRA, etc.)
+   - ✅ Implement `addAlpha()` - Convert RGB to RGBA with specified alpha value
+   - ✅ Implement `discardAlpha()` - Convert RGBA to RGB
+   - ✅ Implement `toGrayscale()` - Convert to luminance (0.299R + 0.587G + 0.114B)
 
 2. **Use Cases**
    - Extract roughness from metallic-roughness packed texture
    - Pack custom material maps (R=AO, G=Roughness, B=Metallic)
    - Convert normal maps between coordinate systems
+   - Generate grayscale previews or masks
 
-3. **Testing**
-   - Test channel extraction (R, G, B, A)
-   - Test packing 1-4 channels
-   - Verify format conversions
+3. **Testing** ✅
+   - ✅ Test channel extraction (R, G, B, A) - 4 test cases, 32 assertions
+   - ✅ Test packing 1-4 channels - 3 test cases, 41 assertions
+   - ✅ Test channel swizzling - 1 test case, 12 assertions
+   - ✅ Test format conversions (RGB<->RGBA, grayscale) - 3 test cases, 23 assertions
+   - Total: 11 test cases, 108 assertions - all passing ✅
 
-**Deliverable:** Material editor can manipulate texture channels.
+**Deliverable:** Material editor can manipulate texture channels. ImageConverter provides complete channel manipulation and format conversion API.
+
+**Test Results:**
+```
+All tests passed (108 assertions in 11 test cases)
+Functions implemented:
+- extractChannel() - Extract single channel as grayscale
+- packChannels() - Pack up to 4 single-channel images
+- swizzle() - Rearrange RGBA channels
+- addAlpha() - RGB to RGBA conversion
+- discardAlpha() - RGBA to RGB conversion
+- toGrayscale() - RGB/RGBA to luminance
+```
 
 ---
 

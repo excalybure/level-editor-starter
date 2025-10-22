@@ -76,6 +76,7 @@ add_library(graphics STATIC
   src/graphics/material_system/compiled_material.cpp
   src/graphics/material_system/shader_reflection.cpp
   src/graphics/image/image_processor.cpp
+  src/graphics/image/image_converter.cpp
   src/graphics/texture/texture_loader.cpp
   src/graphics/texture/bindless_texture_heap.cpp
   src/graphics/texture/texture_manager.cpp
@@ -303,6 +304,7 @@ if(ENABLE_TESTS AND Catch2_FOUND)
     tests/bindless_texture_heap_tests.cpp
     tests/graphics_texture_manager_tests.cpp
     tests/image_processor_tests.cpp
+    tests/image_converter_tests.cpp
     tests/hash_utils_tests.cpp
     tests/string_util_tests.cpp
     tests/vec_tests.cpp
